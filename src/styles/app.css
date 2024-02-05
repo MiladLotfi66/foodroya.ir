@@ -544,12 +544,7 @@ video {
   --tw-backdrop-sepia:  ;
 }
 
-.bg-blue-500 {
+.bg-brown-600 {
   --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity));
-}
-
-.bg-blue-600 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(37 99 235 / var(--tw-bg-opacity));
+  background-color: rgb(150 114 89 / var(--tw-bg-opacity));
 }
