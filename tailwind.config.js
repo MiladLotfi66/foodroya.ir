@@ -15,6 +15,17 @@ module.exports = {
           900: "#634832",
         },
       },
+      "fontFamily":{
+        "Vazir":"Vazir",
+        "Dana":"Dana",
+        "DanaMedium":"Dana Medium",
+        "DanaDemiBold":"Dana DemiBold",
+        "MorabbaLight":"Morabba Light",
+        "MorabbaBold":"Morabba Bold",
+        "MorabbaMedium":"Morabba Medium",
+        "IranSans":"IranSans",
+      },
+
       boxShadow: {
         "shadow-normal": " 0px 1px 10px rgba(0, 0, 0, 0.05)",
       },
