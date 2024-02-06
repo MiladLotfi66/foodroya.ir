@@ -5,8 +5,13 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode:"class",
+
   theme: {
     extend: {
+      letterSpacing: {
+        "tightest": '-.065em',
+      },
       colors: {
         brown: {
           100: "#ECE0D1",
@@ -15,7 +20,7 @@ module.exports = {
           900: "#634832",
         },
       },
-      "fontFamily":{
+      fontFamily:{
         "Vazir":"Vazir",
         "Dana":"Dana",
         "DanaMedium":"Dana Medium",
@@ -40,5 +45,8 @@ module.exports = {
     },
   },
 
-  plugins: [],
+  plugins: [ function({ addVariant }) {
+    addVariant('child', '&>*');
+    addVariant('child-hover', '&>*:hover');
+  }],
 };
