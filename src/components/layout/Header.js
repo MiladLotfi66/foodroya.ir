@@ -21,8 +21,8 @@ function Header() {
     <header
       className={
         darkMode
-          ? "dark  flex right-0 left-0 top-9 fixed  items-center bg-black/50 w-[90%] h-24 rounded-3xl px-10 mx-auto backdrop-blur-[6px]"
-          : "flex right-0 left-0 top-9 fixed  items-center bg-black/50 w-[90%] h-24 rounded-3xl px-10 mx-auto backdrop-blur-[6px]"
+          ? "dark flex right-0 left-0 top-9 fixed  items-center bg-black/50  w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
+          : "flex  right-0 left-0 top-9 fixed  items-center bg-black/50 w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
       }
     >
       <div className="flex justify-between w-full">
@@ -41,11 +41,11 @@ function Header() {
           <Sunsvg />
         </div>
         {/* logo & menu */}
-        <nav className="flex items-center gap-x-9 h-14">
-          <svg className="w-[59px] h-[59px]">
+        <nav className="flex items-center gap-x-4 xl:gap-x-9 h-14">
+          <svg className="shrink-0 w-[59px] h-[59px]">
             <use className="flex items-center " href="#signallogo"></use>
           </svg>
-          <ul className="flex h-full text-xl text-gray-300 gap-x-9 tracking-tightest child:leading-[56px] child-hover:text-orange-300 ">
+          <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">
             <li className="flex items-center">
               <a className="font-DanaMedium text-orange-200 my-auto" href="#">
                 صفحه اصلی
@@ -72,9 +72,9 @@ function Header() {
         </nav>
 
         {/* shopping basket and lodin moon */}
-        <div className="flex gap-x-10 text-orange-200 items-center ">
+        <div className="flex gap-x-3 xl:gap-x-10 text-orange-200 items-center ">
           {/* shopping and moon */}
-          <div className="flex gap-x-5">
+          <div className="flex gap-x-4">
             {/* shopping icone hover */}
             <div className="relative group">
               <div className="py-3  ">
@@ -84,18 +84,7 @@ function Header() {
                 {/* shopping box باکس سبد خرید */}
 
                 <div className="absolute  w-[400px] left-0 p-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full    bg-white dark:bg-zinc-700/90   border-t-[3px] border-t-orange-300 rounded-2xl  shadow-normal transition-all dark:text-white  ">
-                  {/* shopping box title نوار عنوان سبد خرید */}
-
-                  <div className="flex justify-between items-center font-DanaMedium text-xs tracking-tighter">
-                    <span className="text-gray-300 ">1 مورد</span>
-                    <a className="flex items-center text-orange-300">
-                      مشاهده سبد خرید
-                      <svg width="20" height="20">
-                        <use href="#left_arrow"></use>
-                      </svg>
-                    </a>
-                  </div>
-                  {/* shopping box  list محصولات  سبد خرید */}
+{/* سبد خرید */}
 
                 <BasketShop/>
                 </div>
@@ -123,7 +112,9 @@ function Header() {
             <svg width="34" height="34" className="rotate-180">
               <use href="#login"></use>
             </svg>
+            <span className="hidden xl:inline-block">
             ورود | ثبت‌نام
+            </span>
           </a>
         </div>
       </div>
