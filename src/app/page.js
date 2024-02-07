@@ -4,8 +4,8 @@ import MobileHeader from "@/layout/MobileHeader";
 export default function Home() {
   return (
     <>
-      <MobileHeader />
 
+      <MobileHeader />
       <Header />
     </>
   );

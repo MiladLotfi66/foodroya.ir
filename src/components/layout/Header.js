@@ -14,15 +14,14 @@ function Header() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
-    console.log(darkMode);
   };
 
   return (
     <header
       className={
         darkMode
-          ? "dark flex right-0 left-0 top-9 fixed  items-center bg-black/50  w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
-          : "flex  right-0 left-0 top-9 fixed  items-center bg-black/50 w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
+          ? "dark hidden md:flex right-0 left-0 top-9 fixed  items-center bg-black/50  w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
+          : "hidden md:flex  right-0 left-0 top-9 fixed  items-center bg-black/50 w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
       }
     >
       <div className="flex justify-between w-full">
@@ -79,7 +78,7 @@ function Header() {
             <div className="relative group">
               <div className="py-3  ">
                 <svg width="34" height="34" className=" cursor-pointer">
-                  <use href="#shapping_basket"></use>
+                  <use href="#Basketsvg"></use>
                 </svg>
                 {/* shopping box باکس سبد خرید */}
 

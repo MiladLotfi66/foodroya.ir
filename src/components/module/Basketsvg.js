@@ -2,8 +2,8 @@
 function Basketsvg() {
   return (
     <svg
-    className="w-1 h-1"
-    id="shapping_basket"
+    className="w-6 h-6"
+    id="Basketsvg"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
