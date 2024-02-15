@@ -1,4 +1,9 @@
 import { dana } from "@/utils/fonts";
+import "@/styles/app.css";
+import { ThemeProviders } from "@/providers/ThemeProviders";
+import Header from "@/layout/Header";
+import MobileHeader from "@/layout/MobileHeader";
+import MobileMenu from "@/layout/MobileMenu";
 
 export const metadata = {
   title: "Create Next App",
@@ -8,7 +13,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fa" className={dana.className} dir="rtl">
-      <body>{children}</body>
+      <body className=" bg-cover bg-no-repeat  bg-[url('../../public/Images/jpg/cake.jpg')]">
+        <ThemeProviders >
+          <MobileHeader />
+          <Header />
+          <MobileMenu />
+          {children}
+        </ThemeProviders>
+      </body>
     </html>
   );
 }

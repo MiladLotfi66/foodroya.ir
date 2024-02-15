@@ -1,25 +1,22 @@
 "use client";
-import React, { useState, useEffect } from "react";
-
-import Moonsvg from "@/module/Moonsvg";
-import SignallogoSvg from "@/module/SignallogoSvg";
-import Basketsvg from "@/module/Basketsvg";
-import Leftarrow from "@/module/Leftarrow";
-import Loginlogosvg from "@/module/Loginlogosvg";
-import Sunsvg from "@/module/Sunsvg";
+import { useState } from "react";
+import me from "@/public/Images/PNG/FoodRoyaLogo.png";
+import Image from "next/image";
+import Moonsvg from "@/module/svgs/Moonsvg";
+import Basketsvg from "@/module/svgs/Basketsvg";
+import Leftarrow from "@/module/svgs/Leftarrow";
+import Loginlogosvg from "@/module/svgs/Loginlogosvg";
+import Sunsvg from "@/module/svgs/Sunsvg";
 import BasketShop from "@/layout/BasketShop";
+import { useTheme } from "next-themes";
 
 function Header() {
-  const [darkMode, setDarkMode] = useState(true);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+  const { theme, setTheme } = useTheme();
 
   return (
     <header
       className={
-        darkMode
+        theme === "dark"
           ? "dark hidden md:flex right-0 left-0 top-9 fixed  items-center bg-black/50  w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
           : "hidden md:flex  right-0 left-0 top-9 fixed  items-center bg-black/50 w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
       }
@@ -29,7 +26,7 @@ function Header() {
           {/*  آیکون جهت چپ */}
           <Leftarrow />
           {/* آیکون سیگنال موبایل */}
-          <SignallogoSvg />
+
           {/* آیکون سبد خرید */}
           <Basketsvg />
           {/* آیکون ماه */}
@@ -41,9 +38,16 @@ function Header() {
         </div>
         {/* logo & menu */}
         <nav className="flex items-center gap-x-4 xl:gap-x-9 h-14">
-          <svg className="shrink-0 w-[59px] h-[59px]">
-            <use className="flex items-center " href="#signallogo"></use>
-          </svg>
+          <Image
+            className="flex items-center shrink-0"
+            src={me}
+            width={59}
+            height={59}
+            quality={10}
+            priority={false}
+            loading="lazy"
+            alt="FoodRoya logo"
+          />
           <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">
             <li className="flex items-center">
               <a className="font-DanaMedium text-orange-200 my-auto" href="#">
@@ -83,23 +87,32 @@ function Header() {
                 {/* shopping box باکس سبد خرید */}
 
                 <div className="absolute  w-[400px] left-0 p-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full    bg-white dark:bg-zinc-700/90   border-t-[3px] border-t-orange-300 rounded-2xl  shadow-normal transition-all dark:text-white  ">
-{/* سبد خرید */}
+                  {/* سبد خرید */}
 
-                <BasketShop/>
+                  <BasketShop />
                 </div>
               </div>
             </div>
 
-            <div className="py-3 cursor-pointer">
+            <div className="py-3 cursor-pointer ">
               {/*  dark if شرط دارک مود*/}
-
-              {darkMode ? (
-                <svg width="34" height="34" onClick={toggleDarkMode}>
-                  <use href="#moon"></use>
+              {theme === "dark" ? (
+                <svg
+                  className=" text-orange-200"
+                  width="34"
+                  height="34"
+                  onClick={() => setTheme("light")}
+                >
+                  <use href="#sun"></use>
                 </svg>
               ) : (
-                <svg width="34" height="34" onClick={toggleDarkMode}>
-                  <use href="#sun"></use>
+                <svg
+                  className=" text-orange-200"
+                  width="34"
+                  height="34"
+                  onClick={() => setTheme("dark")}
+                >
+                  <use href="#moon"></use>
                 </svg>
               )}
             </div>
@@ -111,9 +124,7 @@ function Header() {
             <svg width="34" height="34" className="rotate-180">
               <use href="#login"></use>
             </svg>
-            <span className="hidden xl:inline-block">
-            ورود | ثبت‌نام
-            </span>
+            <span className="hidden xl:inline-block">ورود | ثبت‌نام</span>
           </a>
         </div>
       </div>
