@@ -16,12 +16,12 @@ function BasketShop() {
       </div>
       {/* shopping box  list محصولات  سبد خرید */}
       <div className="flex gap[10px] mt-5 border-b border-b-gray-300 dark:border-b-white/10 pb-6">
-        <Image
+        {/* <Image className="w-auto h-auto"
           src={product_shopingbox}
           alt="signalmobile logo"
           width={120}
           height={120}
-        />
+        /> */}
 
         <div className="flex flex-col justify-between gap-6 px-2">
           <h4 className="text-zinc-700 dark:text-white font-DanaMedium text-base">
@@ -57,3 +57,4 @@ function BasketShop() {
 }
 
 export default BasketShop;
+

@@ -671,6 +671,18 @@ video {
   margin-bottom: auto;
 }
 
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.mr-2\.5 {
+  margin-right: 0.625rem;
+}
+
 .mt-3 {
   margin-top: 0.75rem;
 }
@@ -679,12 +691,28 @@ video {
   margin-top: 1.25rem;
 }
 
+.mt-8 {
+  margin-top: 2rem;
+}
+
 .block {
   display: block;
 }
 
+.inline-block {
+  display: inline-block;
+}
+
+.inline {
+  display: inline;
+}
+
 .flex {
   display: flex;
+}
+
+.inline-flex {
+  display: inline-flex;
 }
 
 .hidden {
@@ -713,6 +741,10 @@ video {
 
 .h-6 {
   height: 1.5rem;
+}
+
+.h-auto {
+  height: auto;
 }
 
 .h-full {
@@ -753,6 +785,10 @@ video {
 
 .w-\[98\%\] {
   width: 98%;
+}
+
+.w-auto {
+  width: auto;
 }
 
 .w-full {
@@ -821,6 +857,14 @@ video {
        column-gap: 1.25rem;
 }
 
+.gap-y-3 {
+  row-gap: 0.75rem;
+}
+
+.gap-y-4 {
+  row-gap: 1rem;
+}
+
 .space-y-4 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
@@ -843,6 +887,10 @@ video {
   border-bottom-width: 1px;
 }
 
+.border-t {
+  border-top-width: 1px;
+}
+
 .border-t-\[3px\] {
   border-top-width: 3px;
 }
@@ -850,6 +898,11 @@ video {
 .border-b-gray-300 {
   --tw-border-opacity: 1;
   border-bottom-color: rgb(209 213 219 / var(--tw-border-opacity));
+}
+
+.border-t-gray-300 {
+  --tw-border-opacity: 1;
+  border-top-color: rgb(209 213 219 / var(--tw-border-opacity));
 }
 
 .border-t-orange-300 {
@@ -904,6 +957,11 @@ video {
   padding-right: 0.5rem;
 }
 
+.px-2\.5 {
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -927,8 +985,16 @@ video {
   padding-bottom: 1.5rem;
 }
 
+.pr-7 {
+  padding-right: 1.75rem;
+}
+
 .pt-6 {
   padding-top: 1.5rem;
+}
+
+.pt-8 {
+  padding-top: 2rem;
 }
 
 .pt-\[21px\] {
@@ -1042,6 +1108,15 @@ video {
   display: inline-block;
 }
 
+.child\:child\:flex>*>* {
+  display: flex;
+}
+
+.child\:child\:gap-x-2>*>* {
+  -moz-column-gap: 0.5rem;
+       column-gap: 0.5rem;
+}
+
 .child\:text-xs>* {
   font-size: 0.75rem;
   line-height: 1rem;
@@ -1062,8 +1137,20 @@ video {
   color: rgb(253 186 116 / var(--tw-text-opacity));
 }
 
+:is(.dark .dark\:inline-block) {
+  display: inline-block;
+}
+
+:is(.dark .dark\:hidden) {
+  display: none;
+}
+
 :is(.dark .dark\:border-b-white\/10) {
   border-bottom-color: rgb(255 255 255 / 0.1);
+}
+
+:is(.dark .dark\:border-t-white\/10) {
+  border-top-color: rgb(255 255 255 / 0.1);
 }
 
 :is(.dark .dark\:bg-zinc-700) {

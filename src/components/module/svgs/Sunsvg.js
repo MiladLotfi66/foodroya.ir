@@ -4,7 +4,7 @@ function Sunsvg() {
   return (
     <svg
     className="w-1 h-1"
-    id="sun"
+    id="Sunsvg"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"

@@ -2,16 +2,28 @@
 import { useState } from "react";
 import me from "@/public/Images/PNG/FoodRoyaLogo.png";
 import Image from "next/image";
-import Moonsvg from "@/module/svgs/Moonsvg";
+import Moonsvg from "@/module/svgs/Moon.svg";
 import Basketsvg from "@/module/svgs/Basketsvg";
 import Leftarrow from "@/module/svgs/Leftarrow";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
 import Sunsvg from "@/module/svgs/Sunsvg";
 import BasketShop from "@/layout/BasketShop";
 import { useTheme } from "next-themes";
+import { useEffect } from "react";
 
 function Header() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false)
+
+  // useEffect only runs on the client, so now we can safely show the UI
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+
 
   return (
     <header
@@ -30,7 +42,7 @@ function Header() {
           {/* آیکون سبد خرید */}
           <Basketsvg />
           {/* آیکون ماه */}
-          <Moonsvg />
+          {/* <Moonsvg /> */}
           {/* آیکون ورود و ثبت نام */}
           <Loginlogosvg />
           {/* آیکون خورشید */}
@@ -39,13 +51,12 @@ function Header() {
         {/* logo & menu */}
         <nav className="flex items-center gap-x-4 xl:gap-x-9 h-14">
           <Image
-            className="flex items-center shrink-0"
+            className="flex items-center shrink-0 w-auto h-auto"
             src={me}
             width={59}
             height={59}
-            quality={10}
-            priority={false}
-            loading="lazy"
+            quality={20}
+            priority={true}
             alt="FoodRoya logo"
           />
           <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">
@@ -96,25 +107,29 @@ function Header() {
 
             <div className="py-3 cursor-pointer ">
               {/*  dark if شرط دارک مود*/}
-              {theme === "dark" ? (
-                <svg
-                  className=" text-orange-200"
+              {/* {theme === "dark" ? (
+                <Image
+                  className=" text-orange-200 w-auto h-auto"
+                  alt="moon"
+                  src={Moonsvg}
                   width="34"
                   height="34"
                   onClick={() => setTheme("light")}
-                >
-                  <use href="#sun"></use>
-                </svg>
+                />
+                 
+                         
+
               ) : (
-                <svg
-                  className=" text-orange-200"
+                <Image
+                  className=" text-orange-200 w-auto h-auto"
+                  alt="moon"
+                  src={Moonsvg}
                   width="34"
                   height="34"
-                  onClick={() => setTheme("dark")}
-                >
-                  <use href="#moon"></use>
-                </svg>
-              )}
+                  onClick={() => setTheme("light")}
+                />
+                 
+              )} */}
             </div>
           </div>
           {/* devide line */}
@@ -133,3 +148,5 @@ function Header() {
 }
 
 export default Header;
+
+

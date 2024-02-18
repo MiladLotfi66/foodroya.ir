@@ -4,6 +4,9 @@ import { ThemeProviders } from "@/providers/ThemeProviders";
 import Header from "@/layout/Header";
 import MobileHeader from "@/layout/MobileHeader";
 import MobileMenu from "@/layout/MobileMenu";
+import Providers from "../Redux/Providers";
+import ThemeSwitch from "@/module/ThemeSwitch";
+
 
 export const metadata = {
   title: "Create Next App",
@@ -12,14 +15,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fa" className={dana.className} dir="rtl">
+    <html lang="fa" className={dana.className} dir="rtl" suppressHydrationWarning>
       <body className=" bg-cover bg-no-repeat  bg-[url('../../public/Images/jpg/cake.jpg')]">
-        <ThemeProviders >
-          <MobileHeader />
-          <Header />
-          <MobileMenu />
-          {children}
+          <Providers>
+      <ThemeProviders >
+            <MobileHeader />
+            <Header />
+            <MobileMenu />
+            {/* <ThemeSwitch/> */}
+            {children}
         </ThemeProviders>
+          </Providers>
       </body>
     </html>
   );
