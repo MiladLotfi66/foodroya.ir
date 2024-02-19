@@ -2,7 +2,8 @@
 import { useState } from "react";
 import me from "@/public/Images/PNG/FoodRoyaLogo.png";
 import Image from "next/image";
-import Moonsvg from "@/module/svgs/Moon.svg";
+import Moonsvg from "@/module/svgs/Moonsvg.js";
+import Moonsvg2 from "../../components/module/svgs/Moonsvg";
 import Basketsvg from "@/module/svgs/Basketsvg";
 import Leftarrow from "@/module/svgs/Leftarrow";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
@@ -42,7 +43,7 @@ function Header() {
           {/* آیکون سبد خرید */}
           <Basketsvg />
           {/* آیکون ماه */}
-          {/* <Moonsvg /> */}
+          <Moonsvg />
           {/* آیکون ورود و ثبت نام */}
           <Loginlogosvg />
           {/* آیکون خورشید */}
@@ -107,29 +108,25 @@ function Header() {
 
             <div className="py-3 cursor-pointer ">
               {/*  dark if شرط دارک مود*/}
-              {/* {theme === "dark" ? (
-                <Image
-                  className=" text-orange-200 w-auto h-auto"
-                  alt="moon"
-                  src={Moonsvg}
+              {theme === "dark" ? (
+                <svg
+                  className=" text-orange-200"
                   width="34"
                   height="34"
                   onClick={() => setTheme("light")}
-                />
-                 
-                         
-
+                >
+                  <use href="#Sunsvg"></use>
+                </svg>
               ) : (
-                <Image
-                  className=" text-orange-200 w-auto h-auto"
-                  alt="moon"
-                  src={Moonsvg}
+                <svg
+                  className=" text-orange-200"
                   width="34"
                   height="34"
-                  onClick={() => setTheme("light")}
-                />
-                 
-              )} */}
+                  onClick={() => setTheme("dark")}
+                >
+                  <use href="#Moonsvg"></use>
+                </svg>
+              )}
             </div>
           </div>
           {/* devide line */}
