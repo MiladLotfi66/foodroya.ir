@@ -3,6 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
     mobileMenu: false,
+    isBasketCartOpen: false,
+
 };
 
 const mobileMenuSlice = createSlice({
@@ -12,10 +14,15 @@ const mobileMenuSlice = createSlice({
         reversemobileMenu: (state) => {
             state.mobileMenu =!state.mobileMenu;
         },
+        toggleBasketCart: (state) => {
+            state.isBasketCartOpen = !state.isBasketCartOpen;
+        },
     },
+ 
 });
 
-export const { reversemobileMenu } = mobileMenuSlice.actions;
+export const { reversemobileMenu, toggleBasketCart } = mobileMenuSlice.actions;
 export default mobileMenuSlice.reducer;
 
 export const selectmobileMenu = (state) => state.mobileMenu.mobileMenu;
+export const selectIsBasketCartOpen = (state) => state.mobileMenu.isBasketCartOpen;

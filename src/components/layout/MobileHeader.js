@@ -1,18 +1,26 @@
 "use client";
-import { reversemobileMenu } from "../../Redux/features/mobileMenu/mobileMenuSlice";
+import { toggleBasketCart, selectIsBasketCartOpen,reversemobileMenu } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 import { useDispatch } from "react-redux";
 import Bars3 from "@/module/svgs/Bars3";
 import me from "@/public/Images/PNG/FoodRoyaLogo.png";
 import me2 from "@/public/Images/PNG/FoodRoyaLogoDark.png";
 import Basketsvg from "@/module/svgs/Basketsvg";
-import BasketShop from "@/layout/BasketShop";
 import Image from "next/image";
+import ShopingBoxMobile from "@/layout/ShopingBoxMobile";
 
+import { useSelector } from "react-redux";
 
 function MobileHeader() {
 
+  const isBasketCartOpen = useSelector(selectIsBasketCartOpen);
 
   const dispatch = useDispatch();
+  const handleToggleBasketMenu = () => {
+    dispatch(toggleBasketCart());
+};
+  const handleToggleMobileMenu = () => {
+    dispatch(reversemobileMenu());
+};
 
   return (
 
@@ -23,7 +31,7 @@ function MobileHeader() {
       </div>
 
       <svg
-        onClick={() => dispatch(reversemobileMenu())}
+        onClick={handleToggleMobileMenu}
         className="shrink-0 w-6 h-6 "
       >
         <use className="text-zinc-700 dark:text-white" href="#Bars3"></use>
@@ -38,14 +46,15 @@ function MobileHeader() {
       />
 <div className="relative group">
 
-      <svg className="shrink-0 w-6 h-6">
+      <svg onClick={handleToggleBasketMenu} className="shrink-0 w-6 h-6">
         <use className="text-zinc-700 dark:text-white" href="#Basketsvg"></use>
       </svg>
-      <div className="absolute  w-[400px] left-0 p-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full    bg-white dark:bg-zinc-700/90   border-t-[3px] border-t-orange-300 rounded-2xl  shadow-normal transition-all dark:text-white  ">
         {/* سبد خرید */}
+     <div >
 
-        <BasketShop />
-      </div>
+{/* <div className="overlay md:hidden fixed inset-0 w-full h-full bg-black/40 z-10"></div> */}
+{isBasketCartOpen?(<ShopingBoxMobile />):""}
+      </div> 
 </div>
     </header>
   );
