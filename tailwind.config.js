@@ -16,6 +16,14 @@ module.exports = {
       letterSpacing: {
         "tightest": '-.065em',
       },
+      container:{
+        center:true,
+        padding:{
+          DEFAULT:'1rem',
+          lg:"0.625rem"
+        }
+      },
+    
       colors: {
         brown: {
           100: "#ECE0D1",
@@ -46,6 +54,13 @@ module.exports = {
       //   "gradient-conic":
       //     "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       // },
+    },
+  
+      screens: {
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
     },
   },
 
