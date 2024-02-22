@@ -608,6 +608,46 @@ video {
   --tw-backdrop-sepia:  ;
 }
 
+.container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+@media (min-width: 480px) {
+  .container {
+    max-width: 480px;
+  }
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+    padding-right: 0.625rem;
+    padding-left: 0.625rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
 .invisible {
   visibility: hidden;
 }
@@ -670,6 +710,11 @@ video {
   margin-right: auto;
 }
 
+.my-2 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .my-auto {
   margin-top: auto;
   margin-bottom: auto;
@@ -719,6 +764,14 @@ video {
   display: none;
 }
 
+.aspect-auto {
+  aspect-ratio: auto;
+}
+
+.aspect-\[2\/1\] {
+  aspect-ratio: 2/1;
+}
+
 .h-1 {
   height: 0.25rem;
 }
@@ -759,6 +812,18 @@ video {
   height: 100%;
 }
 
+.h-px {
+  height: 1px;
+}
+
+.h-\[\] {
+  height: ;
+}
+
+.h-\[200px\] {
+  height: 200px;
+}
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -791,6 +856,10 @@ video {
   width: 16rem;
 }
 
+.w-\[100px\] {
+  width: 100px;
+}
+
 .w-\[400px\] {
   width: 400px;
 }
@@ -813,6 +882,10 @@ video {
 
 .w-px {
   width: 1px;
+}
+
+.max-w-\[201px\] {
+  max-width: 201px;
 }
 
 .shrink-0 {
@@ -838,6 +911,10 @@ video {
 
 .items-center {
   align-items: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
 }
 
 .justify-between {
@@ -946,6 +1023,11 @@ video {
   background-color: rgb(0 0 0 / 0.5);
 }
 
+.bg-orange-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(253 186 116 / var(--tw-bg-opacity));
+}
+
 .bg-teal-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(13 148 136 / var(--tw-bg-opacity));
@@ -960,8 +1042,8 @@ video {
   background-color: rgb(255 255 255 / 0.2);
 }
 
-.bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/cake\.jpg\'\)\] {
-  background-image: url('../../public/Images/jpg/cake.jpg');
+.bg-home-desktop {
+  background-image: url(../../public/Images/jpg/cake.jpg);
 }
 
 .bg-cover {
@@ -1048,6 +1130,19 @@ video {
 
 .font-DanaMedium {
   font-family: Dana Medium;
+}
+
+.font-MorabbaBold {
+  font-family: Morabba Bold;
+}
+
+.font-MorabbaLight {
+  font-family: Morabba Light;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
 }
 
 .text-base {
@@ -1206,7 +1301,25 @@ video {
   color: rgb(255 255 255 / var(--tw-text-opacity));
 }
 
+@media (min-width: 480px) {
+  .xs\:aspect-\[2\/1\] {
+    aspect-ratio: 2/1;
+  }
+
+  .xs\:h-auto {
+    height: auto;
+  }
+
+  .xs\:h-\[200px\] {
+    height: 200px;
+  }
+}
+
 @media (min-width: 640px) {
+  .sm\:h-auto {
+    height: auto;
+  }
+
   .sm\:child\:text-xl>* {
     font-size: 1.25rem;
     line-height: 1.75rem;
@@ -1214,12 +1327,33 @@ video {
 }
 
 @media (min-width: 768px) {
+  .md\:my-8 {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .md\:mt-2 {
+    margin-top: 0.5rem;
+  }
+
   .md\:flex {
     display: flex;
   }
 
   .md\:hidden {
     display: none;
+  }
+
+  .md\:aspect-auto {
+    aspect-ratio: auto;
+  }
+
+  .md\:h-0 {
+    height: 0px;
+  }
+
+  .md\:h-0\.5 {
+    height: 0.125rem;
   }
 
   .md\:h-14 {
@@ -1230,12 +1364,20 @@ video {
     height: auto;
   }
 
+  .md\:min-h-screen {
+    min-height: 100vh;
+  }
+
   .md\:w-36 {
     width: 9rem;
   }
 
   .md\:w-auto {
     width: auto;
+  }
+
+  .md\:max-w-\[460px\] {
+    max-width: 460px;
   }
 
   .md\:gap-6 {
@@ -1254,6 +1396,16 @@ video {
 
   .md\:pb-6 {
     padding-bottom: 1.5rem;
+  }
+
+  .md\:text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .md\:text-5xl {
+    font-size: 3rem;
+    line-height: 1;
   }
 
   .md\:text-base {

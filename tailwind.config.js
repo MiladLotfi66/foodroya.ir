@@ -49,14 +49,17 @@ module.exports = {
       borderRadius: {
         "4xl": "2rem",
       },
-      // backgroundImage: {
-      //   "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-      //   "gradient-conic":
-      //     "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      // },
+      backgroundImage: {
+        "home-desktop":"url(../../public/Images/jpg/cake.jpg)",
+        // "home-mobile":"url()"
+        // "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        // "gradient-conic":
+        // "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
     },
   
       screens: {
+        'xs': '480px',
         'sm': '640px',
         'md': '768px',
         'lg': '1024px',

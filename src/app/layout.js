@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fa" className={dana.className} dir="rtl" suppressHydrationWarning>
-      <body className=" bg-cover bg-no-repeat  bg-[url('../../public/Images/jpg/cake.jpg')]">
+      <body >
       <ThemeProviders >
           <Providers>
             <Header />
