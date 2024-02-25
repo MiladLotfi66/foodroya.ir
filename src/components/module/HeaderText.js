@@ -1,6 +1,7 @@
 function HeaderText() {
   return (
-    <div className="container h-full flex justify-end items-center  md:min-h-screen  text-white">
+    
+    <div className="container h-[90%] flex justify-end items-center  md:min-h-screen  text-white">
       <div >
         <span className="font-MorabbaBold text-2xl md:text-5xl ">
           انواع کیک و شیرینی های تازه
@@ -14,7 +15,10 @@ function HeaderText() {
           تجربه کنید
         </p>
       </div>
+
+
     </div>
+
   );
 }
 

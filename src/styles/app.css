@@ -764,14 +764,6 @@ video {
   display: none;
 }
 
-.aspect-auto {
-  aspect-ratio: auto;
-}
-
-.aspect-\[2\/1\] {
-  aspect-ratio: 2/1;
-}
-
 .h-1 {
   height: 0.25rem;
 }
@@ -792,12 +784,24 @@ video {
   height: 6rem;
 }
 
+.h-4 {
+  height: 1rem;
+}
+
 .h-5 {
   height: 1.25rem;
 }
 
 .h-6 {
   height: 1.5rem;
+}
+
+.h-\[200px\] {
+  height: 200px;
+}
+
+.h-\[90\%\] {
+  height: 90%;
 }
 
 .h-\[90\] {
@@ -816,12 +820,8 @@ video {
   height: 1px;
 }
 
-.h-\[\] {
-  height: ;
-}
-
-.h-\[200px\] {
-  height: 200px;
+.h-screen {
+  height: 100vh;
 }
 
 .min-h-screen {
@@ -838,6 +838,10 @@ video {
 
 .w-36 {
   width: 9rem;
+}
+
+.w-4 {
+  width: 1rem;
 }
 
 .w-5 {
@@ -884,6 +888,10 @@ video {
   width: 1px;
 }
 
+.w-screen {
+  width: 100vw;
+}
+
 .max-w-\[201px\] {
   max-width: 201px;
 }
@@ -909,6 +917,10 @@ video {
   flex-direction: column;
 }
 
+.items-end {
+  align-items: flex-end;
+}
+
 .items-center {
   align-items: center;
 }
@@ -917,12 +929,20 @@ video {
   justify-content: flex-end;
 }
 
+.justify-center {
+  justify-content: center;
+}
+
 .justify-between {
   justify-content: space-between;
 }
 
 .gap-1 {
   gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
 }
 
 .gap-6 {
@@ -984,8 +1004,16 @@ video {
   border-radius: 1.5rem;
 }
 
+.rounded-full {
+  border-radius: 9999px;
+}
+
 .rounded-xl {
   border-radius: 0.75rem;
+}
+
+.border-4 {
+  border-width: 4px;
 }
 
 .border-b {
@@ -998,6 +1026,11 @@ video {
 
 .border-t-\[3px\] {
   border-top-width: 3px;
+}
+
+.border-orange-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(253 186 116 / var(--tw-border-opacity));
 }
 
 .border-b-gray-300 {
@@ -1042,8 +1075,20 @@ video {
   background-color: rgb(255 255 255 / 0.2);
 }
 
-.bg-home-desktop {
-  background-image: url(../../public/Images/jpg/cake.jpg);
+.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/cake\.jpg\"\)\] {
+  background-image: url("../../public/Images/jpg/cake.jpg");
+}
+
+.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/finger\.jpg\"\)\] {
+  background-image: url("../../public/Images/jpg/finger.jpg");
+}
+
+.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/header\.jpg\"\)\] {
+  background-image: url("../../public/Images/jpg/header.jpg");
+}
+
+.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/iphone14\.jpg\"\)\] {
+  background-image: url("../../public/Images/jpg/iphone14.jpg");
 }
 
 .bg-cover {
@@ -1094,6 +1139,10 @@ video {
 
 .pb-2 {
   padding-bottom: 0.5rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
 }
 
 .pb-5 {
@@ -1216,6 +1265,12 @@ video {
   opacity: 0;
 }
 
+.shadow-sm {
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
 .backdrop-blur-\[6px\] {
   --tw-backdrop-blur: blur(6px);
   -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
@@ -1309,17 +1364,9 @@ video {
   .xs\:h-auto {
     height: auto;
   }
-
-  .xs\:h-\[200px\] {
-    height: 200px;
-  }
 }
 
 @media (min-width: 640px) {
-  .sm\:h-auto {
-    height: auto;
-  }
-
   .sm\:child\:text-xl>* {
     font-size: 1.25rem;
     line-height: 1.75rem;
