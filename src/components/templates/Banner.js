@@ -16,6 +16,26 @@ function Banner() {
     return () => clearInterval(interval);
   }, []);
 
+
+  useEffect(() => {
+    // تابعی که می‌خواهید هنگام تغییر currentImageIndex اجرا شود
+    // مثال: 
+    const handleChange = () => {
+      // کد مربوط به تغییر currentImageIndex
+      console.log("currentImageIndex changed:", currentImageIndex);
+    };
+
+    // فراخوانی تابع handleChange هنگامی که currentImageIndex تغییر کند
+    handleChange();
+
+    // توجه: برای استفاده از currentImageIndex درون این تابع باید آن را به وابستگی اضافه کنید
+  }, [currentImageIndex]); // این آرایه وابستگی ها است که تابع باید بر اساس آن اجرا شود
+
+  // بقیه کدهای شما
+
+
+
+
   const changeImage = (index) => {
     setCurrentImageIndex(index);
     clearInterval(intervalId); // ریست تایمر
@@ -25,60 +45,47 @@ function Banner() {
     setIntervalId(newInterval); // ذخیره شناسه تایمر جدید
   };
 
-  const handleMouseDown = (event) => {
-    setStartX(event.clientX);
-  };
-
-  const handleMouseUp = (event) => {
-    setEndX(event.clientX);
-    if (endX - startX > 0) {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % 4);
-    } else if (startX - endX > 0) {
-      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + 4) % 4);
-    }
-    clearInterval(intervalId);
-  };
+ 
 
   return (
     <header
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+   
       className={
         currentImageIndex === 0
-          ? `relative h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/finger.jpg")]`
+          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/finger.jpg")]`
           : currentImageIndex === 1
-          ? `relative h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/cake.jpg")]`
+          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/cake.jpg")]`
           : currentImageIndex === 2
-          ? `relative h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/header.jpg")]`
+          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/header.jpg")]`
           : currentImageIndex === 3
-          ? `relative h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/iphone14.jpg")]`
+          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/iphone14.jpg")]`
           : ""
       }
 
       // className={`h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover ${currentImageIndex === 0 ? 'banner1' : currentImageIndex === 1 ? 'banner2' : currentImageIndex === 2 ? 'banner3' : 'banner4'}`}
     >
-      <div className="absolute flex items-end justify-center w-screen h-screen gap-2 pb-4 p-5 ">
+      <HeaderText />
+      <div className=" flex items-end justify-center  gap-2 pb-3 p-5 ">
         <div
           onClick={() => changeImage(1)}
-          className="rounded-full bg-orange-300 border-orange-300 w-4 h-4 border-4  shadow-sm"
+          className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
         ></div>
 
         <div
           onClick={() => changeImage(2)}
-          className="rounded-full bg-orange-300 border-orange-300 w-4 h-4 border-4  shadow-sm"
+          className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
         ></div>
 
         <div
           onClick={() => changeImage(3)}
-          className="rounded-full bg-orange-300 border-orange-300 w-4 h-4 border-4  shadow-sm"
+          className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
         ></div>
 
         <div
           onClick={() => changeImage(4)}
-          className="rounded-full bg-orange-300 border-orange-300 w-4 h-4 border-4  shadow-sm"
+          className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
         ></div>
       </div>
-      <HeaderText />
     </header>
   );
 }
