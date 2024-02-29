@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fa" className={dana.className} dir="rtl" suppressHydrationWarning>
-      <body >
+      <body className="bg-gray-100 dark:bg-zinc-800">
       <ThemeProviders >
           <Providers>
             <Header />

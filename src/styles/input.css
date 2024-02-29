@@ -2,49 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  @font-face {
+    font-family: "Vazir";
+    src: url("../../public/fonts/vazir/Vazir-Medium.ttf") format("ttf");
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Dana";
+    src: url("../../public/fonts/Dana/woff2/DanaFaNum-Regular.woff2")
+      format("woff2");
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Dana Medium";
+    src: url("../../public/fonts/Dana/woff2/DanaFaNum-Medium.woff2")
+      format("woff2");
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Dana DemiBold";
+    src: url("../../public/fonts/Dana/woff2/DanaFaNum-DemiBold.woff2")
+      format("woff2");
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Morabba Light";
+    src: url("../../public/fonts/Morabba/woff2/Morabba-Light.woff2")
+      format("woff2");
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Morabba Medium";
+    src: url("../../public/fonts/Morabba/woff2/Morabba-Medium.woff2")
+      format("woff2");
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Morabba Bold";
+    src: url("../../public/fonts/Morabba/woff2/Morabba-Bold.woff2")
+      format("woff2");
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "IranSans";
+    src: url("../../public/fonts/IranSans/Iranian\ Sans.ttf") format("ttf");
+    font-display: swap;
+  }
+}
+
+@layer components {
+  .lightlinergradient {
+    background: linear-gradient(
+      rgba(243, 244, 246, 0.65),
+      rgba(243, 244, 246, 0.65)
+    )
+  }
+  .darklinergradient {
+    background: linear-gradient(
+      rgba(39 ,39 ,42, 0.65),
+      rgba(39 ,39 ,42, 0.65)
+    )
+  }
+
+  .section_title{
+    @apply text-2xl md:text-5xl font-MorabbaMedium text-zinc-700 dark:text-white;
+  } 
+  .section_Sub_title{
+    @apply text-lg md:text-3xl inline-block font-MorabbaLight mt-0.5 md:mt-1.5 text-zinc-700 dark:text-white;
+  } 
+  .section_showmore{
+    @apply text-base md:text-xl text-orange-300 font-Dana tracking-tightest h-10 rounded-md pr-3 pl-1 inline-flex md:gap-x-1 items-center cursor-pointer transition-colors md:hover:bg-orange-300/20 ;
+  } 
+
+  .offerPrice{
+@apply text-gray-400 text-wrap line-clamp-2 w-[165px] max-w-[165px] relative ;
 
 
-@layer base{
-    @font-face {
-        font-family: "Vazir";
-        src:url("../../public/fonts/vazir/Vazir-Medium.ttf")format("ttf");
-        font-display: swap;
-    }
-    @font-face {
-        font-family: "Dana";
-        src:url("../../public/fonts/Dana/woff2/DanaFaNum-Regular.woff2")format("woff2");
-        font-display: swap;
-    }
-    @font-face {
-        font-family: "Dana Medium";
-        src:url("../../public/fonts/Dana/woff2/DanaFaNum-Medium.woff2")format("woff2");
-        font-display: swap;
-    }
-    @font-face {
-        font-family: "Dana DemiBold";
-        src:url("../../public/fonts/Dana/woff2/DanaFaNum-DemiBold.woff2")format("woff2");
-        font-display: swap;
-    }
+  }
+  .offerPrice::before{
+    /* position: absolute;
+    content: "";
+    width: 100%;
+    height: 1px;
+    inset: 0;
+   
+    margin: auto;
+    background-color: #ef4444;
+    transform: rotate(-15deg); */
 
-    @font-face {
-        font-family: "Morabba Light";
-        src:url("../../public/fonts/Morabba/woff2/Morabba-Light.woff2")format("woff2");
-        font-display: swap;
-    }
-    @font-face {
-        font-family: "Morabba Medium";
-        src:url("../../public/fonts/Morabba/woff2/Morabba-Medium.woff2")format("woff2");
-        font-display: swap;
-    }
-    @font-face {
-        font-family: "Morabba Bold";
-        src:url("../../public/fonts/Morabba/woff2/Morabba-Bold.woff2")format("woff2");
-        font-display: swap;
-    }
-    @font-face {
-        font-family: "IranSans";
-        src:url("../../public/fonts/IranSans/Iranian\ Sans.ttf")format("ttf");
-        font-display: swap;
-    }
-
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: #ef4444;
+    transform-origin: right top;
+    transform: rotate(-20deg) translateY(-10%);
+  }
 }

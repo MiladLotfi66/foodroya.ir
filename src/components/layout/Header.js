@@ -3,7 +3,6 @@ import { useState } from "react";
 import me from "@/public/Images/PNG/FoodRoyaLogo.png";
 import Image from "next/image";
 import Moonsvg from "@/module/svgs/Moonsvg.js";
-import Moonsvg2 from "../../components/module/svgs/Moonsvg";
 import Basketsvg from "@/module/svgs/Basketsvg";
 import Leftarrow from "@/module/svgs/Leftarrow";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
@@ -30,8 +29,8 @@ function Header() {
     <header
       className={
         theme === "dark"
-          ? "dark hidden md:flex right-0 left-0 top-9 fixed  items-center bg-black/50  w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
-          : "hidden md:flex  right-0 left-0 top-9 fixed  items-center bg-black/50 w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px]"
+          ? "dark hidden md:flex right-0 left-0 top-9 fixed  items-center bg-black/50  w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px] z-50"
+          : "hidden md:flex  right-0 left-0 top-9 fixed  items-center bg-black/50 w-[98%] lg:w-[90%] h-24 rounded-3xl px-5 lg:px-10 mx-auto backdrop-blur-[6px] z-50"
       }
     >
       <div className="flex justify-between w-full">

@@ -16,10 +16,9 @@ function Banner() {
     return () => clearInterval(interval);
   }, []);
 
-
   useEffect(() => {
     // تابعی که می‌خواهید هنگام تغییر currentImageIndex اجرا شود
-    // مثال: 
+    // مثال:
     const handleChange = () => {
       // کد مربوط به تغییر currentImageIndex
       console.log("currentImageIndex changed:", currentImageIndex);
@@ -33,9 +32,6 @@ function Banner() {
 
   // بقیه کدهای شما
 
-
-
-
   const changeImage = (index) => {
     setCurrentImageIndex(index);
     clearInterval(intervalId); // ریست تایمر
@@ -45,27 +41,29 @@ function Banner() {
     setIntervalId(newInterval); // ذخیره شناسه تایمر جدید
   };
 
- 
-
   return (
-    <header
-   
+    <section
       className={
         currentImageIndex === 0
-          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/finger.jpg")]`
+          ? ` h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto   bg-no-repeat bg-cover bg-center  bg-[url("../../public/Images/jpg/finger.jpg")]`
           : currentImageIndex === 1
-          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/cake.jpg")]`
+          ? ` h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto   bg-no-repeat bg-cover bg-center  bg-[url("../../public/Images/jpg/cake.jpg")]`
           : currentImageIndex === 2
-          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/header.jpg")]`
+          ? ` h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto   bg-no-repeat bg-cover bg-center  bg-[url("../../public/Images/jpg/hamberger.jpg")]`
           : currentImageIndex === 3
-          ? `overflow-hidden h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-[url("../../public/Images/jpg/iphone14.jpg")]`
+          ? ` h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto   bg-no-repeat bg-cover bg-center  bg-[url("../../public/Images/jpg/rolet.jpg")]`
           : ""
       }
-
-      // className={`h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover ${currentImageIndex === 0 ? 'banner1' : currentImageIndex === 1 ? 'banner2' : currentImageIndex === 2 ? 'banner3' : 'banner4'}`}
     >
+
       <HeaderText />
       <div className=" flex items-end justify-center  gap-2 pb-3 p-5 ">
+
+        <div
+          onClick={() => changeImage(0)}
+          className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
+        ></div>
+
         <div
           onClick={() => changeImage(1)}
           className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
@@ -80,13 +78,8 @@ function Banner() {
           onClick={() => changeImage(3)}
           className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
         ></div>
-
-        <div
-          onClick={() => changeImage(4)}
-          className="rounded-full bg-orange-300 border-orange-300 w-3 h-3 border-4  shadow-sm"
-        ></div>
       </div>
-    </header>
+    </section>
   );
 }
 
