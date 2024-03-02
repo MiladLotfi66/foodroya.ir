@@ -661,6 +661,15 @@ video {
     )
 }
 
+.categoriBannerlinergradient {
+  background: linear-gradient(270deg,
+      rgba(0 ,0 ,0, 0.6)33.85%,
+      rgba(0 ,0 ,0, 0.1)100%
+    );
+  height: 100%;
+  width: 100%;
+}
+
 .section_title {
   font-family: Morabba Medium;
   font-size: 1.5rem;
@@ -849,12 +858,20 @@ video {
   margin-bottom: auto;
 }
 
+.mb-10 {
+  margin-bottom: 2.5rem;
+}
+
 .mb-2 {
   margin-bottom: 0.5rem;
 }
 
 .mb-6 {
   margin-bottom: 1.5rem;
+}
+
+.mb-7 {
+  margin-bottom: 1.75rem;
 }
 
 .mr-2 {
@@ -877,6 +894,10 @@ video {
   margin-top: 2.5rem;
 }
 
+.mt-20 {
+  margin-top: 5rem;
+}
+
 .mt-3 {
   margin-top: 0.75rem;
 }
@@ -887,6 +908,10 @@ video {
 
 .mt-8 {
   margin-top: 2rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
 }
 
 .line-clamp-2 {
@@ -928,6 +953,10 @@ video {
   height: 0.25rem;
 }
 
+.h-10 {
+  height: 2.5rem;
+}
+
 .h-11 {
   height: 2.75rem;
 }
@@ -964,6 +993,10 @@ video {
   height: 100%;
 }
 
+.h-\[150px\] {
+  height: 150px;
+}
+
 .h-\[200px\] {
   height: 200px;
 }
@@ -992,20 +1025,20 @@ video {
   height: 1px;
 }
 
-.h-10 {
-  height: 2.5rem;
+.h-\[248px\] {
+  height: 248px;
 }
 
-.min-h-\[36px\] {
-  min-height: 36px;
+.h-\[124px\] {
+  height: 124px;
+}
+
+.h-\[142px\] {
+  height: 142px;
 }
 
 .min-h-screen {
   min-height: 100vh;
-}
-
-.min-h-\[40px\] {
-  min-height: 40px;
 }
 
 .w-1 {
@@ -1110,6 +1143,10 @@ video {
   cursor: pointer;
 }
 
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1120,6 +1157,10 @@ video {
 
 .flex-col {
   flex-direction: column;
+}
+
+.items-start {
+  align-items: flex-start;
 }
 
 .items-end {
@@ -1164,6 +1205,10 @@ video {
 
 .gap-3\.5 {
   gap: 0.875rem;
+}
+
+.gap-5 {
+  gap: 1.25rem;
 }
 
 .gap-6 {
@@ -1325,8 +1370,12 @@ video {
   background-image: url("../../public/Images/jpg/rolet.jpg");
 }
 
-.bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/chef31\.jfif\'\)\] {
-  background-image: url('../../public/Images/jpg/chef31.jfif');
+.bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/chef2\.jfif\'\)\] {
+  background-image: url('../../public/Images/jpg/chef2.jfif');
+}
+
+.bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/crosun1\.jfif\'\)\] {
+  background-image: url('../../public/Images/jpg/crosun1.jfif');
 }
 
 .bg-cover {
@@ -1400,6 +1449,10 @@ video {
   padding-bottom: 1.25rem;
 }
 
+.pr-12 {
+  padding-right: 3rem;
+}
+
 .pr-7 {
   padding-right: 1.75rem;
 }
@@ -1467,6 +1520,11 @@ video {
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
+}
+
+.text-2xl\/6 {
+  font-size: 1.5rem;
+  line-height: 1.5rem;
 }
 
 .tracking-normal {
@@ -1713,6 +1771,10 @@ video {
     margin-top: 0.625rem;
   }
 
+  .md\:mb-7 {
+    margin-bottom: 1.75rem;
+  }
+
   .md\:inline-block {
     display: inline-block;
   }
@@ -1753,32 +1815,16 @@ video {
     height: 22px;
   }
 
-  .md\:h-auto {
-    height: auto;
-  }
-
-  .md\:h-1 {
-    height: 0.25rem;
-  }
-
-  .md\:h-12 {
-    height: 3rem;
-  }
-
-  .md\:h-\[\] {
-    height: ;
-  }
-
-  .md\:h-\[52px\] {
-    height: 52px;
-  }
-
   .md\:h-\[51px\] {
     height: 51px;
   }
 
-  .md\:min-h-\[42px\] {
-    min-height: 42px;
+  .md\:h-auto {
+    height: auto;
+  }
+
+  .md\:h-\[248px\] {
+    height: 248px;
   }
 
   .md\:min-h-\[93vh\] {
@@ -1807,6 +1853,10 @@ video {
 
   .md\:max-w-\[460px\] {
     max-width: 460px;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .md\:gap-5 {
@@ -1845,9 +1895,22 @@ video {
     padding-bottom: 1.5rem;
   }
 
+  .md\:pr-12 {
+    padding-right: 3rem;
+  }
+
+  .md\:font-DanaMedium {
+    font-family: Dana Medium;
+  }
+
   .md\:text-2xl {
     font-size: 1.5rem;
     line-height: 2rem;
+  }
+
+  .md\:text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
   }
 
   .md\:text-5xl {
@@ -1869,17 +1932,24 @@ video {
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
+
+  .md\:text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .md\:text-4xl\/6 {
+    font-size: 2.25rem;
+    line-height: 1.5rem;
+  }
+
+  .md\:text-xl\/6 {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
-  .lg\:h-14 {
-    height: 3.5rem;
-  }
-
-  .lg\:min-h-\[42px\] {
-    min-height: 42px;
-  }
-
   .lg\:w-\[90\%\] {
     width: 90%;
   }

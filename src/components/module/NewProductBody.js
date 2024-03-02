@@ -1,9 +1,5 @@
 import ProductCard from "./ProductCard"
-import Image from "next/image";
-import Basketsvg from "./svgs/Basketsvg";
-import calbas from "../../../public/Images/jpg/Sausage.jpg";
-import Chatsvg from "./svgs/ChatSVG";
-import Star from "./svgs/Star";
+
 
 function NewProductBody() {
   return (
