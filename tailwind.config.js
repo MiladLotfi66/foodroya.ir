@@ -42,6 +42,10 @@ module.exports = {
         "MorabbaMedium":"Morabba Medium",
         "IranSans":"IranSans",
       },
+      spacing:{
+        "25":"6.25rem",
+        "200":"12.5rem",
+      },
 
       boxShadow: {
         "normal": " 0px 1px 10px rgba(0, 0, 0, 0.05)",
