@@ -17,7 +17,8 @@
     "react-dom": "^18",
     "react-redux": "^9.1.0",
     "react-slick": "^0.30.2",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "swiper": "^11.0.7"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",

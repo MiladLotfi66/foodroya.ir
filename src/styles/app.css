@@ -910,6 +910,14 @@ video {
   margin-top: 2rem;
 }
 
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.mb-9 {
+  margin-bottom: 2.25rem;
+}
+
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -971,10 +979,6 @@ video {
 
 .h-3 {
   height: 0.75rem;
-}
-
-.h-32 {
-  height: 8rem;
 }
 
 .h-4 {
@@ -1215,14 +1219,6 @@ video {
   gap: 6;
 }
 
-.gap-\[\] {
-  gap: ;
-}
-
-.gap-\[65px\] {
-  gap: 65px;
-}
-
 .gap-x-2 {
   -moz-column-gap: 0.5rem;
        column-gap: 0.5rem;
@@ -1248,6 +1244,11 @@ video {
        column-gap: 1.25rem;
 }
 
+.gap-x-\[29px\] {
+  -moz-column-gap: 29px;
+       column-gap: 29px;
+}
+
 .gap-y-3 {
   row-gap: 0.75rem;
 }
@@ -1260,24 +1261,10 @@ video {
   row-gap: 1.5rem;
 }
 
-.gap-x-\[\] {
-  -moz-column-gap: ;
-       column-gap: ;
-}
-
-.gap-x-\[29px\] {
-  -moz-column-gap: 29px;
-       column-gap: 29px;
-}
-
 .space-y-4 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1rem * var(--tw-space-y-reverse));
-}
-
-.overflow-hidden {
-  overflow: hidden;
 }
 
 .overflow-y-auto {
@@ -1286,10 +1273,6 @@ video {
 
 .text-wrap {
   text-wrap: wrap;
-}
-
-.text-nowrap {
-  text-wrap: nowrap;
 }
 
 .rounded-2xl {

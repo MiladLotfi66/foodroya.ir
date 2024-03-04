@@ -5,8 +5,7 @@ import { useState, useEffect } from "react";
 function Banner() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
-  const [startX, setStartX] = useState(0);
-  const [endX, setEndX] = useState(0);
+ 
 
   useEffect(() => {
     const interval = setInterval(() => {
