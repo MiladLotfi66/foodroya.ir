@@ -1,5 +1,5 @@
 "use client";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useFormik } from "formik";
 import Usersvg from "@/module/svgs/Usersvg";
 import Emailsvg from "@/module/svgs/Emailsvg";
 import Locksvg from "@/module/svgs/Locksvg";
@@ -11,6 +11,57 @@ function page() {
   const onSubmit = () => {
     console.log("submit");
   };
+// *******************hook use formik******************** 
+
+  const form = useFormik({
+    initialValues: {
+      username: "",
+      email: "",
+      password: "",
+      rePassword: "",
+    },
+
+    onSubmit: (values, { setSubmitting }) => {
+      console.log("form input data", values);
+      setTimeout(() => {
+        setSubmitting(false);
+      }, 3000);
+    },
+    validate: (values) => {
+      const errors = {};
+      if (!values.username) {
+        errors.username = "نام کاربری را وارد کنید";
+      }
+      if (!values.rePassword) {
+        errors.rePassword = "تکرار رمز عبور را وارد کنید";
+      } else if (values.rePassword !== values.password) {
+        errors.rePassword = "رمز عبور با تکرار آن یکسان نمیباشد";
+      }
+      if (!values.email) {
+        errors.email = "ایمیل را وارد کنید";
+      } else if (
+        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
+      ) {
+        errors.email = "ایمیل معتبر نمیباشد";
+      }
+      if (!values.password) {
+        errors.password = "رمز عبور را وارد کنید";
+      } else if (values.password.length < 8) {
+        errors.password = "رمز عبور باید بیشتر از 8 کاراکتر باشد";
+      } else if (values.password.length > 20) {
+        errors.password = "رمز عبور باید کمتر از 20 کاراکتر باشد";
+      } else if (
+        !/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,20}$/i.test(
+          values.password
+        )
+      ) {
+        errors.password =
+          "رمز عبور باید حداقل ۸ کاراکتر و حداکثر ۲۰ کاراکتر، شامل حروف بزرگ و کوچک انگلیسی، اعداد و حروف خاص مانند !@#$%^&* باشد.";
+      }
+      return errors;
+    },
+  });
+
   return (
     <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
       <div className="container ">
@@ -44,144 +95,110 @@ function page() {
           </div>
 
           {/* *******************main******************** */}
-          <Formik
-            initialValues={{
-              username: "",
-              email: "",
-              password: "",
-            }}
-            validate={(values) => {
-              const errors = {};
-              if (!values.username) {
-                errors.username = "نام کاربری را وارد کنید";
-              }
-              if (!values.rePassword) {
-                errors.rePassword = "تکرار رمز عبور را وارد کنید";
-              } else if (values.rePassword !== values.password) {
-                errors.rePassword = "رمز عبور با تکرار آن یکسان نمیباشد";
-              }
-              if (!values.email) {
-                errors.email = "ایمیل را وارد کنید";
-              } else if (
-                !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-              ) {
-                errors.email = "ایمیل معتبر نمیباشد";
-              }
-              if (!values.password) {
-                errors.password = "رمز عبور را وارد کنید";
-              } else if (values.password.length < 8) {
-                errors.password = "رمز عبور باید بیشتر از 8 کاراکتر باشد";
-              } else if (values.password.length > 20) {
-                errors.password = "رمز عبور باید کمتر از 20 کاراکتر باشد";
-              } else if (
-                !/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,20}$/i.test(
-                  values.password
-                )
-              ) {
-                errors.password =
-                  "رمز عبور باید حداقل ۸ کاراکتر و حداکثر ۲۰ کاراکتر، شامل حروف بزرگ و کوچک انگلیسی، اعداد و حروف خاص مانند !@#$%^&* باشد.";
-              }
-              return errors;
-            }}
-            onSubmit={(values, { setSubmitting }) => {
-              console.log("form input data", values);
-              setTimeout(() => {
-                setSubmitting(false);
-              }, 3000);
-            }}
+
+          <form
+            onSubmit={form.handleSubmit}
+            className="login-form flex flex-col gap-4 p-2 md:p-4 "
           >
-            {({ isSubmitting }) => (
-              <Form className="login-form flex flex-col gap-4 p-2 md:p-4 ">
-                {/* *******************username******************** */}
+            {/* *******************username******************** */}
 
-                <div className="flex items-center ">
-                  <svg className="  w-5 h-5 ">
-                    <Usersvg />
-                  </svg>
-                  <Field
-                    className="inputStyle grow  "
-                    type="text"
-                    name="username"
-                    autoComplete="name"
-                    placeholder="نام کاربری"
-                  />
-                </div>
-                <ErrorMessage
-                  name="username"
-                  component="div"
-                  className=" text-xs text-red-400"
-                />
-                {/* *******************email******************** */}
+            <div className="flex items-center ">
+              <svg className="  w-5 h-5 ">
+                <Usersvg />
+              </svg>
+              <input
+                className="inputStyle grow  "
+                type="text"
+                name="username"
+                autoComplete="name"
+                placeholder="نام کاربری"
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+                value={form.values.username}
+              />
+            </div>
+            {form.touched.username && form.errors.username ? (
+              <div className="text-xs text-red-400">{form.errors.username}</div>
+            ) : null}
 
-                <div className="flex items-center ">
-                  <svg className="  w-5 h-5 ">
-                    <Emailsvg />
-                  </svg>
-                  <Field
-                    className="inputStyle grow"
-                    type="email"
-                    name="email"
-                    autoComplete="username"
-                    placeholder="ایمیل"
-                  />
-                </div>
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className=" text-xs text-red-400"
-                />
-                {/* *******************password******************** */}
+            {/* *******************email******************** */}
 
-                <div className="flex items-center  ">
-                  <div className="min-w-5 w-5  ">
-                    <svg className="w-5 h-5">
-                      <Locksvg />
-                    </svg>
-                  </div>
-                  <div className="flex justify-between gap-x-2  ">
-                    <Field
-                      className="text-zinc-700 max-w-[48%] w-[48%] m-2 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 p-2 font-DanaDemiBold placeholder:p-2 "
-                      type="password"
-                      name="password"
-                      autoComplete="current-password"
-                      placeholder="رمز عبور"
-                    />
-                    <Field
-                      className="text-zinc-700 max-w-[48%] w-[48%] m-2 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 p-2 font-DanaDemiBold placeholder:p-2 "
-                      type="password"
-                      name="rePassword"
-                      autoComplete="current-password"
-                      placeholder="تکرار رمز عبور"
-                    />
-                  </div>
-                </div>
+            <div className="flex items-center ">
+              <svg className="  w-5 h-5 ">
+                <Emailsvg />
+              </svg>
+              <input
+                className="inputStyle grow"
+                type="email"
+                name="email"
+                autoComplete="username"
+                placeholder="ایمیل"
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+                value={form.values.email}
+              />
+            </div>
+            {form.touched.email && form.errors.email ? (
+              <div className="text-xs text-red-400">{form.errors.email}</div>
+            ) : null}
 
-                <ErrorMessage
+         
+            {/* *******************password******************** */}
+
+            <div className="flex items-center  ">
+              <div className="min-w-5 w-5  ">
+                <svg className="w-5 h-5">
+                  <Locksvg />
+                </svg>
+              </div>
+              <div className="flex justify-between gap-x-2  ">
+                <input
+                  className="text-zinc-700 max-w-[48%] w-[48%] m-2 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 p-2 font-DanaDemiBold placeholder:p-2 "
+                  type="password"
                   name="password"
-                  component="div"
-                  className=" text-xs text-red-400"
+                  autoComplete="current-password"
+                  placeholder="رمز عبور"
+                  onChange={form.handleChange}
+                  onBlur={form.handleBlur}
+                  value={form.values.password}
                 />
-                <ErrorMessage
+                <input
+                  className="text-zinc-700 max-w-[48%] w-[48%] m-2 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 p-2 font-DanaDemiBold placeholder:p-2 "
+                  type="password"
                   name="rePassword"
-                  component="div"
-                  className=" text-xs text-red-400"
+                  autoComplete="current-password"
+                  placeholder="تکرار رمز عبور"
+                  onChange={form.handleChange}
+                  onBlur={form.handleBlur}
+                  value={form.values.rePassword}
                 />
-                {/* *******************button**************************** */}
+              </div>
+            </div>
+            {form.touched.password && form.errors.password ? (
+              <div className="text-xs text-red-400">{form.errors.password}</div>
+            ) : null}
 
-                <button
-                  type="submit"
-                  className={   /* if issubmit is true class will be change */
-                    isSubmitting
-                      ? " h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
-                      : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
-                  }
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "درحال ثبت نام ..." : "ثبت نام"}
-                </button>
-              </Form>
-            )}
-          </Formik>
+            {form.touched.rePassword && form.errors.rePassword ? (
+              <div className="text-xs text-red-400">
+                {form.errors.rePassword}
+              </div>
+            ) : null}
+
+            {/* *******************button**************************** */}
+
+            <button
+              type="submit"
+              className={
+                /* if issubmit is true class will be change */
+                form.isSubmitting
+                  ? " h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
+                  : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
+              }
+              disabled={form.isSubmitting}
+            >
+              {form.isSubmitting ? "درحال ثبت نام ..." : "ثبت نام"}
+            </button>
+          </form>
         </div>
       </div>
     </div>
