@@ -30,6 +30,7 @@ function BestSalling() {
             spaceBetween: 14,
           },
           768: {
+            slidesPerView: 3,
             spaceBetween: 20,
           },
           1024: {

@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 @layer base {
- 
   @font-face {
     font-family: "Vazir";
     src: url("../../public/fonts/vazir/Vazir-Medium.ttf") format("ttf");
@@ -58,41 +57,38 @@
     background: linear-gradient(
       rgba(243, 244, 246, 0.65),
       rgba(243, 244, 246, 0.65)
-    )
+    );
   }
   .darklinergradient {
-    background: linear-gradient(
-      rgba(39 ,39 ,42, 0.65),
-      rgba(39 ,39 ,42, 0.65)
-    )
+    background: linear-gradient(rgba(39, 39, 42, 0.65), rgba(39, 39, 42, 0.65));
   }
   .categoriBannerlinergradient {
-
-    background: linear-gradient(270deg,
-      rgba(0 ,0 ,0, 0.6)33.85%,
-      rgba(0 ,0 ,0, 0.1)100%
+    background: linear-gradient(
+      270deg,
+      rgba(0, 0, 0, 0.6) 33.85%,
+      rgba(0, 0, 0, 0.1) 100%
     );
     height: 100%;
     width: 100%;
-    
+  }
+  .inputStyle {
+    @apply text-zinc-700 dark:text-white rounded-lg text-xl/7 h-10 bg-gray-200 dark:bg-gray-600 m-2 p-2 font-DanaDemiBold placeholder:p-2;
   }
 
-  .section_title{
+  .section_title {
     @apply text-2xl md:text-5xl font-MorabbaMedium text-zinc-700 dark:text-white;
-  } 
-  .section_Sub_title{
-    @apply text-lg md:text-3xl inline-block font-MorabbaLight mt-0.5 md:mt-1.5 text-zinc-700 dark:text-white;
-  } 
-  .section_showmore{
-    @apply text-base md:text-xl text-orange-300 font-Dana tracking-tightest h-10 rounded-md pr-3 pl-1 inline-flex md:gap-x-1 items-center cursor-pointer transition-colors md:hover:bg-orange-300/20 ;
-  } 
-
-  .offerPrice{
-@apply text-gray-400 relative  ;
-
   }
-  .offerPrice::after{
+  .section_Sub_title {
+    @apply text-lg md:text-3xl inline-block font-MorabbaLight mt-0.5 md:mt-1.5 text-zinc-700 dark:text-white;
+  }
+  .section_showmore {
+    @apply text-base md:text-xl text-orange-300 font-Dana tracking-tightest h-10 rounded-md pr-3 pl-1 inline-flex md:gap-x-1 items-center cursor-pointer transition-colors md:hover:bg-orange-300/20;
+  }
 
+  .offerPrice {
+    @apply text-gray-400 relative;
+  }
+  .offerPrice::after {
     content: "";
     position: absolute;
     width: 100%;
@@ -101,14 +97,11 @@
     margin: auto;
     background-color: #ef4444;
     transform: rotate(-10deg);
-
-
   }
-
 }
 
-@layer utilities{
-    .flexCenter{
-        @apply flex justify-center items-center;
-    }
+@layer utilities {
+  .flexCenter {
+    @apply flex justify-center items-center;
+  }
 }
