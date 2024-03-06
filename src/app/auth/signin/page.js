@@ -15,8 +15,8 @@ function page() {
           <Emailsvg />
         </div>
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
-          <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-40">
-            <div className="flex flex-col items-start gap-3">
+          <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
+            <div className="flex flex-col items-start gap-2.5">
               <h4>
                 خوش آمدید به
                 <Link href="/" className="text-orange-300 font-MorabbaMedium">
@@ -39,9 +39,36 @@ function page() {
               email: "",
               password: "",
             }}
+            validate={(values)=>{
+              const errors = {};
+              if(!values.username){
+                errors.username = "نام کاربری را وارد کنید"
+              }
+              // else if (values.name.length < 8){
+              //   errors.username = "نام کاربری باید بیشتر از 8 کاراکتر باشد"
+              // }
+              if(!values.email){
+                errors.email = "ایمیل را وارد کنید"
+
+              }else if ( !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                errors.email = "ایمیل معتبر نمیباشد"
+
+              }
+              if(!values.password){
+                errors.password = "رمز عبور را وارد کنید"
+              }else if (values.password.length < 8){
+                errors.password = "رمز عبور باید بیشتر از 8 کاراکتر باشد"
+              }else if (values.password.length > 20){
+                errors.password = "رمز عبور باید کمتر از 20 کاراکتر باشد"
+              }else if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,20}$/i.test(values.password)) {
+                errors.password = "رمز عبور باید حداقل ۸ کاراکتر و حداکثر ۲۰ کاراکتر، شامل حروف بزرگ و کوچک انگلیسی، اعداد و حروف خاص مانند !@#$%^&* باشد."
+              }
+              return errors
+
+            }}
           >
-            {({ values, handleChange }) => (
-              <Form className="login-form flex flex-col gap-4 p-2 md:p-5">
+            {({ values, handleChange , handleSubmit, errors , touched}) => (
+              <Form className="login-form flex flex-col gap-4 p-2 md:p-4">
                 <div className="flex items-center ">
                   <svg className="  w-5 h-5 ">
                     <Usersvg />
@@ -52,7 +79,10 @@ function page() {
                     name="username"
                     placeholder="نام کاربری"
                   />
+                  {/* {errors.username && tuched.username && errors.username } */}
                 </div>
+                   {/* <ErrorMessage name="username" /> */}
+                   {errors.username && touched.username ? <div className=" text-xs text-red-400">{errors.username}</div> : null}
                 <div className="flex items-center ">
                   <svg className="  w-5 h-5 ">
                     <Emailsvg />
@@ -65,6 +95,8 @@ function page() {
                     placeholder="ایمیل"
                   />
                 </div>
+                {/* <ErrorMessage name="email" /> */}
+                {errors.email && touched.email ? <div className=" text-xs text-red-400">{errors.email}</div> : null}
                 <div className="flex items-center ">
                   <svg className="  w-5 h-5 ">
                     <Locksvg />
@@ -76,9 +108,11 @@ function page() {
                     placeholder="رمز عبور"
                   />
                 </div>
+                {/* <ErrorMessage name="password" /> */}
+                {errors.password && touched.password ? <div className=" text-xs text-red-400">{errors.password}</div> : null}
                 <button
                   type="submit"
-                  className="w-28 h-11 md:w-36 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-5"
+                  className="w-28 h-11 md:w-36 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
                 >
                   ثبت نام
                 </button>
