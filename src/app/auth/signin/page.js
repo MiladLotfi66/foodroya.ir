@@ -19,6 +19,8 @@ function page() {
           <Emailsvg />
         </div>
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
+          {/* *******************header******************** */}
+
           <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
             <div className="flex flex-col items-start gap-2.5">
               <h4>
@@ -40,6 +42,8 @@ function page() {
               </Link>
             </div>
           </div>
+
+          {/* *******************main******************** */}
           <Formik
             initialValues={{
               username: "",
@@ -79,9 +83,17 @@ function page() {
               }
               return errors;
             }}
+            onSubmit={(values, { setSubmitting }) => {
+              console.log("form input data", values);
+              setTimeout(() => {
+                setSubmitting(false);
+              }, 3000);
+            }}
           >
             {({ isSubmitting }) => (
               <Form className="login-form flex flex-col gap-4 p-2 md:p-4 ">
+                {/* *******************username******************** */}
+
                 <div className="flex items-center ">
                   <svg className="  w-5 h-5 ">
                     <Usersvg />
@@ -99,6 +111,7 @@ function page() {
                   component="div"
                   className=" text-xs text-red-400"
                 />
+                {/* *******************email******************** */}
 
                 <div className="flex items-center ">
                   <svg className="  w-5 h-5 ">
@@ -117,6 +130,7 @@ function page() {
                   component="div"
                   className=" text-xs text-red-400"
                 />
+                {/* *******************password******************** */}
 
                 <div className="flex items-center  ">
                   <div className="min-w-5 w-5  ">
@@ -152,10 +166,16 @@ function page() {
                   component="div"
                   className=" text-xs text-red-400"
                 />
+                {/* *******************button**************************** */}
 
                 <button
                   type="submit"
-                  className="w-28 h-11 md:w-36 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
+                  className={   /* if issubmit is true class will be change */
+                    isSubmitting
+                      ? " h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
+                      : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
+                  }
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? "درحال ثبت نام ..." : "ثبت نام"}
                 </button>
