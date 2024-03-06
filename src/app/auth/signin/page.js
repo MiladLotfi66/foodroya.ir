@@ -5,6 +5,8 @@ import Emailsvg from "@/module/svgs/Emailsvg";
 import Locksvg from "@/module/svgs/Locksvg";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import HashLoader from "react-spinners/HashLoader";
+
 
 function page() {
   const router = useRouter();
@@ -191,12 +193,13 @@ function page() {
               className={
                 /* if issubmit is true class will be change */
                 form.isSubmitting
-                  ? " h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
+                  ? "flexCenter gap-x-2 h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
                   : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
               }
               disabled={form.isSubmitting}
             >
-              {form.isSubmitting ? "درحال ثبت نام ..." : "ثبت نام"}
+              {form.isSubmitting ? "در حال ثبت نام  "   : "ثبت نام"}
+              {form.isSubmitting ? <HashLoader size={25} color="#fff"/>   : ""}
             </button>
           </form>
         </div>
