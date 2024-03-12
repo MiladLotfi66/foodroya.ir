@@ -1,4 +1,4 @@
-import NewProductBody from "@/module/NewProductBody";
+import NewProductBody from "@/module/home/NewProductBody";
 import ChevronDown from "@/module/svgs/ChevronDown";
 function NewProduct() {
   return (

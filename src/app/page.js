@@ -1,8 +1,8 @@
-import NewProduct from "@/module/NewProduct";
-import Banner from "@/module/Banner";
-import CategoryBanner from "@/module/CategoryBanner";
-import ProductCategori from "@/module/ProductCategori";
-import BestSalling from "@/module/BestSalling";
+import NewProduct from "@/module/home/NewProduct";
+import Banner from "@/module/home/Banner";
+import CategoryBanner from "@/module/home/CategoryBanner";
+import ProductCategori from "@/module/home/ProductCategori";
+import BestSalling from "@/module/home/BestSalling";
 
 export default function Home() {
   return (

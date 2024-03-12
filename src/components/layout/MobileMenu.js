@@ -19,12 +19,18 @@ import Breifcase from "@/module/svgs/Breifcase";
 import PhoneArrow from "@/module/svgs/PhoneArrow";
 import ChevronDown from "@/module/svgs/ChevronDown";
 import { useState } from "react";
+import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import Exitsvg from "@/module/svgs/Exitsvg";
 
 function MobileMenu() {
   const { theme, setTheme } = useTheme();
   const isOpenMobileMenu = useSelector(selectmobileMenu);
   const dispatch = useDispatch();
   const [shopSubMenu, setShopSubmenu] = useState(false);
+  // const sessionData = useSession();
+  const { data: session } = useSession()
+
 
   return (
     <>
@@ -48,6 +54,7 @@ function MobileMenu() {
               <Breifcase />
               <PhoneArrow />
               <ChevronDown />
+              <Exitsvg/>
             </div>
             {/* ************************ header ************************ */}
             <div className="flex justify-between  items-center mx-4 mt-3 mb-6 border-b border-b-gray-300 dark:border-b-white/10 pb-5">
@@ -139,17 +146,28 @@ function MobileMenu() {
                   <span>تماس باما</span>
                 </a>
               </li>
+              
             </ul>
 
             {/* ************************ footer ************************ */}
 
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
-              <a href="#" className=" inline-flex items-center gap-x-2    ">
-                <svg className="w-5 h-5 rotate-180">
-                  <use href="#login"></use>
+             
+            {session ? (
+              <Link href="#" className=" inline-flex items-center gap-x-2" onClick={() => signOut()}>
+                <svg className="w-5 h-5">
+                  <use href="#Exitsvg"></use>
                 </svg>
-                ورود | ثبت نام
-              </a>
+                خروج
+              </Link>)
+              :(
+                <Link href="/signin" className=" inline-flex items-center gap-x-2    ">
+                  <svg className="w-5 h-5 rotate-180">
+                    <use href="#login"></use>
+                  </svg>
+                  ورود | ثبت نام
+                </Link>)}
+
               <div className="flex gap-x-2">
                 {theme === "dark" ? (
                   <span

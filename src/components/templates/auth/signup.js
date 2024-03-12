@@ -6,14 +6,12 @@ import Locksvg from "@/module/svgs/Locksvg";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import HashLoader from "react-spinners/HashLoader";
+import { Toaster, toast } from "react-hot-toast";
 
-
-function page() {
+function SignUp() {
   const router = useRouter();
-  const onSubmit = () => {
-    console.log("submit");
-  };
-// *******************hook use formik******************** 
+
+  // *******************hook use formik********************
 
   const form = useFormik({
     initialValues: {
@@ -22,13 +20,31 @@ function page() {
       password: "",
       rePassword: "",
     },
+  // *******************submit ********************
 
-    onSubmit: (values, { setSubmitting }) => {
-      console.log("form input data", values);
-      setTimeout(() => {
-        setSubmitting(false);
-      }, 3000);
+    onSubmit: async (values, { setSubmitting }) => {
+      setSubmitting(true);
+
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          username: values.username,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (res.status === 201) {
+        router.push("/signin");
+      } else {
+        toast.error(data.error);
+      }
+
+      setSubmitting(false);
     },
+      // *******************validate********************
+
     validate: (values) => {
       const errors = {};
       if (!values.username) {
@@ -63,6 +79,7 @@ function page() {
       return errors;
     },
   });
+  // *******************jsx********************
 
   return (
     <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
@@ -88,7 +105,7 @@ function page() {
             <div className="flex flex-col items-start gap-3">
               <h4>قبلا ثبت نام کرده اید؟</h4>
               <Link
-                href="/auth/login"
+                href="/signin"
                 className="text-orange-300 cursor-pointer font-MorabbaMedium"
               >
                 ورود{" "}
@@ -134,7 +151,7 @@ function page() {
                 type="email"
                 name="email"
                 autoComplete="username"
-                placeholder="ایمیل"
+                placeholder="ایمیل یا تلفن همراه"
                 onChange={form.handleChange}
                 onBlur={form.handleBlur}
                 value={form.values.email}
@@ -144,7 +161,6 @@ function page() {
               <div className="text-xs text-red-400">{form.errors.email}</div>
             ) : null}
 
-         
             {/* *******************password******************** */}
 
             <div className="flex items-center  ">
@@ -198,14 +214,15 @@ function page() {
               }
               disabled={form.isSubmitting}
             >
-              {form.isSubmitting ? "در حال ثبت نام  "   : "ثبت نام"}
-              {form.isSubmitting ? <HashLoader size={25} color="#fff"/>   : ""}
+              {form.isSubmitting ? "در حال ثبت نام  " : "ثبت نام"}
+              {form.isSubmitting ? <HashLoader size={25} color="#fff" /> : ""}
             </button>
           </form>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }
 
-export default page;
+export default SignUp;

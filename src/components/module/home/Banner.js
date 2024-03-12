@@ -1,5 +1,5 @@
 "use client";
-import HeaderText from "@/module/HeaderText";
+import HeaderText from "@/module/home/HeaderText";
 import { useState, useEffect } from "react";
 
 function Banner() {

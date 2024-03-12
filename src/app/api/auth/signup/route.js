@@ -13,7 +13,7 @@ export async function POST(req, res) {
     const { email, password,username } = await req.json();
     console.log({ email, password,username  });
 
-    if (!email.trim() || !password.trim() ,!username.trim()) {
+    if (!email.trim() || !password.trim() || !username.trim()) {
       return NextResponse.json(
         { error: "لطفا اطلاعات معتبر وارد کنید" },
         { status: 422 }

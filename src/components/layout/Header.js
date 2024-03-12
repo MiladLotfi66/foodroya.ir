@@ -10,20 +10,24 @@ import Sunsvg from "@/module/svgs/Sunsvg";
 import BasketShop from "@/layout/BasketShop";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import UserMicroCard from "@/module/home/UserMicroCard";
 
 function Header() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
+  const { data: session } = useSession()
+  // console.log(session);
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
+    return null;
   }
-
 
   return (
     <header
@@ -101,7 +105,6 @@ function Header() {
                   {/* سبد خرید */}
 
                   <BasketShop />
-
                 </div>
               </div>
             </div>
@@ -132,12 +135,22 @@ function Header() {
           {/* devide line */}
           <span className=" block w-px h-14 bg-white/20 "></span>
           {/* login icone */}
-          <a className="flex items-center gap-x-2.5 text-xl tracking-tightest">
-            <svg width="34" height="34" className="rotate-180">
-              <use href="#login"></use>
-            </svg>
-            <span className="hidden xl:inline-block">ورود | ثبت‌نام</span>
-          </a>
+
+          {session ? (
+            <Link href="/profile" >
+              <UserMicroCard data={session} />
+            </Link>
+          ) : (
+            <Link
+              href="/signin"
+              className="flex items-center gap-x-2.5 text-xl tracking-tightest"
+            >
+              <svg width="34" height="34" className="rotate-180">
+                <use href="#login"></use>
+              </svg>
+              <span className="hidden xl:inline-block">ورود</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>
@@ -145,5 +158,3 @@ function Header() {
 }
 
 export default Header;
-
-

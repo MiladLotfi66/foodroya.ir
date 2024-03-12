@@ -5,7 +5,8 @@ import Header from "@/layout/Header";
 import MobileHeader from "@/layout/MobileHeader";
 import MobileMenu from "@/layout/MobileMenu";
 import Providers from "../Redux/Providers";
-
+import NextAuthProvider from "@/providers/NextAuthProvider";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata = {
   title: "Create Next App",
@@ -14,17 +15,27 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fa" className={dana.className} dir="rtl" suppressHydrationWarning>
+    <html
+      lang="fa"
+      className={dana.className}
+      dir="rtl"
+      suppressHydrationWarning
+    >
       <body className="bg-gray-100 dark:bg-zinc-800">
-      <ThemeProviders >
-          <Providers>
-            <Header />
-            <MobileHeader />
-            <MobileMenu />
-            {/* <ThemeSwitch/> */}
-            {children}
-          </Providers>
-        </ThemeProviders>
+        <NextAuthProvider>
+        {/* <SessionProvider session={session}> */}
+
+          <ThemeProviders>
+            <Providers>
+              <Header />
+              <MobileHeader />
+              <MobileMenu />
+              {/* <ThemeSwitch/> */}
+              {children}
+            </Providers>
+          </ThemeProviders>
+          {/* </SessionProvider> */}
+        </NextAuthProvider>
       </body>
     </html>
   );

@@ -1,8 +1,8 @@
 import Image from "next/image";
-import Basketsvg from "./svgs/Basketsvg";
-import calbas from "../../../public/Images/jpg/Sausage.jpg";
-import Chatsvg from "./svgs/ChatSVG";
-import Star from "./svgs/Star";
+import Basketsvg from "@/module/svgs/Basketsvg";
+import calbas from "@/public/Images/jpg/Sausage.jpg";
+import Chatsvg from "@/module/svgs/ChatSVG";
+import Star from "@/module/svgs/Star";
 function ProductCard() {
   return (
     

@@ -1,5 +1,5 @@
-import BasketShopFooter from "@/module/BasketShopFooter";
-import BasketShopProductCard from "@/module/BasketShopProductCard";
+import BasketShopFooter from "@/module/home/BasketShopFooter";
+import BasketShopProductCard from "@/module/home/BasketShopProductCard";
 
 function BasketShop() {
   return (

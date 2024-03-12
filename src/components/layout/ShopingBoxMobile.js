@@ -1,7 +1,7 @@
 "use client";
 import Xmark from "@/module/svgs/X-mark";
-import BasketShopProductCard from "@/module/BasketShopProductCard";
-import BasketShopFooter from "@/module/BasketShopFooter";
+import BasketShopProductCard from "@/module/home/BasketShopProductCard";
+import BasketShopFooter from "@/module/home/BasketShopFooter";
 
 import { toggleBasketCart, selectIsBasketCartOpen } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 
