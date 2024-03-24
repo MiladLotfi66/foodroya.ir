@@ -1,5 +1,6 @@
 "use client";
 import {
+  toggleBasketCart,
   selectmobileMenu,
   reversemobileMenu,
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
@@ -201,12 +202,15 @@ function MobileMenu() {
                   <span onClick={() => setTheme("dark")}>تم تیره</span>
                 )}
               </div>
-              <a href="#" className="inline-flex items-center gap-x-2   ">
+              <Link href="#" onClick={()=> {
+                dispatch(reversemobileMenu())
+                dispatch(toggleBasketCart())
+              }} className="inline-flex items-center gap-x-2   ">
                 <svg className="  w-5 h-5">
                   <use href="#Basketsvg"></use>
                 </svg>
                 سبد خرید
-              </a>
+              </Link>
             </div>
           </div>
           <div onClick={() => dispatch(reversemobileMenu())} className="overlay md:hidden fixed inset-0 w-full h-full bg-black/40 z-10"></div>
