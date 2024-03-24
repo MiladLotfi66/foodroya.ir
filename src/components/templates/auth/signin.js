@@ -8,24 +8,39 @@ import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import * as ypu from "yup";
-import {yupResolver} from "@hookform/resolvers"
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+
 function SignIn() {
   const router = useRouter();
   const [IsSubmit, SetIsSubmit] = useState(false);
+
+  // *******************validate********************
+  const schema = yup.object({
+    email: yup
+      .string()
+      .email("ایمیل وارد شده معتبر نمی باشد")
+      .required("وارد کردن فیلد ایمیل اجباری است"),
+    password: yup.string().required("وارد کردن فیلد پسورد اجباری است"),
+  });
+
   // *******************hook use form********************
 
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       email: "",
       password: "",
     },
+    resolver: yupResolver(schema),
   });
 
   // *******************submit ********************
 
-  const formsubmitting = async (data ) => {
-     
+  const formsubmitting = async (data) => {
     SetIsSubmit(true);
 
     const res = await signIn("credentials", {
@@ -34,11 +49,10 @@ function SignIn() {
       password: data.password,
       callbackUrl: "/",
     });
-    SetIsSubmit(false);
     if (res?.ok) router.push("/");
     else toast.error("ایمیل یا رمز عبور اشتباه است");
-      }
-  // *******************validate********************
+    SetIsSubmit(false);
+  };
 
   // *******************jsx********************
 
@@ -93,6 +107,7 @@ function SignIn() {
                 {...register("email")}
               />
             </div>
+            {errors.email && <div className="text-xs text-red-400">{errors.email.message}</div>}
 
             {/* *******************password******************** */}
 
@@ -110,7 +125,7 @@ function SignIn() {
                 {...register("password")}
               />
             </div>
-
+            {errors.password && <div className="text-xs text-red-400">{errors.password.message}</div>}
             {/* *******************button**************************** */}
 
             <button
