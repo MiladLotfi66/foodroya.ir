@@ -10,20 +10,12 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import RegisterSchema from "@/utils/YupSchema";
 
 function SignIn() {
   const router = useRouter();
   const [IsSubmit, SetIsSubmit] = useState(false);
-
-  // *******************validate********************
-  const schema = yup.object({
-    email: yup
-      .string()
-      .email("ایمیل وارد شده معتبر نمی باشد")
-      .required("وارد کردن فیلد ایمیل اجباری است"),
-    password: yup.string().required("وارد کردن فیلد پسورد اجباری است"),
-  });
-
+ 
   // *******************hook use form********************
 
   const {
@@ -35,7 +27,7 @@ function SignIn() {
       email: "",
       password: "",
     },
-    resolver: yupResolver(schema),
+    resolver: yupResolver(RegisterSchema),
   });
 
   // *******************submit ********************
