@@ -8,7 +8,6 @@ import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/YupSchema";
 
