@@ -9,12 +9,14 @@ import { Toaster, toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/YupSchema";
+import RegisterSchema from "@/utils/yupSchemas/signInSchema"; 
+
+
 
 function SignIn() {
   const router = useRouter();
   const [IsSubmit, SetIsSubmit] = useState(false);
- 
+  
   // *******************hook use form********************
 
   const {
@@ -25,6 +27,7 @@ function SignIn() {
     defaultValues: {
       email: "",
       password: "",
+     
     },
     resolver: yupResolver(RegisterSchema),
   });
@@ -33,6 +36,7 @@ function SignIn() {
 
   const formsubmitting = async (data) => {
     SetIsSubmit(true);
+    
 
     const res = await signIn("credentials", {
       redirect: false,

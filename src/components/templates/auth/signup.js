@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/YupSchema";
+import RegisterSchema from "@/utils/yupSchemas/signupSchema"; 
 import { useState } from "react";
 import Usersvg from "@/module/svgs/Usersvg";
 import Emailsvg from "@/module/svgs/Emailsvg";
@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
+import axios from 'axios';
+
 
 function SignUp() {
   const router = useRouter();
@@ -33,24 +35,24 @@ function SignUp() {
 
   const formsubmitting = async (data) => {
     SetIsSubmit(true);
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      body: JSON.stringify({
+  
+    try {
+      const response = await axios.post("/api/auth/signup", {
         username: data.username,
         email: data.email,
         password: data.password,
-        username: data.username,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-    const data2 = await res.json();
-    if (res.status === 201) {
-      router.push("/signin");
-    } else {
-      toast.error(data2.error);
+      });
+  
+      if (response.status === 201) {
+        router.push("/signin");
+      }
+    } catch (error) {
+      toast.error(error.response.data.error);
     }
+  
     SetIsSubmit(false);
   };
+  
   // *******************jsx********************
   return (
     <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
@@ -100,6 +102,7 @@ function SignUp() {
                 className="inputStyle grow  "
                 type="text"
                 name="username"
+                autoComplete="username"
                 placeholder="نام کاربری"
                 {...register("username")}
               />
@@ -118,6 +121,7 @@ function SignUp() {
                 className="inputStyle grow"
                 type="email"
                 name="email"
+                autoComplete="email"
                 placeholder="ایمیل یا تلفن همراه"
                 {...register("email")}
               />
@@ -137,6 +141,7 @@ function SignUp() {
                   className="text-zinc-700 max-w-[48%] w-[48%] m-2 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 p-2 font-DanaDemiBold placeholder:p-2 "
                   type="password"
                   name="password"
+                  autoComplete="password"
                   placeholder="رمز عبور"
                   {...register("password")}
                 />
@@ -144,6 +149,8 @@ function SignUp() {
                   className="text-zinc-700 max-w-[48%] w-[48%] m-2 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 p-2 font-DanaDemiBold placeholder:p-2 "
                   type="password"
                   name="rePassword"
+                  autoComplete="password"
+
                   placeholder="تکرار رمز عبور"
                   {...register("rePassword")}
                 />

@@ -96,7 +96,6 @@ function Header() {
                     href="#"
                     onClick={() => {
                       signOut();
-                      
                     }}
                   >
                     خروج
