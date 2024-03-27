@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/yupSchemas/signupSchema"; 
+import RegisterSchema from "@/utils/yupSchemas/signUpSchema";  
 import { useState } from "react";
 import Usersvg from "@/module/svgs/Usersvg";
 import Emailsvg from "@/module/svgs/Emailsvg";
@@ -23,7 +23,7 @@ function SignUp() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      username: "",
+      name: "",
       email: "",
       password: "",
       rePassword: "",
@@ -38,7 +38,7 @@ function SignUp() {
   
     try {
       const response = await axios.post("/api/auth/signup", {
-        username: data.username,
+        username: data.name,
         email: data.email,
         password: data.password,
       });
@@ -101,15 +101,15 @@ function SignUp() {
               <input
                 className="inputStyle grow  "
                 type="text"
-                name="username"
-                autoComplete="username"
+                name="name"
+                autoComplete="name"
                 placeholder="نام کاربری"
-                {...register("username")}
+                {...register("name")}
               />
             </div>
-            {errors.username && (
+            {errors.name && (
               <div className="text-xs text-red-400">
-                {errors.username.message}
+                {errors.name.message}
               </div>
             )}
             {/* *******************email******************** */}

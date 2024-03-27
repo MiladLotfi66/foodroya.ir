@@ -6,7 +6,7 @@ const RegisterSchema = yup.object().shape({
     .string()
     .email("ایمیل وارد شده معتبر نمی باشد")
     .required("وارد کردن فیلد ایمیل اجباری است"),
-  username: yup
+  name: yup
     .string().nullable()
     .max(25, "نام کاربری نمی‌تواند بیشتر از 25 کاراکتر باشد")
     .required("وارد کردن فیلد نام کاربری اجباری است"),

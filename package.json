@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"npx tailwindcss -i ./src/styles/input.css -o ./src/styles/app.css --watch\"",
+    "dev": "concurrently \"next dev --turbo\" \"npx tailwindcss -i ./src/styles/input.css -o ./src/styles/app.css --watch\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
