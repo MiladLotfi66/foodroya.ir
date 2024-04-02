@@ -1,5 +1,6 @@
 "use client";
 import {
+  toggleBasketCart,
   selectmobileMenu,
   reversemobileMenu,
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
@@ -85,12 +86,15 @@ function MobileMenu() {
             {/* ************************ nav menu ************************ */}
             <ul className="text-orange-300 mr-2.5 px-4 flex flex-col gap-y-4 child:child:flex child:child:gap-x-2 ">
               <li>
-                <a>
+                <Link href="/"  onClick={() => 
+                 dispatch(reversemobileMenu())
+              }>
+               
                   <svg className="w-5 h-5">
                     <use href="#HomeSvg"></use>
                   </svg>
                   <span>صفحه اصلی</span>
-                </a>
+                </Link>
               </li>
 
               <li onClick={() => setShopSubmenu(!shopSubMenu)}>
@@ -154,14 +158,18 @@ function MobileMenu() {
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
              
             {session ? (
-              <Link href="#" className=" inline-flex items-center gap-x-2" onClick={() => signOut()}>
+              <Link href="#" className=" inline-flex items-center gap-x-2" onClick={() => {signOut()
+                 dispatch(reversemobileMenu())
+              }}>
                 <svg className="w-5 h-5">
                   <use href="#Exitsvg"></use>
                 </svg>
                 خروج
               </Link>)
               :(
-                <Link href="/signin" className=" inline-flex items-center gap-x-2    ">
+                <Link href="/signin" onClick={() => 
+                  dispatch(reversemobileMenu())
+               } className=" inline-flex items-center gap-x-2    ">
                   <svg className="w-5 h-5 rotate-180">
                     <use href="#login"></use>
                   </svg>
@@ -194,12 +202,15 @@ function MobileMenu() {
                   <span onClick={() => setTheme("dark")}>تم تیره</span>
                 )}
               </div>
-              <a href="#" className="inline-flex items-center gap-x-2   ">
+              <Link href="#" onClick={()=> {
+                dispatch(reversemobileMenu())
+                dispatch(toggleBasketCart())
+              }} className="inline-flex items-center gap-x-2   ">
                 <svg className="  w-5 h-5">
                   <use href="#Basketsvg"></use>
                 </svg>
                 سبد خرید
-              </a>
+              </Link>
             </div>
           </div>
           <div onClick={() => dispatch(reversemobileMenu())} className="overlay md:hidden fixed inset-0 w-full h-full bg-black/40 z-10"></div>

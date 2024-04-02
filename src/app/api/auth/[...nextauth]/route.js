@@ -28,7 +28,7 @@ export const authOption = {
         if (!user) throw new Error("لطفا ابتدا حساب کاربری ایجاد کنید");
         const isValid = await verifyPassword(password, user.password);
         if (!isValid) throw new Error("ایمیل یا رمز عبور اشتباه است");
-        return {name: user.username , email  };
+        return {name: user.username , email };
 
       },
     }),

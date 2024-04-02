@@ -1,4 +1,5 @@
 "use client";
+
 import {
   toggleBasketCart,
   selectIsBasketCartOpen,
@@ -30,6 +31,7 @@ function MobileHeader() {
   };
 
   return (
+    
     <header className="flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%]">
       <div className="hidden">
         <Bars3 />
@@ -71,6 +73,7 @@ function MobileHeader() {
           ""
         )}
       </div>
+      
     </header>
   );
 }
