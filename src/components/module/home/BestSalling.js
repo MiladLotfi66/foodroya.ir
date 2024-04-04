@@ -7,7 +7,7 @@ import "swiper/css/autoplay";
 
 function BestSalling() {
   return (
-    <div className="container  mb-9 md:mb-20">
+    <div data-aos='fade-up' className="container  mb-9 md:mb-20">
       <div className="container flex items-end justify-between">
         <div>
           <h3 className="section_title">پر فروش ترین ها</h3>

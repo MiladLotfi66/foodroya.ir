@@ -2,7 +2,7 @@ import NewProductBody from "@/module/home/NewProductBody";
 import ChevronDown from "@/module/svgs/ChevronDown";
 function NewProduct() {
   return (
-    <section className="bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chef2.jfif')] w-[1100]  ">
+    <section data-aos='fade-up' className="bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chef2.jfif')] w-[1100]  ">
       <div className="lightlinergradient dark:darklinergradient w-[1100] ">
         <div className="container flex items-end justify-between">
           <div className="pt-48">

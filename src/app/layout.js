@@ -6,6 +6,7 @@ import MobileHeader from "@/layout/MobileHeader";
 import MobileMenu from "@/layout/MobileMenu";
 import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
+import AosInit from "@/utils/Aos";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata = {
@@ -34,6 +35,7 @@ export default function RootLayout({ children }) {
               <MobileHeader />
               <MobileMenu />
               {/* <ThemeSwitch/> */}
+              <AosInit/>
               {children}
             </Providers>
           </ThemeProviders>

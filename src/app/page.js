@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <>
     <Banner2/>
-    <NewProduct/>
+    <NewProduct />
     <CategoryBanner/>
     <ProductCategori/>
     <BestSalling/>
