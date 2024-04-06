@@ -16,12 +16,12 @@ import { useSelector } from "react-redux";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 function MobileHeader() {
-  const { data: session } = useSession()
-
+  const [fixTop, setFixTop] = useState(false);
+  const { data: session } = useSession();
   const isBasketCartOpen = useSelector(selectIsBasketCartOpen);
-
   const dispatch = useDispatch();
   const handleToggleBasketMenu = () => {
     dispatch(toggleBasketCart());
@@ -30,9 +30,23 @@ function MobileHeader() {
     dispatch(reversemobileMenu());
   };
 
+  useEffect(() => {
+    const fixNavbarToTop = () => {
+      const currentScroll = window.pageYOffset;
+      if (currentScroll > 110) {
+        setFixTop(true);
+      } else {
+        setFixTop(false);
+      }
+      console.log("fixTop", fixTop);
+    };
+    window.addEventListener("scroll", fixNavbarToTop);
+    return () => window.addEventListener("scroll", fixNavbarToTop);
+  }, []);
+
   return (
-    
-    <header className="flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%]">
+    <header className={fixTop? "flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%] fixed top-0 left-0 right-0 animate-fadeInDownBig duration-400 ease-linear z-50":
+    "flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%]"}>
       <div className="hidden">
         <Bars3 />
         <Basketsvg />
@@ -50,7 +64,6 @@ function MobileHeader() {
         alt="FoodRoya logo"
       />
       <div className="flex items-center gap-2">
-       
         <div className="relative group">
           <svg onClick={handleToggleBasketMenu} className="shrink-0 w-6 h-6">
             <use
@@ -73,7 +86,6 @@ function MobileHeader() {
           ""
         )}
       </div>
-      
     </header>
   );
 }
