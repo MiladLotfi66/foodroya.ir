@@ -7,7 +7,8 @@ import MobileMenu from "@/layout/MobileMenu";
 import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
-import { SessionProvider } from "next-auth/react";
+import ScrollToTop from "@/utils/ScrollToTop";
+// import { SessionProvider } from "next-auth/react";
 
 export const metadata = {
   title: "Create Next App",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
 
           <ThemeProviders>
             <Providers>
+              <ScrollToTop/>
               <Header />
               <MobileHeader />
               <MobileMenu />
