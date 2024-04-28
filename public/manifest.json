@@ -1,6 +1,6 @@
 {
-    "name": "My awesome PWA app",
-    "short_name": "PWA App",
+    "name": "فروشگاه محصولات خانگی فود رویا",
+    "short_name": "فود رویا",
     "icons": [
       {
         "src": "/android-chrome-192x192.png",
@@ -19,9 +19,9 @@
         "type": "image/png"
       }
     ],
-    "theme_color": "#FFFFFF",
-    "background_color": "#FFFFFF",
+    "theme_color": "#3f3f46",
+    "background_color": "#3f3f46",
     "start_url": "/",
     "display": "standalone",
-    "orientation": "portrait"
+    "orientation": "portrait",
   }
