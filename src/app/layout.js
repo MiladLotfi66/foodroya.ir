@@ -9,24 +9,51 @@ import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
 // import { SessionProvider } from "next-auth/react";
+const APP_NAME = "فود رویا";
+const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
+const APP_TITLE_TEMPLATE = "%s - PWA App";
+const APP_DESCRIPTION = "فروشگاه محصولات خانگی فود رویا";
 
-export const metadata = {
+ export const metadata = {
   manifest:"/manifest.json",
-  title: "فود رویا",
-  description: "محصولات خانگی فود رویا",
 
-  // icons: {
-  //   icon: '/android-chrome-192x192.png',
-  //   shortcut: '/android-chrome-192x192.png',
-  //   apple: '/android-chrome-192x192.png',
-  //   other: {
-  //     rel: 'apple-touch-icon',
-  //     url: '/android-chrome-192x192.png',
-  //   },
-  // },
-
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE,
+    // startUpImage: [],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
 };
 
+export const viewport = {
+  themeColor: "#3f3f46",
+};
 export default function RootLayout({ children }) {
   return (
     <html
@@ -56,3 +83,7 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
+
+
+
