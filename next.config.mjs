@@ -8,8 +8,9 @@ const nextConfig = {
   },
 };
 
-// اضافه کردن متن مورد نظر
-nextConfig.output = 'standalone';
+
+ // اضافه کردن متن مورد نظر
+       nextConfig.output = 'standalone';
 
 export default withPWAInit({
   dest: "public",
@@ -18,6 +19,7 @@ export default withPWAInit({
   reloadOnOnline: true,
   swcMinify: true,
   disable: false,
+  
   workboxOptions: {
     disableDevLogs: true,
   },

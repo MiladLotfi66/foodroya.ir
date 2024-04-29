@@ -1,5 +1,5 @@
 import Image from "next/image";
-import img from "@/public/Images/jpg/hamberger.jpg";
+import img from "@/public/Images/jpg/hamber2.jpeg";
 
 function CategoriIconeAndName() {
   return (

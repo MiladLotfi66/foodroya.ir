@@ -11,10 +11,12 @@ import ScrollToTop from "@/utils/ScrollToTop";
 // import { SessionProvider } from "next-auth/react";
 const APP_NAME = "فود رویا";
 const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
-const APP_TITLE_TEMPLATE = "%s - PWA App";
+const APP_TITLE_TEMPLATE = "محصولات خانگی فود رویا";
 const APP_DESCRIPTION = "فروشگاه محصولات خانگی فود رویا";
 
  export const metadata = {
+  metadataBase: new URL('http://localhost:3000/'),
+
   manifest:"/manifest.json",
 
   applicationName: APP_NAME,
@@ -30,7 +32,7 @@ const APP_DESCRIPTION = "فروشگاه محصولات خانگی فود روی�
     // startUpImage: [],
   },
   formatDetection: {
-    telephone: false,
+      telephone:    false,
   },
   openGraph: {
     type: "website",
