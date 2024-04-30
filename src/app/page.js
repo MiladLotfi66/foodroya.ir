@@ -1,5 +1,4 @@
 import NewProduct from "@/module/home/NewProduct";
-import Banner from "@/module/home/Banner";
 import Banner2 from "@/module/home/Banner2";
 import CategoryBanner from "@/module/home/CategoryBanner";
 import ProductCategori from "@/module/home/ProductCategori";

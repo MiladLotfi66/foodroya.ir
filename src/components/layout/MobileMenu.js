@@ -40,8 +40,8 @@ function MobileMenu() {
           <div
             className={
               theme === "dark"
-                ? "fixed left-0 top-0 right-0 min-h-screen w-64 md:hidden bg-white dark:bg-zinc-700 z-20"
-                : "fixed left-0 top-0 right-0 min-h-screen w-64 md:hidden bg-white dark:bg-zinc-700 z-20"
+                ? "fixed left-0 top-0 right-0 min-h-screen w-64 md:hidden bg-white dark:bg-zinc-700 z-50"
+                : "fixed left-0 top-0 right-0 min-h-screen w-64 md:hidden bg-white dark:bg-zinc-700 z-50"
             }
           >
             <div className="hidden">

@@ -7,8 +7,10 @@ import "swiper/css/autoplay";
 import { Navigation } from "swiper/modules";
 
 function Banner2() {
+
   return (
-    <div>
+    
+    <div className="block">
       <Swiper
         navigation={true}
         autoplay={{ delay: 2000 }}
@@ -17,7 +19,7 @@ function Banner2() {
       >
         <SwiperSlide>
           <section
-            className={` h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto   bg-no-repeat bg-cover bg-center  bg-[url("../../public/Images/jpg/finger.jpg")]`}
+            className={`h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto   bg-no-repeat bg-cover bg-center  bg-[url("../../public/Images/jpg/finger.jpg")]`}
           >
             <HeaderText />
           </section>

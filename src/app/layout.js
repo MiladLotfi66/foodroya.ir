@@ -73,6 +73,9 @@ export default function RootLayout({ children }) {
               <ScrollToTop/>
               <Header />
               <MobileHeader />
+             
+
+
               <MobileMenu />
               {/* <ThemeSwitch/> */}
               <AosInit/>

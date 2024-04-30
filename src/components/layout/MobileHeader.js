@@ -7,7 +7,6 @@ import {
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 import { useDispatch } from "react-redux";
 import Bars3 from "@/module/svgs/Bars3";
-import me from "@/public/Images/PNG/FoodRoyaLogo.png";
 import me2 from "@/public/Images/PNG/FoodRoyaLogoDark.png";
 import Basketsvg from "@/module/svgs/Basketsvg";
 import Image from "next/image";
@@ -31,7 +30,8 @@ function MobileHeader() {
  
 
   return (
-    <header className= "flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%] fixed top-0 left-0 right-0 animate-fadeInDownBig duration-400 ease-linear z-50">
+
+    <header className= "flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%] sticky top-0 left-0 right-0 animate-fadeInDownBig duration-400 ease-linear z-50">
       <div className="hidden">
         <Bars3 />
         <Basketsvg />
@@ -72,6 +72,8 @@ function MobileHeader() {
         )}
       </div>
     </header>
+    
+
   );
 }
 
