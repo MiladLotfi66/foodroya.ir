@@ -7,7 +7,7 @@ function AbutePhone() {
           <PhoneSvg />
         </div>
       </div>
-      <span className="logoName text-sm line-clamp-2">01142044443</span>
+      <span className="logoName text-sm line-clamp-2">011-444-80-501</span>
     </div>
   );
 }

@@ -9,7 +9,7 @@ function AbuteMobile() {
           <MobileSvg />
         </div>
         </div>
-      <span className="logoName text-sm line-clamp-2">09116666195</span>
+      <span className="logoName text-sm line-clamp-2">0903-044-3168</span>
     </div>
   )
 }

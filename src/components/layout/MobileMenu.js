@@ -158,7 +158,7 @@ function MobileMenu() {
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
              
             {session ? (
-              <Link href="#" className=" inline-flex items-center gap-x-2" onClick={() => {signOut()
+              <Link href="/" className=" inline-flex items-center gap-x-2" onClick={() => {signOut()
                  dispatch(reversemobileMenu())
               }}>
                 <svg className="w-5 h-5">
