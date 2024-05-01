@@ -75,6 +75,10 @@
     @apply text-zinc-700 dark:text-white rounded-lg text-base/4 md:text-lg/4 h-10 bg-gray-200 dark:bg-gray-600 m-2 p-2 font-DanaDemiBold placeholder:p-2;
   }
 
+  .logoName {
+    @apply text-wrap text-zinc-700 dark:text-white font-DanaDemiBold text-sm md:text-xl ;
+  }
+
   .section_title {
     @apply text-2xl md:text-5xl font-MorabbaMedium text-zinc-700 dark:text-white;
   }
@@ -105,3 +109,7 @@
     @apply flex justify-center items-center;
   }
 }
+
+
+
+ 

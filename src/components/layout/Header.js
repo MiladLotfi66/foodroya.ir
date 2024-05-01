@@ -81,7 +81,7 @@ function Header() {
               <a href="#">بلاگ</a>
             </li>
             <li className="flex items-center">
-              <a href="#">درباره ما</a>
+              <a href="/abute">درباره ما</a>
             </li>
             <li className="flex items-center">
               <a href="#">ارتباط با ما</a>
