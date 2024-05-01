@@ -7,14 +7,11 @@ import BestSalling from "@/module/home/BestSalling";
 export default function Home() {
   return (
     <>
-    <Banner2/>
-    <NewProduct />
-    <CategoryBanner/>
-    <ProductCategori/>
-    <BestSalling/>
-
+      <Banner2 />
+      <NewProduct />
+      <CategoryBanner />
+      <ProductCategori />
+      <BestSalling />
     </>
   );
 }
-
-
