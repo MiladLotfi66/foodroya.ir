@@ -1799,6 +1799,11 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
+.blur {
+  --tw-blur: blur(8px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
 .backdrop-blur-\[6px\] {
   --tw-backdrop-blur: blur(6px);
   -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
@@ -1823,6 +1828,30 @@ video {
 
 :is(.dark .dark\:darklinergradient) {
   background: linear-gradient(rgba(39, 39, 42, 0.65), rgba(39, 39, 42, 0.65));
+}
+
+.selection\:flexCenter *::-moz-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection\:flexCenter *::selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection\:flexCenter::-moz-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection\:flexCenter::selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .placeholder\:p-2::-moz-placeholder {

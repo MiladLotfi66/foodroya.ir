@@ -167,7 +167,7 @@ function MobileMenu() {
                 خروج
               </Link>)
               :(
-                <Link href="/signin" onClick={() => 
+                <Link href="/signup2" onClick={() => 
                   dispatch(reversemobileMenu())
                } className=" inline-flex items-center gap-x-2    ">
                   <svg className="w-5 h-5 rotate-180">
@@ -175,6 +175,7 @@ function MobileMenu() {
                   </svg>
                   ورود | ثبت نام
                 </Link>)}
+                
 
               <div className="flex gap-x-2">
                 {theme === "dark" ? (

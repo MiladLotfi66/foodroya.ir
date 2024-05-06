@@ -11,6 +11,7 @@ import Whatsapp from "@/public/Images/jpg/Whatsapp.jpeg";
 import Link from "next/link";
 import Image from "next/image";
 
+
 function AbuteSocialNetworks() {
   return (
     <div data-aos="fade-up" className="container  my-9 md:my-20">

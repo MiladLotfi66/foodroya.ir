@@ -18,10 +18,10 @@ const RegisterSchema = yup.object().shape({
     .matches(/[0-9]/, "پسورد باید حداقل 8 کاراکتر باشد، شامل حروف کوچک و بزرگ و یک عدد و یک نشانه")
     .matches(/[!@#$%^&*(),.?":{}|<>]/, "پسورد باید حداقل 8 کاراکتر باشد، شامل حروف کوچک و بزرگ و یک عدد و یک نشانه")
     .required("وارد کردن فیلد پسورد اجباری است"),
-  rePassword: yup.string().nullable().oneOf([yup.ref("password"), null],
-      "تکرار رمز عبور باید با رمز عبور مطابقت داشته باشد"
-    )
-    .required("وارد کردن فیلد تکرار رمز عبور اجباری است"),
+  // rePassword: yup.string().nullable().oneOf([yup.ref("password"), null],
+  //     "تکرار رمز عبور باید با رمز عبور مطابقت داشته باشد"
+  //   )
+  //   .required("وارد کردن فیلد تکرار رمز عبور اجباری است"),
 });
 
 export default RegisterSchema;
