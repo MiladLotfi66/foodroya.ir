@@ -70,7 +70,37 @@ function GetUserName() {
               </Link>
             </div>
           </div>
+          <div className="flex justify-center gap-x-2">
+            <span
+              onClick={() => {
+                SetStep("GetUser");
+              }}
+              className={`block w-[100px]  rounded ${
+                step !== "GetUser" ? "h-1.5" : "h-2 "
+              } ${errors.name ? "bg-orange-300" : "bg-green-300"}`}
+            ></span>
+<span
+              onClick={() => {
+                SetStep("GetPass");
+              }}
+              className={`block w-[100px]  rounded ${
+                step !== "GetPass" ? "h-1.5" : "h-2 "
+              } ${errors.password ? "bg-orange-300" : "bg-green-300"}`}
+            ></span>
 
+
+<span
+              onClick={() => {
+                SetStep("GetEmail");
+              }}
+              className={`block w-[100px]  rounded ${
+                step !== "GetEmail" ? "h-1.5" : "h-2 "
+              } ${errors.email ? "bg-orange-300" : "bg-green-300"}`}
+            ></span>
+
+          
+      
+          </div>
           {/* *******************main******************** */}
 
           <form
@@ -79,132 +109,123 @@ function GetUserName() {
           >
             {/* *******************username******************** */}
 
-              <div className={step !== "GetUser" ? "hidden" : ""}>
-                <div className="flex items-center ">
-                  <svg className="  w-5 h-5 ">
-                    <Usersvg />
-                  </svg>
-                  <input
-                    className="inputStyle grow  "
-                    type="text"
-                    name="name"
-                    autoComplete="name"
-                    placeholder="نام کاربری"
-                    {...register("name")}
-                    onBlur={handleNameBlur} // اضافه کردن onBlur و فراخوانی تابع مربوطه
-                  />
-                </div>
-                {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
-
-                {errors.name && (
-                  <div className="text-xs text-red-400">
-                    {errors.name.message}
-                  </div>
-                )}
-                {/* *******************button**************************** */}
-                <button
-                  onClick={() => {
-                    SetStep("GetPass");
-                  }}
-                  disabled={errors.name}
-                  // type="submit"
-                  className={
-                    /* if issubmit is true class will be change */
-                    errors.name
-                      ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
-                      : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
-                  }
-                >
-                  بعدی
-                </button>
+            <div className={step !== "GetUser" ? "hidden" : ""}>
+              <div className="flex items-center ">
+                <svg className="  w-5 h-5 ">
+                  <Usersvg />
+                </svg>
+                <input
+                  className="inputStyle grow  "
+                  type="text"
+                  name="name"
+                  autoComplete="name"
+                  placeholder="نام کاربری"
+                  {...register("name")}
+                  onBlur={handleNameBlur} // اضافه کردن onBlur و فراخوانی تابع مربوطه
+                />
               </div>
-           
+              {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
 
-
-
+              {errors.name && (
+                <div className="text-xs text-red-400">
+                  {errors.name.message}
+                </div>
+              )}
+              {/* *******************button**************************** */}
+              <button
+                onClick={() => {
+                  SetStep("GetPass");
+                }}
+                disabled={errors.name}
+                // type="submit"
+                className={
+                  /* if issubmit is true class will be change */
+                  errors.name
+                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
+                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
+                }
+              >
+                بعدی
+              </button>
+            </div>
 
             {/* *******************password******************** */}
 
             <div className={step !== "GetPass" ? "hidden" : ""}>
-
-                <div className="flex items-center ">
-                  <svg className="  w-5 h-5 ">
-                    <Usersvg />
-                  </svg>
-                  <input
-                    className="inputStyle grow  "
-                    type="password"
-                    name="password"
-                    autoComplete="password"
-                    placeholder="رمز عبور"
-                    {...register("password")}
-                  />
-                </div>
-                {errors.password && (
-                  <div className="text-xs text-red-400">
-                    {errors.password.message}
-                  </div>
-                )}
-                {/* *******************button**************************** */}
-                <button
-                  onClick={() => {
-                    SetStep("GetEmail");
-                  }}
-                  disabled={errors.password}
-
-                  // type="submit"
-                  className={
-                    /* if issubmit is true class will be change */
-                    errors.password
-                      ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
-                      : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
-                  }
-                >
-                  بعدی
-                </button>
+              <div className="flex items-center ">
+                <svg className="  w-5 h-5 ">
+                  <Usersvg />
+                </svg>
+                <input
+                  className="inputStyle grow  "
+                  type="password"
+                  name="password"
+                  autoComplete="password"
+                  placeholder="رمز عبور"
+                  {...register("password")}
+                />
               </div>
-            
-            {/* *******************email******************** */}
-
-            <div className={step !== "GetEmail" ? "hidden" : ""}>
-
-                <div className="flex items-center ">
-                  <svg className="w-5 h-5 ">
-                    <Usersvg />
-                  </svg>
-                  <input
-                    className="inputStyle grow  "
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    placeholder="ایمیل"
-                    {...register("email")}
-                  />
+              {errors.password && (
+                <div className="text-xs text-red-400">
+                  {errors.password.message}
                 </div>
-                {errors.email && (
-                  <div className="text-xs text-red-400">
-                    {errors.email.message}
-                  </div>
-                )}
-                {/* *******************button**************************** */}
-                <button
-                  onClick={() => {
-                    SetStep("GetUser");
-                  }}
-                  // type="submit"
-                  disabled={errors.email}
-
-                  className={
-                    /* if issubmit is true class will be change */
-                    errors.email
+              )}
+              {/* *******************button**************************** */}
+              <button
+                onClick={() => {
+                  SetStep("GetEmail");
+                }}
+                disabled={errors.password}
+                // type="submit"
+                className={
+                  /* if issubmit is true class will be change */
+                  errors.password
                     ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
                     : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
                 }
-                >
-                  بعدی
-                </button>
+              >
+                بعدی
+              </button>
+            </div>
+
+            {/* *******************email******************** */}
+
+            <div className={step !== "GetEmail" ? "hidden" : ""}>
+              <div className="flex items-center ">
+                <svg className="w-5 h-5 ">
+                  <Usersvg />
+                </svg>
+                <input
+                  className="inputStyle grow  "
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  placeholder="ایمیل"
+                  {...register("email")}
+                />
               </div>
-            
+              {errors.email && (
+                <div className="text-xs text-red-400">
+                  {errors.email.message}
+                </div>
+              )}
+              {/* *******************button**************************** */}
+              <button
+                onClick={() => {
+                  SetStep("GetUser");
+                }}
+                // type="submit"
+                disabled={errors.email}
+                className={
+                  /* if issubmit is true class will be change */
+                  errors.email
+                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
+                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
+                }
+              >
+                بعدی
+              </button>
+            </div>
           </form>
         </div>
       </div>
