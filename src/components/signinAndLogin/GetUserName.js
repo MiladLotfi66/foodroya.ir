@@ -6,18 +6,33 @@ import Usersvg from "@/module/svgs/Usersvg";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Toaster, toast } from "react-hot-toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Usersvg from "@/module/svgs/Usersvg";
+import Emailsvg from "@/module/svgs/Emailsvg";
+import Locksvg from "@/module/svgs/Locksvg";
 
 function GetUserName() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
 
   // *******************hook use form********************
+  // const { register, errors, trigger, handleSubmit, clearErrors } = useForm({
+  //   mode: 'onBlur',
+  //   reValidateMode: 'onBlur'
+  // });
+  useEffect(() => {
+    handleSubmit(formsubmitting)();
+  }, []); 
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: 'all',
+    reValidateMode: 'all',
+    shouldFocusError: true, // اضافه کردن shouldFocusError
+
     defaultValues: {
       name: "",
       password: "",
@@ -29,23 +44,30 @@ function GetUserName() {
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-    console.log(data.name);
+    console.log(data.email);
   };
 
   // فراخوانی تابع handleSubmit برای ورودی name
-  const handleNameBlur = () => {
-    handleSubmit((data) => {
-      console.log("blur");
-    })();
-  };
+  // const handleNameBlur = () => {
+  //   handleSubmit((data) => {
+  //   })();
+  // };
+
+  // const handleEmailBlur = () => {
+  //   handleSubmit((data) => {
+  //   })();
+  // };
+
+  // const handlePassBlur = () => {
+  //   handleSubmit((data) => {
+  //   })();
+  // };
+
 
   // *******************jsx********************
   return (
     <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
       <div className="container ">
-        <div className="hidden">
-          <Usersvg />
-        </div>
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
 
@@ -70,6 +92,8 @@ function GetUserName() {
               </Link>
             </div>
           </div>
+
+          {/* *******************step line******************** */}
           <div className="flex justify-center gap-x-2">
             <span
               onClick={() => {
@@ -77,29 +101,26 @@ function GetUserName() {
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetUser" ? "h-1.5" : "h-2 "
-              } ${errors.name ? "bg-orange-300" : "bg-green-300"}`}
+              } ${errors.name ? "bg-red-300" : "bg-teal-500"}`}
             ></span>
-<span
+
+            <span
               onClick={() => {
                 SetStep("GetPass");
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetPass" ? "h-1.5" : "h-2 "
-              } ${errors.password ? "bg-orange-300" : "bg-green-300"}`}
+              } ${errors.password ? "bg-red-300" : "bg-teal-500"}`}
             ></span>
 
-
-<span
+            <span
               onClick={() => {
                 SetStep("GetEmail");
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetEmail" ? "h-1.5" : "h-2 "
-              } ${errors.email ? "bg-orange-300" : "bg-green-300"}`}
+              } ${errors.email ? "bg-red-300" : "bg-teal-500"}`}
             ></span>
-
-          
-      
           </div>
           {/* *******************main******************** */}
 
@@ -115,13 +136,14 @@ function GetUserName() {
                   <Usersvg />
                 </svg>
                 <input
-                  className="inputStyle grow  "
+                  className="inputStyle grow "
+                  
                   type="text"
                   name="name"
                   autoComplete="name"
                   placeholder="نام کاربری"
                   {...register("name")}
-                  onBlur={handleNameBlur} // اضافه کردن onBlur و فراخوانی تابع مربوطه
+                  // all={handleNameBlur} // اضافه کردن onBlur و فراخوانی تابع مربوطه
                 />
               </div>
               {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
@@ -154,7 +176,7 @@ function GetUserName() {
             <div className={step !== "GetPass" ? "hidden" : ""}>
               <div className="flex items-center ">
                 <svg className="  w-5 h-5 ">
-                  <Usersvg />
+                  <Locksvg />
                 </svg>
                 <input
                   className="inputStyle grow  "
@@ -163,6 +185,7 @@ function GetUserName() {
                   autoComplete="password"
                   placeholder="رمز عبور"
                   {...register("password")}
+                  // all={handlePassBlur}
                 />
               </div>
               {errors.password && (
@@ -193,7 +216,7 @@ function GetUserName() {
             <div className={step !== "GetEmail" ? "hidden" : ""}>
               <div className="flex items-center ">
                 <svg className="w-5 h-5 ">
-                  <Usersvg />
+                  <Emailsvg />
                 </svg>
                 <input
                   className="inputStyle grow  "
@@ -202,6 +225,7 @@ function GetUserName() {
                   autoComplete="email"
                   placeholder="ایمیل"
                   {...register("email")}
+                  // all={handleEmailBlur}
                 />
               </div>
               {errors.email && (
@@ -211,10 +235,13 @@ function GetUserName() {
               )}
               {/* *******************button**************************** */}
               <button
+                             
+
                 onClick={() => {
-                  SetStep("GetUser");
+                  errors.email || errors.name || errors.password ? SetStep("GetUser") : null ;
+                  
                 }}
-                // type="submit"
+                type="submit"
                 disabled={errors.email}
                 className={
                   /* if issubmit is true class will be change */
@@ -223,7 +250,8 @@ function GetUserName() {
                     : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
                 }
               >
-                بعدی
+                {errors.email || errors.name || errors.password ? "بعدی" : "ثبت نام"}
+                
               </button>
             </div>
           </form>
