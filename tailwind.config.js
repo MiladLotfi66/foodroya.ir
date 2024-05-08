@@ -41,6 +41,7 @@ module.exports = {
         "MorabbaBold":"Morabba Bold",
         "MorabbaMedium":"Morabba Medium",
         "IranSans":"IranSans",
+        "roboto":"roboto",
       },
       spacing:{
         "25":"6.25rem",

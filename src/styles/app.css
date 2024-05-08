@@ -445,6 +445,14 @@ video {
 }
 
 @font-face {
+  font-family: "roboto";
+
+  src: url("../../public/fonts/roboto/Roboto-Black.ttf") format("ttf");
+
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Vazir";
 
   src: url("../../public/fonts/vazir/Vazir-Medium.ttf") format("ttf");
@@ -1527,11 +1535,6 @@ video {
 .bg-orange-300 {
   --tw-bg-opacity: 1;
   background-color: rgb(253 186 116 / var(--tw-bg-opacity));
-}
-
-.bg-red-300 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(252 165 165 / var(--tw-bg-opacity));
 }
 
 .bg-teal-500 {

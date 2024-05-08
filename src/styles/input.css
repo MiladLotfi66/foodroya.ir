@@ -4,6 +4,11 @@
 
 @layer base {
   @font-face {
+    font-family: "roboto";
+    src: url("../../public/fonts/roboto/Roboto-Black.ttf") format("ttf");
+    font-display: swap;
+  } 
+   @font-face {
     font-family: "Vazir";
     src: url("../../public/fonts/vazir/Vazir-Medium.ttf") format("ttf");
     font-display: swap;

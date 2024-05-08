@@ -7,19 +7,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
-import Usersvg from "@/module/svgs/Usersvg";
-import Emailsvg from "@/module/svgs/Emailsvg";
+import Phonesvg from "@/module/svgs/phoneSvg1";
 import Locksvg from "@/module/svgs/Locksvg";
+
 
 function GetUserName() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
 
   // *******************hook use form********************
-  // const { register, errors, trigger, handleSubmit, clearErrors } = useForm({
-  //   mode: 'onBlur',
-  //   reValidateMode: 'onBlur'
-  // });
+
   useEffect(() => {
     handleSubmit(formsubmitting)();
   }, []); 
@@ -29,14 +26,14 @@ function GetUserName() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    mode: 'all',
-    reValidateMode: 'all',
-    shouldFocusError: true, // اضافه کردن shouldFocusError
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+    // shouldFocusError: true, // اضافه کردن shouldFocusError
 
     defaultValues: {
       name: "",
       password: "",
-      email: "",
+      Phone: "",
     },
     resolver: yupResolver(RegisterSchema),
   });
@@ -44,24 +41,8 @@ function GetUserName() {
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-    console.log(data.email);
+    console.log(data.Phone);
   };
-
-  // فراخوانی تابع handleSubmit برای ورودی name
-  // const handleNameBlur = () => {
-  //   handleSubmit((data) => {
-  //   })();
-  // };
-
-  // const handleEmailBlur = () => {
-  //   handleSubmit((data) => {
-  //   })();
-  // };
-
-  // const handlePassBlur = () => {
-  //   handleSubmit((data) => {
-  //   })();
-  // };
 
 
   // *******************jsx********************
@@ -71,7 +52,7 @@ function GetUserName() {
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
 
-          <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
+          <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36 mb-6">
             <div className="flex flex-col items-start gap-2.5">
               <h4>
                 خوش آمدید به
@@ -101,7 +82,7 @@ function GetUserName() {
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetUser" ? "h-1.5" : "h-2 "
-              } ${errors.name ? "bg-red-300" : "bg-teal-500"}`}
+              } ${errors.name ? "bg-orange-300" : "bg-teal-500"}`}
             ></span>
 
             <span
@@ -110,16 +91,16 @@ function GetUserName() {
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetPass" ? "h-1.5" : "h-2 "
-              } ${errors.password ? "bg-red-300" : "bg-teal-500"}`}
+              } ${errors.password ? "bg-orange-300" : "bg-teal-500"}`}
             ></span>
 
             <span
               onClick={() => {
-                SetStep("GetEmail");
+                SetStep("GetPhone");
               }}
               className={`block w-[100px]  rounded ${
-                step !== "GetEmail" ? "h-1.5" : "h-2 "
-              } ${errors.email ? "bg-red-300" : "bg-teal-500"}`}
+                step !== "GetPhone" ? "h-1.5" : "h-2 "
+              } ${errors.Phone ? "bg-orange-300" : "bg-teal-500"}`}
             ></span>
           </div>
           {/* *******************main******************** */}
@@ -149,7 +130,7 @@ function GetUserName() {
               {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
 
               {errors.name && (
-                <div className="text-xs text-red-400">
+                <div className="text-xs container text-red-400 mt-5">
                   {errors.name.message}
                 </div>
               )}
@@ -189,14 +170,14 @@ function GetUserName() {
                 />
               </div>
               {errors.password && (
-                <div className="text-xs text-red-400">
+                <div className="text-xs container text-red-400 mt-5">
                   {errors.password.message}
                 </div>
               )}
               {/* *******************button**************************** */}
               <button
                 onClick={() => {
-                  SetStep("GetEmail");
+                  SetStep("GetPhone");
                 }}
                 disabled={errors.password}
                 // type="submit"
@@ -211,26 +192,26 @@ function GetUserName() {
               </button>
             </div>
 
-            {/* *******************email******************** */}
+            {/* *******************Phone******************** */}
 
-            <div className={step !== "GetEmail" ? "hidden" : ""}>
+            <div className={step !== "GetPhone" ? "hidden" : ""}>
               <div className="flex items-center ">
                 <svg className="w-5 h-5 ">
-                  <Emailsvg />
+                  <Phonesvg />
                 </svg>
                 <input
-                  className="inputStyle grow  "
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  placeholder="ایمیل"
-                  {...register("email")}
-                  // all={handleEmailBlur}
+                  className="inputStyle grow"
+                  type="Phone"
+                  name="Phone"
+                  autoComplete="Phone"
+                  placeholder="شماره تلفن همراه"
+                  {...register("Phone")}
+                  // all={handlePhoneBlur}
                 />
               </div>
-              {errors.email && (
-                <div className="text-xs text-red-400">
-                  {errors.email.message}
+              {errors.Phone && (
+                <div className="text-xs container text-red-400 mt-5">
+                  {errors.Phone.message}
                 </div>
               )}
               {/* *******************button**************************** */}
@@ -238,19 +219,19 @@ function GetUserName() {
                              
 
                 onClick={() => {
-                  errors.email || errors.name || errors.password ? SetStep("GetUser") : null ;
+                  errors.Phone || errors.name || errors.password ? SetStep("GetUser") : null ;
                   
                 }}
                 type="submit"
-                disabled={errors.email}
+                disabled={errors.Phone}
                 className={
                   /* if issubmit is true class will be change */
-                  errors.email
+                  errors.Phone
                     ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
                     : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
                 }
               >
-                {errors.email || errors.name || errors.password ? "بعدی" : "ثبت نام"}
+                {errors.Phone || errors.name || errors.password ? "بعدی" : "ثبت نام"}
                 
               </button>
             </div>
