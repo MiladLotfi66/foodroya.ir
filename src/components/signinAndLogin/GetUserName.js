@@ -9,7 +9,9 @@ import Phonesvg from "@/module/svgs/phoneSvg1";
 import Locksvg from "@/module/svgs/Locksvg";
 import addNewUserHandler from "./signUpHandler";
 import HashLoader from "react-spinners/HashLoader";
-import { DevTool } from "@hookform/devtools";
+import { yupResolver } from "@hookform/resolvers/yup";
+import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
+// import { DevTool } from "@hookform/devtools";
 // let count =0
 
 function GetUserName() {
@@ -27,7 +29,7 @@ function GetUserName() {
 
   const {
     register,
-    control,
+    // control,
     // reset,
     handleSubmit,
     formState: { errors },isSubmitting,setValue
@@ -38,6 +40,8 @@ function GetUserName() {
       password: "",
       phone: "",
     },
+    resolver: yupResolver(RegisterSchema),
+
   });
 
   // *******************submit ********************
@@ -145,18 +149,7 @@ function GetUserName() {
                   autoComplete="username"
                   placeholder="نام"
                   {...register("username",
-                  {
-                  required:"ورور فیلد نام اجباری است",
-                  maxLength:{
-                    value:25,
-                    message:"نام کاربری باید حداکثر ۲۵ کاراکتر باشد "
-                  },
-                  minLength:{
-                    value:3,
-                    message:"نام کاربری باید حداقل ۳ کاراکتر باشد "
-                  }
-                  
-                  })}
+                 )}
                 />
               </div>
               {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
@@ -197,22 +190,7 @@ function GetUserName() {
                   autoComplete="password"
                   placeholder="رمز عبور"
                   {...register("password",
-                  {required:"ورور فیلد پسورد اجباری است",
-                  
-                    maxLength:{
-                      value:25,
-                      message:"نام کاربری باید حداکثر ۲۵ کاراکتر باشد "
-                    },
-                    minLength:{
-                      value:8,
-                      message:"نام کاربری باید حداقل ۸ کاراکتر باشد "
-                    },
-                    
-                  pattern:{
-                    value:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/,
-                    message: "رمز عبور باید حداقل ۸ کاراکتر باشد و شامل حداقل یک حرف بزرگ، یک حرف کوچک، یک عدد و یک کاراکتر خاص (#?!@$%^&*-)."
-                  } 
-                  }
+          
                 )
                   }
                 />
@@ -252,14 +230,7 @@ function GetUserName() {
                   name="phone"
                   autoComplete="phone"
                   placeholder="شماره تلفن همراه"
-                  {...register("phone",
-                  {required:"ورور فیلد تلفن همراه اجباری است",
-                  pattern:{
-                    value:/^[۰-۹0-9]{11}$/,
-                    message:  "شماره تلفن وارد شده معتبر نیست"
-                  }
-                  }
-                )
+                  {...register("phone")
                   }
                 />
               </div>
@@ -294,7 +265,7 @@ function GetUserName() {
               </button>
             </div>
           </form>
-          <DevTool control={control} />
+          {/* <DevTool control={control} /> */}
         </div>
       </div>
       <Toaster />

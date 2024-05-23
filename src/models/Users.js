@@ -1,4 +1,5 @@
 import { Schema, model, models } from "mongoose";
+import { string } from "yup";
 const UserSchema = new Schema(
   {
     username: {
@@ -21,6 +22,7 @@ const UserSchema = new Schema(
       default: "user",
       required: true,
     },
+    refreshToken:String,
   },
   { timestamp: true }
 );

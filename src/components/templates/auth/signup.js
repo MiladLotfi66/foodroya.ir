@@ -1,7 +1,7 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/yupSchemas/signUpSchema";  
+import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";  
 import { useState } from "react";
 import Usersvg from "@/module/svgs/Usersvg";
 import Emailsvg from "@/module/svgs/Emailsvg";

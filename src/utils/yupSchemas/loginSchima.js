@@ -1,11 +1,12 @@
 import * as yup from "yup";
 
 // *******************validate********************
-const RegisterSchema = yup.object().shape({
-  email: yup
+const loginSchima = yup.object().shape({
+  phone: yup
     .string()
-    .email("ایمیل وارد شده معتبر نمی باشد")
-    .required("وارد کردن فیلد ایمیل اجباری است"),
+    .matches(/^[۰-۹0-9]{11}$/
+    , "شماره تلفن وارد شده معتبر نیست")
+    .required("وارد کردن فیلد شماره تلفن الزامیست "),
  
   password: yup
     .string()
@@ -18,4 +19,4 @@ const RegisterSchema = yup.object().shape({
   
 });
 
-export default RegisterSchema;
+export default loginSchima;

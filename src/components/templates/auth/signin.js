@@ -1,52 +1,58 @@
 "use client";
 import { useForm } from "react-hook-form";
-import Emailsvg from "@/module/svgs/Emailsvg";
 import Locksvg from "@/module/svgs/Locksvg";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
-import { signIn } from "next-auth/react";
-import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/yupSchemas/signInSchema"; 
+import loginSchima from "@/utils/yupSchemas/loginSchima"; 
+import PhoneSvg from "@/module/svgs/phoneSvg1";
+import { useEffect } from "react";
 
 
 
 function SignIn() {
   const router = useRouter();
-  const [IsSubmit, SetIsSubmit] = useState(false);
-  
+
+
+  useEffect(() => {
+    setValue("password","",{shouldValidate:true})
+    setValue("phone","",{shouldValidate:true})
+    }, []); 
   // *******************hook use form********************
 
   const {
     register,
+    // control,
+    // reset,
     handleSubmit,
-    formState: { errors },
+    formState: { errors },isSubmitting,setValue
   } = useForm({
+    mode: "all",
     defaultValues: {
-      email: "",
+      phone: "",
       password: "",
      
     },
-    resolver: yupResolver(RegisterSchema),
+    resolver: yupResolver(loginSchima),
   });
 
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-    SetIsSubmit(true);
+    // SetIsSubmit(true);
     
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email: data.email,
-      password: data.password,
-      callbackUrl: "/",
-    });
-    if (res?.ok) router.push("/");
-    else toast.error("ایمیل یا رمز عبور اشتباه است");
-    SetIsSubmit(false);
+    // const res = await signIn("credentials", {
+    //   redirect: false,
+    //   email: data.email,
+    //   password: data.password,
+    //   callbackUrl: "/",
+    // });
+    // if (res?.ok) router.push("/");
+    // else toast.error("ایمیل یا رمز عبور اشتباه است");
+    // SetIsSubmit(false);
   };
 
   // *******************jsx********************
@@ -55,7 +61,7 @@ function SignIn() {
     <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
       <div className="container ">
         <div className="hidden">
-          <Emailsvg />
+          <phonesvg1 />
         </div>
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
@@ -69,7 +75,7 @@ function SignIn() {
                   فود رویا
                 </Link>
               </h4>
-              <h1 className="text-3xl font-MorabbaBold">ورود </h1>
+              <h1 className="text-3xl font-MorabbaBold">ورود با رمز عبور </h1>
             </div>
             <div className="flex flex-col items-start gap-3">
               <h4> ثبت نام نکرده اید؟</h4>
@@ -88,21 +94,21 @@ function SignIn() {
             onSubmit={handleSubmit(formsubmitting)}
             className="login-form flex flex-col gap-4 p-2 md:p-4"
           >
-            {/* *******************email******************** */}
+            {/* *******************phone******************** */}
 
             <div className="flex items-center ">
               <svg className="  w-5 h-5 ">
-                <Emailsvg />
+                <PhoneSvg />
               </svg>
               <input
                 className="inputStyle grow"
-                type="email"
-                name="email"
-                placeholder="ایمیل یا تلفن همراه"
-                {...register("email")}
+                type="phone"
+                name="phone"
+                placeholder="تلفن همراه"
+                {...register("phone")}
               />
             </div>
-            {errors.email && <div className="text-xs text-red-400">{errors.email.message}</div>}
+            {errors.phone && <div className="text-xs text-red-400">{errors.phone.message}</div>}
 
             {/* *******************password******************** */}
 
@@ -121,8 +127,8 @@ function SignIn() {
               />
             </div>
             <div className="flex justify-between items-center  ">
-            <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="#"> فراموشی رمز عبور</Link >
-            <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="#"> ورود با کد یکبار مصرف</Link >
+            <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="/forgetPassword"> فراموشی رمز عبور</Link >
+            <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="/OTPlogin"> ورود با کد یکبار مصرف</Link >
             </div>
             {errors.password && <div className="text-xs text-red-400">{errors.password.message}</div>}
             {/* *******************button**************************** */}
@@ -131,14 +137,14 @@ function SignIn() {
               type="submit"
               className={
                 /* if issubmit is true class will be change */
-                IsSubmit
+                isSubmitting
                   ? "flexCenter gap-x-2 h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
                   : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
               }
-              disabled={IsSubmit}
+              disabled={isSubmitting}
             >
-              {IsSubmit ? "در حال ورود  " : "ورود"}
-              {IsSubmit ? <HashLoader size={25} color="#fff" /> : ""}
+              {isSubmitting ? "در حال ورود  " : "ورود"}
+              {isSubmitting ? <HashLoader size={25} color="#fff" /> : ""}
             </button>
           </form>
         </div>

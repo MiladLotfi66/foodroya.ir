@@ -1,7 +1,9 @@
-import SignUp from "@/templates/auth/signup"
+import GetUserName from "@/components/signinAndLogin/GetUserName"
 function page() {
   return (
-   <SignUp/>
+    <div>
+      <GetUserName/>
+    </div>
   )
 }
 

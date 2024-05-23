@@ -1,16 +1,17 @@
+
 "use client";
 import { useForm } from "react-hook-form";
-import Chatsvg from "@/module/svgs/ChatSVG";
+import PhoneSvg from "@/module/svgs/phoneSvg1";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import "@/styles/styles.css"
 import { yupResolver } from "@hookform/resolvers/yup";
-import OTPSchima from "@/utils/yupSchemas/OTPSchima";
+import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
 
 
-function GetOTP() {
+function ForgetPassword() {
   const router = useRouter();
   
   // *******************hook use form********************
@@ -21,9 +22,9 @@ function GetOTP() {
     formState: { errors },isSubmitting,setValue
   } = useForm({
     defaultValues: {
-      OTP: "",
+      phone: "",
     },
-    resolver: yupResolver(OTPSchima),
+    resolver: yupResolver(RegisterSchema),
 
   });
 
@@ -51,7 +52,7 @@ function GetOTP() {
                   فود رویا
                 </Link>
               </h4>
-              <h1 className="text-2xl font-MorabbaBold">ورود با کد یکبار مصرف </h1>
+              <h1 className="text-2xl font-MorabbaBold">فراموشی رمز عبور </h1>
             </div>
             <div className="flex flex-col items-start gap-3">
               <h4> ثبت نام نکرده اید؟</h4>
@@ -70,24 +71,24 @@ function GetOTP() {
             onSubmit={handleSubmit(formsubmitting)}
             className="login-form flex flex-col gap-4 p-2 md:p-4"
           >
-            {/* *******************email******************** */}
+            {/* *******************phone******************** */}
 
             <div className="flex items-center ">
               <svg className="  w-5 h-5 ">
-                <Chatsvg />
+                <PhoneSvg />
               </svg>
               <input
                 className="inputStyle grow no-spinner"
                 type="number"
-                name="OTP"
-                placeholder="کد ارسال شده را وارد کنید"
-                {...register("OTP")}
+                name="phone"
+                placeholder="شماره تلفن همراه خود را وارد کنید"
+                {...register("phone")}
               />
             </div>
-            {errors.OTP && <div className="text-xs text-red-400">{errors.OTP.message}</div>}
+            {errors.phone && <div className="text-xs text-red-400">{errors.phone.message}</div>}
 
             <div className="flex justify-between items-center  ">
-            <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="/forgetPassword"> فراموشی رمز عبور</Link >
+            <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="/OTPlogin"> دریافت کد یکبار مصرف</Link >
             <Link className="text-orange-300 cursor-pointer font-MorabbaMedium" rel="nofollow" href="/signin"> ورود با رمز عبور</Link >
             </div>
             {/* *******************button**************************** */}
@@ -113,4 +114,4 @@ function GetOTP() {
   );
 }
 
-export default GetOTP;
+export default ForgetPassword;
