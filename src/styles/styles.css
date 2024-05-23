@@ -1,0 +1,13 @@
+/* styles.css یا هر فایل CSS دیگری */
+
+/* برای مرورگرهای وب‌کیت (مثل کروم و سافاری) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* برای فایرفاکس */
+input[type="number"] {
+  -moz-appearance: textfield;
+}

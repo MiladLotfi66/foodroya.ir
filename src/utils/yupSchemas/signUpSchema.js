@@ -3,8 +3,7 @@ import * as yup from "yup";
 // *******************validate********************
 const RegisterSchema = yup.object().shape({
  
-
-  name: yup
+  username: yup
     .string().nullable()
     .max(25, "نام کاربری نمی‌تواند بیشتر از 25 کاراکتر باشد")
     .required("وارد کردن فیلد نام کاربری اجباری است"),
@@ -17,9 +16,7 @@ const RegisterSchema = yup.object().shape({
     .matches(/[!@#$%^&*(),.?":{}|<>]/, "پسورد باید حداقل 8 کاراکتر باشد، شامل حروف کوچک و بزرگ و یک عدد و یک نشانه")
     .required("وارد کردن فیلد پسورد اجباری است"),
 
-
-
-    Phone: yup
+    phone: yup
     .string()
     .matches(/^[۰-۹0-9]{11}$/
     , "شماره تلفن وارد شده معتبر نیست")

@@ -13,6 +13,8 @@
       "@/layout/*": ["src/components/layout/*"],
       "@/module/*": ["src/components/module/*"],
       "@/templates/*": ["src/components/templates/*"],
+      "@/components/*": ["src/components/*"],
+
     }
   }
 }

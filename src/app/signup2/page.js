@@ -1,4 +1,4 @@
-import GetUserName from "src/components/signinAndLogin/GetUserName"
+import GetUserName from "@/components/signinAndLogin/GetUserName"
 function page() {
   return (
     <div>

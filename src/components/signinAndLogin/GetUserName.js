@@ -1,7 +1,5 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/yupSchemas/signUpSchema";
 import Usersvg from "@/module/svgs/Usersvg";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,41 +7,59 @@ import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import Phonesvg from "@/module/svgs/phoneSvg1";
 import Locksvg from "@/module/svgs/Locksvg";
-
+import addNewUserHandler from "./signUpHandler";
+import HashLoader from "react-spinners/HashLoader";
+import { DevTool } from "@hookform/devtools";
+// let count =0
 
 function GetUserName() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
+  // count++;
 
-  // *******************hook use form********************
 
   useEffect(() => {
-    handleSubmit(formsubmitting)();
+  setValue("username","",{shouldValidate:true})
+  setValue("password","",{shouldValidate:true})
+  setValue("phone","",{shouldValidate:true})
   }, []); 
+  // *******************hook use form********************
 
   const {
     register,
+    control,
+    // reset,
     handleSubmit,
-    formState: { errors },
+    formState: { errors },isSubmitting,setValue
   } = useForm({
-    mode: 'onChange',
-    reValidateMode: 'onChange',
-    // shouldFocusError: true, // اضافه کردن shouldFocusError
-
+    mode: "all",
     defaultValues: {
-      name: "",
+      username: "",
       password: "",
-      Phone: "",
+      phone: "",
     },
-    resolver: yupResolver(RegisterSchema),
   });
 
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-    console.log(data.Phone);
-  };
+    // SetIsSubmit(true);
+    try{
+    const res= await addNewUserHandler(data);
+    if (res.status === 201) {
+      router.push("/signin");
+    }else {
+      toast.error(res.error);
 
+    }
+
+  } catch (error) {
+   console.log(error);
+  }
+    
+    
+    // SetIsSubmit(false);
+  };
 
   // *******************jsx********************
   return (
@@ -51,12 +67,16 @@ function GetUserName() {
       <div className="container ">
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
-
+{/* <h1>{count/2}</h1> */}
           <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36 mb-6">
             <div className="flex flex-col items-start gap-2.5">
               <h4>
                 خوش آمدید به
-                <Link href="/" className="text-orange-300 font-MorabbaMedium">
+                <Link
+                  href="/"
+                  rel="nofollow"
+                  className="text-orange-300 font-MorabbaMedium"
+                >
                   {" "}
                   فود رویا
                 </Link>
@@ -67,6 +87,7 @@ function GetUserName() {
               <h4>قبلا ثبت نام کرده اید؟</h4>
               <Link
                 href="/signin"
+                rel="nofollow"
                 className="text-orange-300 cursor-pointer font-MorabbaMedium"
               >
                 ورود{" "}
@@ -82,7 +103,7 @@ function GetUserName() {
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetUser" ? "h-1.5" : "h-2 "
-              } ${errors.name ? "bg-orange-300" : "bg-teal-500"}`}
+              } ${errors.username ? "bg-orange-300" : "bg-teal-500"}`}
             ></span>
 
             <span
@@ -100,12 +121,13 @@ function GetUserName() {
               }}
               className={`block w-[100px]  rounded ${
                 step !== "GetPhone" ? "h-1.5" : "h-2 "
-              } ${errors.Phone ? "bg-orange-300" : "bg-teal-500"}`}
+              } ${errors.phone ? "bg-orange-300" : "bg-teal-500"}`}
             ></span>
           </div>
           {/* *******************main******************** */}
 
           <form
+            noValidate
             onSubmit={handleSubmit(formsubmitting)}
             className="login-form flex flex-col gap-4 p-2 md:p-4 "
           >
@@ -118,20 +140,30 @@ function GetUserName() {
                 </svg>
                 <input
                   className="inputStyle grow "
-                  
                   type="text"
-                  name="name"
-                  autoComplete="name"
-                  placeholder="نام کاربری"
-                  {...register("name")}
-                  // all={handleNameBlur} // اضافه کردن onBlur و فراخوانی تابع مربوطه
+                  name="username"
+                  autoComplete="username"
+                  placeholder="نام"
+                  {...register("username",
+                  {
+                  required:"ورور فیلد نام اجباری است",
+                  maxLength:{
+                    value:25,
+                    message:"نام کاربری باید حداکثر ۲۵ کاراکتر باشد "
+                  },
+                  minLength:{
+                    value:3,
+                    message:"نام کاربری باید حداقل ۳ کاراکتر باشد "
+                  }
+                  
+                  })}
                 />
               </div>
               {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
 
-              {errors.name && (
+              {errors.username && (
                 <div className="text-xs container text-red-400 mt-5">
-                  {errors.name.message}
+                  {errors.username.message}
                 </div>
               )}
               {/* *******************button**************************** */}
@@ -139,11 +171,10 @@ function GetUserName() {
                 onClick={() => {
                   SetStep("GetPass");
                 }}
-                disabled={errors.name}
-                // type="submit"
+                disabled={errors.username}
                 className={
                   /* if issubmit is true class will be change */
-                  errors.name
+                  errors.username
                     ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
                     : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
                 }
@@ -165,8 +196,25 @@ function GetUserName() {
                   name="password"
                   autoComplete="password"
                   placeholder="رمز عبور"
-                  {...register("password")}
-                  // all={handlePassBlur}
+                  {...register("password",
+                  {required:"ورور فیلد پسورد اجباری است",
+                  
+                    maxLength:{
+                      value:25,
+                      message:"نام کاربری باید حداکثر ۲۵ کاراکتر باشد "
+                    },
+                    minLength:{
+                      value:8,
+                      message:"نام کاربری باید حداقل ۸ کاراکتر باشد "
+                    },
+                    
+                  pattern:{
+                    value:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/,
+                    message: "رمز عبور باید حداقل ۸ کاراکتر باشد و شامل حداقل یک حرف بزرگ، یک حرف کوچک، یک عدد و یک کاراکتر خاص (#?!@$%^&*-)."
+                  } 
+                  }
+                )
+                  }
                 />
               </div>
               {errors.password && (
@@ -180,7 +228,6 @@ function GetUserName() {
                   SetStep("GetPhone");
                 }}
                 disabled={errors.password}
-                // type="submit"
                 className={
                   /* if issubmit is true class will be change */
                   errors.password
@@ -201,41 +248,53 @@ function GetUserName() {
                 </svg>
                 <input
                   className="inputStyle grow"
-                  type="Phone"
-                  name="Phone"
-                  autoComplete="Phone"
+                  type="phone"
+                  name="phone"
+                  autoComplete="phone"
                   placeholder="شماره تلفن همراه"
-                  {...register("Phone")}
-                  // all={handlePhoneBlur}
+                  {...register("phone",
+                  {required:"ورور فیلد تلفن همراه اجباری است",
+                  pattern:{
+                    value:/^[۰-۹0-9]{11}$/,
+                    message:  "شماره تلفن وارد شده معتبر نیست"
+                  }
+                  }
+                )
+                  }
                 />
               </div>
-              {errors.Phone && (
+              {errors.phone && (
                 <div className="text-xs container text-red-400 mt-5">
-                  {errors.Phone.message}
+                  {errors.phone.message}
                 </div>
               )}
               {/* *******************button**************************** */}
               <button
-                             
-
                 onClick={() => {
-                  errors.Phone || errors.name || errors.password ? SetStep("GetUser") : null ;
-                  
+                  errors.phone || errors.username || errors.password
+                    ? SetStep("GetUser")
+                    : null;
                 }}
                 type="submit"
-                disabled={errors.Phone}
+                disabled={errors.phone || isSubmitting}
                 className={
                   /* if issubmit is true class will be change */
-                  errors.Phone
+                  errors.phone || isSubmitting
                     ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
                     : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
                 }
               >
-                {errors.Phone || errors.name || errors.password ? "بعدی" : "ثبت نام"}
-                
+                {/* if issubmit is true button will be change */}
+
+                {errors.phone || errors.username || errors.password
+                  ? "بعدی"
+                  : "ثبت نام"}
+
+                {isSubmitting ? <HashLoader size={25} color="#fff" /> : ""}
               </button>
             </div>
           </form>
+          <DevTool control={control} />
         </div>
       </div>
       <Toaster />
