@@ -7,7 +7,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import Phonesvg from "@/module/svgs/phoneSvg1";
 import Locksvg from "@/module/svgs/Locksvg";
-import signUpServerAction from "./signUpServerAction";
+import signUpServerAction from "./Actions/signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";

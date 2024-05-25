@@ -8,7 +8,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import loginSchima from "@/utils/yupSchemas/loginSchima"; 
 import PhoneSvg from "@/module/svgs/phoneSvg1";
-import LoginServerAction from "@/components/signinAndLogin/LoginServerAction";
+import LoginServerAction from "@/components/signinAndLogin/Actions/LoginServerAction";
 import { useState } from "react";
 
 

@@ -16,7 +16,7 @@ import UserMicroCard from "@/module/home/UserMicroCard";
 // import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-function MobileHeader() {
+function MobileHeader(isLogin) {
   // const { data: session } = useSession();
   const isBasketCartOpen = useSelector(selectIsBasketCartOpen);
   const dispatch = useDispatch();
@@ -27,9 +27,7 @@ function MobileHeader() {
     dispatch(reversemobileMenu());
   };
 
- 
-
-  return (
+   return (
 
     <header className= "flex md:hidden items-center justify-between bg-white dark:bg-zinc-700 px-4 h-16 w[90%] sticky top-0 left-0 right-0 animate-fadeInDownBig duration-400 ease-linear z-50">
       <div className="hidden">
@@ -63,13 +61,13 @@ function MobileHeader() {
             {isBasketCartOpen ? <ShopingBoxMobile /> : ""}
           </div>
         </div>
-        {/* {session ? (
+        {isLogin ? (
           <Link href="/profile">
-            <UserMicroCard data={session} />
+            <UserMicroCard data={isLogin} />
           </Link>
         ) : (
           ""
-        )} */}
+        )}
       </div>
     </header>
     
