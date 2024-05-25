@@ -24,6 +24,7 @@ const ScrollToTop = () => {
 
   return (
     <button
+    aria-label="scroll to top"
       className={isVisible ? styles.buttonVisible : styles.button}
       onClick={scrollToTop}
     >

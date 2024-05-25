@@ -20,7 +20,7 @@ import Breifcase from "@/module/svgs/Breifcase";
 import PhoneArrow from "@/module/svgs/PhoneArrow";
 import ChevronDown from "@/module/svgs/ChevronDown";
 import { useState } from "react";
-import { signOut, useSession } from "next-auth/react";
+// import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";
 
@@ -30,7 +30,7 @@ function MobileMenu() {
   const dispatch = useDispatch();
   const [shopSubMenu, setShopSubmenu] = useState(false);
   // const sessionData = useSession();
-  const { data: session } = useSession()
+  // const { data: session } = useSession()
 
 
   return (
@@ -157,7 +157,7 @@ function MobileMenu() {
 
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
              
-            {session ? (
+            {/* {session ? (
               <Link href="/" className=" inline-flex items-center gap-x-2" onClick={() => {signOut()
                  dispatch(reversemobileMenu())
               }}>
@@ -167,14 +167,14 @@ function MobileMenu() {
                 خروج
               </Link>)
               :(
-                <Link href="/signup2" onClick={() => 
+                <Link href="/signup" onClick={() => 
                   dispatch(reversemobileMenu())
                } className=" inline-flex items-center gap-x-2    ">
                   <svg className="w-5 h-5 rotate-180">
                     <use href="#login"></use>
                   </svg>
                   ورود | ثبت نام
-                </Link>)}
+                </Link>)} */}
                 
 
               <div className="flex gap-x-2">

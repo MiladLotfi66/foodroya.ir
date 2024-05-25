@@ -5,7 +5,7 @@ import Header from "@/layout/Header";
 import MobileHeader from "@/layout/MobileHeader";
 import MobileMenu from "@/layout/MobileMenu";
 import Providers from "../Redux/Providers";
-import NextAuthProvider from "@/providers/NextAuthProvider";
+// import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
 // import { SessionProvider } from "next-auth/react";
@@ -65,7 +65,7 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body className="bg-gray-100 dark:bg-zinc-800">
-        <NextAuthProvider>
+        {/* <NextAuthProvider> */}
         {/* <SessionProvider session={session}> */}
 
           <ThemeProviders>
@@ -83,7 +83,7 @@ export default function RootLayout({ children }) {
             </Providers>
           </ThemeProviders>
           {/* </SessionProvider> */}
-        </NextAuthProvider>
+        {/* </NextAuthProvider> */}
       </body>
     </html>
   );

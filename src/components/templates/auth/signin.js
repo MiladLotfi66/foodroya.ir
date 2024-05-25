@@ -8,18 +8,20 @@ import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import loginSchima from "@/utils/yupSchemas/loginSchima"; 
 import PhoneSvg from "@/module/svgs/phoneSvg1";
-import { useEffect } from "react";
+import LoginServerAction from "@/components/signinAndLogin/LoginServerAction";
+import { useState } from "react";
 
 
 
 function SignIn() {
   const router = useRouter();
+  const [isSubmit, setIsSubmit] = useState(false);
 
 
-  useEffect(() => {
-    setValue("password","",{shouldValidate:true})
-    setValue("phone","",{shouldValidate:true})
-    }, []); 
+  // useEffect(() => {
+  //   setValue("password","",{shouldValidate:true})
+  //   setValue("phone","",{shouldValidate:true})
+  //   }, []); 
   // *******************hook use form********************
 
   const {
@@ -27,9 +29,8 @@ function SignIn() {
     // control,
     // reset,
     handleSubmit,
-    formState: { errors },isSubmitting,setValue
+    formState: { errors }
   } = useForm({
-    mode: "all",
     defaultValues: {
       phone: "",
       password: "",
@@ -41,18 +42,20 @@ function SignIn() {
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-    // SetIsSubmit(true);
-    
+    setIsSubmit(true);
+    try {
+      const res = await LoginServerAction(data);
+      console.log(res);
+      if (res.status === 200) {
+        router.push("/");
+      } else {
+        toast.error(res.error);
+      }
+    } catch (error) {
+      console.log(error);
+    }
 
-    // const res = await signIn("credentials", {
-    //   redirect: false,
-    //   email: data.email,
-    //   password: data.password,
-    //   callbackUrl: "/",
-    // });
-    // if (res?.ok) router.push("/");
-    // else toast.error("ایمیل یا رمز عبور اشتباه است");
-    // SetIsSubmit(false);
+    setIsSubmit(false);
   };
 
   // *******************jsx********************
@@ -137,14 +140,14 @@ function SignIn() {
               type="submit"
               className={
                 /* if issubmit is true class will be change */
-                isSubmitting
+                isSubmit
                   ? "flexCenter gap-x-2 h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
                   : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
               }
-              disabled={isSubmitting}
+              disabled={isSubmit}
             >
-              {isSubmitting ? "در حال ورود  " : "ورود"}
-              {isSubmitting ? <HashLoader size={25} color="#fff" /> : ""}
+              {isSubmit ? "در حال ورود  " : "ورود"}
+              {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
             </button>
           </form>
         </div>

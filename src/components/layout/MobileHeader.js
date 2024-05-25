@@ -13,11 +13,11 @@ import Image from "next/image";
 import ShopingBoxMobile from "@/layout/ShopingBoxMobile";
 import { useSelector } from "react-redux";
 import UserMicroCard from "@/module/home/UserMicroCard";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 function MobileHeader() {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const isBasketCartOpen = useSelector(selectIsBasketCartOpen);
   const dispatch = useDispatch();
   const handleToggleBasketMenu = () => {
@@ -63,13 +63,13 @@ function MobileHeader() {
             {isBasketCartOpen ? <ShopingBoxMobile /> : ""}
           </div>
         </div>
-        {session ? (
+        {/* {session ? (
           <Link href="/profile">
             <UserMicroCard data={session} />
           </Link>
         ) : (
           ""
-        )}
+        )} */}
       </div>
     </header>
     

@@ -7,7 +7,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import Phonesvg from "@/module/svgs/phoneSvg1";
 import Locksvg from "@/module/svgs/Locksvg";
-import addNewUserHandler from "./signUpHandler";
+import signUpServerAction from "./signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
@@ -17,14 +17,14 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
 function GetUserName() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
+  const [isSubmit, setIsSubmit] = useState(false);
   // count++;
 
-
   useEffect(() => {
-  setValue("username","",{shouldValidate:true})
-  setValue("password","",{shouldValidate:true})
-  setValue("phone","",{shouldValidate:true})
-  }, []); 
+    setValue("username", "", { shouldValidate: true });
+    setValue("password", "", { shouldValidate: true });
+    setValue("phone", "", { shouldValidate: true });
+  }, []);
   // *******************hook use form********************
 
   const {
@@ -32,7 +32,9 @@ function GetUserName() {
     // control,
     // reset,
     handleSubmit,
-    formState: { errors },isSubmitting,setValue
+    formState: { errors },
+    isSubmitting,
+    setValue,
   } = useForm({
     mode: "all",
     defaultValues: {
@@ -41,28 +43,25 @@ function GetUserName() {
       phone: "",
     },
     resolver: yupResolver(RegisterSchema),
-
   });
 
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-    // SetIsSubmit(true);
-    try{
-    const res= await addNewUserHandler(data);
-    if (res.status === 201) {
-      router.push("/signin");
-    }else {
-      toast.error(res.error);
-
+    setIsSubmit(true);
+    try {
+      const res = await signUpServerAction(data);
+      console.log(res);
+      if (res.status === 201) {
+        router.push("/signin");
+      } else {
+        toast.error(res.error);
+      }
+    } catch (error) {
+      console.log(error);
     }
 
-  } catch (error) {
-   console.log(error);
-  }
-    
-    
-    // SetIsSubmit(false);
+    setIsSubmit(false);
   };
 
   // *******************jsx********************
@@ -71,7 +70,7 @@ function GetUserName() {
       <div className="container ">
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
-{/* <h1>{count/2}</h1> */}
+          {/* <h1>{count/2}</h1> */}
           <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36 mb-6">
             <div className="flex flex-col items-start gap-2.5">
               <h4>
@@ -148,8 +147,7 @@ function GetUserName() {
                   name="username"
                   autoComplete="username"
                   placeholder="نام"
-                  {...register("username",
-                 )}
+                  {...register("username")}
                 />
               </div>
               {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
@@ -189,10 +187,7 @@ function GetUserName() {
                   name="password"
                   autoComplete="password"
                   placeholder="رمز عبور"
-                  {...register("password",
-          
-                )
-                  }
+                  {...register("password")}
                 />
               </div>
               {errors.password && (
@@ -230,8 +225,7 @@ function GetUserName() {
                   name="phone"
                   autoComplete="phone"
                   placeholder="شماره تلفن همراه"
-                  {...register("phone")
-                  }
+                  {...register("phone")}
                 />
               </div>
               {errors.phone && (
@@ -247,10 +241,10 @@ function GetUserName() {
                     : null;
                 }}
                 type="submit"
-                disabled={errors.phone || isSubmitting}
+                disabled={errors.phone || isSubmit}
                 className={
                   /* if issubmit is true class will be change */
-                  errors.phone || isSubmitting
+                  errors.phone || isSubmit
                     ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
                     : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
                 }
@@ -261,7 +255,7 @@ function GetUserName() {
                   ? "بعدی"
                   : "ثبت نام"}
 
-                {isSubmitting ? <HashLoader size={25} color="#fff" /> : ""}
+                {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
               </button>
             </div>
           </form>

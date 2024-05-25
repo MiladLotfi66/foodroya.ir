@@ -11,13 +11,13 @@ import BasketShop from "@/layout/BasketShop";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+// import { signOut, useSession } from "next-auth/react";
 import UserMicroCard from "@/module/home/UserMicroCard";
 
 function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   // console.log(session);
 
   // useEffect only runs on the client, so now we can safely show the UI
@@ -86,7 +86,7 @@ function Header() {
             <li className="flex items-center">
               <a href="#">ارتباط با ما</a>
             </li>
-            {session ? (
+            {/* {session ? (
               <>
                 <li className="flex items-center">
                   <a href="#">پنل مدیریتی</a>
@@ -104,7 +104,7 @@ function Header() {
               </>
             ) : (
               ""
-            )}
+            )} */}
           </ul>
         </nav>
 
@@ -155,7 +155,7 @@ function Header() {
           <span className=" block w-px h-14 bg-white/20 "></span>
           {/* login icone */}
 
-          {session ? (
+          {/* {session ? (
             <Link href="/profile">
               <UserMicroCard data={session} />
             </Link>
@@ -169,7 +169,7 @@ function Header() {
               </svg>
               <span className="hidden xl:inline-block">ورود</span>
             </Link>
-          )}
+          )} */}
         </div>
       </div>
     </header>

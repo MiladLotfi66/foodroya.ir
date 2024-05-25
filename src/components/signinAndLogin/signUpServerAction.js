@@ -2,9 +2,12 @@
 
 import Users from "@/models/Users";
 import connectDB from "@/utils/connectToDB";
-import { hashPassword } from "@/utils/auth";
+import {  hashPassword } from "@/utils/auth";
 
-async function addNewUserHandler(formData) {
+
+
+
+async function signUpServerAction(formData) {
 
 
   try {
@@ -23,13 +26,19 @@ async function addNewUserHandler(formData) {
     }
 
     const hashedPassword = await hashPassword(password);
+ 
 
     const user = Users.create({
       username: formData.username,
       phone: formData.phone,
       password: hashedPassword,
     });
-    return  { Message: "اطلاعات با موفقیت ثبت شد" , status:201}
+   
+
+    return  ({ Message: "اطلاعات با موفقیت ثبت شد" },{status:201})
+
+    
+      
 
   } catch (error) {
 
@@ -37,4 +46,4 @@ async function addNewUserHandler(formData) {
   }
 }
 
-export default addNewUserHandler;
+export default signUpServerAction;
