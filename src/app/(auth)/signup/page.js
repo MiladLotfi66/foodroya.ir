@@ -1,8 +1,8 @@
-import GetUserName from "@/components/signinAndLogin/GetUserName"
+import SignUp from "@/components/signinAndLogin/signUp"
 function page() {
   return (
     <div>
-      <GetUserName/>
+      <SignUp/>
     </div>
   )
 }

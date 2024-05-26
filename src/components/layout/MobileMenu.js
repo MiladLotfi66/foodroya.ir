@@ -24,7 +24,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";
 
-function MobileMenu(isLogin) {
+function MobileMenu({isLogin}) {
   const { theme, setTheme } = useTheme();
   const isOpenMobileMenu = useSelector(selectmobileMenu);
   const dispatch = useDispatch();

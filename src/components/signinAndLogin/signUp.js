@@ -11,13 +11,18 @@ import signUpServerAction from "./Actions/signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
+
+
 // import { DevTool } from "@hookform/devtools";
 // let count =0
 
-function GetUserName() {
+function SignUp() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
   const [isSubmit, setIsSubmit] = useState(false);
+
+  
+
   // count++;
 
   useEffect(() => {
@@ -266,4 +271,4 @@ function GetUserName() {
     </div>
   );
 }
-export default GetUserName;
+export default SignUp;

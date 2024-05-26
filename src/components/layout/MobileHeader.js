@@ -16,7 +16,7 @@ import UserMicroCard from "@/module/home/UserMicroCard";
 // import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-function MobileHeader(isLogin) {
+function MobileHeader({isLogin}) {
   // const { data: session } = useSession();
   const isBasketCartOpen = useSelector(selectIsBasketCartOpen);
   const dispatch = useDispatch();
