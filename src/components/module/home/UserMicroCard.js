@@ -2,7 +2,6 @@ import Image from "next/image";
 import usericone from "@/public/Images/jpg/user.jpg";
 
 function UserMicroCard({ data }) {
-  console.log("data",data)
   return (
     <span className="flex items-center gap-2">
       <Image

@@ -1,5 +1,4 @@
 import { Schema, model, models } from "mongoose";
-import { string } from "yup";
 const UserSchema = new Schema(
   {
     username: {

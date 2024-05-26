@@ -5,12 +5,14 @@ import Header from "@/layout/Header";
 import MobileHeader from "@/layout/MobileHeader";
 import MobileMenu from "@/layout/MobileMenu";
 import Providers from "../Redux/Providers";
-import { cookies } from "next/headers";
+// import { cookies } from "next/headers";
 // import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
-import { verifyAccessToken } from "@/utils/auth";
-import Users from "@/models/Users";
+// import { verifyAccessToken } from "@/utils/auth";
+// import Users from "@/models/Users";
+import { AuthUser } from "@/utils/ServerHelper";
+
 // import { SessionProvider } from "next-auth/react";
 const APP_NAME = "فود رویا";
 const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
@@ -61,29 +63,31 @@ export const viewport = {
 };
 export default async function RootLayout({ children }) {
 
-  const tokenCookie = cookies().get("token");
-  let user=null;
+  // const tokenCookie = cookies().get("token");
+  // let user=null;
 
-  if (!tokenCookie) {
-    console.error("Token not found in cookies");
-  } else {
-    const token = tokenCookie.value;
-    try {
-      const tokenPayload = verifyAccessToken(token);
-      if (tokenPayload) {
-        const userFromDb = await Users.findOne({ phone: tokenPayload.phone });
-        if (userFromDb) {
-          user = {
-            phone: userFromDb.phone,
-            name: userFromDb.name,
-            // ویژگی‌های دیگر که نیاز دارید
-          };
-        }
-      }
-    } catch (error) {
-      console.error('verify access token error -->', error);
-    }
-  }
+  // if (!tokenCookie) {
+  //   console.error("Token not found in cookies");
+  // } else {
+  //   const token = tokenCookie.value;
+  //   try {
+  //     const tokenPayload = verifyAccessToken(token);
+  //     if (tokenPayload) {
+  //       const userFromDb = await Users.findOne({ phone: tokenPayload.phone });
+  //       if (userFromDb) {
+  //         user = {
+  //           phone: userFromDb.phone,
+  //           name: userFromDb.name,
+  //           // ویژگی‌های دیگر که نیاز دارید
+  //         };
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('verify access token error -->', error);
+  //   }
+  // }
+
+  const user=await AuthUser();
 
  
 

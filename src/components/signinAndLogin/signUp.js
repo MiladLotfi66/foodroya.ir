@@ -11,21 +11,31 @@ import signUpServerAction from "./Actions/signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
+import { AuthUser } from "@/utils/ServerHelper";
 
+// import { cookies } from "next/headers";
+// import { useCookies } from 'next-client-cookies';
 
 // import { DevTool } from "@hookform/devtools";
 // let count =0
 
-function SignUp() {
+ function SignUp() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
   const [isSubmit, setIsSubmit] = useState(false);
 
-  
-
   // count++;
 
   useEffect(() => {
+    const checkUser = async () => {
+      const user = await AuthUser();
+      if (user) {
+        router.push("/");
+      }
+    };
+
+    checkUser();
+
     setValue("username", "", { shouldValidate: true });
     setValue("password", "", { shouldValidate: true });
     setValue("phone", "", { shouldValidate: true });
@@ -56,15 +66,12 @@ function SignUp() {
     setIsSubmit(true);
     try {
       const res = await signUpServerAction(data);
-      console.log(res);
       if (res.status === 201) {
         router.push("/signin");
       } else {
         toast.error(res.error);
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
 
     setIsSubmit(false);
   };

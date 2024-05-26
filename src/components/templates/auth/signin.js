@@ -9,7 +9,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import loginSchima from "@/utils/yupSchemas/loginSchima"; 
 import PhoneSvg from "@/module/svgs/phoneSvg1";
 import LoginServerAction from "@/components/signinAndLogin/Actions/LoginServerAction";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AuthUser } from "@/utils/ServerHelper";
 
 
 
@@ -17,11 +18,20 @@ function SignIn() {
   const router = useRouter();
   const [isSubmit, setIsSubmit] = useState(false);
 
+  useEffect(() => {
+    const checkUser = async () => {
+      const user = await AuthUser();
+      if (user) {
+        router.push("/");
+      }
+    };
 
-  // useEffect(() => {
-  //   setValue("password","",{shouldValidate:true})
-  //   setValue("phone","",{shouldValidate:true})
-  //   }, []); 
+    checkUser();
+
+  
+  }, []);
+
+
   // *******************hook use form********************
 
   const {
@@ -45,14 +55,12 @@ function SignIn() {
     setIsSubmit(true);
     try {
       const res = await LoginServerAction(data);
-      console.log(res);
       if (res.status === 200) {
         router.push("/");
       } else {
         toast.error(res.error);
       }
     } catch (error) {
-      console.log(error);
     }
 
     setIsSubmit(false);
@@ -64,7 +72,7 @@ function SignIn() {
     <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
       <div className="container ">
         <div className="hidden">
-          <phonesvg1 />
+          <phonesvg/>
         </div>
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
