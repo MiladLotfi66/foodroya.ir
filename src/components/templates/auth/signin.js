@@ -13,7 +13,6 @@ import { useEffect, useState } from "react";
 import { AuthUser } from "@/utils/ServerHelper";
 
 
-
 function SignIn() {
   const router = useRouter();
   const [isSubmit, setIsSubmit] = useState(false);
@@ -102,6 +101,7 @@ function SignIn() {
           {/* *******************main******************** */}
 
           <form
+          action={LoginServerAction}
             onSubmit={handleSubmit(formsubmitting)}
             className="login-form flex flex-col gap-4 p-2 md:p-4"
           >

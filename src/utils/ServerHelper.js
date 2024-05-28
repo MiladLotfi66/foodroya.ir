@@ -1,6 +1,5 @@
 "use server"
 import { cookies } from "next/headers";
-import connectDB from "./connectToDB";
 import Users from "@/models/Users";
 import { verifyAccessToken } from "./auth"; // مسیر صحیح را وارد کنید
 
