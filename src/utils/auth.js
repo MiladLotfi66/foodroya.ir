@@ -1,6 +1,7 @@
-
 import { hash, compare } from "bcryptjs";
 import { sign,verify } from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
+
 
 async function hashPassword(password) {
   const hashedPassword = await hash(password, 12);
@@ -22,13 +23,17 @@ const verifyAccessToken=(Token)=>{
    const tokenPayload=verify(Token , process.env.ACCESSTOKENSECRET_KEY)
    return tokenPayload
 
-
  } catch (error) {
   console.log("verify access token error -->",error);
   return false
  }
 
 }
+
+
+
+
+
 
 const generateRefreshToken=(data)=>{
   const Token=sign({...data},process.env.REFRESHTOKENSECRET_KEY,{expiresIn:"15d"});

@@ -17,18 +17,18 @@ function SignIn() {
   const router = useRouter();
   const [isSubmit, setIsSubmit] = useState(false);
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const user = await AuthUser();
-      if (user) {
-        router.push("/");
-      }
-    };
+  // useEffect(() => {
+  //   const checkUser = async () => {
+  //     const user = await AuthUser();
+  //     if (user) {
+  //       router.push("/");
+  //     }
+  //   };
 
-    checkUser();
+  //   checkUser();
 
   
-  }, []);
+  // }, []);
 
 
   // *******************hook use form********************
