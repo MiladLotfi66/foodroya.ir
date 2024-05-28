@@ -101,7 +101,6 @@ function SignIn() {
           {/* *******************main******************** */}
 
           <form
-          action={LoginServerAction}
             onSubmit={handleSubmit(formsubmitting)}
             className="login-form flex flex-col gap-4 p-2 md:p-4"
           >

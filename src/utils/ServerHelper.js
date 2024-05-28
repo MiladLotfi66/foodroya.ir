@@ -27,6 +27,7 @@ const AuthUser = async () => {
           user = {
             phone: userFromDb.phone,
             name: userFromDb.username,
+            role:userFromDb.role,
             // ویژگی‌های دیگر که نیاز دارید
           };
         }
