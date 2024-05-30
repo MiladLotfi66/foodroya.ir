@@ -1,37 +1,58 @@
 
 "use client";
+
 import { useForm } from "react-hook-form";
 import PhoneSvg from "@/module/svgs/phoneSvg1";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import "@/styles/styles.css"
 import { yupResolver } from "@hookform/resolvers/yup";
-import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
+import phoneSchema from "@/utils/yupSchemas/phoneSchima";
+import { SendSMSServerAction } from "src/ServerActions/SendSMSServerAction";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+// import { redirect } from "next/navigation";
+// import { useRouter } from "next/router";
+// import { redirect } from "next/dist/server/api-utils";
 
 
 function ForgetPassword() {
+  const [isSubmit, setIsSubmit] = useState(false);
   const router = useRouter();
-  
+
+
   // *******************hook use form********************
 
   const {
     register,
     handleSubmit,
-    formState: { errors },isSubmitting,setValue
+    formState: { errors }
   } = useForm({
     defaultValues: {
       phone: "",
     },
-    resolver: yupResolver(RegisterSchema),
+    resolver: yupResolver(phoneSchema),
 
   });
 
   // *******************submit ********************
 
   const formsubmitting = async (data) => {
-  
+    setIsSubmit(true)
+    const res = await SendSMSServerAction(data)
+    if (res.status===200) {
+      toast.success(res.message);
+
+      router.push("/OTPlogin");
+
+    }else{
+      toast.error(res.error);
+    }
+
+    setIsSubmit(false)
+
+
   };
 
   // *******************jsx********************
@@ -97,14 +118,14 @@ function ForgetPassword() {
               type="submit"
               className={
                 /* if issubmit is true class will be change */
-                isSubmitting
+                isSubmit
                   ? "flexCenter gap-x-2 h-11  md:h-14 bg-gray-400 rounded-xl   text-white mt-4"
                   : "h-11  md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700  text-white mt-4"
               }
-              disabled={isSubmitting}
+              disabled={isSubmit}
             >
-              {isSubmitting ? "در حال ورود  " : "ورود"}
-              {isSubmitting ? <HashLoader size={25} color="#fff" /> : ""}
+              {isSubmit ? "در حال ورود  " : "ورود"}
+              {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
             </button>
           </form>
         </div>

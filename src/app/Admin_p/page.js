@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 async function page() {
     const user=await AuthUser();
-    if (user.role==="Admin") {
+    if (user?.role==="Admin") {
         return (
             <div>
                 <Admin_panel/>
