@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -18,9 +17,9 @@ import { useRouter } from "next/navigation";
 
 
 function ForgetPassword() {
+  
   const [isSubmit, setIsSubmit] = useState(false);
   const router = useRouter();
-
 
   // *******************hook use form********************
 
@@ -41,6 +40,7 @@ function ForgetPassword() {
   const formsubmitting = async (data) => {
     setIsSubmit(true)
     const res = await SendSMSServerAction(data)
+    console.log("res--->",res);
     if (res.status===200) {
       toast.success(res.message);
 

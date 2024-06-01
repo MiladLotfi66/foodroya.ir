@@ -34,6 +34,6 @@ export async function SendSMSServerAction(formData) {
     }
   } catch (error) {
     console.log("Error: ", error);
-    return { message: "Code not sent", status: 409 };
+    return { error: "کد ارسال نشد ‍، با پشتیبانی تماس بگیرید", status: 409 };
   }
 }
