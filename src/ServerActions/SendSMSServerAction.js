@@ -1,10 +1,12 @@
 "use server";
 
 import OTP from "@/models/OTP";
+import connectDB from "@/utils/connectToDB";
 import axios from "axios";
 
-export async function SendSMSServerAction(formData) {
-  const { phone } = formData;
+export async function SendSMSServerAction(data) {
+  await connectDB();
+  const phone  = data;
   const code = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
   const date = new Date();
   const expTime = date.getTime() + 300000;
@@ -34,6 +36,6 @@ export async function SendSMSServerAction(formData) {
     }
   } catch (error) {
     console.log("Error: ", error);
-    return { error: "کد ارسال نشد ‍، با پشتیبانی تماس بگیرید", status: 409 };
+    return { error: "کد ارسال نشد ‍، با پشتیبانی تماس بگیرید", status: 407 };
   }
 }

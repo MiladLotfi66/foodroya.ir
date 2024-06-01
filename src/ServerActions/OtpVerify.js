@@ -4,24 +4,31 @@
 
 import connectDB from "@/utils/connectToDB";
 import OTP from "@/models/OTP";
+// import CustomError from "@/utils/CustomError";
 
 export async function verifyOTP(phone, otp) {
   await connectDB();
 
   if (!phone || !otp) {
-    throw new Error("Phone and OTP are required");
+    // throw new CustomError("Phone and OTP are required", 400);
+    return { error: "Phone and OTP are required", status: 400 };
+
   }
 
   const otpRecord = await OTP.findOne({ phone, otp });
 
   if (!otpRecord) {
-    throw new Error("Invalid OTP");
+    // throw new CustomError("Invalid OTP", 401);
+    return { error: "Invalid OTP", status: 401 };
+
   }
 
   const currentTime = new Date().getTime();
 
   if (currentTime > otpRecord.expTime) {
-    throw new Error("OTP expired");
+    // throw new CustomError("OTP expired", 410);
+    return { error: "OTP expired", status: 410 };
+
   }
 
   // Mark OTP as used
@@ -29,5 +36,5 @@ export async function verifyOTP(phone, otp) {
   await otpRecord.save();
 
   // Return success message
-  return { message: "OTP verified successfully" };
+  return { message: "اعتبار سنجی با موفقیت انجام شد", status: 200 };
 }

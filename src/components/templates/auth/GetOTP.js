@@ -72,7 +72,7 @@ function GetOTP() {
             onSubmit={handleSubmit(formsubmitting)}
             className="login-form flex flex-col gap-4 p-2 md:p-4"
           >
-            {/* *******************email******************** */}
+            {/* *******************otp******************** */}
 
             <div className="flex items-center ">
               <svg className="  w-5 h-5 ">
