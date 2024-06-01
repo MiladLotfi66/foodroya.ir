@@ -19,6 +19,9 @@ function ForgetPassword() {
   const [isSubmit, setIsSubmit] = useState(false);
   const [isSendSms, setIsSendSms] = useState(false);
   const [phoneState, setPhoneState] = useState("");
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState(null);
+
   const router = useRouter();
 
   // *******************hook use form********************
@@ -51,15 +54,21 @@ function ForgetPassword() {
       }
     }else{
 
-      const res = await verifyOTP(phoneState , data.OTP);
-      console.log("verify",res);
+      const result = await verifyOTP(phoneState, data.OTP);
 
-      if (res.status === 200) {
-        toast.success(res.message);
-        router.push("/")
+      if (result.error) {
+        setMessage(result.error);
+        setStatus(result.status);
+        toast.error(result.error); // استفاده مستقیم از مقدار result.error
+
       } else {
-        toast.error(res);
+        setMessage(result.message);
+        setStatus(result.status);
+        toast.success(result.message);
+        router.push("/")
       }
+
+     
     }
    
 

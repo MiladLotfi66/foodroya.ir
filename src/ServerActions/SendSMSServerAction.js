@@ -9,7 +9,7 @@ export async function SendSMSServerAction(data) {
   const phone  = data;
   const code = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
   const date = new Date();
-  const expTime = date.getTime() + 300000;
+  const expTime = date.getTime() + 180000;
 
   try {
     const response = await axios.post("http://ippanel.com/api/select", {
