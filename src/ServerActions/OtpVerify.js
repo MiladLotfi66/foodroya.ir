@@ -24,13 +24,15 @@ export async function verifyOTP(phone, otp) {
 
   const currentTime = new Date().getTime();
 
-  if (otpRecord.useStep >= 3 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
+  if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
     return { error: "تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.", status: 429 };
   }
 
-  if (otpRecord.otp !== parseInt(p2e(otp))) {
-
-      
+  if (otpRecord.otp !== p2e(otp)){
+// console.log(typeof(otp),otp);
+//     console.log(p2e(otp),typeof(p2e(otp)))
+//     console.log(otpRecord.otp,typeof(otpRecord.otp))
+    
     otpRecord.useStep += 1;
     otpRecord.lastFailedAttempt = currentTime; // Update the time of the last failed attempt
     await otpRecord.save();
