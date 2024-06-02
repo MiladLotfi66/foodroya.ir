@@ -7,7 +7,7 @@ const OTPSchema = new Schema(
     },
 
     otp: {
-      type: Number,
+      type: String,
       required: true,
     },
     expTime: {

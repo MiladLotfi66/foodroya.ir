@@ -3,6 +3,9 @@
 import connectDB from "@/utils/connectToDB";
 import OTP from "@/models/OTP";
 import { e2p, p2e } from "@/utils/ReplaceNumber";
+import Users from "@/models/Users";
+import { generateAccessToken, generateRefreshToken } from "@/utils/auth";
+import { cookies } from "next/headers";
 
 
 export async function verifyOTP(phone, otp) {
@@ -21,13 +24,13 @@ export async function verifyOTP(phone, otp) {
 
   const currentTime = new Date().getTime();
 
-  if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
+  if (otpRecord.useStep >= 3 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
     return { error: "تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.", status: 429 };
   }
 
   if (otpRecord.otp !== parseInt(p2e(otp))) {
 
-
+      
     otpRecord.useStep += 1;
     otpRecord.lastFailedAttempt = currentTime; // Update the time of the last failed attempt
     await otpRecord.save();
@@ -43,6 +46,22 @@ export async function verifyOTP(phone, otp) {
   otpRecord.useStep = 0;
   otpRecord.lastFailedAttempt = null;
   await otpRecord.save();
+
+
+    // ایجاد توکن‌های دسترسی و تازه‌سازی
+    const accessToken = generateAccessToken({ phone });
+    const refreshToken = generateRefreshToken({ phone });
+    
+    // به‌روزرسانی توکن در دیتابیس
+    await Users.findOneAndUpdate({ phone }, { $set: { refreshToken } });
+
+    // ست کردن کوکی‌ها
+    cookies().set({
+        name: "token",
+        value: accessToken,
+        httpOnly: true,
+        path: "/",
+    });
 
   // Return success message
   return { message: "اعتبار سنجی با موفقیت انجام شد", status: 200 };
