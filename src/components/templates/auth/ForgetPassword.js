@@ -45,10 +45,16 @@ function ForgetPassword() {
     if (!isSendSms) {
       setPhoneState(data.phone);
       const res = await SendSMSServerAction(data.phone);
+      
   
       if (res.status === 200) {
         toast.success(res.message);
         setIsSendSms(true)
+      } else if (res.status === 429){
+        toast.success(res.error);
+        setIsSendSms(true)
+
+      
       } else {
         toast.error(res.error);
       }
@@ -141,7 +147,7 @@ function ForgetPassword() {
                 </svg>
                 <input
                   className="inputStyle grow no-spinner"
-                  type="number"
+                  type="string"
                   name="OTP"
                   placeholder="کد ارسال شده را وارد کنید"
                   {...register("OTP")}

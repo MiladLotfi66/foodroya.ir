@@ -11,20 +11,24 @@ export async function SendSMSServerAction(data) {
   const date = new Date();
   const expTime = date.getTime() + 180000;
   const currentTime = date.getTime();
-
-
-
   const otpRecord = await OTP.findOne({ phone });
 
   if (otpRecord) {
     // Check if the last failed attempt was less than 10 minutes ago
     if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
-      return { error: "تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.", status: 429 };
+      return { error: "تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.", status: 428 };
     }
   }
 
+   // Check if an OTP was sent within the last 3 minutes
+   const recentOTP = await OTP.findOne({ phone, expTime: { $gt: currentTime } });
 
-
+   if (recentOTP) {
+     return {
+       error: "کد قبلی هنوز معتبر است، لطفاً بعد از اتمام اعتبار کد فعلی دوباره تلاش کنید.",
+       status: 429
+     };
+   }
 
   try {
     const response = await axios.post("http://ippanel.com/api/select", {
