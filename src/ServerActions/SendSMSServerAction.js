@@ -10,6 +10,21 @@ export async function SendSMSServerAction(data) {
   const code = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
   const date = new Date();
   const expTime = date.getTime() + 180000;
+  const currentTime = date.getTime();
+
+
+
+  const otpRecord = await OTP.findOne({ phone });
+
+  if (otpRecord) {
+    // Check if the last failed attempt was less than 10 minutes ago
+    if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
+      return { error: "تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.", status: 429 };
+    }
+  }
+
+
+
 
   try {
     const response = await axios.post("http://ippanel.com/api/select", {
@@ -28,6 +43,7 @@ export async function SendSMSServerAction(data) {
         otp: code,
         expTime,
         useStep: 0,
+        tryStep:0,
       });
       return { message: "کد ارسال شد", status: 200 };
     } else {
