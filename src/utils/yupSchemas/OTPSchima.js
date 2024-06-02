@@ -4,9 +4,8 @@ import * as yup from "yup";
 const OTPSchima = yup.object().shape({
   OTP: yup
     .string()
+    .matches(/^[۰-۹0-9]{5}$/, "کد وارد شده معتبر نیست")
     .nullable()
-    .max(5, "رمز یکبار مصرف باید ۵ رقمی باشد")
-    .min(5, "رمز یکبار مصرف باید ۵ رقمی باشد")
     .required("لطفا کد یکبار مصرف را وارد نمایید"),
   
 });
