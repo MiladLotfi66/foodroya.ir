@@ -2,7 +2,7 @@
 
 import connectDB from "@/utils/connectToDB";
 import OTP from "@/models/OTP";
-import { e2p, p2e } from "@/utils/ReplaceNumber";
+import {  p2e } from "@/utils/ReplaceNumber";
 import Users from "@/models/Users";
 import { generateAccessToken, generateRefreshToken } from "@/utils/auth";
 import { cookies } from "next/headers";
