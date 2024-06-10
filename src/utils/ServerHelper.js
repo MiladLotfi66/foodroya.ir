@@ -2,9 +2,11 @@
 import { cookies } from "next/headers";
 import Users from "@/models/Users";
 import { verifyAccessToken } from "./auth"; // مسیر صحیح را وارد کنید
+import connectDB from "./connectToDB";
 
 const AuthUser = async () => {
   try {
+    connectDB();
   } catch (error) {
     console.error("Database connection error -->", error);
     return null;
@@ -12,6 +14,7 @@ const AuthUser = async () => {
 
   const tokenCookie = cookies().get("token");
   let user = null;
+ 
 
   if (!tokenCookie) {
     console.error("Token not found in cookies");

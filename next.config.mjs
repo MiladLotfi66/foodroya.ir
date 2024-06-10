@@ -1,16 +1,16 @@
 import withPWAInit from "@ducanh2912/next-pwa";
 
 const nextConfig = {
+
   images: {
     dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
+    contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 
-
- // اضافه کردن متن مورد نظر
-       nextConfig.output = 'standalone';
+// اضافه کردن متن مورد نظر
+nextConfig.output = "standalone";
 
 export default withPWAInit({
   dest: "public",
@@ -19,7 +19,7 @@ export default withPWAInit({
   reloadOnOnline: true,
   swcMinify: true,
   disable: false,
-  
+
   workboxOptions: {
     disableDevLogs: true,
   },

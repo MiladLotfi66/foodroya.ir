@@ -1,11 +1,11 @@
+import SomeComponent from "@/components/someComponent";
 
 function page() {
   return (
     <div>
-      product
-
+      <SomeComponent />
     </div>
-  )
+  );
 }
 
-export default page
+export default page;

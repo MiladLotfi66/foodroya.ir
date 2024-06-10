@@ -42,6 +42,13 @@ async function LoginServerAction(formData) {
             httpOnly: true,
             path: "/",
         });
+        cookies().set({
+            name: "refreshToken",
+            value: refreshToken,
+            httpOnly: true,
+            secure: true, // تنظیم secure برای ارسال اطمینان از اینکه کوکی تنها از طریق HTTPS ارسال می‌شود
+            path: "/",
+        });
         
         return { message: "ورود موفقیت‌آمیز بود", status: 200 };
     } catch (error) {

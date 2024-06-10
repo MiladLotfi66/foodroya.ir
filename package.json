@@ -17,6 +17,7 @@
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "concurrently": "^8.2.2",
+    "cookie": "^0.6.0",
     "formik": "^2.4.5",
     "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.11.1",

@@ -13,13 +13,13 @@ async function verifyPassword(password, hashedPassword) {
 }
 
 const generateAccessToken=(data)=>{
-  const Token=sign({...data},process.env.ACCESSTOKENSECRET_KEY,{expiresIn:"60d"});
+  const Token=sign({...data},process.env.ACCESSTOKENSECRET_KEY,{expiresIn:"1m"});
   return Token
 
 }
 const verifyAccessToken=(Token)=>{
  try {
-   const tokenPayload=verify(Token , process.env.ACCESSTOKENSECRET_KEY)
+   const tokenPayload= verify(Token , process.env.ACCESSTOKENSECRET_KEY)
    return tokenPayload
 
  } catch (error) {
@@ -28,11 +28,6 @@ const verifyAccessToken=(Token)=>{
  }
 
 }
-
-
-
-
-
 
 const generateRefreshToken=(data)=>{
   const Token=sign({...data},process.env.REFRESHTOKENSECRET_KEY,{expiresIn:"15d"});
