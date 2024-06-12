@@ -4,7 +4,6 @@
 
 export async function useRefreshToken() {
     try {
-        console.log("11111");
         const res = await fetch('/api/refreshToken', {
             method: 'POST',
             credentials: 'include',

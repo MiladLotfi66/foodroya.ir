@@ -1,4 +1,5 @@
 "use client";
+
 import { useForm } from "react-hook-form";
 import Locksvg from "@/module/svgs/Locksvg";
 import { useRouter } from "next/navigation";
@@ -8,8 +9,10 @@ import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import loginSchima from "@/utils/yupSchemas/loginSchima"; 
 import PhoneSvg from "@/module/svgs/phoneSvg1";
+import {signIn} from 'next-auth/react';
+
 import LoginServerAction from "@/components/signinAndLogin/Actions/LoginServerAction";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AuthUser } from "@/utils/ServerHelper";
 
 
@@ -52,15 +55,31 @@ function SignIn() {
 
   const formsubmitting = async (data) => {
     setIsSubmit(true);
-    try {
-      const res = await LoginServerAction(data);
-      if (res.status === 200) {
-        router.push("/");
-      } else {
-        toast.error(res.error);
-      }
-    } catch (error) {
+    // e.preventDefault();
+    // setLoading(true);
+    const res=await signIn('credentials',{
+      redirect:false,
+      phone:data.phone,
+      password:data.password,
+    
+    })
+
+    if(res.error){
+      toast.error(res.error)
+    }else{
+      router.push("/");
     }
+
+
+    // try {
+    //   const res = await LoginServerAction(data);
+    //   if (res.status === 200) {
+    //     router.push("/");
+    //   } else {
+    //     toast.error(res.error);
+    //   }
+    // } catch (error) {
+    // }
 
     setIsSubmit(false);
   };

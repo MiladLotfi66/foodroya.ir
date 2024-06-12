@@ -13,12 +13,14 @@ import { useEffect } from "react";
 import Link from "next/link";
 import logOutServerAction from "../signinAndLogin/Actions/logOutServerAction";
 import UserMicroCard from "@/module/home/UserMicroCard";
+import { useSession } from "next-auth/react";
 
-function Header({isLogin}) {
-
+function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  const { data: session, status } = useSession();
+  
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
@@ -86,7 +88,7 @@ function Header({isLogin}) {
             <li className="flex items-center">
               <a href="#">ارتباط با ما</a>
             </li>
-            {isLogin ? (
+            {session ? (
               <>
                 <li className="flex items-center">
                   <a href="#">پنل مدیریتی</a>
@@ -94,12 +96,11 @@ function Header({isLogin}) {
                 <li className="flex items-center">
                   <a
                     href="#"
-                    onClick={async() => {
-                      const res=await logOutServerAction();
-                      if (res.status===200) {
-                        location.replace("/")
+                    onClick={async () => {
+                      const res = await logOutServerAction();
+                      if (res.status === 200) {
+                        location.replace("/");
                       }
-
                     }}
                   >
                     خروج
@@ -159,9 +160,11 @@ function Header({isLogin}) {
           <span className=" block w-px h-14 bg-white/20 "></span>
           {/* login icone */}
 
-          {isLogin ? (
+          {session ? (
             <Link href="/profile">
-              <UserMicroCard data={isLogin} />
+              <UserMicroCard user={session.user} />
+             
+
             </Link>
           ) : (
             <Link

@@ -29,9 +29,7 @@ export async function verifyOTP(phone, otp) {
   }
 
   if (otpRecord.otp !== p2e(otp)){
-// console.log(typeof(otp),otp);
-//     console.log(p2e(otp),typeof(p2e(otp)))
-//     console.log(otpRecord.otp,typeof(otpRecord.otp))
+
     
     otpRecord.useStep += 1;
     otpRecord.lastFailedAttempt = currentTime; // Update the time of the last failed attempt
