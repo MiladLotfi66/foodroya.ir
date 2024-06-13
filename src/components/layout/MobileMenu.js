@@ -23,7 +23,6 @@ import { useState } from "react";
 // import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";
-import logOutServerAction from "../signinAndLogin/Actions/logOutServerAction";
 
 function MobileMenu({isLogin}) {
   const { theme, setTheme } = useTheme();
@@ -32,6 +31,10 @@ function MobileMenu({isLogin}) {
   const [shopSubMenu, setShopSubmenu] = useState(false);
   // const sessionData = useSession();
   // const { data: session } = useSession()
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
 
 
   return (
@@ -159,13 +162,7 @@ function MobileMenu({isLogin}) {
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
              
             {isLogin ? (
-              <Link href="/" className=" inline-flex items-center gap-x-2" onClick={async() => {
-                const res=await logOutServerAction();
-                if (res.status===200) {
-                  location.replace("/")
-                }
-
-              }}>
+              <Link href="/" className=" inline-flex items-center gap-x-2"   onClick={handleSignOut} >
                 <svg className="w-5 h-5">
                   <use href="#Exitsvg"></use>
                 </svg>

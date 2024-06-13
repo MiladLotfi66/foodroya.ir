@@ -14,13 +14,13 @@ import { verifyOTP } from "src/ServerActions/OtpVerify";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Chatsvg from "@/module/svgs/ChatSVG";
+import { signIn } from "next-auth/react";
 
 function ForgetPassword() {
   const [isSubmit, setIsSubmit] = useState(false);
   const [isSendSms, setIsSendSms] = useState(false);
   const [phoneState, setPhoneState] = useState("");
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState(null);
+
 
   const router = useRouter();
 
@@ -45,38 +45,32 @@ function ForgetPassword() {
     if (!isSendSms) {
       setPhoneState(data.phone);
       const res = await SendSMSServerAction(data.phone);
-      
-  
+
       if (res.status === 200) {
         toast.success(res.message);
-        setIsSendSms(true)
-      } else if (res.status === 429){
+        setIsSendSms(true);
+      } else if (res.status === 429) {
         toast.success(res.error);
-        setIsSendSms(true)
-
-      
+        setIsSendSms(true);
       } else {
         toast.error(res.error);
       }
-    }else{
+    } else {
+      console.log(data.phone,data.OTP);
+      const res = await signIn("OTPProvider", {
+        redirect: false,
+        phone: data.phone, // شماره تلفنی که کاربر وارد می‌کند
+        otp: data.OTP, // کد OTP که کاربر وارد می‌کند
+        callbackUrl: "/", // آدرس صفحه‌ای که بعد از ورود موفقیت‌آمیز می‌خواهید کاربر به آن هدایت شود
+      });
 
-      const result = await verifyOTP(phoneState, data.OTP);
-
-      if (result.error) {
-        setMessage(result.error);
-        setStatus(result.status);
-        toast.error(result.error); // استفاده مستقیم از مقدار result.error
-
+      if (!res.error) {
+        router.push(res.url || "/");
       } else {
-        setMessage(result.message);
-        setStatus(result.status);
-        toast.success(result.message);
-        router.push("/")
+        // در صورت بروز خطا نمایش پیام خطا
+        console.error(res.error);
       }
-
-     
     }
-   
 
     setIsSubmit(false);
   };
@@ -162,14 +156,14 @@ function ForgetPassword() {
 
             {/* *******************links******************** */}
             <div className="flex justify-between items-center  ">
-              <Link
+              {/* <Link
                 className="text-orange-300 cursor-pointer font-MorabbaMedium"
                 rel="nofollow"
                 href="/OTPlogin"
               >
                 {" "}
                 دریافت کد یکبار مصرف
-              </Link>
+              </Link> */}
               <Link
                 className="text-orange-300 cursor-pointer font-MorabbaMedium"
                 rel="nofollow"

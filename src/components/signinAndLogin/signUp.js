@@ -11,7 +11,7 @@ import signUpServerAction from "./Actions/signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
-import { AuthUser } from "@/utils/ServerHelper";
+// import { AuthUser } from "@/utils/ServerHelper";
 
 // import { cookies } from "next/headers";
 // import { useCookies } from 'next-client-cookies';
@@ -27,14 +27,14 @@ import { AuthUser } from "@/utils/ServerHelper";
   // count++;
 
   useEffect(() => {
-    const checkUser = async () => {
-      const user = await AuthUser();
-      if (user) {
-        router.push("/");
-      }
-    };
+    // const checkUser = async () => {
+    //   const user = await AuthUser();
+    //   if (user) {
+    //     router.push("/");
+    //   }
+    // };
 
-    checkUser();
+    // checkUser();
 
     setValue("username", "", { shouldValidate: true });
     setValue("password", "", { shouldValidate: true });

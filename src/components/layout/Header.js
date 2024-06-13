@@ -11,9 +11,9 @@ import BasketShop from "@/layout/BasketShop";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import Link from "next/link";
-import logOutServerAction from "../signinAndLogin/Actions/logOutServerAction";
 import UserMicroCard from "@/module/home/UserMicroCard";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+
 
 function Header() {
   const { theme, setTheme } = useTheme();
@@ -30,6 +30,12 @@ function Header() {
   if (!mounted) {
     return null;
   }
+
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
 
   return (
     <header
@@ -96,12 +102,16 @@ function Header() {
                 <li className="flex items-center">
                   <a
                     href="#"
-                    onClick={async () => {
-                      const res = await logOutServerAction();
-                      if (res.status === 200) {
-                        location.replace("/");
-                      }
-                    }}
+                             onClick={handleSignOut}
+
+                    // onClick={() => {
+                    //   // const res = await logOutServerAction();
+                    //   // if (res.status === 200) {
+                    //   console.log("signout clicked");
+                    //   signOut();
+                    //     location.replace("/");
+                    //   // }
+                    // }}
                   >
                     خروج
                   </a>

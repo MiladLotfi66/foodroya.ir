@@ -3,9 +3,8 @@
 import connectDB from "@/utils/connectToDB";
 import OTP from "@/models/OTP";
 import {  p2e } from "@/utils/ReplaceNumber";
-import Users from "@/models/Users";
-import { generateAccessToken, generateRefreshToken } from "@/utils/auth";
-import { cookies } from "next/headers";
+
+
 
 
 export async function verifyOTP(phone, otp) {
@@ -30,6 +29,9 @@ export async function verifyOTP(phone, otp) {
 
   if (otpRecord.otp !== p2e(otp)){
 
+    console.log(typeof(otp),otp);
+    console.log(p2e(otp),typeof(p2e(otp)))
+    console.log(otpRecord.otp,typeof(otpRecord.otp))
     
     otpRecord.useStep += 1;
     otpRecord.lastFailedAttempt = currentTime; // Update the time of the last failed attempt
@@ -47,21 +49,21 @@ export async function verifyOTP(phone, otp) {
   otpRecord.lastFailedAttempt = null;
   await otpRecord.save();
 
-
+  
     // ایجاد توکن‌های دسترسی و تازه‌سازی
-    const accessToken = generateAccessToken({ phone });
-    const refreshToken = generateRefreshToken({ phone });
+    // const accessToken = generateAccessToken({ phone });
+    // const refreshToken = generateRefreshToken({ phone });
     
     // به‌روزرسانی توکن در دیتابیس
-    await Users.findOneAndUpdate({ phone }, { $set: { refreshToken } });
+    // await Users.findOneAndUpdate({ phone }, { $set: { refreshToken } });
 
     // ست کردن کوکی‌ها
-    cookies().set({
-        name: "token",
-        value: accessToken,
-        httpOnly: true,
-        path: "/",
-    });
+    // cookies().set({
+    //     name: "token",
+    //     value: accessToken,
+    //     httpOnly: true,
+    //     path: "/",
+    // });
 
   // Return success message
   return { message: "اعتبار سنجی با موفقیت انجام شد", status: 200 };

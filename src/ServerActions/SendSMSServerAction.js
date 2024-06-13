@@ -13,6 +13,7 @@ export async function SendSMSServerAction(data) {
   const currentTime = date.getTime();
   const otpRecord = await OTP.findOne({ phone });
 
+
   if (otpRecord) {
     // Check if the last failed attempt was less than 10 minutes ago
     if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
@@ -20,7 +21,10 @@ export async function SendSMSServerAction(data) {
     }
   }
 
+
+
    // Check if an OTP was sent within the last 3 minutes
+
    const recentOTP = await OTP.findOne({ phone, expTime: { $gt: currentTime } });
 
    if (recentOTP) {
