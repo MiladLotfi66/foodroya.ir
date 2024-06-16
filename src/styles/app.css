@@ -1584,22 +1584,6 @@ video {
   background-color: rgb(255 255 255 / 0.2);
 }
 
-.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/cake\.jpg\"\)\] {
-  background-image: url("../../public/Images/jpg/cake.jpg");
-}
-
-.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/finger\.jpg\"\)\] {
-  background-image: url("../../public/Images/jpg/finger.jpg");
-}
-
-.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/hamberger\.jpg\"\)\] {
-  background-image: url("../../public/Images/jpg/hamberger.jpg");
-}
-
-.bg-\[url\(\"\.\.\/\.\.\/public\/Images\/jpg\/rolet\.jpg\"\)\] {
-  background-image: url("../../public/Images/jpg/rolet.jpg");
-}
-
 .bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/chef2\.jfif\'\)\] {
   background-image: url('../../public/Images/jpg/chef2.jfif');
 }

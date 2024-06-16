@@ -47,3 +47,16 @@ export async function PUT(req) {
         return Response.json({ message: error.message }, { status: 500 });
     }
 }
+export async function GET(req) {
+    try {
+        await connectDB();
+
+        // واکشی تمام اطلاعات بنرها از دیتابیس
+        const banners = await Banner.find({}).lean(); // lean() برای بازگشتن به شیء JS ساده بدون مدیریت مدل
+
+        return Response.json({ banners }, { status: 200 });
+    } catch (error) {
+        return Response.json({ message: error.message }, { status: 500 });
+    }
+}
+
