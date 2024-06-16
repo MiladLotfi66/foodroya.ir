@@ -1,5 +1,4 @@
 import { hash, compare } from "bcryptjs";
-import { sign,verify } from "jsonwebtoken";
 
 
 async function hashPassword(password) {

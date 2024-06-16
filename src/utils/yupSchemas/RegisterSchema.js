@@ -4,7 +4,7 @@ import * as yup from "yup";
 const RegisterSchema = yup.object().shape({
  
   username: yup
-    .string().nullable()
+    .string()
     .max(25, "نام کاربری نمی‌تواند بیشتر از 25 کاراکتر باشد")
     .required("وارد کردن فیلد نام کاربری اجباری است"),
   password: yup
