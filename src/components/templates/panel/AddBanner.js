@@ -6,7 +6,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
-import BannerServerAction from "src/ServerActions/BannerServerAction";
 
 function AddBanner() {
   const [isSubmit, setIsSubmit] = useState(false);
