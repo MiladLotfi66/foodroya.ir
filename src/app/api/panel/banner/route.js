@@ -7,7 +7,6 @@ import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 export async function PUT(req) {
     try {
         await connectDB();
-        console.log("req==>", req);
 
         // استخراج داده‌های فرم از formData
         const formData = await req.formData();
@@ -18,13 +17,13 @@ export async function PUT(req) {
             BannersmallDiscription: formData.get("BannersmallDiscription"),
             BannerDiscription: formData.get("BannerDiscription"),
             BannerStep: formData.get("BannerStep"),
+            BannerTextColor: formData.get("BannerTextColor"),
             BannerImage: formData.getAll("BannerImage"), // اینجا از getAll برای دریافت تمام فایل‌های انتخاب شده استفاده می‌شود
         }, {
             abortEarly: false, // نمایش همه خطاها
         });
 
-        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage } = validatedData;
-
+        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage ,BannerTextColor } = validatedData;
         // تبدیل تصویر به buffer و ذخیره در مسیر مورد نظر
         const buffer = Buffer.from(await BannerImage[0].arrayBuffer()); // اینجا از BannerImage[0] برای فایل اول استفاده شده است
         const fileName = Date.now() + BannerImage[0].name;
@@ -38,6 +37,7 @@ export async function PUT(req) {
             BannerDiscription,
             BannerStep,
             imageUrl,
+            BannerTextColor,
         });
 
         await newBanner.save();

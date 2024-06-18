@@ -21,6 +21,14 @@ const BannerSchima = yup.object().shape({
     .max(2, "شماره وارد شده باید بین ۰ تا ۹۹ باشد"),
 
 
+    BannerTextColor: yup
+    .string()
+    .required('رنگ متن الزامی است')
+    .matches(/^#[0-9A-Fa-f]{6}$/, 'فرمت رنگ معتبر نیست'),
+
+
+
+
     BannerImage: yup
     .mixed()
     .required('تصویر بنر الزامی است')

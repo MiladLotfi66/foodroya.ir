@@ -114,10 +114,21 @@
 
 @layer utilities {
   .flexCenter {
-    @apply flex justify-center items-center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .shadowDarkSvg {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+
+  }
+
+  .shadowLightSvg {
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
+
   }
 }
-
 
 
  

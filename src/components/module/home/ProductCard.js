@@ -3,10 +3,14 @@ import Basketsvg from "@/module/svgs/Basketsvg";
 import calbas from "@/public/Images/jpg/Sausage.jpg";
 import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
+import ThreeDotsMenu from "../minicomponents/ThreeDotsMenu";
 function ProductCard() {
+
   return (
-    
-    <div className=" bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal  rounded-2xl ">
+
+    <div className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal  rounded-2xl ">
+         <ThreeDotsMenu />
+
       <div className="hidden">
         <Basketsvg />
         <Chatsvg />
@@ -24,7 +28,7 @@ function ProductCard() {
           quality={50}
           priority={true}
         />
-        <span className="absolute shadow-normal top-1.5 right-1.5 block h-[30px]  bg-orange-300 text-white dark:text-zinc-700 px-2.5 md:px-3.5  py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
+        <span className="absolute shadow-normal top-1.5 left-1.5 block h-[30px]  bg-orange-300 text-white dark:text-zinc-700 px-2.5 md:px-3.5  py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
           12 %
         </span>
       </div>

@@ -8,13 +8,14 @@ import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
+import ComponentMenu from "@/module/minicomponents/ComponentMenu";
 
 const APP_NAME = "فود رویا";
 const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
 const APP_TITLE_TEMPLATE = "محصولات خانگی فود رویا";
 const APP_DESCRIPTION = "فروشگاه محصولات خانگی فود رویا";
 
- export const metadata = {
+export const metadata = {
   metadataBase: new URL('http://localhost:3000/'),
 
   manifest:"/manifest.json",
@@ -29,10 +30,9 @@ const APP_DESCRIPTION = "فروشگاه محصولات خانگی فود روی�
     capable: true,
     statusBarStyle: "default",
     title: APP_DEFAULT_TITLE,
-    // startUpImage: [],
   },
   formatDetection: {
-      telephone:    false,
+    telephone: false,
   },
   openGraph: {
     type: "website",
@@ -57,9 +57,7 @@ export const viewport = {
   themeColor: "#3f3f46",
 };
 
-
-export default async function RootLayout({ children }) {
-
+export default function RootLayout({ children }) {
   return (
     <html
       lang="fa"
@@ -69,27 +67,19 @@ export default async function RootLayout({ children }) {
     >
       <body className="bg-gray-100 dark:bg-zinc-800">
         <NextAuthProvider>
-        {/* <SessionProvider session={session}> */}
-
           <ThemeProviders>
             <Providers>
               <ScrollToTop/>
-
               <Header />
+              <ComponentMenu />
               <MobileHeader />
               <MobileMenu />
-              {/* <ThemeSwitch/> */}
               <AosInit/>
               {children}
             </Providers>
           </ThemeProviders>
-          {/* </SessionProvider> */}
         </NextAuthProvider>
       </body>
     </html>
   );
 }
-
-
-
-

@@ -40,7 +40,7 @@ function BestSalling() {
         }}
       >
         <SwiperSlide>
-          <ProductCard />
+          <ProductCard  />
         </SwiperSlide>
         <SwiperSlide>
           <ProductCard />

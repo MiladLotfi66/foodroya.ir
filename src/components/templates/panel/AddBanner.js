@@ -25,6 +25,8 @@ function AddBanner() {
       BannerStep: "",
       BannerDiscription: "",
       BannerImage: null,
+      BannerTextColor: "#000000",
+
     },
     resolver: yupResolver(BannerSchima),
   });
@@ -41,6 +43,8 @@ function AddBanner() {
       formDataObj.append('BannersmallDiscription', formData.BannersmallDiscription);
       formDataObj.append('BannerDiscription', formData.BannerDiscription);
       formDataObj.append('BannerStep', formData.BannerStep);
+      formDataObj.append('BannerTextColor', formData.BannerTextColor);
+
   
       const res = await fetch('/api/panel/banner', {
         method: 'PUT',
@@ -94,12 +98,12 @@ function AddBanner() {
             {/* *******************BannerBigTitle******************** */}
 
             <div className="flex items-center">
-              <svg className="w-5 h-5"></svg>
+              <label htmlFor="BannerBigTitle" className=" w-1/5 text-sm">عنوان بنر</label>
               <input
-                className="inputStyle grow"
+                className="inputStyle grow w-4/5 "
                 type="text"
                 name="BannerBigTitle"
-                placeholder="عنوان بنر"
+                id="BannerBigTitle"
                 {...register("BannerBigTitle")}
               />
             </div>
@@ -112,12 +116,12 @@ function AddBanner() {
             {/* *******************BannersmallDiscription******************** */}
 
             <div className="flex items-center">
-              <svg className="w-5 h-5"></svg>
+              <label htmlFor="BannersmallDiscription" className=" w-1/5 text-sm">توضیح مختصر</label>
               <input
-                className="inputStyle grow"
+                className="inputStyle grow w-4/5"
                 type="text"
                 name="BannersmallDiscription"
-                placeholder="توضیح مختصر"
+                id="BannersmallDiscription"
                 {...register("BannersmallDiscription")}
               />
             </div>
@@ -130,11 +134,11 @@ function AddBanner() {
             {/* *******************BannerDiscription******************** */}
 
             <div className="flex items-center">
-              <svg className="w-5 h-5"></svg>
+              <label  htmlFor="BannerDiscription" className=" w-1/5 text-sm">توضیحات بنر</label>
               <textarea
-                className="textAriaStyle grow"
+                className="textAriaStyle grow w-4/5"
                 name="BannerDiscription"
-                placeholder="توضیحات بنر"
+                id="BannerDiscription"
                 {...register("BannerDiscription")}
               />
             </div>
@@ -147,12 +151,12 @@ function AddBanner() {
             {/* *******************BannerStep******************** */}
 
             <div className="flex items-center">
-              <svg className="w-5 h-5"></svg>
+              <label htmlFor="BannerStep" className=" w-1/5 text-sm">نوبت بنر</label>
               <input
-                className="inputStyle grow"
+                className="inputStyle grow w-4/5"
                 type="number"
                 name="BannerStep"
-                placeholder="نوبت بنر"
+                id="BannerStep"
                 {...register("BannerStep")}
               />
             </div>
@@ -161,9 +165,12 @@ function AddBanner() {
                 {errors.BannerStep.message}
               </div>
             )}
-
             {/* *******************BannerImage******************** */}
 
+<div className="flex items-center">
+
+            {/* *******************BannerImage******************** */}
+<div className="w-1/2">
             {selectedImage ? (
               <img
                 onClick={() => document.getElementById('BannerImage').click()}
@@ -174,7 +181,7 @@ function AddBanner() {
             ) : (
               <label
                 htmlFor="BannerImage"
-                className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-40"
+                className="text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-44"
               >
                 <PhotoSvg />
                 انتخاب تصویر
@@ -194,6 +201,31 @@ function AddBanner() {
                 {errors.BannerImage.message}
               </div>
             )}
+</div>
+              {/* *******************BannerTextColor******************** */}
+
+              <div className="w-1/2 " >
+              
+              <label
+                htmlFor="BannerTextColor"
+                className=" text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-44"
+              >
+              <input
+                className=" grow"
+                type="color"
+                name="BannerTextColor"
+                id="BannerTextColor"
+                {...register("BannerTextColor")}
+                />
+                انتخاب رنگ متن
+                </label>
+            </div>
+            {errors.BannerTextColor && (
+              <div className="text-xs text-red-400">
+                {errors.BannerTextColor.message}
+              </div>
+            )}
+              </div>
 
             {/* *******************button**************************** */}
 

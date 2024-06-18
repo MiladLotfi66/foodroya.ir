@@ -15,6 +15,10 @@ const BannerSchema = new Schema(
 
     BannerDiscription: {
       type: String,
+    }, 
+    
+    BannerTextColor: {
+      type: String,
     },
 
     imageUrl: { type: String, required: true },
