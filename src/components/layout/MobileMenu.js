@@ -1,7 +1,7 @@
 "use client";
 import {
   toggleBasketCart,
-  selectmobileMenu,
+  selectMobileMenu,
   reversemobileMenu,
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 import { useSelector, useDispatch } from "react-redux";
@@ -26,7 +26,7 @@ import Exitsvg from "@/module/svgs/Exitsvg";
 
 function MobileMenu({isLogin}) {
   const { theme, setTheme } = useTheme();
-  const isOpenMobileMenu = useSelector(selectmobileMenu);
+  const isOpenMobileMenu = useSelector(selectMobileMenu);
   const dispatch = useDispatch();
   const [shopSubMenu, setShopSubmenu] = useState(false);
   // const sessionData = useSession();

@@ -1,16 +1,77 @@
+"use client";
+
 import Image from "next/image";
 import Basketsvg from "@/module/svgs/Basketsvg";
 import calbas from "@/public/Images/jpg/Sausage.jpg";
 import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
 import ThreeDotsMenu from "../minicomponents/ThreeDotsMenu";
+import { useEffect, useState, useRef } from "react";
+
 function ProductCard() {
+
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const containerRef = useRef(null);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const EditHandler = (productId) => {
+    console.log(`Editing productId with id: ${productId}`);
+  };
+
+  const DeleteHandler = (productId) => {
+    console.log(`Deleting productId with id: ${productId}`);
+  };
+
+  const SendHandler = (productId) => {
+    console.log(`Sending productId with id: ${productId}`);
+  };
+
+  const menuItems = [
+    { label: 'ویرایش', action: 'edit' },
+    { label: 'حذف', action: 'delete' },
+    { label: 'ارسال', action: 'send' }
+  ];
+
+  const menuActions = {
+    edit: (id) => EditHandler(id),
+    delete: (id) => DeleteHandler(id),
+    send: (id) => SendHandler(id),
+  };
+
+  const handleMenuToggle = (productId) => {
+    setOpenMenuId(openMenuId === productId ? null : productId);
+  };
+
+  const handleMenuClose = () => {
+    setOpenMenuId(null);
+  };
+
+//////////////////////////////////////
 
   return (
 
     <div className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal  rounded-2xl ">
-         <ThreeDotsMenu />
-
+              <ThreeDotsMenu
+                bannerId={1}
+                menuItems={menuItems}
+                menuActions={menuActions}
+                isOpen={openMenuId === 1}
+                onClose={handleMenuClose}
+                onToggle={handleMenuToggle}
+              />
       <div className="hidden">
         <Basketsvg />
         <Chatsvg />
