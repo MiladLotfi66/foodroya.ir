@@ -6,12 +6,14 @@ import "swiper/css/autoplay";
 import { Navigation } from "swiper/modules";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import ThreeDotsMenu from "../minicomponents/ThreeDotsMenu";
+// import ThreeDotsMenu from "../minicomponents/ThreeDotsMenu";
+import { useDispatch } from "react-redux";
+import { openRightMenu, closeRightMenu } from "src/Redux/features/mobileMenu/mobileMenuSlice";
 
 function Banner2() {
   const [banners, setBanners] = useState([]);
-  const [openMenuId, setOpenMenuId] = useState(null);
   const containerRef = useRef(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     axios
@@ -27,7 +29,7 @@ function Banner2() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setOpenMenuId(null);
+        dispatch(closeRightMenu());
       }
     };
 
@@ -35,7 +37,7 @@ function Banner2() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [dispatch]);
 
   const EditHandler = (bannerId) => {
     console.log(`Editing banner with id: ${bannerId}`);
@@ -56,17 +58,23 @@ function Banner2() {
   ];
 
   const menuActions = {
-    edit: (id) => EditHandler(id),
-    delete: (id) => DeleteHandler(id),
-    send: (id) => SendHandler(id),
+    edit: EditHandler,
+    delete: DeleteHandler,
+    send: SendHandler,
   };
 
-  const handleMenuToggle = (bannerId) => {
-    setOpenMenuId(openMenuId === bannerId ? null : bannerId);
+  const handleMenuToggle = (event, bannerId) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+    };
+
+    dispatch(openRightMenu({ position, itemId: bannerId, menuItems }));
   };
 
   const handleMenuClose = () => {
-    setOpenMenuId(null);
+    dispatch(closeRightMenu());
   };
 
   return (
@@ -81,17 +89,36 @@ function Banner2() {
         {banners.map((banner, index) => (
           <SwiperSlide key={index}>
             <section
+
+            
               className="h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-center"
               style={{ backgroundImage: `url("${banner.imageUrl}")` }}
             >
-              <ThreeDotsMenu
-                bannerId={banner._id}
-                menuItems={menuItems}
-                menuActions={menuActions}
-                isOpen={openMenuId === banner._id}
-                onClose={handleMenuClose}
-                onToggle={handleMenuToggle}
-              />
+                  <div className="absolute w-[20%] h-[10%] z-[46]">
+
+
+              <button
+                className="w-full h-full"
+                onClick={(event) => handleMenuToggle(event, banner._id)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-[50%] h-[50%] items-start text-zinc-600 dark:text-white shadowLightSvg dark:shadowDarkSvg"
+                >
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" fill="transparent" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
+                </svg>
+              </button>
+              </div>
+
               <div className="h-[100%] flex justify-end items-center md:min-h-[93vh]" style={{ color: banner.BannerTextColor }}>
                 <div>
                   <span className="font-MorabbaBold text-2xl md:text-5xl ">{banner.BannerBigTitle}</span>
@@ -101,6 +128,7 @@ function Banner2() {
                 </div>
               </div>
             </section>
+            {/* <ThreeDotsMenu menuActions={menuActions} onClose={handleMenuClose} /> */}
           </SwiperSlide>
         ))}
       </Swiper>

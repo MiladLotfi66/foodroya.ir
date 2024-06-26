@@ -1,3 +1,4 @@
+// ProductCard.js
 "use client";
 
 import Image from "next/image";
@@ -5,19 +6,24 @@ import Basketsvg from "@/module/svgs/Basketsvg";
 import calbas from "@/public/Images/jpg/Sausage.jpg";
 import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
-import ThreeDotsMenu from "../minicomponents/ThreeDotsMenu";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
+import { openRightMenu, closeRightMenu } from "src/Redux/features/mobileMenu/mobileMenuSlice";
+import { ProductEditItem, ProductDeleteItem, ProductSendItem } from "@/components/signinAndLogin/Actions/MenuServerActions";
+
+
+
+
+
 
 function ProductCard() {
-
-  const [openMenuId, setOpenMenuId] = useState(null);
   const containerRef = useRef(null);
-
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setOpenMenuId(null);
+        dispatch(closeRightMenu());
       }
     };
 
@@ -25,60 +31,66 @@ function ProductCard() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [dispatch]);
 
-  const EditHandler = (productId) => {
-    console.log(`Editing productId with id: ${productId}`);
+  const handleMenuToggle = (event, productId) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+    };
+
+    dispatch(openRightMenu({
+      position,
+      itemId: productId,
+      menuItems: [
+        { label: "ویرایش", action: "edit" },
+        { label: "حذف", action: "delete" },
+        { label: "ارسال", action: "send" },
+      ],
+    }));
   };
 
-  const DeleteHandler = (productId) => {
-    console.log(`Deleting productId with id: ${productId}`);
+  const handleMenuItemClick = async (action, itemId) => {
+    if (action === "edit") {
+      await ProductEditItem(itemId);
+    } else if (action === "delete") {
+      await ProductDeleteItem(itemId);
+    } else if (action === "send") {
+      await ProductSendItem(itemId);
+    }
+    dispatch(closeRightMenu());
   };
-
-  const SendHandler = (productId) => {
-    console.log(`Sending productId with id: ${productId}`);
-  };
-
-  const menuItems = [
-    { label: 'ویرایش', action: 'edit' },
-    { label: 'حذف', action: 'delete' },
-    { label: 'ارسال', action: 'send' }
-  ];
-
-  const menuActions = {
-    edit: (id) => EditHandler(id),
-    delete: (id) => DeleteHandler(id),
-    send: (id) => SendHandler(id),
-  };
-
-  const handleMenuToggle = (productId) => {
-    setOpenMenuId(openMenuId === productId ? null : productId);
-  };
-
-  const handleMenuClose = () => {
-    setOpenMenuId(null);
-  };
-
-//////////////////////////////////////
 
   return (
-
-    <div className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal  rounded-2xl ">
-              <ThreeDotsMenu
-                bannerId={1}
-                menuItems={menuItems}
-                menuActions={menuActions}
-                isOpen={openMenuId === 1}
-                onClose={handleMenuClose}
-                onToggle={handleMenuToggle}
-              />
+    <div ref={containerRef} className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl">
+      <div className="absolute w-[20%] h-[10%] z-[46]">
+        <button
+          className="w-full h-full"
+          onClick={(event) => handleMenuToggle(event, 1)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-[50%] h-[50%] items-start text-zinc-600 dark:text-white shadowLightSvg dark:shadowDarkSvg"
+          >
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" fill="transparent" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        </button>
+      </div>
       <div className="hidden">
         <Basketsvg />
         <Chatsvg />
         <Star />
       </div>
-      {/* //////////////////تصویر و درصد تخفیف //////////////////// */}
-
       <div className="relative z-0 mb-2 md:mb-5">
         <Image
           className=" w-32 mx-auto md:w-auto h-auto rounded-md"
@@ -89,24 +101,19 @@ function ProductCard() {
           quality={50}
           priority={true}
         />
-        <span className="absolute shadow-normal top-1.5 left-1.5 block h-[30px]  bg-orange-300 text-white dark:text-zinc-700 px-2.5 md:px-3.5  py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
+        <span className="absolute shadow-normal top-1.5 left-1.5 block h-[30px] bg-orange-300 text-white dark:text-zinc-700 px-2.5 md:px-3.5 py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
           12 %
         </span>
       </div>
-
-      {/* //////////////////عنوان محصول //////////////////// */}
-
-      <h4 className="text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap  h-10 md:h-[51px]">
+      <h4 className="text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
         کالباس فیله ی بوقلمون 500 گرمی با بهترین مواد و بهترین کیفیت
       </h4>
-
-      {/* //////////////////قیمت و تخفیف //////////////////// */}
       <div className="flex flex-col mt-1.5 md:mt-2.5 gap-2.5 font-Dana text-xs">
         <div className="">
           <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
             175000000000000
           </span>
-          <span className=" text-xs md:text-sm   text-gray-400">تومان</span>
+          <span className=" text-xs md:text-sm text-gray-400">تومان</span>
         </div>
         <div className="text-teal-600 dark:text-emerald-500 ">
           <span className="font-DanaDemiBold text-sm md:text-base lg:text-xl">
@@ -115,45 +122,30 @@ function ProductCard() {
           <span className="text-xs md:text-sm tracking-tighter">تومان</span>
         </div>
       </div>
-      {/* //////////////////footer //////////////////// */}
       <div className="flex justify-between items-center gap-1.5">
-        <div className="flexCenter ">
-          <div className="flexCenter ">
-            <span className=" flexCenter block h-[26px] w-[26px] md:h-9 md:w-9 text-gray-400  bg-gray-100 dark:bg-zinc-800 rounded-full hover:text-white dark:hover:bg-emerald-600 hover:bg-teal-600 cursor-pointer transition-all">
-              <svg className="h-4 w-4 md:h-[22px] md:w-[22px]  ">
+        <div className="flexCenter">
+          <div className="flexCenter">
+            <span className="flexCenter block h-[26px] w-[26px] md:h-9 md:w-9 text-gray-400 bg-gray-100 dark:bg-zinc-800 rounded-full hover:text-white dark:hover:bg-emerald-600 hover:bg-teal-600 cursor-pointer transition-all">
+              <svg className="h-4 w-4 md:h-[22px] md:w-[22px]">
                 <use href="#Basketsvg"></use>
               </svg>
             </span>
           </div>
-          <div className="flexCenter ">
-            <span className=" flexCenter block h-[26px] w-[26px] md:h-9 md:w-9 text-gray-400  bg-gray-100 dark:bg-zinc-800 rounded-full hover:text-white dark:hover:bg-emerald-600 hover:bg-teal-600 cursor-pointer transition-all">
-              <svg className="h-4 w-4 md:h-[22px] md:w-[22px]  ">
-                <use href="#chatsvg"></use>
+          <div className="flexCenter">
+            <span className="flexCenter block h-[26px] w-[26px] md:h-9 md:w-9 text-gray-400 bg-gray-100 dark:bg-zinc-800 rounded-full hover:text-white dark:hover:bg-emerald-600 hover:bg-teal-600 cursor-pointer transition-all">
+              <svg className="h-4 w-4 md:h-[22px] md:w-[22px]">
+                <use href="#Chatsvg"></use>
               </svg>
             </span>
           </div>
         </div>
-        <div className="flex justify-end items-End ">
-          <svg className="h-4 w-4 md:h-6 md:w-6  text-gray-300 dark:text-gray-400">
-            <use href="#Star"></use>
-          </svg>
-          <svg className="h-4 w-4 md:h-6 md:w-6  text-yellow-400">
-            <use href="#Star"></use>
-          </svg>
-          <svg className="h-4 w-4 md:h-6 md:w-6  text-yellow-400">
-            <use href="#Star"></use>
-          </svg>
-          <svg className="h-4 w-4 md:h-6 md:w-6  text-yellow-400">
-            <use href="#Star"></use>
-          </svg>
-          <svg className="h-4 w-4 md:h-6 md:w-6  text-yellow-400">
+        <div className="text-orange-300 md:text-[22px] leading-[0px]">
+          <svg className="h-8 md:h-10 md:w-10 w-8 ">
             <use href="#Star"></use>
           </svg>
         </div>
       </div>
     </div>
-    
-   
   );
 }
 

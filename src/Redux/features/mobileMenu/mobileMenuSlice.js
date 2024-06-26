@@ -1,3 +1,4 @@
+// Redux Slice
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -7,7 +8,6 @@ const initialState = {
     RightMenuItemId: null,
     isBasketCartOpen: false,
     menuItems: [],
-    menuActions: {},
 };
 
 const mobileMenuSlice = createSlice({
@@ -28,14 +28,21 @@ const mobileMenuSlice = createSlice({
             state.RightMenuPosition = action.payload.position;
             state.RightMenuItemId = action.payload.itemId;
             state.menuItems = action.payload.menuItems;
-            state.menuActions = action.payload.menuActions;
         },
         closeRightMenu: (state) => {
             state.RightMenu = false;
             state.RightMenuItemId = null;
             state.menuItems = [];
-            state.menuActions = {};
         },
+        //  selectedMenuAction :  (action, itemId) => {
+        //     if (action === "edit") {
+        //        ProductEditItem(itemId);
+        //     } else if (action === "delete") {
+        //        ProductDeleteItem(itemId);
+        //     } else if (action === "send") {
+        //        ProductSendItem(itemId);
+        //     }
+        //   },
     },
 });
 
@@ -55,4 +62,3 @@ export const selectIsRightMenuOpen = (state) => state.mobileMenu.RightMenu;
 export const selectRightMenuPosition = (state) => state.mobileMenu.RightMenuPosition;
 export const selectRightMenuItemId = (state) => state.mobileMenu.RightMenuItemId;
 export const selectMenuItems = (state) => state.mobileMenu.menuItems;
-export const selectMenuActions = (state) => state.mobileMenu.menuActions;
