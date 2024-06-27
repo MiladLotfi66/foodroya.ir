@@ -1,4 +1,3 @@
-// ProductCard.js
 "use client";
 
 import Image from "next/image";
@@ -6,69 +5,38 @@ import Basketsvg from "@/module/svgs/Basketsvg";
 import calbas from "@/public/Images/jpg/Sausage.jpg";
 import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
-import { useEffect, useRef } from "react";
-import { useDispatch } from "react-redux";
-import { openRightMenu, closeRightMenu } from "src/Redux/features/mobileMenu/mobileMenuSlice";
-import { ProductEditItem, ProductDeleteItem, ProductSendItem } from "@/components/signinAndLogin/Actions/MenuServerActions";
-
-
-
-
-
+import { useEffect, useRef, useState } from "react";
+import ShareSvg from "../svgs/ShareSvg";
+import EditSvg from "../svgs/EditSvg";
+import DeleteSvg from "../svgs/DeleteSvg";
 
 function ProductCard() {
   const containerRef = useRef(null);
-  const dispatch = useDispatch();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null); // مرجع برای منو
+  const position = { top: 0, left: 0 };
+
+  const handleMenuToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleClickOutside = (event) => {
+    if (menuRef.current && !menuRef.current.contains(event.target)) {
+      setIsOpen(false);
+    }
+  };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        dispatch(closeRightMenu());
-      }
-    };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dispatch]);
-
-  const handleMenuToggle = (event, productId) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const position = {
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-    };
-
-    dispatch(openRightMenu({
-      position,
-      itemId: productId,
-      menuItems: [
-        { label: "ویرایش", action: "edit" },
-        { label: "حذف", action: "delete" },
-        { label: "ارسال", action: "send" },
-      ],
-    }));
-  };
-
-  const handleMenuItemClick = async (action, itemId) => {
-    if (action === "edit") {
-      await ProductEditItem(itemId);
-    } else if (action === "delete") {
-      await ProductDeleteItem(itemId);
-    } else if (action === "send") {
-      await ProductSendItem(itemId);
-    }
-    dispatch(closeRightMenu());
-  };
+  }, []);
 
   return (
     <div ref={containerRef} className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl">
       <div className="absolute w-[20%] h-[10%] z-[46]">
-        <button
-          className="w-full h-full"
-          onClick={(event) => handleMenuToggle(event, 1)}
-        >
+        <button className="w-full h-full" onClick={handleMenuToggle}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -85,6 +53,40 @@ function ProductCard() {
             />
           </svg>
         </button>
+        {isOpen && (
+          <div
+            className="absolute w-[20%] h-[10%] z-[46]"
+            style={{ top: position.top +30, left: position.left +20}}
+            ref={menuRef} // اضافه کردن مرجع به منو
+          >
+            <div className="relative group flex items-center">
+            <ul className="relative top-full w-36 sm:w-40 md:w-48 lg:w-56 xl:w-64 space-y-4 text-zinc-700 bg-white text-sm md:text-base border-t-[3px] border-t-orange-300 rounded-xl tracking-normal shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 p-6 pt-[21px] child:transition-colors child-hover:text-orange-300">
+            <div
+                className="cursor-pointer flex gap-2 items-center"
+                onClick={() => console.log("ویرایش")}
+              >
+                <EditSvg />
+                <p>ویرایش</p>
+              </div>
+              <div
+                className="cursor-pointer flex gap-2 items-center"
+                onClick={() => console.log("حذف")}
+              >
+                <DeleteSvg />
+                <p>حذف</p>
+              </div>
+
+              <div
+                className="cursor-pointer flex gap-2 items-center"
+                onClick={() => console.log("ارسال")}
+              >
+                <ShareSvg />
+                <p>ارسال</p>
+              </div>
+            </ul>
+            </div>
+          </div>
+        )}
       </div>
       <div className="hidden">
         <Basketsvg />

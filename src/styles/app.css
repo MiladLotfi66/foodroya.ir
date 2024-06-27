@@ -944,24 +944,12 @@ video {
   z-index: 50;
 }
 
+.z-\[146\] {
+  z-index: 146;
+}
+
 .z-\[46\] {
   z-index: 46;
-}
-
-.z-\[50\] {
-  z-index: 50;
-}
-
-.z-\[150\] {
-  z-index: 150;
-}
-
-.z-\[\6F5\] {
-  z-index: ۵;
-}
-
-.z-\[\] {
-  z-index: ;
 }
 
 .mx-4 {
@@ -1106,6 +1094,16 @@ video {
 
 .hidden {
   display: none;
+}
+
+.size-6 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.size-4 {
+  width: 1rem;
+  height: 1rem;
 }
 
 .h-1 {

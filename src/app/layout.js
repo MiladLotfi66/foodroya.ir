@@ -8,7 +8,6 @@ import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
-import ThreeDotsMenu from "@/module/minicomponents/ThreeDotsMenu";
 
 const APP_NAME = "فود رویا";
 const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
@@ -72,7 +71,6 @@ export default function RootLayout({ children }) {
               <ScrollToTop/>
               <Header />
               <MobileHeader />
-              <ThreeDotsMenu/>
               <MobileMenu />
               <AosInit/>
               {children}
