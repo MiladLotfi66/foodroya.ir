@@ -9,6 +9,7 @@ import axios from "axios";
 import ShareSvg from "../svgs/ShareSvg";
 import EditSvg from "../svgs/EditSvg";
 import DeleteSvg from "../svgs/DeleteSvg";
+import Threedot from "../svgs/threedot";
 
 function Banner2() {
   const [banners, setBanners] = useState([]);
@@ -77,33 +78,13 @@ function Banner2() {
               className="h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-center"
               style={{ backgroundImage: `url("${banner.imageUrl}")` }}
             >
-              <div className="absolute w-[20%] h-[10%] z-[46]">
+              <div className="absolute  w-4 h-4 md:w-8 md:h-8 z-[46] p-2">
                 <button
-                  className="w-full h-full"
                   onClick={(event) => handleMenuToggle(event, banner._id)}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-[50%] h-[50%] items-start text-zinc-600 dark:text-white shadowLightSvg dark:shadowDarkSvg"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                      fill="transparent"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
+               
+
+                 <Threedot/>
                 </button>
               </div>
 
@@ -136,7 +117,7 @@ function Banner2() {
         >
           <div className="relative group flex items-center">
             <ul className="relative top-full w-36 sm:w-40 md:w-48 lg:w-56 xl:w-64 space-y-4 text-zinc-700 bg-white text-sm md:text-base border-t-[3px] border-t-orange-300 rounded-xl tracking-normal shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 p-6 pt-[21px] child:transition-colors child-hover:text-orange-300">
-            <div
+              <div
                 className="cursor-pointer flex gap-2 items-center"
                 onClick={() => console.log("ویرایش")}
               >

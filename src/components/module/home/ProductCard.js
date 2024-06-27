@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import ShareSvg from "../svgs/ShareSvg";
 import EditSvg from "../svgs/EditSvg";
 import DeleteSvg from "../svgs/DeleteSvg";
+import Threedot from "../svgs/threedot";
 
 function ProductCard() {
   const containerRef = useRef(null);
@@ -33,25 +34,18 @@ function ProductCard() {
     };
   }, []);
 
+//////////////////////// actions //////////////////////////////
+
+
+
+
+
   return (
     <div ref={containerRef} className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl">
-      <div className="absolute w-[20%] h-[10%] z-[46]">
-        <button className="w-full h-full" onClick={handleMenuToggle}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-[50%] h-[50%] items-start text-zinc-600 dark:text-white shadowLightSvg dark:shadowDarkSvg"
-          >
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" fill="transparent" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-            />
-          </svg>
+              <div className="absolute w-4 h-4 md:w-8 md:h-8 z-[46] p-2">
+              <button  onClick={handleMenuToggle}>
+              <Threedot/>
+
         </button>
         {isOpen && (
           <div
