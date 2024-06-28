@@ -7,7 +7,7 @@ import {
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 import { useDispatch } from "react-redux";
 import Bars3 from "@/module/svgs/Bars3";
-import me2 from "@/public/Images/PNG/FoodRoyaLogoDark.png";
+import me2 from "@/public/Images/PNG/FoodRoyaLogoDark.webp";
 import Basketsvg from "@/module/svgs/Basketsvg";
 import Image from "next/image";
 import ShopingBoxMobile from "@/layout/ShopingBoxMobile";
@@ -44,6 +44,9 @@ function MobileHeader({isLogin}) {
         src={me2}
         width={59}
         height={59}
+        quality={60}
+        priority={true}
+
         alt="FoodRoya logo"
       />
       <div className="flex items-center gap-2">

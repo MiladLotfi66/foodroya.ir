@@ -74,7 +74,7 @@ function SignIn() {
   // *******************jsx********************
 
   return (
-    <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full ">
+    <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.webp')] w-[100%] h-[90%] md:h-full ">
       <div className="container ">
         <div className="hidden">
           <PhoneSvg/>

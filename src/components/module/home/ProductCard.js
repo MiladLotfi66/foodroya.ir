@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Basketsvg from "@/module/svgs/Basketsvg";
-import calbas from "@/public/Images/jpg/Sausage.jpg";
+import calbas from "@/public/Images/jpg/Sausage.webp";
 import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
 import { useEffect, useRef, useState } from "react";
@@ -43,7 +43,9 @@ function ProductCard() {
   return (
     <div ref={containerRef} className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl">
               <div className="absolute w-4 h-4 md:w-8 md:h-8 z-[46] p-2">
-              <button  onClick={handleMenuToggle}>
+              <button  
+              aria-label="product card Menu Button"
+              onClick={handleMenuToggle}>
               <Threedot/>
 
         </button>
@@ -92,12 +94,12 @@ function ProductCard() {
           className=" w-32 mx-auto md:w-auto h-auto rounded-md"
           src={calbas}
           alt="signalmobile procuct"
-          width={260}
-          height={260}
+          width={100}
+          height={100}
           quality={50}
-          priority={true}
+          // priority={true}
         />
-        <span className="absolute shadow-normal top-1.5 left-1.5 block h-[30px] bg-orange-300 text-white dark:text-zinc-700 px-2.5 md:px-3.5 py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
+        <span className="absolute shadow-normal top-1.5 left-1.5 block h-[30px] bg-orange-400 text-white dark:text-zinc-700 px-2.5 md:px-3.5 py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
           12 %
         </span>
       </div>

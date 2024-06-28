@@ -6,8 +6,8 @@ import {
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 import { useSelector, useDispatch } from "react-redux";
 import Image from "next/image";
-import me from "@/public/Images/PNG/FoodRoyaLogo.png";
-import textlogo from "@/public/Images/PNG/foodroyaTextlogo.png";
+import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
+import textlogo from "@/public/Images/PNG/foodroyaTextlogo.webp";
 import Xmark from "@/module/svgs/X-mark";
 import { useTheme } from "next-themes";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
@@ -69,6 +69,7 @@ function MobileMenu({isLogin}) {
                   src={me}
                   width={40}
                   height={40}
+                  priority={true}
                   alt="FoodRoya logo"
                 />
                 <Image
@@ -76,6 +77,7 @@ function MobileMenu({isLogin}) {
                   src={textlogo}
                   width={100}
                   height={40}
+                  priority={true}
                   alt="FoodRoyatextlogo"
                 />
               </div>
@@ -102,7 +104,7 @@ function MobileMenu({isLogin}) {
               </li>
 
               <li onClick={() => setShopSubmenu(!shopSubMenu)}>
-                <a className="justify-between">
+                <a href="/"  className="justify-between">
                   <div className="flex gap-x-2">
                     <svg className="w-5 h-5">
                       <use href="#ShoppingBag"></use>
@@ -120,7 +122,7 @@ function MobileMenu({isLogin}) {
                 {shopSubMenu ? (
                   <ul className="mt-3">
                     <li className="submenu flex flex-col gap-y-3 pr-7  text-zinc-600 dark:text-white ">
-                      <a className="inline" href="#">
+                      <a href="/"  className="inline" >
                         انواع سوسیس و کالباس
                       </a>
                       <a className="inline" href="#">

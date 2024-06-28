@@ -1,5 +1,5 @@
 import Image from "next/image";
-import usericone from "@/public/Images/jpg/user.jpg";
+import usericone from "@/public/Images/jpg/user.webp";
 
 function UserMicroCard({ user }) {
   return (
@@ -9,8 +9,10 @@ function UserMicroCard({ user }) {
         src={usericone}
         // src={user.image || "/default-user.png"}
         alt="تصویر کاربر"
-        width={40}
-        height={40}
+        width={30}
+        height={30}
+        quality={60}
+
       />
       <div className="hidden xl:inline-block">{user.username}</div>
     </span>

@@ -11,6 +11,7 @@ import EditSvg from "../svgs/EditSvg";
 import DeleteSvg from "../svgs/DeleteSvg";
 import Threedot from "../svgs/threedot";
 
+
 function Banner2() {
   const [banners, setBanners] = useState([]);
   const containerRef = useRef(null);
@@ -74,21 +75,22 @@ function Banner2() {
       >
         {banners.map((banner, index) => (
           <SwiperSlide key={index}>
+
+            
             <section
               className="h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-center"
               style={{ backgroundImage: `url("${banner.imageUrl}")` }}
             >
               <div className="absolute  w-4 h-4 md:w-8 md:h-8 z-[46] p-2">
                 <button
+                  aria-label="banner Menu Button"
                   onClick={(event) => handleMenuToggle(event, banner._id)}
                 >
-               
-
                  <Threedot/>
                 </button>
               </div>
 
-              <div
+              <section
                 className="h-[100%] flex justify-end items-center md:min-h-[93vh]"
                 style={{ color: banner.BannerTextColor }}
               >
@@ -104,7 +106,7 @@ function Banner2() {
                     {banner.BannerDiscription}
                   </p>
                 </div>
-              </div>
+              </section>
             </section>
           </SwiperSlide>
         ))}

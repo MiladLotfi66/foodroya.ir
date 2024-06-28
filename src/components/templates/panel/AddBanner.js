@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
+import Image from "next/image";
 
 function AddBanner() {
   const [isSubmit, setIsSubmit] = useState(false);
@@ -77,7 +78,7 @@ function AddBanner() {
   ////////////////////////////////////
 
   return (
-    <div className="absolute bg-no-repeat bg-cover bg-center bg-[url('../../public/Images/jpg/chefSign.jfif')] w-[100%] h-[90%] md:h-full">
+    <div className="absolute bg-no-repeat bg-cover bg-center bg-[url('../../public/Images/jpg/chefSign.webp')] w-[100%] h-[90%] md:h-full">
       <div className="container">
         <div className="hidden">
           <PhotoSvg />
@@ -172,12 +173,16 @@ function AddBanner() {
             {/* *******************BannerImage******************** */}
 <div className="w-1/2">
             {selectedImage ? (
-              <img
+              <Image
                 onClick={() => document.getElementById('BannerImage').click()}
                 src={selectedImage}
                 alt="Selected"
                 className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-40"
-              />
+                width={60}
+                height={60}
+                quality={60}
+
+                />
             ) : (
               <label
                 htmlFor="BannerImage"

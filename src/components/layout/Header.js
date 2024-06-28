@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import me from "@/public/Images/PNG/FoodRoyaLogo.png";
+import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
 import Image from "next/image";
 import Moonsvg from "@/module/svgs/Moonsvg.js";
 import Basketsvg from "@/module/svgs/Basketsvg";
@@ -68,7 +68,6 @@ function Header() {
             width={59}
             height={59}
             quality={20}
-            priority={true}
             alt="FoodRoya logo"
           />
           <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">

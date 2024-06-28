@@ -1,4 +1,4 @@
-import product_shopingbox from "@/public/Images/jpg/iphone14.jpg";
+import product_shopingbox from "@/public/Images/jpg/iphone14.webp";
 import Image from "next/image";
 function BasketShopProductCard() {
   return (
@@ -7,9 +7,9 @@ function BasketShopProductCard() {
    <Image 
       src={product_shopingbox}
       alt="signalmobile procuct"
-      width={120}
-      height={120}
-      quality={10}
+      width={80}
+      height={80}
+      quality={20}
     />
    </div>
    

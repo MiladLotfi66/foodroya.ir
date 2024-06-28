@@ -4,13 +4,11 @@ import * as yup from "yup";
 const BannerSchima = yup.object().shape({
     BannerBigTitle: yup
     .string().nullable()
-    .max(25, "عنوان بنر بنر نمی‌تواند بیشتر از 25 کاراکتر باشد"),
-
+    .max(25, "عنوان بنر نمی‌تواند بیشتر از 25 کاراکتر باشد"),
 
     BannersmallDiscription: yup
     .string().nullable()
     .max(40, "توضیح مختصر بنر نمی‌تواند بیشتر از 40 کاراکتر باشد"),  
-
 
     BannerDiscription: yup
     .string().nullable()
@@ -20,14 +18,10 @@ const BannerSchima = yup.object().shape({
     .string().nullable()
     .max(2, "شماره وارد شده باید بین ۰ تا ۹۹ باشد"),
 
-
     BannerTextColor: yup
     .string()
     .required('رنگ متن الزامی است')
     .matches(/^#[0-9A-Fa-f]{6}$/, 'فرمت رنگ معتبر نیست'),
-
-
-
 
     BannerImage: yup
     .mixed()
@@ -38,13 +32,13 @@ const BannerSchima = yup.object().shape({
       }
       return false;
     })
-    .test('fileType', 'فرمت تصویر باید JPEG یا PNG باشد', (value) => {
+    .test('fileType', 'فرمت تصویر باید JPEG، PNG یا WebP باشد', (value) => {
       if (value && value.length > 0) {
-        return value[0].type === 'image/jpeg' || value[0].type === 'image/png';
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        return allowedTypes.includes(value[0].type);
       }
       return false;
     }),
-  
 });
 
 export default BannerSchima;
