@@ -22,6 +22,8 @@ const BannerSchema = new Schema(
     },
 
     imageUrl: { type: String, required: true },
+    BannerStatus: { type: Boolean, required: true },
+    BannerLink: { type: String},
 
 
   },

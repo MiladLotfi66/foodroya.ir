@@ -19,11 +19,13 @@ export async function PUT(req) {
             BannerStep: formData.get("BannerStep"),
             BannerTextColor: formData.get("BannerTextColor"),
             BannerImage: formData.getAll("BannerImage"), // اینجا از getAll برای دریافت تمام فایل‌های انتخاب شده استفاده می‌شود
+            BannerStatus: formData.get("BannerStatus"),
+            BannerLink: formData.get("BannerLink"),
         }, {
             abortEarly: false, // نمایش همه خطاها
         });
 
-        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage ,BannerTextColor } = validatedData;
+        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage ,BannerTextColor ,BannerStatus,BannerLink} = validatedData;
         // تبدیل تصویر به buffer و ذخیره در مسیر مورد نظر
         const buffer = Buffer.from(await BannerImage[0].arrayBuffer()); // اینجا از BannerImage[0] برای فایل اول استفاده شده است
         const fileName = Date.now() + BannerImage[0].name;
@@ -38,6 +40,9 @@ export async function PUT(req) {
             BannerStep,
             imageUrl,
             BannerTextColor,
+            BannerStatus,
+            BannerLink
+            
         });
 
         await newBanner.save();

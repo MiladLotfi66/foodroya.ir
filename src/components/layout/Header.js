@@ -69,6 +69,7 @@ function Header() {
             height={59}
             quality={20}
             alt="FoodRoya logo"
+            priority={true}
           />
           <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">
             <li className="flex items-center">

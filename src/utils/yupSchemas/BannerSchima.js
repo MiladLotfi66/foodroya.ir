@@ -1,5 +1,8 @@
 import * as yup from "yup";
 
+const SITE_URL = process.env.NEXTAUTH_URL;
+
+
 // *******************validate********************
 const BannerSchima = yup.object().shape({
     BannerBigTitle: yup
@@ -22,6 +25,16 @@ const BannerSchima = yup.object().shape({
     .string()
     .required('رنگ متن الزامی است')
     .matches(/^#[0-9A-Fa-f]{6}$/, 'فرمت رنگ معتبر نیست'),
+    
+    BannerStatus: yup
+    .boolean('فرمت وضعیت بنر صحیح نمی باشد'),
+
+    BannerLink: yup
+    .mixed()
+    .test('is-url', 'فرمت لینک معتبر نیست', value => {
+      if (!value) return true; // اجازه برای وجود نداشتن مقدار
+      return /^(https?:\/\/(localhost|127\.0\.0\.1|192\.168\.1\.\d+)(:\d+)?(\/[a-zA-Z0-9-._~:\/?#[\]@!$&'()*+,;=%]*)?)?$/.test(value);
+    }),
 
     BannerImage: yup
     .mixed()
