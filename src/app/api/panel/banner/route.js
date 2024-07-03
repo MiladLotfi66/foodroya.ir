@@ -1,6 +1,6 @@
 import connectDB from "@/utils/connectToDB";
-import Banner from "@/models/Banner";   
-import { writeFile } from "fs/promises";
+import Banner from "@/models/Banner";
+import { writeFile, unlink } from "fs/promises";
 import path from "path";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 
@@ -8,31 +8,28 @@ export async function PUT(req) {
     try {
         await connectDB();
 
-        // استخراج داده‌های فرم از formData
         const formData = await req.formData();
 
-        // اعتبارسنجی داده‌ها با استفاده از yup
         const validatedData = await BannerSchima.validate({
             BannerBigTitle: formData.get("BannerBigTitle"),
             BannersmallDiscription: formData.get("BannersmallDiscription"),
             BannerDiscription: formData.get("BannerDiscription"),
             BannerStep: formData.get("BannerStep"),
             BannerTextColor: formData.get("BannerTextColor"),
-            BannerImage: formData.getAll("BannerImage"), // اینجا از getAll برای دریافت تمام فایل‌های انتخاب شده استفاده می‌شود
+            BannerImage: formData.getAll("BannerImage"),
             BannerStatus: formData.get("BannerStatus"),
             BannerLink: formData.get("BannerLink"),
         }, {
-            abortEarly: false, // نمایش همه خطاها
+            abortEarly: false,
         });
 
-        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage ,BannerTextColor ,BannerStatus,BannerLink} = validatedData;
-        // تبدیل تصویر به buffer و ذخیره در مسیر مورد نظر
-        const buffer = Buffer.from(await BannerImage[0].arrayBuffer()); // اینجا از BannerImage[0] برای فایل اول استفاده شده است
+        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage, BannerTextColor, BannerStatus, BannerLink } = validatedData;
+
+        const buffer = Buffer.from(await BannerImage[0].arrayBuffer());
         const fileName = Date.now() + BannerImage[0].name;
         await writeFile(path.join(process.cwd(), "public/Uploads/" + fileName), buffer);
         const imageUrl = "/Uploads/" + fileName;
 
-        // ذخیره اطلاعات در دیتابیس
         const newBanner = new Banner({
             BannerBigTitle,
             BannersmallDiscription,
@@ -42,7 +39,6 @@ export async function PUT(req) {
             BannerTextColor,
             BannerStatus,
             BannerLink
-            
         });
 
         await newBanner.save();
@@ -52,16 +48,72 @@ export async function PUT(req) {
         return Response.json({ message: error.message }, { status: 500 });
     }
 }
+
+export async function PATCH(req) {
+    try {
+        await connectDB();
+
+        const formData = await req.formData();
+        const bannerId = formData.get("id");
+
+        const validatedData = await BannerSchima.validate({
+            BannerBigTitle: formData.get("BannerBigTitle"),
+            BannersmallDiscription: formData.get("BannersmallDiscription"),
+            BannerDiscription: formData.get("BannerDiscription"),
+            BannerStep: formData.get("BannerStep"),
+            BannerTextColor: formData.get("BannerTextColor"),
+            BannerImage: formData.getAll("BannerImage"),
+            BannerStatus: formData.get("BannerStatus"),
+            BannerLink: formData.get("BannerLink"),
+        }, {
+            abortEarly: false,
+        });
+
+        const { BannerBigTitle, BannersmallDiscription, BannerDiscription, BannerStep, BannerImage, BannerTextColor, BannerStatus, BannerLink } = validatedData;
+
+        let imageUrl;
+
+        if (BannerImage && BannerImage.length > 0) {
+            const buffer = Buffer.from(await BannerImage[0].arrayBuffer());
+            const fileName = Date.now() + BannerImage[0].name;
+            await writeFile(path.join(process.cwd(), "public/Uploads/" + fileName), buffer);
+            imageUrl = "/Uploads/" + fileName;
+        }
+
+        const updatedBanner = {
+            BannerBigTitle,
+            BannersmallDiscription,
+            BannerDiscription,
+            BannerStep,
+            BannerTextColor,
+            BannerStatus,
+            BannerLink
+        };
+
+        if (imageUrl) {
+            updatedBanner.imageUrl = imageUrl;
+        }
+
+        const banner = await Banner.findByIdAndUpdate(bannerId, updatedBanner, { new: true });
+
+        if (imageUrl && banner.imageUrl) {
+            await unlink(path.join(process.cwd(), banner.imageUrl));
+        }
+
+        return Response.json({ message: "ویرایش بنر با موفقیت انجام شد" }, { status: 200 });
+    } catch (error) {
+        return Response.json({ message: error.message }, { status: 500 });
+    }
+}
+
 export async function GET(req) {
     try {
         await connectDB();
 
-        // واکشی تمام اطلاعات بنرها از دیتابیس
-        const banners = await Banner.find({}).lean(); // lean() برای بازگشتن به شیء JS ساده بدون مدیریت مدل
+        const banners = await Banner.find({}).lean();
 
         return Response.json({ banners }, { status: 200 });
     } catch (error) {
         return Response.json({ message: error.message }, { status: 500 });
     }
 }
-

@@ -4,42 +4,39 @@ import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 
-function AddBanner() {
+
+function AddBanner({ banner = {} }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [bannerStatus, setBannerStatus] = useState(banner?.BannerStatus !== undefined ? banner.BannerStatus : true);
 
-  // *******************hook use form********************
 
-  const {
-    register,
-    handleSubmit,
-    reset,  // اضافه کردن متد reset
-    setValue,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      BannerBigTitle: "",
-      BannersmallDiscription: "",
-      BannerStep: "",
-      BannerDiscription: "",
+  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
+    defaultValues: { 
+      BannerBigTitle: banner?.BannerBigTitle || "",
+      BannersmallDiscription: banner?.BannersmallDiscription || "",
+      BannerStep: banner?.BannerStep || "",
+      BannerDiscription: banner?.BannerDiscription || "",
       BannerImage: null,
-      BannerTextColor: "#000000",
-      BannerLink: "",
-      BannerStatus: true,
+      BannerTextColor: banner?.BannerTextColor || "#000000",
+      BannerLink: banner?.BannerLink || "",
+      BannerStatus: banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
     },
     resolver: yupResolver(BannerSchima),
   });
 
-  // *******************submit ********************
+  const handleFormSubmit = async (formData) => {
 
-  const formsubmitting = async (formData) => {
+
     setIsSubmit(true);
-
     try {
+      // اعتبارسنجی مقادیر فرم با استفاده از Yup schema
+      await BannerSchima.validate(formData, { abortEarly: false });
+
       const formDataObj = new FormData();
       formDataObj.append("BannerImage", formData.BannerImage[0]);
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
@@ -50,30 +47,46 @@ function AddBanner() {
       formDataObj.append("BannerStatus", formData.BannerStatus);
       formDataObj.append("BannerLink", formData.BannerLink);
 
-
-      const res = await fetch("/api/panel/banner", {
-        method: "PUT",
+      const res = await fetch(`/api/panel/banner${banner?._id ? `/${banner._id}` : ''}`, {
+        method: banner?._id ? "PATCH" : "PUT",
         body: formDataObj,
       });
 
       const result = await res.json();
       if (res.ok) {
-         // ریست کردن فرم بعد از ثبت موفقیت‌آمیز
         toast.success("بنر با موفقیت ثبت شد");
-        window.location.reload();
-
-        // setSelectedImage(null);  // ریست کردن تصویر انتخاب شده
+        setSelectedImage(null);
+        reset(); // پاک کردن مقادیر فرم پس از ثبت
       } else {
         toast.error(result.message || "خطایی رخ داده است");
       }
     } catch (error) {
-      toast.error("خطایی در ارسال درخواست به سرور رخ داد");
-    } finally {
-      setIsSubmit(false);
+      if (error ) {
+        // نمایش خطاهای اعتبارسنجی
+          toast.error(error.message);
+        
+      } else {
+        toast.error("خطایی در ارسال درخواست به سرور رخ داد");
+      }
     }
+    setIsSubmit(false);
   };
 
-  ////////////////////////////////////
+
+
+  useEffect(() => {
+    if (banner?.imageUrl) {
+      setSelectedImage(banner.imageUrl);
+      setValue("BannerImage", banner.BannerImage); // setValue برای تنظیم مقدار تصویر بنر
+    }
+  }, [banner, setValue]);
+
+  const formsubmitting = async (formData) => {
+    console.log("formsubmitting called");
+    setIsSubmit(true);
+    await handleFormSubmit(formData);
+    setIsSubmit(false);
+  };
 
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -82,208 +95,172 @@ function AddBanner() {
     }
   };
 
-  ////////////////////////////////////
-
   return (
-
-    
     <div className="overflow-y-auto max-h-screen">
-
-        {/* *******************header******************** */}
-
-        <div className="flex justify-between p-2 md:p-5 mt-4 ">
-          <h1 className="text-3xl font-MorabbaBold">افزودن بنر</h1>
+      <div className="flex justify-between p-2 md:p-5 mt-4">
+        <h1 className="text-3xl font-MorabbaBold">
+          {banner?._id ? "ویرایش بنر" : "افزودن بنر"}
+        </h1>
+      </div>
+      <form onSubmit={handleSubmit((data) => {
+        formsubmitting(data);
+      })} className="flex flex-col gap-4 p-2 md:p-4">
+        <div className="flex items-center">
+          <label htmlFor="BannerStatus" className="w-1/5 text-xs md:text-sm">وضعیت بنر</label>
+          <input
+            className="inputStyle w-1/5"
+            type="checkbox"
+            name="BannerStatus"
+            id="BannerStatus"
+            checked={bannerStatus}
+                        {...register("BannerStatus")}
+          />
         </div>
-
-        {/* *******************main******************** */}
-        <form
-          onSubmit={handleSubmit(formsubmitting)}
-          className=" flex flex-col gap-4 p-2 md:p-4"
-        >
-          {/* *******************BannerStatus******************** */}
-
-          <div className="flex items-center ">
-            <label htmlFor="BannerStatus" className="w-1/5 text-xs md:text-sm">وضعیت بنر</label>
-            <input
-              className="inputStyle w-1/5 "
-              type="checkbox"
-              name="BannerStatus"
-              id="BannerStatus"
-              defaultChecked={true}
-              {...register("BannerStatus")}
-            />
+        <div className="flex items-center">
+          <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">عنوان بنر</label>
+          <input
+            className="inputStyle grow w-4/5"
+            type="text"
+            name="BannerBigTitle"
+            id="BannerBigTitle"
+            {...register("BannerBigTitle")}
+          />
+        </div>
+        {errors.BannerBigTitle && (
+          <div className="text-xs text-red-400">
+            {errors.BannerBigTitle.message}
           </div>
-
-          {/* *******************BannerBigTitle******************** */}
-
-          <div className="flex items-center">
-            <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">عنوان بنر</label>
-            <input
-              className="inputStyle grow w-4/5 "
-              type="text"
-              name="BannerBigTitle"
-              id="BannerBigTitle"
-              {...register("BannerBigTitle")}
-            />
+        )}
+        <div className="flex items-center">
+          <label htmlFor="BannersmallDiscription" className="w-1/5 text-xs md:text-sm">توضیح مختصر</label>
+          <input
+            className="inputStyle grow w-4/5"
+            type="text"
+            name="BannersmallDiscription"
+            id="BannersmallDiscription"
+            {...register("BannersmallDiscription")}
+          />
+        </div>
+        {errors.BannersmallDiscription && (
+          <div className="text-xs text-red-400">
+            {errors.BannersmallDiscription.message}
           </div>
-          {errors.BannerBigTitle && (
-            <div className="text-xs text-red-400">
-              {errors.BannerBigTitle.message}
-            </div>
-          )}
-
-          {/* *******************BannersmallDiscription******************** */}
-
-          <div className="flex items-center">
-            <label htmlFor="BannersmallDiscription" className="w-1/5 text-xs md:text-sm">توضیح مختصر</label>
-            <input
-              className="inputStyle grow w-4/5"
-              type="text"
-              name="BannersmallDiscription"
-              id="BannersmallDiscription"
-              {...register("BannersmallDiscription")}
-            />
+        )}
+        <div className="flex items-center">
+          <label htmlFor="BannerDiscription" className="w-1/5 text-xs md:text-sm">توضیحات بنر</label>
+          <textarea
+            className="textAriaStyle grow w-4/5"
+            name="BannerDiscription"
+            id="BannerDiscription"
+            {...register("BannerDiscription")}
+          />
+        </div>
+        {errors.BannerDiscription && (
+          <div className="text-xs text-red-400">
+            {errors.BannerDiscription.message}
           </div>
-          {errors.BannersmallDiscription && (
-            <div className="text-xs text-red-400">
-              {errors.BannersmallDiscription.message}
-            </div>
-          )}
-
-          {/* *******************BannerDiscription******************** */}
-
-          <div className="flex items-center">
-            <label htmlFor="BannerDiscription" className="w-1/5 text-xs md:text-sm">توضیحات بنر</label>
-            <textarea
-              className="textAriaStyle grow w-4/5"
-              name="BannerDiscription"
-              id="BannerDiscription"
-              {...register("BannerDiscription")}
-            />
+        )}
+        <div className="flex items-center">
+          <label htmlFor="BannerStep" className="w-1/5 text-xs md:text-sm">نوبت بنر</label>
+          <input
+            className="inputStyle grow w-4/5"
+            type="number"
+            name="BannerStep"
+            id="BannerStep"
+            {...register("BannerStep")}
+          />
+        </div>
+        {errors.BannerStep && (
+          <div className="text-xs text-red-400">
+            {errors.BannerStep.message}
           </div>
-          {errors.BannerDiscription && (
-            <div className="text-xs text-red-400">
-              {errors.BannerDiscription.message}
-            </div>
-          )}
-
-          {/* *******************BannerStep******************** */}
-
-          <div className="flex items-center">
-            <label htmlFor="BannerStep" className="w-1/5 text-xs md:text-sm">نوبت بنر</label>
-            <input
-              className="inputStyle grow w-4/5"
-              type="number"
-              name="BannerStep"
-              id="BannerStep"
-              {...register("BannerStep")}
-            />
+        )}
+        <div className="flex items-center">
+          <label htmlFor="BannerLink" className="w-1/5 text-xs md:text-sm">لینک بنر</label>
+          <input
+            className="inputStyle grow w-4/5"
+            type="text"
+            name="BannerLink"
+            id="BannerLink"
+            {...register("BannerLink")}
+          />
+        </div>
+        {errors.BannerLink && (
+          <div className="text-xs text-red-400">
+            {errors.BannerLink.message}
           </div>
-          {errors.BannerStep && (
-            <div className="text-xs text-red-400">
-              {errors.BannerStep.message}
-            </div>
-          )}
-                    {/* *******************BannerLink******************** */}
-
-                    <div className="flex items-center">
-            <label htmlFor="BannerLink" className="w-1/5 text-xs md:text-sm">لینک بنر</label>
-            <input
-              className="inputStyle grow w-4/5"
-              type="text"
-              name="BannerLink"
-              id="BannerLink"
-              {...register("BannerLink")}
-            />
-          </div>
-          {errors.BannerLink && (
-            <div className="text-xs text-red-400">
-              {errors.BannerLink.message}
-            </div>
-          )}
-
-          {/* *******************BannerImage******************** */}
-
-          <div className="flex items-center">
-            <div className="w-1/2">
-              {selectedImage ? (
-                <Image
-                  onClick={() => document.getElementById('BannerImage').click()}
-                  src={selectedImage}
-                  alt="Selected"
-                  className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
-                  width={60}
-                  height={60}
-                  quality={60}
-                />
-              ) : (
-                <label
-                  htmlFor="BannerImage"
-                  className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
-                >
-                  <PhotoSvg />
-                  <span className="hidden md:inline-block">انتخاب تصویر</span>
-
-                </label>
-              )}
-
-              <input
-                className="hidden"
-                id="BannerImage"
-                type="file"
-                name="BannerImage"
-                accept="image/*"
-                onChange={handleImageChange}
+        )}
+        <div className="flex items-center">
+          <div className="w-1/2">
+            {selectedImage ? (
+              <Image
+                onClick={() => document.getElementById('imageUrl').click()}
+                src={selectedImage}
+                alt="Selected"
+                className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
+                width={60}
+                height={60}
+                quality={60}
               />
-              {errors.BannerImage && (
-                <div className="text-xs text-red-400">
-                  {errors.BannerImage.message}
-                </div>
-              )}
-            </div>
-
-            {/* *******************BannerTextColor******************** */}
-
-            <div className="w-1/2">
+            ) : (
               <label
-                htmlFor="BannerTextColor"
+                htmlFor="imageUrl"
                 className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
               >
-                <input
-                  className="grow"
-                  type="color"
-                  name="BannerTextColor"
-                  id="BannerTextColor"
-                  {...register("BannerTextColor")}
-                />
-                              <span className="hidden md:inline-block">انتخاب رنگ متن</span>
-
+                <PhotoSvg />
+                <span className="hidden md:inline-block">انتخاب تصویر</span>
               </label>
-            </div>
-            {errors.BannerTextColor && (
+            )}
+            <input
+              className="hidden"
+              id="imageUrl"
+              type="file"
+              name="imageUrl"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            {errors.imageUrl && (
               <div className="text-xs text-red-400">
-                {errors.BannerTextColor.message}
+                {errors.imageUrl.message}
               </div>
             )}
           </div>
-
-          {/* *******************button**************************** */}
-
-          <button
-            type="submit"
-            className={
-              isSubmit
-                ? "flexCenter gap-x-2 h-11 md:h-14 bg-gray-400 rounded-xl text-white mt-4"
-                : "h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4"
-            }
-            disabled={isSubmit}
-          >
-            {isSubmit ? "در حال ثبت" : "ثبت"}
-            {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
-          </button>
-          <Toaster />
-        </form>
-      </div>
+          <div className="w-1/2">
+            <label
+              htmlFor="BannerTextColor"
+              className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
+            >
+              <input
+                className="grow"
+                type="color"
+                name="BannerTextColor"
+                id="BannerTextColor"
+                {...register("BannerTextColor")}
+              />
+              <span className="hidden md:inline-block">انتخاب رنگ متن</span>
+            </label>
+          </div>
+          {errors.BannerTextColor && (
+            <div className="text-xs text-red-400">
+              {errors.BannerTextColor.message}
+            </div>
+          )}
+        </div>
+        <button
+          type="submit"
+          className={
+            isSubmit
+              ? "flexCenter gap-x-2 h-11 md:h-14 bg-gray-400 rounded-xl text-white mt-4"
+              : "h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4"
+          }
+          disabled={isSubmit}
+        >
+          {isSubmit ? "در حال ثبت" : "ثبت"}
+          {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
+        </button>
+        <Toaster />
+      </form>
+    </div>
   );
 }
 

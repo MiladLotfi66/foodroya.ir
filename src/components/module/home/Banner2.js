@@ -5,13 +5,17 @@ import "swiper/css";
 import "swiper/css/autoplay";
 import { Navigation } from "swiper/modules";
 import { useEffect, useState, useRef } from "react";
-import ShareSvg from "../svgs/ShareSvg";
 import EditSvg from "../svgs/EditSvg";
 import DeleteSvg from "../svgs/DeleteSvg";
-import Threedot from "../svgs/threedot";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { GetAllEnableBanners } from "@/components/signinAndLogin/Actions/BannerServerActions";
+import { GetAllEnableBanners,  BannerServerEnableActions,
+  BannerServerDisableActions,
+  DeleteBanners, } from "@/components/signinAndLogin/Actions/BannerServerActions";
+import EyeSvg from "../svgs/EyeSvg";
+import EyeslashSvg from "../svgs/EyeslashSvg";
+import SettingSvg from "../svgs/SettingSvg";
+
 
 
 function Banner2() {
@@ -23,11 +27,6 @@ function Banner2() {
   const menuRef = useRef(null); // مرجع برای منو
   const position = { top: 0, left: 0 };
 
-  const handleMenuToggle = (event ,id) => {
-    setBannerID(id)
-    setIsOpen(!isOpen);
-  };
-
    useEffect(() => {
     const fetchBanners = async () => {
       try {
@@ -38,14 +37,7 @@ function Banner2() {
       }
     };
     fetchBanners();
-    // axios
-    // .get("/api/panel/banner?BannerStatus=active") // ارسال پارامتر status=active به عنوان فیلتر بر روی وضعیت بنرها
-    // .then((response) => {
-    //     setBanners(response.data.banners);
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error fetching banners:", error);
-    //   });
+
   }, []);
 
   useEffect(() => {
@@ -66,17 +58,18 @@ function Banner2() {
 router.push(`/panel/addbanner/edit/${id}`);
 
   }
-    const deleteHandler = (id) => {
-router.push(`/panel/addbanner/delete${id}`);
+ 
 
-  }  
-    const shareHandler = (id) => {
-router.push(`/panel/addbanner/share${id}`);
-
-  }
 
   return (
     <div className="relative" >
+       <div className="hidden">
+        <DeleteSvg />
+        <EditSvg />
+        <EyeSvg />
+        <EyeslashSvg />
+        <SettingSvg/>
+      </div>
       <Swiper
         ref={swiperRef}
         onSwiper={handleSwiper}
@@ -95,14 +88,80 @@ router.push(`/panel/addbanner/share${id}`);
               style={{ backgroundImage: `url("${banner.imageUrl}")` }}
               
             >
-              <div className="absolute  w-4 h-4 md:w-8 md:h-8 z-[46] p-2">
-                <button
-                  aria-label="banner Menu Button"
-                  onClick={(event) => handleMenuToggle(event, banner._id)}
-                >
-                 <Threedot/>
-                </button>
-              </div>
+            
+              {/* /////////////////////دکمه ها/////////////// */}
+              <div className="flex items-center gap-2 child-hover:text-orange-300">
+              <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer "
+        
+            onClick={async () => router.push("/panel/banners/bannerManage")}
+          >
+            <use href="#SettingSvg"></use>
+          </svg>
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer "
+        
+            onClick={async () => {
+              try {
+                await DeleteBanners(banner._id);
+                window.location.reload();
+              } catch (error) {
+                console.error("خطا در حذف بنر:", error);
+              }
+            }}
+          >
+            <use href="#DeleteSvg"></use>
+          </svg>
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer"
+            onClick={editHandler}
+          >
+            <use href="#EditSvg"></use>
+          </svg>
+       
+
+          {!banner.BannerStatus && (
+            <svg
+              width="34"
+              height="34"
+              className=" cursor-pointer"
+              onClick={    async () => {
+              try {
+                await BannerServerEnableActions(banner._id);
+                window.location.reload();
+              } catch (error) {
+                console.error("خطا در فعال‌سازی بنر:", error);
+              }
+            }}
+            >
+              <use href="#EyeSvg"></use>
+            </svg>
+          )}
+          {banner.BannerStatus && (
+            <svg
+              width="34"
+              height="34"
+              className=" cursor-pointer"
+              onClick={async () => {
+                try {
+                  await BannerServerDisableActions(banner._id);
+                  window.location.reload();
+                } catch (error) {
+                  console.error("خطا در غیرفعال‌سازی بنر:", error);
+                }
+              }}
+            >
+              <use href="#EyeslashSvg"></use>
+            </svg>
+          )}
+        </div>
+              {/* ///////////////////////////////// */}
 
               <Link href={banner.BannerLink || "#"}
                 className="h-[100%] flex justify-end items-center md:min-h-[93vh]"
@@ -155,14 +214,7 @@ router.push(`/panel/addbanner/share${id}`);
                 <DeleteSvg />
                 <p>حذف</p>
               </div>
-
-              <div
-                className="cursor-pointer flex gap-2 items-center"
-                onClick={() => shareHandler(bannerID)}
-              >
-                <ShareSvg />
-                <p>ارسال</p>
-              </div>
+            
             </ul>
           </div>
         </div>

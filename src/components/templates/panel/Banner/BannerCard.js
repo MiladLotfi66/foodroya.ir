@@ -10,34 +10,35 @@ import {
   BannerServerDisableActions,
   DeleteBanners,
 } from "@/components/signinAndLogin/Actions/BannerServerActions";
-function BannerCard({ banner, handleMenuToggle }) {
+
+function BannerCard({ banner, editfunction }) {
   const enableFunc = async () => {
     try {
-      await BannerServerEnableActions(banner._id); // فراخوانی تابع برای فعال کردن بنر با استفاده از banner._id
+      await BannerServerEnableActions(banner._id);
       window.location.reload();
     } catch (error) {
       console.error("خطا در فعال‌سازی بنر:", error);
-      // مدیریت خطا (اختیاری) می‌توانید اینجا پیاده‌سازی کنید
     }
   };
-  const DisableFunc = async () => {
+
+  const disableFunc = async () => {
     try {
-      await BannerServerDisableActions(banner._id); // فراخوانی تابع برای فعال کردن بنر با استفاده از banner._id
+      await BannerServerDisableActions(banner._id);
       window.location.reload();
     } catch (error) {
-      console.error("خطا در فعال‌سازی بنر:", error);
-      // مدیریت خطا (اختیاری) می‌توانید اینجا پیاده‌سازی کنید
+      console.error("خطا در غیرفعال‌سازی بنر:", error);
     }
   };
-  const DeleteFunc = async () => {
+
+  const deleteFunc = async () => {
     try {
-      await DeleteBanners(banner._id); // فراخوانی تابع برای فعال کردن بنر با استفاده از banner._id
+      await DeleteBanners(banner._id);
       window.location.reload();
     } catch (error) {
-      console.error("خطا در فعال‌سازی بنر:", error);
-      // مدیریت خطا (اختیاری) می‌توانید اینجا پیاده‌سازی کنید
+      console.error("خطا در حذف بنر:", error);
     }
   };
+
   return (
     <div
       className="relative bg-no-repeat bg-cover bg-center h-[150px] md:h-[300px] w-full rounded-lg"
@@ -59,11 +60,16 @@ function BannerCard({ banner, handleMenuToggle }) {
             width="34"
             height="34"
             className=" cursor-pointer "
-            onClick={DeleteFunc} // تابع را بدون پارامتر از اینجا صدا بزنید
+            onClick={deleteFunc}
           >
             <use href="#DeleteSvg"></use>
           </svg>
-          <svg width="34" height="34" className=" cursor-pointer">
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer"
+            onClick={editfunction}
+          >
             <use href="#EditSvg"></use>
           </svg>
           <svg width="34" height="34" className=" cursor-pointer">
@@ -75,7 +81,7 @@ function BannerCard({ banner, handleMenuToggle }) {
               width="34"
               height="34"
               className=" cursor-pointer"
-              onClick={enableFunc} // تابع را بدون پارامتر از اینجا صدا بزنید
+              onClick={enableFunc}
             >
               <use href="#EyeSvg"></use>
             </svg>
@@ -85,7 +91,7 @@ function BannerCard({ banner, handleMenuToggle }) {
               width="34"
               height="34"
               className=" cursor-pointer"
-              onClick={DisableFunc}
+              onClick={disableFunc}
             >
               <use href="#EyeslashSvg"></use>
             </svg>
