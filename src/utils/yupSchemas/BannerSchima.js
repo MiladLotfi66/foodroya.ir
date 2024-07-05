@@ -1,56 +1,60 @@
 import * as yup from "yup";
 
-const SITE_URL = process.env.NEXTAUTH_URL;
-
-
 // *******************validate********************
 const BannerSchima = yup.object().shape({
-    BannerBigTitle: yup
+  BannerBigTitle: yup
     .string().nullable()
     .max(25, "عنوان بنر نمی‌تواند بیشتر از 25 کاراکتر باشد"),
 
-    BannersmallDiscription: yup
+  BannersmallDiscription: yup
     .string().nullable()
-    .max(40, "توضیح مختصر بنر نمی‌تواند بیشتر از 40 کاراکتر باشد"),  
+    .max(40, "توضیح مختصر بنر نمی‌تواند بیشتر از 40 کاراکتر باشد"),
 
-    BannerDiscription: yup
+  BannerDiscription: yup
     .string().nullable()
     .max(120, "توضیح کامل بنر نمی‌تواند بیشتر از 120 کاراکتر باشد"),
- 
-    BannerStep: yup
+
+  BannerStep: yup
     .string().nullable()
     .max(2, "شماره وارد شده باید بین ۰ تا ۹۹ باشد"),
 
-    BannerTextColor: yup
+  BannerTextColor: yup
     .string()
     .required('رنگ متن الزامی است')
     .matches(/^#[0-9A-Fa-f]{6}$/, 'فرمت رنگ معتبر نیست'),
-    
-    BannerStatus: yup
+
+  BannerStatus: yup
     .boolean('فرمت وضعیت بنر صحیح نمی باشد'),
 
-    BannerLink: yup
+  BannerLink: yup
     .mixed()
     .test('is-url', 'فرمت لینک معتبر نیست', value => {
       if (!value) return true; // اجازه برای وجود نداشتن مقدار
       return /^(https?:\/\/(localhost|127\.0\.0\.1|192\.168\.1\.\d+)(:\d+)?(\/[a-zA-Z0-9-._~:\/?#[\]@!$&'()*+,;=%]*)?)?$/.test(value);
     }),
 
-    BannerImage: yup
+  BannerImage: yup
     .mixed()
     .required('تصویر بنر الزامی است')
-    .test('fileSize', 'حجم تصویر باید کمتر از 2 مگابایت باشد', (value) => {
-      if (value && value.length > 0) {
+    .test('fileOrUrl', 'فرمت تصویر یا آدرس تصویر معتبر نیست', function(value) {
+      if (typeof value === 'string') {
+        // بررسی کنید که آیا URL آپلود است یا خیر
+        return value.startsWith('/Uploads/');
+      }
+      return value && value.length > 0; // در حالت جدید و نوع فایل معتبر است
+    })
+    .test('fileSize', 'حجم تصویر باید کمتر از 2 مگابایت باشد', function(value) {
+      if (value && typeof value !== 'string' && value.length > 0) {
         return value[0].size <= 2000000; // 2MB in bytes
       }
-      return false;
+      return true; // برای URL نیازی به بررسی حجم نیست
     })
-    .test('fileType', 'فرمت تصویر باید JPEG، PNG یا WebP باشد', (value) => {
-      if (value && value.length > 0) {
+    .test('fileType', 'فرمت تصویر باید JPEG، PNG یا WebP باشد', function(value) {
+      if (value && typeof value !== 'string' && value.length > 0) {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         return allowedTypes.includes(value[0].type);
       }
-      return false;
+      return true; // برای URL نیازی به بررسی نوع فایل نیست
     }),
 });
 

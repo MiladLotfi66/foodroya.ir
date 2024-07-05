@@ -9,6 +9,7 @@ function BannerManage() {
   const [banners, setBanners] = useState([]);
   const [isOpenAddBanner, setIsOpenAddBanner] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
+  const [selectedBannerFile, setSelectedBannerFile] = useState(null); // افزودن استیت جدید
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -26,12 +27,20 @@ function BannerManage() {
     if (e.target === e.currentTarget) {
       setIsOpenAddBanner(false);
       setSelectedBanner(null);
+      setSelectedBannerFile(null); // ریست کردن فایل بنر
     }
   };
 
   const handleEditClick = (banner) => {
     setSelectedBanner(banner);
+    setSelectedBannerFile(null); // ریست کردن فایل بنر در حالت ویرایش
     setIsOpenAddBanner(true);
+  };
+
+  const handleAddBannerClick = () => {
+    setIsOpenAddBanner(true);
+    setSelectedBanner(null);
+    setSelectedBannerFile(null); // ریست کردن فایل بنر در حالت افزودن جدید
   };
 
   const handleSubmit = async (formData, bannerId) => {
@@ -56,6 +65,7 @@ function BannerManage() {
       if (res.ok) {
         toast.success("بنر با موفقیت ثبت شد");
         setSelectedBanner(null);
+        setSelectedBannerFile(null); // ریست کردن فایل بنر پس از ثبت موفقیت‌آمیز
         setIsOpenAddBanner(false);
         // Refresh banners list after successful submission
       } else {
@@ -77,7 +87,7 @@ function BannerManage() {
             className="relative bg-white dark:bg-zinc-700 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <AddBanner banner={selectedBanner} onSubmit={handleSubmit} />
+            <AddBanner banner={selectedBanner} bannerFile={selectedBannerFile} onSubmit={handleSubmit} />
           </div>
         </div>
       )}
@@ -88,10 +98,7 @@ function BannerManage() {
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add baner"
-            onClick={() => {
-              setIsOpenAddBanner(true);
-              setSelectedBanner(null);
-            }}
+            onClick={handleAddBannerClick}
           >
             افزودن بنر
           </button>
@@ -103,7 +110,7 @@ function BannerManage() {
               className="p-2 md:p-4"
               key={banner._id}
               banner={banner}
-              editfunction={() => handleEditClick(banner)}
+              editfunction={() => handleEditClick(banner )}
             />
           ))}
         </div>

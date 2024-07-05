@@ -159,7 +159,7 @@ async function EditBanner(bannerID, bannerData) {
   }
 }
 
-async function AddBanner(bannerData) {
+async function AddBanner({bannerData}) {
     console.log("bannerData-->",bannerData);
   try {
     await connectDB(); // اتصال به دیتابیس

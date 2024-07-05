@@ -7,16 +7,17 @@ import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { useEffect, useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
+import { DevTool } from "@hookform/devtools";
 
 
 function AddBanner({ banner = {} }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [bannerStatus, setBannerStatus] = useState(banner?.BannerStatus !== undefined ? banner.BannerStatus : true);
 
+  const { register, control, handleSubmit, setValue, formState: { errors }, reset } = useForm({
+    mode: "all",
 
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
-    defaultValues: { 
+    defaultValues: {
       BannerBigTitle: banner?.BannerBigTitle || "",
       BannersmallDiscription: banner?.BannersmallDiscription || "",
       BannerStep: banner?.BannerStep || "",
@@ -29,16 +30,37 @@ function AddBanner({ banner = {} }) {
     resolver: yupResolver(BannerSchima),
   });
 
+  useEffect(() => {
+    if (banner?.imageUrl) {
+      setSelectedImage(banner.imageUrl);
+      setValue("BannerImage", banner.imageUrl); // تنظیم مقدار تصویر بنر به آدرس URL
+    }
+  }, [banner, setValue]);
+  const handleImageChange = (e) => {
+    console.log(selectedImage);
+    if (e.target.files && e.target.files[0]) {
+      setSelectedImage(URL.createObjectURL(e.target.files[0]));
+      setValue("BannerImage", e.target.files); // ثبت فایل انتخابی در فرم
+
+      console.log(selectedImage);
+    }
+    
+  };
+  
   const handleFormSubmit = async (formData) => {
-
-
     setIsSubmit(true);
+    console.log("Form Data before submission:", formData);
     try {
       // اعتبارسنجی مقادیر فرم با استفاده از Yup schema
       await BannerSchima.validate(formData, { abortEarly: false });
 
       const formDataObj = new FormData();
-      formDataObj.append("BannerImage", formData.BannerImage[0]);
+      if (formData.BannerImage && formData.BannerImage.length > 0) {
+        formDataObj.append("BannerImage", formData.BannerImage[0]);
+      } else if (banner?.imageUrl && typeof formData.BannerImage !== 'object') {
+        // اگر تصویر انتخاب نشده بود و بنر در حالت ویرایش است، آدرس تصویر قبلی را استفاده کنید
+        formDataObj.append("BannerImage", banner.imageUrl);
+      }
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
       formDataObj.append("BannersmallDiscription", formData.BannersmallDiscription);
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
@@ -46,6 +68,11 @@ function AddBanner({ banner = {} }) {
       formDataObj.append("BannerTextColor", formData.BannerTextColor);
       formDataObj.append("BannerStatus", formData.BannerStatus);
       formDataObj.append("BannerLink", formData.BannerLink);
+
+      // Logging the FormData content
+      for (let [key, value] of formDataObj.entries()) {
+        console.log(key, value);
+      }
 
       const res = await fetch(`/api/panel/banner${banner?._id ? `/${banner._id}` : ''}`, {
         method: banner?._id ? "PATCH" : "PUT",
@@ -61,10 +88,9 @@ function AddBanner({ banner = {} }) {
         toast.error(result.message || "خطایی رخ داده است");
       }
     } catch (error) {
-      if (error ) {
+      if (error) {
         // نمایش خطاهای اعتبارسنجی
-          toast.error(error.message);
-        
+        toast.error(error.message);
       } else {
         toast.error("خطایی در ارسال درخواست به سرور رخ داد");
       }
@@ -72,29 +98,15 @@ function AddBanner({ banner = {} }) {
     setIsSubmit(false);
   };
 
-
-
-  useEffect(() => {
-    if (banner?.imageUrl) {
-      setSelectedImage(banner.imageUrl);
-      setValue("BannerImage", banner.BannerImage); // setValue برای تنظیم مقدار تصویر بنر
-    }
-  }, [banner, setValue]);
-
   const formsubmitting = async (formData) => {
-    console.log("formsubmitting called");
+    console.log("formsubmitting called with:", formData);
     setIsSubmit(true);
     await handleFormSubmit(formData);
     setIsSubmit(false);
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(URL.createObjectURL(e.target.files[0]));
-      setValue("BannerImage", e.target.files); // ثبت فایل انتخابی در فرم
-    }
-  };
 
+  
   return (
     <div className="overflow-y-auto max-h-screen">
       <div className="flex justify-between p-2 md:p-5 mt-4">
@@ -112,8 +124,7 @@ function AddBanner({ banner = {} }) {
             type="checkbox"
             name="BannerStatus"
             id="BannerStatus"
-            checked={bannerStatus}
-                        {...register("BannerStatus")}
+            {...register("BannerStatus")}
           />
         </div>
         <div className="flex items-center">
@@ -258,6 +269,12 @@ function AddBanner({ banner = {} }) {
           {isSubmit ? "در حال ثبت" : "ثبت"}
           {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
         </button>
+        <button
+        onClick={()=>console.log(errors)}
+        > 
+          کلیک
+        </button>
+        <DevTool control={control} />
         <Toaster />
       </form>
     </div>
