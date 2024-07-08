@@ -9,12 +9,18 @@ import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import { DevTool } from "@hookform/devtools";
 
-
 function AddBanner({ banner = {} }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const { register, control, handleSubmit, setValue, formState: { errors }, reset } = useForm({
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm({
     mode: "all",
 
     defaultValues: {
@@ -25,7 +31,8 @@ function AddBanner({ banner = {} }) {
       BannerImage: null,
       BannerTextColor: banner?.BannerTextColor || "#000000",
       BannerLink: banner?.BannerLink || "",
-      BannerStatus: banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
+      BannerStatus:
+        banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
     },
     resolver: yupResolver(BannerSchima),
   });
@@ -44,40 +51,52 @@ function AddBanner({ banner = {} }) {
 
       console.log(selectedImage);
     }
-    
   };
-  
+
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
-    console.log("Form Data before submission:", formData);
+
     try {
       // اعتبارسنجی مقادیر فرم با استفاده از Yup schema
       await BannerSchima.validate(formData, { abortEarly: false });
-
       const formDataObj = new FormData();
+      
       if (formData.BannerImage && formData.BannerImage.length > 0) {
         formDataObj.append("BannerImage", formData.BannerImage[0]);
-      } else if (banner?.imageUrl && typeof formData.BannerImage !== 'object') {
+        console.log("imageUrl--->");
+
+      } else if (banner?.imageUrl && typeof formData.BannerImage !== "object") {
         // اگر تصویر انتخاب نشده بود و بنر در حالت ویرایش است، آدرس تصویر قبلی را استفاده کنید
         formDataObj.append("BannerImage", banner.imageUrl);
+        console.log("imageUrl--->",banner.imageUrl);
+        
       }
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
-      formDataObj.append("BannersmallDiscription", formData.BannersmallDiscription);
+      formDataObj.append(
+        "BannersmallDiscription",
+        formData.BannersmallDiscription
+      );
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
       formDataObj.append("BannerStep", formData.BannerStep);
       formDataObj.append("BannerTextColor", formData.BannerTextColor);
       formDataObj.append("BannerStatus", formData.BannerStatus);
       formDataObj.append("BannerLink", formData.BannerLink);
+      if (banner?._id) {
+        formDataObj.append("id", banner._id); // اضافه کردن id به formData
+      }
 
       // Logging the FormData content
       for (let [key, value] of formDataObj.entries()) {
         console.log(key, value);
       }
 
-      const res = await fetch(`/api/panel/banner${banner?._id ? `/${banner._id}` : ''}`, {
-        method: banner?._id ? "PATCH" : "PUT",
-        body: formDataObj,
-      });
+      const res = await fetch(
+        `/api/panel/banner${banner?._id ? `/${banner._id}` : ""}`,
+        {
+          method: banner?._id ? "PATCH" : "PUT",
+          body: formDataObj,
+        }
+      );
 
       const result = await res.json();
       if (res.ok) {
@@ -99,14 +118,11 @@ function AddBanner({ banner = {} }) {
   };
 
   const formsubmitting = async (formData) => {
-    console.log("formsubmitting called with:", formData);
     setIsSubmit(true);
     await handleFormSubmit(formData);
     setIsSubmit(false);
   };
 
-
-  
   return (
     <div className="overflow-y-auto max-h-screen">
       <div className="flex justify-between p-2 md:p-5 mt-4">
@@ -114,11 +130,16 @@ function AddBanner({ banner = {} }) {
           {banner?._id ? "ویرایش بنر" : "افزودن بنر"}
         </h1>
       </div>
-      <form onSubmit={handleSubmit((data) => {
-        formsubmitting(data);
-      })} className="flex flex-col gap-4 p-2 md:p-4">
+      <form
+        onSubmit={handleSubmit((data) => {
+          formsubmitting(data);
+        })}
+        className="flex flex-col gap-4 p-2 md:p-4"
+      >
         <div className="flex items-center">
-          <label htmlFor="BannerStatus" className="w-1/5 text-xs md:text-sm">وضعیت بنر</label>
+          <label htmlFor="BannerStatus" className="w-1/5 text-xs md:text-sm">
+            وضعیت بنر
+          </label>
           <input
             className="inputStyle w-1/5"
             type="checkbox"
@@ -128,7 +149,9 @@ function AddBanner({ banner = {} }) {
           />
         </div>
         <div className="flex items-center">
-          <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">عنوان بنر</label>
+          <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">
+            عنوان بنر
+          </label>
           <input
             className="inputStyle grow w-4/5"
             type="text"
@@ -143,7 +166,12 @@ function AddBanner({ banner = {} }) {
           </div>
         )}
         <div className="flex items-center">
-          <label htmlFor="BannersmallDiscription" className="w-1/5 text-xs md:text-sm">توضیح مختصر</label>
+          <label
+            htmlFor="BannersmallDiscription"
+            className="w-1/5 text-xs md:text-sm"
+          >
+            توضیح مختصر
+          </label>
           <input
             className="inputStyle grow w-4/5"
             type="text"
@@ -158,7 +186,12 @@ function AddBanner({ banner = {} }) {
           </div>
         )}
         <div className="flex items-center">
-          <label htmlFor="BannerDiscription" className="w-1/5 text-xs md:text-sm">توضیحات بنر</label>
+          <label
+            htmlFor="BannerDiscription"
+            className="w-1/5 text-xs md:text-sm"
+          >
+            توضیحات بنر
+          </label>
           <textarea
             className="textAriaStyle grow w-4/5"
             name="BannerDiscription"
@@ -172,7 +205,9 @@ function AddBanner({ banner = {} }) {
           </div>
         )}
         <div className="flex items-center">
-          <label htmlFor="BannerStep" className="w-1/5 text-xs md:text-sm">نوبت بنر</label>
+          <label htmlFor="BannerStep" className="w-1/5 text-xs md:text-sm">
+            نوبت بنر
+          </label>
           <input
             className="inputStyle grow w-4/5"
             type="number"
@@ -187,7 +222,9 @@ function AddBanner({ banner = {} }) {
           </div>
         )}
         <div className="flex items-center">
-          <label htmlFor="BannerLink" className="w-1/5 text-xs md:text-sm">لینک بنر</label>
+          <label htmlFor="BannerLink" className="w-1/5 text-xs md:text-sm">
+            لینک بنر
+          </label>
           <input
             className="inputStyle grow w-4/5"
             type="text"
@@ -205,7 +242,7 @@ function AddBanner({ banner = {} }) {
           <div className="w-1/2">
             {selectedImage ? (
               <Image
-                onClick={() => document.getElementById('imageUrl').click()}
+                onClick={() => document.getElementById("imageUrl").click()}
                 src={selectedImage}
                 alt="Selected"
                 className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
@@ -269,11 +306,7 @@ function AddBanner({ banner = {} }) {
           {isSubmit ? "در حال ثبت" : "ثبت"}
           {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
         </button>
-        <button
-        onClick={()=>console.log(errors)}
-        > 
-          کلیک
-        </button>
+        <button onClick={() => console.log(errors)}>کلیک</button>
         <DevTool control={control} />
         <Toaster />
       </form>
