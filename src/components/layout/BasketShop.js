@@ -8,7 +8,7 @@ function BasketShop() {
 
       <div className="flex justify-between items-center font-DanaMedium text-xs tracking-tighter">
         <span className="text-gray-300 ">1 مورد</span>
-        <a className="flex items-center text-orange-300">
+        <a href="#" rel="nofollow" className="flex items-center text-orange-300">
           مشاهده سبد خرید
           <svg width="20" height="20">
             <use href="#left_arrow"></use>

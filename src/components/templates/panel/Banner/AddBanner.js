@@ -32,7 +32,7 @@ function AddBanner({ banner = {} }) {
       BannerTextColor: banner?.BannerTextColor || "#000000",
       BannerLink: banner?.BannerLink || "",
       BannerStatus:
-        banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
+      banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
     },
     resolver: yupResolver(BannerSchima),
   });
@@ -40,16 +40,16 @@ function AddBanner({ banner = {} }) {
   useEffect(() => {
     if (banner?.imageUrl) {
       setSelectedImage(banner.imageUrl);
+      console.log("BannerImageuseEffect",banner.imageUrl);
       setValue("BannerImage", banner.imageUrl); // تنظیم مقدار تصویر بنر به آدرس URL
     }
   }, [banner, setValue]);
   const handleImageChange = (e) => {
-    console.log(selectedImage);
+    console.log('selectedImage',selectedImage);
     if (e.target.files && e.target.files[0]) {
       setSelectedImage(URL.createObjectURL(e.target.files[0]));
       setValue("BannerImage", e.target.files); // ثبت فایل انتخابی در فرم
 
-      console.log(selectedImage);
     }
   };
 

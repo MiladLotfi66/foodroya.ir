@@ -49,17 +49,23 @@ function BannerManage() {
       const formDataObj = new FormData();
       formDataObj.append("BannerImage", formData.BannerImage);
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
-      formDataObj.append("BannersmallDiscription", formData.BannersmallDiscription);
+      formDataObj.append(
+        "BannersmallDiscription",
+        formData.BannersmallDiscription
+      );
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
       formDataObj.append("BannerStep", formData.BannerStep);
       formDataObj.append("BannerTextColor", formData.BannerTextColor);
       formDataObj.append("BannerStatus", formData.BannerStatus);
       formDataObj.append("BannerLink", formData.BannerLink);
 
-      const res = await fetch(`/api/panel/banner${bannerId ? `/${bannerId}` : ''}`, {
-        method: bannerId ? "PATCH" : "PUT",
-        body: formDataObj,
-      });
+      const res = await fetch(
+        `/api/panel/banner${bannerId ? `/${bannerId}` : ""}`,
+        {
+          method: bannerId ? "PATCH" : "PUT",
+          body: formDataObj,
+        }
+      );
 
       const result = await res.json();
       if (res.ok) {
@@ -87,7 +93,11 @@ function BannerManage() {
             className="relative bg-white dark:bg-zinc-700 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <AddBanner banner={selectedBanner} bannerFile={selectedBannerFile} onSubmit={handleSubmit} />
+            <AddBanner
+              banner={selectedBanner}
+              bannerFile={selectedBannerFile}
+              onSubmit={handleSubmit}
+            />
           </div>
         </div>
       )}
@@ -102,6 +112,7 @@ function BannerManage() {
           >
             افزودن بنر
           </button>
+         
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
@@ -110,7 +121,7 @@ function BannerManage() {
               className="p-2 md:p-4"
               key={banner._id}
               banner={banner}
-              editfunction={() => handleEditClick(banner )}
+              editfunction={() => handleEditClick(banner)}
             />
           ))}
         </div>
