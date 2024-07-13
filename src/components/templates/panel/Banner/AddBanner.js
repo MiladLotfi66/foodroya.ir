@@ -1,4 +1,3 @@
-"use client";
 import { useForm } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
@@ -7,22 +6,22 @@ import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { useEffect, useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
-import { DevTool } from "@hookform/devtools";
+import CloseSvg from "@/module/svgs/CloseSvg";
+// import { DevTool } from "@hookform/devtools";
 
-function AddBanner({ banner = {} }) {
+function AddBanner({ banner = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-
+  const [selectedImage, setSelectedImage] = useState(banner?.imageUrl || null);
+  /////////////////////react hook form////////////////////////////
   const {
     register,
-    control,
+    // control,
     handleSubmit,
     setValue,
     formState: { errors },
     reset,
   } = useForm({
     mode: "all",
-
     defaultValues: {
       BannerBigTitle: banner?.BannerBigTitle || "",
       BannersmallDiscription: banner?.BannersmallDiscription || "",
@@ -32,44 +31,40 @@ function AddBanner({ banner = {} }) {
       BannerTextColor: banner?.BannerTextColor || "#000000",
       BannerLink: banner?.BannerLink || "",
       BannerStatus:
-      banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
+        banner?.BannerStatus !== undefined ? banner?.BannerStatus : true,
     },
     resolver: yupResolver(BannerSchima),
   });
+  /////////////////////useEffect////////////////////////////
 
   useEffect(() => {
     if (banner?.imageUrl) {
       setSelectedImage(banner.imageUrl);
-      console.log("BannerImageuseEffect",banner.imageUrl);
-      setValue("BannerImage", banner.imageUrl); // تنظیم مقدار تصویر بنر به آدرس URL
+      setValue("BannerImage", banner.imageUrl);
     }
   }, [banner, setValue]);
+
+  /////////////////////hanndle image change////////////////////////////
+
   const handleImageChange = (e) => {
-    console.log('selectedImage',selectedImage);
     if (e.target.files && e.target.files[0]) {
       setSelectedImage(URL.createObjectURL(e.target.files[0]));
-      setValue("BannerImage", e.target.files); // ثبت فایل انتخابی در فرم
-
+      setValue("BannerImage", e.target.files[0]);
     }
   };
 
+  /////////////////////handle form submit////////////////////////////
+
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
-
     try {
-      // اعتبارسنجی مقادیر فرم با استفاده از Yup schema
       await BannerSchima.validate(formData, { abortEarly: false });
       const formDataObj = new FormData();
-      
-      if (formData.BannerImage && formData.BannerImage.length > 0) {
-        formDataObj.append("BannerImage", formData.BannerImage[0]);
-        console.log("imageUrl--->");
 
-      } else if (banner?.imageUrl && typeof formData.BannerImage !== "object") {
-        // اگر تصویر انتخاب نشده بود و بنر در حالت ویرایش است، آدرس تصویر قبلی را استفاده کنید
+      if (banner?.imageUrl && typeof formData.BannerImage === "string") {
         formDataObj.append("BannerImage", banner.imageUrl);
-        console.log("imageUrl--->",banner.imageUrl);
-        
+      } else if (formData.BannerImage) {
+        formDataObj.append("BannerImage", formData.BannerImage);
       }
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
       formDataObj.append(
@@ -82,14 +77,8 @@ function AddBanner({ banner = {} }) {
       formDataObj.append("BannerStatus", formData.BannerStatus);
       formDataObj.append("BannerLink", formData.BannerLink);
       if (banner?._id) {
-        formDataObj.append("id", banner._id); // اضافه کردن id به formData
+        formDataObj.append("id", banner._id);
       }
-
-      // Logging the FormData content
-      for (let [key, value] of formDataObj.entries()) {
-        console.log(key, value);
-      }
-
       const res = await fetch(
         `/api/panel/banner${banner?._id ? `/${banner._id}` : ""}`,
         {
@@ -102,40 +91,58 @@ function AddBanner({ banner = {} }) {
       if (res.ok) {
         toast.success("بنر با موفقیت ثبت شد");
         setSelectedImage(null);
-        reset(); // پاک کردن مقادیر فرم پس از ثبت
+        reset();
       } else {
         toast.error(result.message || "خطایی رخ داده است");
       }
     } catch (error) {
-      if (error) {
-        // نمایش خطاهای اعتبارسنجی
-        toast.error(error.message);
-      } else {
-        toast.error("خطایی در ارسال درخواست به سرور رخ داد");
-      }
+      toast.error(error.message || "خطایی در ارسال درخواست به سرور رخ داد");
     }
     setIsSubmit(false);
   };
+  /////////////////////formsubmitting////////////////////////////
 
   const formsubmitting = async (formData) => {
-    setIsSubmit(true);
     await handleFormSubmit(formData);
-    setIsSubmit(false);
   };
 
   return (
     <div className="overflow-y-auto max-h-screen">
+      <div className="hidden">
+        <CloseSvg />
+      </div>
+      {/* /////////////////////title//////////////////////////// */}
+    
       <div className="flex justify-between p-2 md:p-5 mt-4">
+        <button
+            aria-label="close"
+            className="hover:text-orange-300"
+
+        >
+
+      <svg
+        width="34"
+        height="34"
+        onClick={onClose} // Close the modal on click
+      >
+        <use href="#CloseSvg"></use>
+      </svg>
+      </button>
+
         <h1 className="text-3xl font-MorabbaBold">
           {banner?._id ? "ویرایش بنر" : "افزودن بنر"}
         </h1>
       </div>
+      {/* /////////////////////form//////////////////////////// */}
+
       <form
         onSubmit={handleSubmit((data) => {
           formsubmitting(data);
         })}
         className="flex flex-col gap-4 p-2 md:p-4"
       >
+        {/* /////////////////////banner status//////////////////////////// */}
+
         <div className="flex items-center">
           <label htmlFor="BannerStatus" className="w-1/5 text-xs md:text-sm">
             وضعیت بنر
@@ -148,6 +155,8 @@ function AddBanner({ banner = {} }) {
             {...register("BannerStatus")}
           />
         </div>
+        {/* /////////////////////BannerBigTitle//////////////////////////// */}
+
         <div className="flex items-center">
           <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">
             عنوان بنر
@@ -165,6 +174,7 @@ function AddBanner({ banner = {} }) {
             {errors.BannerBigTitle.message}
           </div>
         )}
+        {/* /////////////////////BannersmallDiscription//////////////////////////// */}
         <div className="flex items-center">
           <label
             htmlFor="BannersmallDiscription"
@@ -185,6 +195,8 @@ function AddBanner({ banner = {} }) {
             {errors.BannersmallDiscription.message}
           </div>
         )}
+        {/* /////////////////////BannerDiscription//////////////////////////// */}
+
         <div className="flex items-center">
           <label
             htmlFor="BannerDiscription"
@@ -204,6 +216,8 @@ function AddBanner({ banner = {} }) {
             {errors.BannerDiscription.message}
           </div>
         )}
+        {/* /////////////////////BannerStep//////////////////////////// */}
+
         <div className="flex items-center">
           <label htmlFor="BannerStep" className="w-1/5 text-xs md:text-sm">
             نوبت بنر
@@ -221,6 +235,8 @@ function AddBanner({ banner = {} }) {
             {errors.BannerStep.message}
           </div>
         )}
+        {/* /////////////////////BannerLink//////////////////////////// */}
+
         <div className="flex items-center">
           <label htmlFor="BannerLink" className="w-1/5 text-xs md:text-sm">
             لینک بنر
@@ -238,6 +254,8 @@ function AddBanner({ banner = {} }) {
             {errors.BannerLink.message}
           </div>
         )}
+        {/* /////////////////////Bannerimage and color//////////////////////////// */}
+
         <div className="flex items-center">
           <div className="w-1/2">
             {selectedImage ? (
@@ -273,6 +291,8 @@ function AddBanner({ banner = {} }) {
               </div>
             )}
           </div>
+          {/* /////////////////////Banner color//////////////////////////// */}
+
           <div className="w-1/2">
             <label
               htmlFor="BannerTextColor"
@@ -294,6 +314,8 @@ function AddBanner({ banner = {} }) {
             </div>
           )}
         </div>
+        {/* /////////////////////button//////////////////////////// */}
+
         <button
           type="submit"
           className={
@@ -306,8 +328,7 @@ function AddBanner({ banner = {} }) {
           {isSubmit ? "در حال ثبت" : "ثبت"}
           {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
         </button>
-        <button onClick={() => console.log(errors)}>کلیک</button>
-        <DevTool control={control} />
+        {/* <DevTool control={control} /> */}
         <Toaster />
       </form>
     </div>

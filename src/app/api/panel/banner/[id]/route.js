@@ -7,11 +7,9 @@ import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 export async function PATCH(req) {
     try {
         await connectDB();
-        console.log('Connected to DB');
 
         const formData = await req.formData();
         const bannerId = formData.get("id");
-        console.log(bannerId,formData);
 
         if (!bannerId) {
             console.error('Banner ID is missing');
@@ -24,7 +22,6 @@ export async function PATCH(req) {
             console.error('Banner not found');
             return new Response(JSON.stringify({ message: "بنری با این آی‌دی یافت نشد" }), { status: 404, headers: { 'Content-Type': 'application/json' } });
         }
-console.log("BannerImage",formData.getAll("BannerImage"));
 
         const validatedData = await BannerSchima.validate({
             BannerBigTitle: formData.get("BannerBigTitle"),
@@ -32,7 +29,7 @@ console.log("BannerImage",formData.getAll("BannerImage"));
             BannerDiscription: formData.get("BannerDiscription"),
             BannerStep: formData.get("BannerStep"),
             BannerTextColor: formData.get("BannerTextColor"),
-            BannerImage: formData.getAll("BannerImage"),
+            BannerImage: formData.get("BannerImage"),
             BannerStatus: formData.get("BannerStatus"),
             BannerLink: formData.get("BannerLink"),
         }, {
@@ -43,14 +40,16 @@ console.log("BannerImage",formData.getAll("BannerImage"));
 
         let imageUrl;
 
-        if (BannerImage && BannerImage.length > 0) {
-            const buffer = Buffer.from(await BannerImage[0].arrayBuffer());
-            const fileName = Date.now() + BannerImage[0].name;
+        if (BannerImage && typeof BannerImage !== "string") {
+            const buffer = Buffer.from(await BannerImage.arrayBuffer());
+            const fileName = Date.now() + BannerImage.name;
             const filePath = path.join(process.cwd(), "public/Uploads/" + fileName);
             await writeFile(filePath, buffer);
             imageUrl = "/Uploads/" + fileName;
+        }else {
+            imageUrl=BannerImage
         }
-
+console.log("imageUrl",imageUrl);
         const updatedBanner = {
             BannerBigTitle,
             BannersmallDiscription,

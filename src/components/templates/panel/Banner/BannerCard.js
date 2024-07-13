@@ -56,45 +56,60 @@ function BannerCard({ banner, editfunction }) {
       </div>
       <div className="absolute top-2 right-2 z-20 p-2">
         <div className="flex items-center gap-2 child-hover:text-orange-300">
-          <svg
-            width="34"
-            height="34"
-            className=" cursor-pointer "
-            onClick={deleteFunc}
-          >
-            <use href="#DeleteSvg"></use>
-          </svg>
-          <svg
-            width="34"
-            height="34"
-            className=" cursor-pointer"
-            onClick={editfunction}
-          >
-            <use href="#EditSvg"></use>
-          </svg>
-          <svg width="34" height="34" className=" cursor-pointer">
-            <use href="#ShareSvg"></use>
-          </svg>
+          {/* ///////////////////////////delete icone////////////////////////////////// */}
+          <button aria-label="delete">
+            <svg
+              width="34"
+              height="34"
+              className=" cursor-pointer "
+              onClick={deleteFunc}
+            >
+              <use href="#DeleteSvg"></use>
+            </svg>
+          </button>
+          {/* ///////////////////////////edit icone////////////////////////////////// */}
+
+          <button aria-label="edit">
+            <svg
+              width="34"
+              height="34"
+              className=" cursor-pointer"
+              onClick={editfunction}
+            >
+              <use href="#EditSvg"></use>
+            </svg>
+          </button>
+          {/* ///////////////////////////share icone////////////////////////////////// */}
+          <button aria-label="share">
+            <svg width="34" height="34" className=" cursor-pointer">
+              <use href="#ShareSvg"></use>
+            </svg>
+          </button>
+          {/* ///////////////////////////enable disable icone////////////////////////////////// */}
 
           {!banner.BannerStatus && (
-            <svg
-              width="34"
-              height="34"
-              className=" cursor-pointer"
-              onClick={enableFunc}
-            >
-              <use href="#EyeSvg"></use>
-            </svg>
+            <button aria-label="enable">
+              <svg
+                width="34"
+                height="34"
+                className=" cursor-pointer"
+                onClick={enableFunc}
+              >
+                <use href="#EyeSvg"></use>
+              </svg>
+            </button>
           )}
           {banner.BannerStatus && (
-            <svg
-              width="34"
-              height="34"
-              className=" cursor-pointer"
-              onClick={disableFunc}
-            >
-              <use href="#EyeslashSvg"></use>
-            </svg>
+            <button aria-label="disable">
+              <svg
+                width="34"
+                height="34"
+                className=" cursor-pointer"
+                onClick={disableFunc}
+              >
+                <use href="#EyeslashSvg"></use>
+              </svg>
+            </button>
           )}
         </div>
       </div>

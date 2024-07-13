@@ -1,21 +1,25 @@
 import * as yup from "yup";
 
 // *******************validate********************
-const BannerSchima = yup.object().shape({
+const BannerSchema = yup.object().shape({
   BannerBigTitle: yup
-    .string().nullable()
+    .string()
+    .nullable()
     .max(25, "عنوان بنر نمی‌تواند بیشتر از 25 کاراکتر باشد"),
 
   BannersmallDiscription: yup
-    .string().nullable()
+    .string()
+    .nullable()
     .max(40, "توضیح مختصر بنر نمی‌تواند بیشتر از 40 کاراکتر باشد"),
 
   BannerDiscription: yup
-    .string().nullable()
+    .string()
+    .nullable()
     .max(120, "توضیح کامل بنر نمی‌تواند بیشتر از 120 کاراکتر باشد"),
 
   BannerStep: yup
-    .string().nullable()
+    .string()
+    .nullable()
     .max(2, "شماره وارد شده باید بین ۰ تا ۹۹ باشد"),
 
   BannerTextColor: yup
@@ -35,13 +39,15 @@ const BannerSchima = yup.object().shape({
 
   BannerImage: yup
     .mixed()
-    .required('تصویر بنر الزامی است')
     .test('fileOrUrl', 'فرمت تصویر یا آدرس تصویر معتبر نیست', function(value) {
       if (typeof value === 'string') {
         // بررسی کنید که آیا URL آپلود است یا خیر
         return value.startsWith('/Uploads/');
       }
-      return value && value.length > 0; // در حالت جدید و نوع فایل معتبر است
+      if (value && value.length > 0) {
+        return value.length > 0;
+      }
+      return true; // برای URL نیازی به بررسی حجم نیست
     })
     .test('fileSize', 'حجم تصویر باید کمتر از 2 مگابایت باشد', function(value) {
       if (value && typeof value !== 'string' && value.length > 0) {
@@ -58,4 +64,4 @@ const BannerSchima = yup.object().shape({
     }),
 });
 
-export default BannerSchima;
+export default BannerSchema;

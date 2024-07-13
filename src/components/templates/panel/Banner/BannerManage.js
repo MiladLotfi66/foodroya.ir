@@ -43,16 +43,19 @@ function BannerManage() {
     setSelectedBannerFile(null); // ریست کردن فایل بنر در حالت افزودن جدید
   };
 
+  const handleCloseModal = () => {
+    setIsOpenAddBanner(false);
+    setSelectedBanner(null);
+    setSelectedBannerFile(null);
+  };
+
   const handleSubmit = async (formData, bannerId) => {
     console.log("addbaner run");
     try {
       const formDataObj = new FormData();
       formDataObj.append("BannerImage", formData.BannerImage);
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
-      formDataObj.append(
-        "BannersmallDiscription",
-        formData.BannersmallDiscription
-      );
+      formDataObj.append("BannersmallDiscription",formData.BannersmallDiscription);
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
       formDataObj.append("BannerStep", formData.BannerStep);
       formDataObj.append("BannerTextColor", formData.BannerTextColor);
@@ -97,6 +100,7 @@ function BannerManage() {
               banner={selectedBanner}
               bannerFile={selectedBannerFile}
               onSubmit={handleSubmit}
+              onClose={handleCloseModal}
             />
           </div>
         </div>
