@@ -21,11 +21,8 @@ import SettingSvg from "../svgs/SettingSvg";
 function Banner2() {
   const router=useRouter();
   const [banners, setBanners] = useState([]);
-  const [bannerID, setBannerID] = useState();
   const swiperRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null); // مرجع برای منو
-  const position = { top: 0, left: 0 };
 
    useEffect(() => {
     const fetchBanners = async () => {
@@ -74,7 +71,7 @@ router.push(`/panel/addbanner/edit/${id}`);
         ref={swiperRef}
         onSwiper={handleSwiper}
         navigation={true}
-        autoplay={{ delay: 2000 }}
+        autoplay={{ delay: 5000 }}
         modules={[Navigation, Autoplay]}
         className="mySwiper"
       >
@@ -95,7 +92,7 @@ router.push(`/panel/addbanner/edit/${id}`);
             width="34"
             height="34"
             className=" cursor-pointer "
-        
+        aria-label="setting"
             onClick={async () => router.push("/panel/banners/bannerManage")}
           >
             <use href="#SettingSvg"></use>
@@ -104,7 +101,8 @@ router.push(`/panel/addbanner/edit/${id}`);
             width="34"
             height="34"
             className=" cursor-pointer "
-        
+            aria-label="delete"
+
             onClick={async () => {
               try {
                 await DeleteBanners(banner._id);
@@ -120,6 +118,7 @@ router.push(`/panel/addbanner/edit/${id}`);
             width="34"
             height="34"
             className=" cursor-pointer"
+            aria-label="edit"
             onClick={editHandler}
           >
             <use href="#EditSvg"></use>
@@ -131,6 +130,8 @@ router.push(`/panel/addbanner/edit/${id}`);
               width="34"
               height="34"
               className=" cursor-pointer"
+              aria-label="enable"
+
               onClick={    async () => {
               try {
                 await BannerServerEnableActions(banner._id);
@@ -148,6 +149,8 @@ router.push(`/panel/addbanner/edit/${id}`);
               width="34"
               height="34"
               className=" cursor-pointer"
+              aria-label="disable"
+
               onClick={async () => {
                 try {
                   await BannerServerDisableActions(banner._id);
@@ -184,42 +187,7 @@ router.push(`/panel/addbanner/edit/${id}`);
           </SwiperSlide>
         ))}
       </Swiper>
-      {isOpen && (
-           <>
-                  {/* لایه شفاف */}
-                  <div
-                  className="fixed top-0 left-0 w-full h-full bg-black opacity-50 z-[145]"
-                  onClick={() => setIsOpen(false)} // بستن منو با کلیک بر روی لایه شفاف
-                ></div>
-
-        <div
-          className="absolute w-[20%] h-[10%] z-[146]"
-          style={{ top: position.top + 30, right: position.left + 60 }}
-          ref={menuRef} // اضافه کردن مرجع به منو
-        >
-
-          <div className="relative group flex items-center">
-            <ul className="relative top-full w-36 sm:w-40 md:w-48 lg:w-56 xl:w-64 space-y-4 text-zinc-700 bg-white text-sm md:text-base border-t-[3px] border-t-orange-300 rounded-xl tracking-normal shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 p-6 pt-[21px] child:transition-colors child-hover:text-orange-300">
-              <div
-                className="cursor-pointer flex gap-2 items-center"
-                onClick={() => editHandler(bannerID)}
-              >
-                <EditSvg />
-                <p>ویرایش</p>
-              </div>
-              <div
-                className="cursor-pointer flex gap-2 items-center"
-                onClick={() => deleteHandler(bannerID)}
-              >
-                <DeleteSvg />
-                <p>حذف</p>
-              </div>
-            
-            </ul>
-          </div>
-        </div>
-        </>
-      )}
+   
 
     </div>
   );

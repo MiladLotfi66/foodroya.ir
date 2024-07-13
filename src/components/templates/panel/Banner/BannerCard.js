@@ -57,59 +57,53 @@ function BannerCard({ banner, editfunction }) {
       <div className="absolute top-2 right-2 z-20 p-2">
         <div className="flex items-center gap-2 child-hover:text-orange-300">
           {/* ///////////////////////////delete icone////////////////////////////////// */}
-          <button aria-label="delete">
             <svg
               width="34"
               height="34"
               className=" cursor-pointer "
+              aria-label="delete"
               onClick={deleteFunc}
             >
               <use href="#DeleteSvg"></use>
             </svg>
-          </button>
           {/* ///////////////////////////edit icone////////////////////////////////// */}
 
-          <button aria-label="edit">
             <svg
               width="34"
               height="34"
               className=" cursor-pointer"
+              aria-label="edit"
               onClick={editfunction}
             >
               <use href="#EditSvg"></use>
             </svg>
-          </button>
           {/* ///////////////////////////share icone////////////////////////////////// */}
-          <button aria-label="share">
-            <svg width="34" height="34" className=" cursor-pointer">
+            <svg width="34" height="34" className=" cursor-pointer" aria-label="share">
               <use href="#ShareSvg"></use>
             </svg>
-          </button>
           {/* ///////////////////////////enable disable icone////////////////////////////////// */}
 
           {!banner.BannerStatus && (
-            <button aria-label="enable">
               <svg
                 width="34"
                 height="34"
                 className=" cursor-pointer"
+                aria-label="enable"
                 onClick={enableFunc}
               >
                 <use href="#EyeSvg"></use>
               </svg>
-            </button>
           )}
           {banner.BannerStatus && (
-            <button aria-label="disable">
               <svg
                 width="34"
                 height="34"
                 className=" cursor-pointer"
+                aria-label="disable"
                 onClick={disableFunc}
               >
                 <use href="#EyeslashSvg"></use>
               </svg>
-            </button>
           )}
         </div>
       </div>
