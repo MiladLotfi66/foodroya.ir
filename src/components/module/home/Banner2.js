@@ -22,7 +22,6 @@ function Banner2() {
   const router=useRouter();
   const [banners, setBanners] = useState([]);
   const swiperRef = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
 
    useEffect(() => {
     const fetchBanners = async () => {
@@ -37,25 +36,11 @@ function Banner2() {
 
   }, []);
 
-  useEffect(() => {
-    if (swiperRef.current) {
-      if (isOpen) {
-        swiperRef.current.autoplay.stop();
-      } else {
-        swiperRef.current.autoplay.start();
-      }
-    }
-  }, [isOpen]);
+
 
   const handleSwiper = (swiper) => {
     swiperRef.current = swiper;
   };
-
-  const editHandler = (id) => {
-router.push(`/panel/addbanner/edit/${id}`);
-
-  }
- 
 
 
   return (
@@ -114,16 +99,7 @@ router.push(`/panel/addbanner/edit/${id}`);
           >
             <use href="#DeleteSvg"></use>
           </svg>
-          <svg
-            width="34"
-            height="34"
-            className=" cursor-pointer"
-            aria-label="edit"
-            onClick={editHandler}
-          >
-            <use href="#EditSvg"></use>
-          </svg>
-       
+             
 
           {!banner.BannerStatus && (
             <svg

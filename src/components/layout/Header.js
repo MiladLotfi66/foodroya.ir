@@ -91,9 +91,7 @@ function Header() {
             <li className="flex items-center">
               <a href="/abute">درباره ما</a>
             </li>
-            <li className="flex items-center">
-              <a href="#">ارتباط با ما</a>
-            </li>
+        
             {session ? (
               <>
                 <li className="flex items-center">

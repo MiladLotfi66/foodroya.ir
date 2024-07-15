@@ -93,7 +93,7 @@ function BannerManage() {
           onClick={handleOverlayClick}
         >
           <div
-            className="relative bg-white dark:bg-zinc-700 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
             onClick={(e) => e.stopPropagation()}
           >
             <AddBanner
@@ -106,7 +106,7 @@ function BannerManage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-zinc-700 shadow-normal rounded-2xl mt-36">
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
           <h1 className="text-3xl font-MorabbaBold">مدیریت بنر ها</h1>
           <button

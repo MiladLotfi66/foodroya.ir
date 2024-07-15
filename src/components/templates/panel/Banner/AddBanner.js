@@ -117,7 +117,6 @@ function AddBanner({ banner = {}, onClose }) {
         <button
             aria-label="close"
             className="hover:text-orange-300"
-
         >
 
       <svg
