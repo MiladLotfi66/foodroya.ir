@@ -1,9 +1,11 @@
 "use server";
 
-// import "server-only";
 import shops from "@/models/shops";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from 'next/headers';
+import fs from "fs";
+import path from "path";
+import ShopSchema from "@/utils/yupSchemas/ShopSchema";
 
 export async function authenticateUser() {
   try {
@@ -67,58 +69,59 @@ async function GetUserShops() {
   }
 }
 
+
 async function ShopServerEnableActions(ShopID) {
   try {
     await connectDB(); // اتصال به دیتابیس
+    const userData = await authenticateUser();
 
-    // یافتن فروشگاه با استفاده از ShopID
     const Shop = await shops.findById(ShopID);
 
     if (!Shop) {
-      // اگر فروشگاه پیدا نشد، پرتاب خطا
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    // تغییر وضعیت فروشگاه به true
+    if (Shop.CreatedBy.toString() !== userData.id) {
+      throw new Error("شما مجاز به انجام این عملیات نیستید");
+    }
+
     Shop.ShopStatus = true;
 
-    // ذخیره کردن تغییرات در دیتابیس
     await Shop.save();
 
-    // بازگرداندن پاسخ موفقیت‌آمیز
     return { Message: "وضعیت فروشگاه با موفقیت به true تغییر یافت", status: 201 };
   } catch (error) {
-    // چاپ خطا در صورت وقوع مشکل
     console.error("خطا در تغییر وضعیت فروشگاه:", error);
     throw new Error("خطای سرور، تغییر وضعیت فروشگاه انجام نشد");
   }
 }
+
 async function ShopServerDisableActions(ShopID) {
   try {
     await connectDB(); // اتصال به دیتابیس
+    const userData = await authenticateUser();
 
-    // یافتن فروشگاه با استفاده از ShopID
     const Shop = await shops.findById(ShopID);
 
     if (!Shop) {
-      // اگر فروشگاه پیدا نشد، پرتاب خطا
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    // تغییر وضعیت فروشگاه به true
+    if (Shop.CreatedBy.toString() !== userData.id) {
+      throw new Error("شما مجاز به انجام این عملیات نیستید");
+    }
+
     Shop.ShopStatus = false;
 
-    // ذخیره کردن تغییرات در دیتابیس
     await Shop.save();
 
-    // بازگرداندن پاسخ موفقیت‌آمیز
-    return { Message: "وضعیت فروشگاه با موفقیت به true تغییر یافت", status: 201 };
+    return { Message: "وضعیت فروشگاه با موفقیت به false تغییر یافت", status: 201 };
   } catch (error) {
-    // چاپ خطا در صورت وقوع مشکل
     console.error("خطا در تغییر وضعیت فروشگاه:", error);
     throw new Error("خطای سرور، تغییر وضعیت فروشگاه انجام نشد");
   }
 }
+
 async function GetAllShops() {
   try {
     await connectDB();
@@ -163,51 +166,54 @@ async function GetAllEnableShops() {
     throw new Error("خطای سرور، تغییر وضعیت فروشگاه انجام نشد");
   }
 }
+ 
 async function DeleteShops(ShopID) {
   try {
     await connectDB();
-    console.log("ShopID",ShopID);
+    const userData = await authenticateUser();
 
-    // یافتن فروشگاه با استفاده از ShopID
     const Shop = await shops.findById(ShopID);
+
     if (!Shop) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    // مسیر فایل تصویر فروشگاه
+    if (Shop.CreatedBy.toString() !== userData.id) {
+      throw new Error("شما مجاز به انجام این عملیات نیستید");
+    }
+
     const LogoUrl = path.join(process.cwd(), "public", Shop.LogoUrl);
     const TextLogoUrl = path.join(process.cwd(), "public", Shop.TextLogoUrl);
     const BackGroundShopUrl = path.join(process.cwd(), "public", Shop.BackGroundShopUrl);
     const BackGroundpanelUrl = path.join(process.cwd(), "public", Shop.BackGroundpanelUrl);
 
-    // حذف  فروشگاه از دیتابیس
     const result = await Shop.deleteOne({ _id: ShopID });
+
     if (result.deletedCount === 0) {
       throw new Error("فروشگاه مورد نظر حذف نشد");
     }
 
-    // حذف فایل لوگو فروشگاه
     fs.unlink(LogoUrl, (err) => {
       if (err) {
         console.error("خطا در حذف فایل تصویر:", err);
         throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
       }
-    }); 
-     // حذف فایل لوگو متنی فروشگاه
+    });
+
     fs.unlink(TextLogoUrl, (err) => {
       if (err) {
         console.error("خطا در حذف فایل تصویر:", err);
         throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
       }
-    }); 
-     // حذف فایل تصویر زمینه فروشگاه
+    });
+
     fs.unlink(BackGroundShopUrl, (err) => {
       if (err) {
         console.error("خطا در حذف فایل تصویر:", err);
         throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
       }
-    });  
-    // حذف فایل تصویر زمینه پنل
+    });
+
     fs.unlink(BackGroundpanelUrl, (err) => {
       if (err) {
         console.error("خطا در حذف فایل تصویر:", err);
@@ -222,9 +228,11 @@ async function DeleteShops(ShopID) {
   }
 }
 
+
 async function EditShop(ShopID, ShopData) {
   try {
     await connectDB(); // اتصال به دیتابیس
+    const userData = await authenticateUser();
 
     const validatedData = await ShopSchema.validate(ShopData, { abortEarly: false });
 
@@ -234,10 +242,12 @@ async function EditShop(ShopID, ShopData) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    // به روزرسانی فروشگاه با داده‌های جدید
+    if (Shop.CreatedBy.toString() !== userData.id) {
+      throw new Error("شما مجاز به انجام این عملیات نیستید");
+    }
+
     Object.assign(Shop, validatedData);
     await Shop.save();
-
 
     return { message: "فروشگاه با موفقیت ویرایش شد", status: 200 };
   } catch (error) {
@@ -245,6 +255,7 @@ async function EditShop(ShopID, ShopData) {
     throw new Error("خطای سرور، ویرایش فروشگاه انجام نشد");
   }
 }
+
 
 async function AddShop({ShopData}) {
   try {

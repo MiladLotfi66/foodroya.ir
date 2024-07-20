@@ -9,10 +9,8 @@ import { getToken } from "next-auth/jwt"; // استفاده از getToken برا
 export async function PUT(req) {
   try {
     await connectDB();
-console.log("connected to put");
     // استخراج توکن JWT
     const token = await getToken({ req, secret: process.env.JWT_SECRET });
-    console.log("token----->" , token);
 
     if (!token) {
       return new Response(JSON.stringify({ message: "Unauthorized" }), {
@@ -109,34 +107,34 @@ console.log("connected to put");
 
 
 
-export async function GET(req) {
-  try {
-    await connectDB();
+// export async function GET(req) {
+//   try {
+//     await connectDB();
 
-    const shopsData = await shops.find({}).lean();
+//     const shopsData = await shops.find({}).lean();
 
-    // تبدیل اشیاء MongoDB به plain objects
-    const Shops = shopsData.map(shop => ({
-      ...shop,
-      _id: shop._id.toString(),
-      CreatedBy: shop.CreatedBy.toString(),
-      LastEditedBy: shop.LastEditedBy.toString(),
-      createdAt: shop.createdAt.toISOString(),
-      updatedAt: shop.updatedAt.toISOString(),
-    }));
+//     // تبدیل اشیاء MongoDB به plain objects
+//     const Shops = shopsData.map(shop => ({
+//       ...shop,
+//       _id: shop._id.toString(),
+//       CreatedBy: shop.CreatedBy.toString(),
+//       LastEditedBy: shop.LastEditedBy.toString(),
+//       createdAt: shop.createdAt.toISOString(),
+//       updatedAt: shop.updatedAt.toISOString(),
+//     }));
 
-    return new Response(JSON.stringify({ Shops }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error in GET API:", error);
-    return new Response(JSON.stringify({ message: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-}
+//     return new Response(JSON.stringify({ Shops }), {
+//       status: 200,
+//       headers: { "Content-Type": "application/json" },
+//     });
+//   } catch (error) {
+//     console.error("Error in GET API:", error);
+//     return new Response(JSON.stringify({ message: error.message }), {
+//       status: 500,
+//       headers: { "Content-Type": "application/json" },
+//     });
+//   }
+// }
 
 
 // export async function GET(req) {
