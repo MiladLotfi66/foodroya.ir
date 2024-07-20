@@ -1,10 +1,71 @@
 "use server";
 
+// import "server-only";
 import shops from "@/models/shops";
 import connectDB from "@/utils/connectToDB";
-import fs from "fs";
-import path from "path";
-import ShopSchema from "@/utils/yupSchemas/ShopSchema";
+import { cookies } from 'next/headers';
+
+export async function authenticateUser() {
+  try {
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get('next-auth.session-token')?.value;
+
+    if (!accessToken) {
+      throw new Error('Access token not found');
+    }
+
+
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `next-auth.session-token=${accessToken}`,
+    },
+    credentials: 'include',
+  });
+
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch user data. Status: ${res.status}`);
+    }
+
+    const session = await res.json();
+    // console.log('Session Data:', session);
+
+    if (!session.user) {
+      throw new Error('No user data found in session');
+    }
+
+    return session.user;
+  } catch (err) {
+    console.error('Error in authenticateUser:', err);
+    throw err;
+  }
+}
+
+async function GetUserShops() {
+  try {
+    await connectDB();
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error('User data not found');
+    }
+
+    const Shops = await shops.find({ CreatedBy: userData.id }).lean();
+
+    const plainShops = Shops.map((Shop) => ({
+      ...Shop,
+      _id: Shop._id.toString(),
+      createdAt: Shop.createdAt.toISOString(),
+      updatedAt: Shop.updatedAt.toISOString(),
+    }));
+
+    return { Shops: plainShops, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت فروشگاه‌ها:", error);
+    throw new Error("خطای سرور، دریافت فروشگاه‌ها انجام نشد");
+  }
+}
 
 async function ShopServerEnableActions(ShopID) {
   try {
@@ -79,6 +140,7 @@ async function GetAllShops() {
     throw new Error("خطای سرور، تغییر وضعیت فروشگاه انجام نشد");
   }
 }
+
 
 async function GetAllEnableShops() {
   try {
@@ -185,7 +247,6 @@ async function EditShop(ShopID, ShopData) {
 }
 
 async function AddShop({ShopData}) {
-    console.log("ShopData-->",ShopData);
   try {
     await connectDB(); // اتصال به دیتابیس
 
@@ -210,4 +271,5 @@ export {
   GetAllEnableShops,
   EditShop,
   AddShop,
+  GetUserShops,
 };

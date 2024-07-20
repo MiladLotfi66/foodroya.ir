@@ -21,6 +21,14 @@ const BannerSchema = new Schema(
       type: String,
     },
 
+    LastEditedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Users',    },
+
+    CreatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Users',    },
+
     imageUrl: { type: String, required: true },
     BannerStatus: { type: Boolean, required: true },
     BannerLink: { type: String},

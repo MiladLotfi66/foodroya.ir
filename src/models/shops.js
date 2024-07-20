@@ -25,6 +25,14 @@ const schema = new Schema(
     ShopMobile: {
       type: String,
     },
+    
+    LastEditedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Users',    },
+
+    CreatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Users',    },
 
     LogoUrl: { type: String, required: true },
     TextLogoUrl: { type: String, required: true },
