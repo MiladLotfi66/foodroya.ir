@@ -1,13 +1,24 @@
 import { Schema, model, models } from "mongoose";
 const schema = new Schema(
   {
+    ShopUniqueName: {
+      type: String,
+      required: true,
+      unique: true ,// اطمینان از منحصر به فرد بودن
+      minlength: 5,   // حداقل 5 کاراکتر
+      maxlength: 255   // حداکثر 30 کاراکتر
+    },
+
     ShopName: {
       type: String,
       required: true,
+      minlength: 5,   // حداقل 5 کاراکتر
+      maxlength: 255   // حداکثر 30 کاراکتر
     },
 
     ShopSmallDiscription: {
       type: String,
+      
     },
 
     ShopDiscription: {

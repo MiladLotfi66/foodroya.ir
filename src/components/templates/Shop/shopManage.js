@@ -2,12 +2,8 @@
 import { useEffect, useState } from "react";
 import FormTemplate from "@/templates/formTemplate";
 import ShopCard from "./ShopCard";
-import { GetUserShops } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { GetUserShops  } from "@/components/signinAndLogin/Actions/ShopServerActions";
 import AddShop from "./AddShop";
-
-
-
-
 
 
 function ShopManage() {
@@ -21,6 +17,7 @@ function ShopManage() {
     const fetchShops = async () => {
       try {
         const response = await GetUserShops();
+        // const response = await GetAllShops();
         setShops(response.Shops);
       } catch (error) {
         console.error("Error fetching shops:", error);

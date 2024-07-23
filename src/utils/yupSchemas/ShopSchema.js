@@ -1,8 +1,10 @@
 import * as yup from "yup";
+import { isUniqShop } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
 // تعریف یک قانون مشترک برای فیلدهای تصویر
 const imageValidationSchema = yup
   .mixed()
+  .required("وارد کردن تصویر الزامیست")
   .test("fileOrUrl", "فرمت تصویر یا آدرس تصویر معتبر نیست", function (value) {
     if (typeof value === "string") {
       // بررسی کنید که آیا URL آپلود است یا خیر
@@ -36,23 +38,38 @@ const imageValidationSchema = yup
   );
 
 const ShopSchema = yup.object().shape({
+
+  ShopUniqueName: yup
+  .string()
+  .required("وارد کردن نام منحصر به فرد فروشگاه الزامیست")
+  .min(5, "نام منحصر به فرد فروشگاه باید حداقل 5 کاراکتر باشد")
+  .max(30, "نام منحصر به فرد فروشگاه نمی‌تواند بیشتر از 30 کاراکتر باشد")
+  .matches(/^\w+$/, "نام منحصر به فرد فروشگاه باید فقط شامل حروف، اعداد و زیرخط باشد")
+  .test("isUnique", "این نام فروشگاه تکراری می باشد", async function (value) {
+    const { error } = await isUniqShop(value);
+    return !error;
+  })
+  ,
+  
   ShopName: yup
     .string()
-    .nullable()
+    .required("وارد کردن عنوان فروشگاه الزامیست")
     .max(25, "عنوان فروشگاه نمی‌تواند بیشتر از 25 کاراکتر باشد"),
 
   ShopSmallDiscription: yup
     .string()
-    .nullable()
+    .required("وارد کردن توضیح مختصر الزامیست")
     .max(70, "توضیح مختصر فروشگاه نمی‌تواند بیشتر از 70 کاراکتر باشد"),
 
   ShopDiscription: yup
     .string()
-    .nullable()
+    .required("وارد کردن توضیح کامل الزامیست زیرا این توضیحات در قسمت درباره ی ما قرار می گیرد ")
     .max(500, "توضیح کامل فروشگاه نمی‌تواند بیشتر از 500 کاراکتر باشد"),
 
   ShopAddress: yup
     .string()
+    .required("وارد کردن آدرس الزامیست")
+
     .nullable()
     .max(255, "آدرس حداکثر باید ۲۵۵ کاراکتر باشد"),
 

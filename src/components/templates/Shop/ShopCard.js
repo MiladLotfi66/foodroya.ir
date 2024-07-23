@@ -7,22 +7,36 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import Image from "next/image";
 
-import { ShopServerDisableActions,ShopServerEnableActions,DeleteShops } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import {
+  ShopServerDisableActions,
+  ShopServerEnableActions,
+  DeleteShops,
+} from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { Toaster, toast } from "react-hot-toast";
+import Link from "next/link";
 
 function ShopCard({ Shop, editfunction }) {
   const enableFunc = async () => {
     try {
-      await ShopServerEnableActions(Shop._id);
-      window.location.reload();
+      const res = await ShopServerEnableActions(Shop._id);
+      if (res.status === 200 || res.status === 201) {
+        window.location.reload();
+      } else {
+        toast.error(res.error);
+      }
     } catch (error) {
-      console.error("خطا در فعال‌سازی بنر:", error);
+      console.error("خطا در غیرفعال‌سازی بنر:", error);
     }
   };
 
   const disableFunc = async () => {
     try {
-      await ShopServerDisableActions(Shop._id);
-      window.location.reload();
+      const res = await ShopServerDisableActions(Shop._id);
+      if (res.status === 200 || res.status === 201) {
+        window.location.reload();
+      } else {
+        toast.error(res.error);
+      }
     } catch (error) {
       console.error("خطا در غیرفعال‌سازی بنر:", error);
     }
@@ -30,8 +44,13 @@ function ShopCard({ Shop, editfunction }) {
 
   const deleteFunc = async () => {
     try {
-      await DeleteShops(Shop._id);
-      window.location.reload();
+      const res = await DeleteShops(Shop._id);
+      console.log(res.error);
+      if (res.status === 200 || res.status === 201) {
+        window.location.reload();
+      } else {
+        toast.error(res.error);
+      }
     } catch (error) {
       console.error("خطا در حذف بنر:", error);
     }
@@ -55,53 +74,58 @@ function ShopCard({ Shop, editfunction }) {
       <div className="absolute top-2 right-2 z-20 p-2">
         <div className="flex items-center gap-2 child-hover:text-orange-300">
           {/* ///////////////////////////delete icone////////////////////////////////// */}
-            <svg
-              width="34"
-              height="34"
-              className=" cursor-pointer "
-              aria-label="delete"
-              onClick={deleteFunc}
-            >
-              <use href="#DeleteSvg"></use>
-            </svg>
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer "
+            aria-label="delete"
+            onClick={deleteFunc}
+          >
+            <use href="#DeleteSvg"></use>
+          </svg>
           {/* ///////////////////////////edit icone////////////////////////////////// */}
 
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer"
+            aria-label="edit"
+            onClick={editfunction}
+          >
+            <use href="#EditSvg"></use>
+          </svg>
+          {/* ///////////////////////////share icone////////////////////////////////// */}
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer"
+            aria-label="share"
+          >
+            <use href="#ShareSvg"></use>
+          </svg>
+          {/* ///////////////////////////enable disable icone////////////////////////////////// */}
+
+          {!Shop.ShopStatus && (
             <svg
               width="34"
               height="34"
               className=" cursor-pointer"
-              aria-label="edit"
-              onClick={editfunction}
+              aria-label="enable"
+              onClick={enableFunc}
             >
-              <use href="#EditSvg"></use>
+              <use href="#EyeSvg"></use>
             </svg>
-          {/* ///////////////////////////share icone////////////////////////////////// */}
-            <svg width="34" height="34" className=" cursor-pointer" aria-label="share">
-              <use href="#ShareSvg"></use>
-            </svg>
-          {/* ///////////////////////////enable disable icone////////////////////////////////// */}
-
-          {!Shop.ShopStatus && (
-              <svg
-                width="34"
-                height="34"
-                className=" cursor-pointer"
-                aria-label="enable"
-                onClick={enableFunc}
-              >
-                <use href="#EyeSvg"></use>
-              </svg>
           )}
           {Shop.ShopStatus && (
-              <svg
-                width="34"
-                height="34"
-                className=" cursor-pointer"
-                aria-label="disable"
-                onClick={disableFunc}
-              >
-                <use href="#EyeslashSvg"></use>
-              </svg>
+            <svg
+              width="34"
+              height="34"
+              className=" cursor-pointer"
+              aria-label="disable"
+              onClick={disableFunc}
+            >
+              <use href="#EyeslashSvg"></use>
+            </svg>
           )}
         </div>
       </div>
@@ -109,32 +133,40 @@ function ShopCard({ Shop, editfunction }) {
         className="absolute bottom-2 left-2 z-20 p-2"
         // style={{ color: Shop.BannerTextColor }}
       >
-        <div className="bg-black bg-opacity-50 rounded-md p-3">
-       <div className="flex">
-        <Image
-        className="rounded-full"
-        src={Shop.LogoUrl}
-        alt="Shop logo"
-        width={30}
-        height={30}
-        quality={30}
-
-      />
-          <span className="font-MorabbaBold text-sm md:text-xl">
-            {Shop.ShopName}
-          </span>
+        <div
+          className="bg-white
+ bg-opacity-50 dark:bg-zinc-700 dark:bg-opacity-50 rounded-md p-3"
+        >
+          <div className="flex">
+            <Image
+              className="rounded-full"
+              src={Shop.LogoUrl}
+              alt="Shop logo"
+              width={30}
+              height={30}
+              quality={30}
+            />
+            <span className="font-MorabbaBold text-sm md:text-xl">
+              {Shop.ShopName}
+            </span>
           </div>
           <p className="font-MorabbaLight text-xs md:text-lg mt-1">
             {Shop.ShopSmallDiscription}
           </p>
           <span className="block bg-orange-300 w-[25px] h-px md:w-[50px] md:h-0.5 my-1 md:my-2"></span>
-          <p className="text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm  line-clamp-2 text-wrap  "
-          // className="max-w-[100px] md:max-w-[200px] "
+          <p
+            className="text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm  line-clamp-2 text-wrap max-w-80"
+            // className="max-w-[100px] md:max-w-[200px] "
           >
             {Shop.ShopDiscription}
           </p>
+          <h3 className="font-IranSans my-2 text-sm md:text-xl text-center child-hover:text-orange-300 truncate max-w-80 ltr">
+            <Link href={`/${Shop.ShopUniqueName}`}>@{Shop.ShopUniqueName}</Link>
+          </h3>
         </div>
       </div>
+
+      <Toaster />
     </div>
   );
 }

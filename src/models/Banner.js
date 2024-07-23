@@ -1,6 +1,10 @@
 import { Schema, model, models } from "mongoose";
 const BannerSchema = new Schema(
   {
+    ShopId: {
+      type: Schema.Types.ObjectId,
+      ref: 'shops',    },
+
     BannerBigTitle: {
       type: String,
     },
@@ -28,6 +32,7 @@ const BannerSchema = new Schema(
     CreatedBy: {
       type: Schema.Types.ObjectId,
       ref: 'Users',    },
+
 
     imageUrl: { type: String, required: true },
     BannerStatus: { type: Boolean, required: true },

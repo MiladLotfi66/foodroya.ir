@@ -8,6 +8,7 @@ import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 // import { DevTool } from "@hookform/devtools";
+import { AddShopServerAction,EditShop } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
 function AddShop({ Shop = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
@@ -24,14 +25,18 @@ function AddShop({ Shop = {}, onClose }) {
   /////////////////////react hook form////////////////////////////
   const {
     register,
+    watch,
     // control,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
     reset,
   } = useForm({
     mode: "all",
     defaultValues: {
+
+      ShopUniqueName: Shop?.ShopUniqueName || "",
       ShopName: Shop?.ShopName || "",
       ShopSmallDiscription: Shop?.ShopSmallDiscription || "",
       ShopAddress: Shop?.ShopAddress || "",
@@ -46,6 +51,24 @@ function AddShop({ Shop = {}, onClose }) {
     },
     resolver: yupResolver(ShopSchema),
   });
+
+
+  /////////////////// Watch ShopUniqueName and validate on change   ////////////////////////////////////////////
+  const shopUniqueName = watch('ShopUniqueName');
+  useEffect(() => {
+    async function validateShopUniqueName() {
+      try {
+        await ShopSchema.fields.ShopUniqueName.validate(shopUniqueName);
+        setError('ShopUniqueName', {});
+      } catch (error) {
+        setError('ShopUniqueName', { type: 'manual', message: error.message });
+      }
+    }
+
+    validateShopUniqueName();
+  }, [shopUniqueName, setError]);
+
+
   /////////////////////useEffect////////////////////////////
 
   useEffect(() => {
@@ -125,6 +148,7 @@ function AddShop({ Shop = {}, onClose }) {
       } else if (formData.BackGroundpanel) {
         formDataObj.append("BackGroundpanel", formData.BackGroundpanel);
       }
+      formDataObj.append("ShopUniqueName", formData.ShopUniqueName);
       formDataObj.append("ShopName", formData.ShopName);
       formDataObj.append("ShopSmallDiscription", formData.ShopSmallDiscription);
       formDataObj.append("ShopDiscription", formData.ShopDiscription);
@@ -132,25 +156,23 @@ function AddShop({ Shop = {}, onClose }) {
       formDataObj.append("ShopStatus", formData.ShopStatus);
       formDataObj.append("ShopPhone", formData.ShopPhone);
       formDataObj.append("ShopMobile", formData.ShopMobile);
+   
+   
+      let res;
       if (Shop?._id) {
         formDataObj.append("id", Shop._id);
+        res = await EditShop(formDataObj);
+      } else {
+        res = await AddShopServerAction(formDataObj);
       }
-      const res = await fetch(
-        `/api/panel/Shop${Shop?._id ? `/${Shop._id}` : ""}`,
-        {
-          method: Shop?._id ? "PATCH" : "PUT",
-          body: formDataObj,
-        }
-      );
 
-      const result = await res.json();
-      if (res.ok) {
-        toast.success("فروشگاه با موفقیت ثبت شد");
+
+      // const result = await res.json();
+      if (res.status === 200 || res.status === 201 ) {
         onClose()
         window.location.reload();
-
-      } else {
-        toast.error(result.message || "خطایی رخ داده است");
+       } else {
+        toast.error(res.error || "خطایی رخ داده است");
       }
     } catch (error) {
       toast.error(error.message || "خطایی در ارسال درخواست به سرور رخ داد");
@@ -206,6 +228,22 @@ function AddShop({ Shop = {}, onClose }) {
             {...register("ShopStatus")}
           />
         </div>
+        {/* /////////////////////ShopUniqueName//////////////////////////// */}
+        <div className="flex items-center">
+          <label htmlFor="ShopUniqueName" className="w-1/5 text-xs md:text-sm">
+            شناسه فروشگاه
+          </label>
+          <input
+            className="inputStyle grow w-4/5"
+            type="text"
+            name="ShopUniqueName"
+            id="ShopUniqueName"
+            {...register("ShopUniqueName")}
+          />
+        </div>
+        {errors.ShopUniqueName && (
+          <div className="text-xs text-red-400">{errors.ShopUniqueName.message}</div>
+        )}       
         {/* /////////////////////ShopName//////////////////////////// */}
         <div className="flex items-center">
           <label htmlFor="ShopName" className="w-1/5 text-xs md:text-sm">

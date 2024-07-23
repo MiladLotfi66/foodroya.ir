@@ -1085,6 +1085,13 @@ video {
   margin-top: 2rem;
 }
 
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -1370,6 +1377,10 @@ video {
   min-width: 1.25rem;
 }
 
+.max-w-80 {
+  max-width: 20rem;
+}
+
 .max-w-\[100px\] {
   max-width: 100px;
 }
@@ -1574,6 +1585,12 @@ video {
 
 .overflow-y-auto {
   overflow-y: auto;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .text-wrap {
@@ -1853,6 +1870,10 @@ video {
   font-family: Dana Medium;
 }
 
+.font-IranSans {
+  font-family: IranSans;
+}
+
 .font-MorabbaBold {
   font-family: Morabba Bold;
 }
@@ -2001,6 +2022,10 @@ video {
   filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
 }
 
+.ltr {
+  direction: ltr;
+}
+
 .dark\:darklinergradient:is(.dark *) {
   background: linear-gradient(rgba(39, 39, 42, 0.65), rgba(39, 39, 42, 0.65));
 }
@@ -2099,6 +2124,10 @@ video {
 
 .dark\:bg-opacity-95:is(.dark *) {
   --tw-bg-opacity: 0.95;
+}
+
+.dark\:bg-opacity-50:is(.dark *) {
+  --tw-bg-opacity: 0.5;
 }
 
 .dark\:text-emerald-500:is(.dark *) {
