@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import FormTemplate from "@/templates/formTemplate";
+import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
 import { GetAllBanners } from "@/components/signinAndLogin/Actions/BannerServerActions";
 import AddBanner from "./AddBanner";

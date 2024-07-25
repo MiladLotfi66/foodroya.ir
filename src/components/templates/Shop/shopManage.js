@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import FormTemplate from "@/templates/formTemplate";
+import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ShopCard from "./ShopCard";
 import { GetUserShops  } from "@/components/signinAndLogin/Actions/ShopServerActions";
 import AddShop from "./AddShop";
