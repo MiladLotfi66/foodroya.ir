@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
+import { AddNewBanner } from "../signinAndLogin/Actions/BannerServerActions";
 
 
 function Header() {
@@ -34,6 +35,9 @@ function Header() {
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/' });
+  }; 
+  const handleAddNewBanner = async () => {
+    await AddNewBanner()
   };
 
 
@@ -86,7 +90,9 @@ function Header() {
               </div>
             </li>
             <li className="flex items-center">
-              <a href="#">بلاگ</a>
+              <a href="#"
+            onClick={AddNewBanner}
+              >بلاگ</a>
             </li>
             <li className="flex items-center">
               <a href="/abute">درباره ما</a>
@@ -98,9 +104,9 @@ function Header() {
                   <a href="#">پنل مدیریتی</a>
                 </li>
                 <li className="flex items-center">
-                  <a
-                    href="#"
-                             onClick={handleSignOut}
+                  <button
+                    
+                             onClick={handleAddNewBanner}
 
                     // onClick={() => {
                     //   // const res = await logOutServerAction();
@@ -112,7 +118,7 @@ function Header() {
                     // }}
                   >
                     خروج
-                  </a>
+                  </button>
                 </li>
               </>
             ) : (

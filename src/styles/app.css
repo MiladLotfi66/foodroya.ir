@@ -1085,13 +1085,6 @@ video {
   margin-top: 2rem;
 }
 
-.line-clamp-1 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
-
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -2118,16 +2111,16 @@ video {
   background-color: rgb(39 39 42 / var(--tw-bg-opacity));
 }
 
+.dark\:bg-opacity-50:is(.dark *) {
+  --tw-bg-opacity: 0.5;
+}
+
 .dark\:bg-opacity-90:is(.dark *) {
   --tw-bg-opacity: 0.9;
 }
 
 .dark\:bg-opacity-95:is(.dark *) {
   --tw-bg-opacity: 0.95;
-}
-
-.dark\:bg-opacity-50:is(.dark *) {
-  --tw-bg-opacity: 0.5;
 }
 
 .dark\:text-emerald-500:is(.dark *) {

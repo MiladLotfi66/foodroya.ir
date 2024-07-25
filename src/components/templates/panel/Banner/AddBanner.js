@@ -7,11 +7,17 @@ import { useEffect, useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
+import { useRouter } from 'next/router';
+
 // import { DevTool } from "@hookform/devtools";
 
 function AddBanner({ banner = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(banner?.imageUrl || null);
+  const router = useRouter();
+  const { shopUniqName } = router.query;
+
+
   /////////////////////react hook form////////////////////////////
   const {
     register,
@@ -23,6 +29,7 @@ function AddBanner({ banner = {}, onClose }) {
   } = useForm({
     mode: "all",
     defaultValues: {
+      ShopId: banner?.ShopId || "",
       BannerBigTitle: banner?.BannerBigTitle || "",
       BannersmallDiscription: banner?.BannersmallDiscription || "",
       BannerStep: banner?.BannerStep || "",
@@ -66,9 +73,9 @@ function AddBanner({ banner = {}, onClose }) {
       } else if (formData.BannerImage) {
         formDataObj.append("BannerImage", formData.BannerImage);
       }
+      formDataObj.append("ShopId", shopUniqName);
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
-      formDataObj.append(
-        "BannersmallDiscription",
+      formDataObj.append("BannersmallDiscription",
         formData.BannersmallDiscription
       );
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
@@ -154,7 +161,26 @@ function AddBanner({ banner = {}, onClose }) {
             {...register("BannerStatus")}
           />
         </div>
-        {/* /////////////////////BannerBigTitle//////////////////////////// */}
+        {/* /////////////////////ShopId////////////////////////////
+
+        <div className="flex items-center">
+          <label htmlFor="ShopId" className="w-1/5 text-xs md:text-sm">
+            عنوان بنر
+          </label>
+          <input
+            className="inputStyle grow w-4/5"
+            type="text"
+            name="ShopId"
+            id="ShopId"
+            {...register("ShopId")}
+          />
+        </div>
+        {errors.ShopId && (
+          <div className="text-xs text-red-400">
+            {errors.ShopId.message}
+          </div>
+        )}        */}
+         {/* /////////////////////BannerBigTitle//////////////////////////// */}
 
         <div className="flex items-center">
           <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">
