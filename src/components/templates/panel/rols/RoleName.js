@@ -1,10 +1,9 @@
-import Threedot from "@/module/svgs/threedot";
 import EditSvg from "@/module/svgs/EditSvg";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
-function RoleName({ name }) {
+function RoleName({ name , onClickfunction}) {
   return (
-    <div className=" rounded-full bg-gray-300 dark:bg-zinc-600 h-[6rem] w-[6rem] text-xs md:text-base md:h-32 md:w-32 flex items-center justify-center hover:border hover:dark:bg-zinc-500 hover:border-orange-300">
+    <div onClick={onClickfunction} className=" rounded-full bg-gray-300 dark:bg-zinc-600 h-[6rem] w-[6rem] text-xs md:text-base md:h-32 md:w-32 flex items-center justify-center hover:border hover:dark:bg-zinc-500 hover:border-orange-300">
       <div className="hidden">
         <EditSvg />
         <DeleteSvg />

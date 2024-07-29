@@ -1,14 +1,28 @@
 import { Schema, model, models } from "mongoose";
 const schema = new Schema(
   {
+    RoleTitle: {
+      type: String,
+      required: true
+    },
+    
+    ShopId: {
+      type: Schema.Types.ObjectId,
+      ref: "shops",
+      required: true
+
+    },
+
     LastEditedBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
+      required: true
     },
 
     CreatedBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
+      required: true
     },
 
     bannersPermissions: {
@@ -17,21 +31,12 @@ const schema = new Schema(
       default: [],
     },
 
-    rolsPermissions: {
+    rolesPermissions: {
       type: [String],
       enum: ["add", "edit", "delete", "view"],
       default: [],
     },
-    
-    LastEditedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-    },
-
-    CreatedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-    },
+  
     RoleStatus: { type: Boolean, required: true },
 
   },

@@ -29,4 +29,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-export default models.roleInShop || model("roleInShop", schema);
+export default models.RoleInShop || model("RoleInShop", schema);
