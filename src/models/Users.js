@@ -23,6 +23,5 @@ const UserSchema = new Schema(
     },
     refreshToken:String,
   },
-  { timestamp: true }
-);
+  { timestamps: true } );
 export default models.User || model("User", UserSchema);

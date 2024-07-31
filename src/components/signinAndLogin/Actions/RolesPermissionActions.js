@@ -6,6 +6,47 @@ import RoleSchema from "@/utils/yupSchemas/RoleSchema";
 import AuthenticateUser from "@/utils/authenticateUserInActions";
 import RoleInShop from "@/models/RoleInShop";
 import shops from "@/models/shops";
+import Users from "@/models/Users";
+
+
+export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
+  try {
+    // اتصال به دیتابیس
+    console.log("UserId, shopUniqName, RoleId",UserId, shopUniqName, RoleId);
+    await connectDB();
+    // دریافت آی‌دی شاپ
+    if (!shopUniqName) {
+      throw new Error("shopUniqName is required in RoleData");
+    }
+    const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
+    if (!ShopId) {
+      throw new Error("shopId is required in RoleData");
+    }
+
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error("User data not found");
+    }
+    // ایجاد رکورد جدید
+    const newRoleInShop = new RoleInShop({
+      UserId,
+      ShopId,
+      RoleId,
+      CreatedBy: userData.id,
+      LastEditedBy: userData.id, // فرض بر این است که خالق همان شخص آخرین ویرایشگر است
+    });
+
+    // ذخیره رکورد در دیتابیس
+    await newRoleInShop.save();
+
+    console.log('رکورد جدید با موفقیت ذخیره شد.');
+    return { success: true, message: 'رکورد جدید با موفقیت ذخیره شد.' };
+  } catch (error) {
+    console.error('خطا در ذخیره رکورد:', error);
+    return { success: false, message: 'خطا در ذخیره رکورد', error };
+  }
+}
 
 // احراز هویت کاربر
 export async function authenticateUser() {
@@ -261,9 +302,6 @@ export async function GetShopRolesByShopUniqName(ShopUniqName) {
   }
 }
 
-
-
-
 export async function CheckRolePermissionsServerAction({ roles, action, access }) {
   try {
     await connectDB();
@@ -298,7 +336,6 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
 }
 
 
-
 export async function GetShopIdByShopUniqueName(ShopUniqueName) {
   try {
     await connectDB();
@@ -318,11 +355,15 @@ export async function GetShopIdByShopUniqueName(ShopUniqueName) {
 export const getUsersByRoleId = async (roleId) => {
   try {
     await connectDB();
-    const rolesInShop = await RoleInShop.find({ RoleId: roleId }).populate("UserId", "username");
+    // const rolesInShop = await RoleInShop.find({ RoleId: roleId }).populate('UserId');
+    const rolesInShop = await RoleInShop.find({ RoleId: roleId })
+    .populate({path: 'UserId',select: 'username phone role'  // فیلدهای مورد نظر از مدل User
+    });
+    console.log("roleId",rolesInShop);
 
-    const userNames = rolesInShop.map((roleInShop) => roleInShop.UserId.name);
+    // const userNames = rolesInShop.map((roleInShop) => roleInShop.UserId.name);
 
-    return userNames;
+    // return userNames;
   } catch (error) {
     console.error("Error fetching user names by RoleId:", error);
     throw new Error("Error fetching user names by RoleId");

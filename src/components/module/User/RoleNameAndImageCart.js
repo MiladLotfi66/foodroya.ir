@@ -1,7 +1,7 @@
 import Image from "next/image";
 import usericone from "@/public/Images/jpg/user.webp";
 
-function UserMicroCard({ user }) {
+function RoleNameAndImageCart({ user }) {
   return (
     <span className="flex items-center gap-2">
       <Image
@@ -14,10 +14,10 @@ function UserMicroCard({ user }) {
         quality={60}
 
       />
-      <div className="hidden xl:inline-block">{user?.username}</div>
+      <p className="truncate max-w-52" >{user?.username}</p>
     </span>
   );
 }
 
-export default UserMicroCard;
+export default RoleNameAndImageCart;
 

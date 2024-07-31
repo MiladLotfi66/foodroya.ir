@@ -13,7 +13,6 @@ import { useEffect } from "react";
 import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
-import { AddNewBanner } from "../signinAndLogin/Actions/BannerServerActions";
 
 
 function Header() {
@@ -91,7 +90,6 @@ function Header() {
             </li>
             <li className="flex items-center">
               <a href="#"
-            onClick={AddNewBanner}
               >بلاگ</a>
             </li>
             <li className="flex items-center">
@@ -106,8 +104,7 @@ function Header() {
                 <li className="flex items-center">
                   <button
                     
-                             onClick={handleAddNewBanner}
-
+                    onClick={handleSignOut}
                     // onClick={() => {
                     //   // const res = await logOutServerAction();
                     //   // if (res.status === 200) {

@@ -974,6 +974,15 @@ video {
   z-index: 46;
 }
 
+.m-auto {
+  margin: auto;
+}
+
+.mx-2 {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
 .mx-4 {
   margin-left: 1rem;
   margin-right: 1rem;
@@ -1190,10 +1199,6 @@ video {
   height: 1rem;
 }
 
-.h-40 {
-  height: 10rem;
-}
-
 .h-5 {
   height: 1.25rem;
 }
@@ -1266,6 +1271,10 @@ video {
   height: 1px;
 }
 
+.h-12 {
+  height: 3rem;
+}
+
 .max-h-screen {
   max-height: 100vh;
 }
@@ -1318,10 +1327,6 @@ video {
   width: 80%;
 }
 
-.w-40 {
-  width: 10rem;
-}
-
 .w-5 {
   width: 1.25rem;
 }
@@ -1370,6 +1375,10 @@ video {
   width: 400px;
 }
 
+.w-\[50\%\] {
+  width: 50%;
+}
+
 .w-\[6rem\] {
   width: 6rem;
 }
@@ -1400,6 +1409,10 @@ video {
 
 .min-w-5 {
   min-width: 1.25rem;
+}
+
+.max-w-52 {
+  max-width: 13rem;
 }
 
 .max-w-80 {
@@ -1654,6 +1667,10 @@ video {
   border-radius: 0.75rem;
 }
 
+.border {
+  border-width: 1px;
+}
+
 .border-b {
   border-bottom-width: 1px;
 }
@@ -1733,11 +1750,6 @@ video {
   background-color: rgb(251 146 60 / var(--tw-bg-opacity));
 }
 
-.bg-red-200 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(254 202 202 / var(--tw-bg-opacity));
-}
-
 .bg-teal-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(20 184 166 / var(--tw-bg-opacity));
@@ -1761,12 +1773,24 @@ video {
   --tw-bg-opacity: 0.5;
 }
 
+.bg-opacity-60 {
+  --tw-bg-opacity: 0.6;
+}
+
 .bg-opacity-90 {
   --tw-bg-opacity: 0.9;
 }
 
 .bg-opacity-95 {
   --tw-bg-opacity: 0.95;
+}
+
+.bg-opacity-10 {
+  --tw-bg-opacity: 0.1;
+}
+
+.bg-opacity-0 {
+  --tw-bg-opacity: 0;
 }
 
 .bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/chef2\.webp\'\)\] {
@@ -1779,6 +1803,10 @@ video {
 
 .bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/crosun2\.webp\'\)\] {
   background-image: url('../../public/Images/jpg/crosun2.webp');
+}
+
+.bg-\[url\(\'\.\.\/\.\.\/public\/Images\/webp\/rols\.webp\'\)\] {
+  background-image: url('../../public/Images/webp/rols.webp');
 }
 
 .bg-cover {
@@ -2190,8 +2218,17 @@ video {
   background-color: rgb(39 39 42 / var(--tw-bg-opacity));
 }
 
+.dark\:bg-black:is(.dark *) {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 0 0 / var(--tw-bg-opacity));
+}
+
 .dark\:bg-opacity-50:is(.dark *) {
   --tw-bg-opacity: 0.5;
+}
+
+.dark\:bg-opacity-60:is(.dark *) {
+  --tw-bg-opacity: 0.6;
 }
 
 .dark\:bg-opacity-90:is(.dark *) {
@@ -2261,6 +2298,11 @@ video {
 }
 
 @media (min-width: 768px) {
+  .md\:mx-4 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
   .md\:my-2 {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
@@ -2269,6 +2311,11 @@ video {
   .md\:my-20 {
     margin-top: 5rem;
     margin-bottom: 5rem;
+  }
+
+  .md\:my-4 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
   .md\:my-8 {
@@ -2460,6 +2507,10 @@ video {
     gap: 0.75rem;
   }
 
+  .md\:gap-4 {
+    gap: 1rem;
+  }
+
   .md\:gap-5 {
     gap: 1.25rem;
   }
@@ -2625,10 +2676,6 @@ video {
 
   .xl\:w-64 {
     width: 16rem;
-  }
-
-  .xl\:grid-cols-8 {
-    grid-template-columns: repeat(8, minmax(0, 1fr));
   }
 
   .xl\:gap-x-10 {
