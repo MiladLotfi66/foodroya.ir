@@ -9,6 +9,7 @@ const nextConfig = {
   },
   output: "standalone",
   
+  
   webpack: (config, { isServer }) => {
     // Only add compression plugin for the client-side bundle
     if (!isServer) {

@@ -1,3 +1,4 @@
+"use client";
 import { useForm } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
@@ -7,21 +8,33 @@ import { useEffect, useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
-import { useRouter } from 'next/router';
-
-// import { DevTool } from "@hookform/devtools";
-
+import { useParams } from 'next/navigation';
+  
+ 
 function AddBanner({ banner = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(banner?.imageUrl || null);
-  const router = useRouter();
-  const { shopUniqName } = router.query;
+  const [isMounted, setIsMounted] = useState(false);
+
+  
+  const params = useParams();
+  const { shopUniqName} = params;
 
 
-  /////////////////////react hook form////////////////////////////
+  useEffect(() => {
+    if (banner?.imageUrl) {
+      setSelectedImage(banner.imageUrl);
+      setValue("BannerImage", banner.imageUrl);
+    }
+  // }, [banner, setValue]);
+  }, [banner]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const {
     register,
-    // control,
     handleSubmit,
     setValue,
     formState: { errors },
@@ -42,16 +55,6 @@ function AddBanner({ banner = {}, onClose }) {
     },
     resolver: yupResolver(BannerSchima),
   });
-  /////////////////////useEffect////////////////////////////
-
-  useEffect(() => {
-    if (banner?.imageUrl) {
-      setSelectedImage(banner.imageUrl);
-      setValue("BannerImage", banner.imageUrl);
-    }
-  }, [banner, setValue]);
-
-  /////////////////////hanndle image change////////////////////////////
 
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -59,8 +62,6 @@ function AddBanner({ banner = {}, onClose }) {
       setValue("BannerImage", e.target.files[0]);
     }
   };
-
-  /////////////////////handle form submit////////////////////////////
 
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
@@ -107,7 +108,6 @@ function AddBanner({ banner = {}, onClose }) {
     }
     setIsSubmit(false);
   };
-  /////////////////////formsubmitting////////////////////////////
 
   const formsubmitting = async (formData) => {
     await handleFormSubmit(formData);
@@ -118,28 +118,25 @@ function AddBanner({ banner = {}, onClose }) {
       <div className="hidden">
         <CloseSvg />
       </div>
-      {/* /////////////////////title//////////////////////////// */}
-    
+
       <div className="flex justify-between p-2 md:p-5 mt-4">
         <button
             aria-label="close"
             className="hover:text-orange-300"
         >
-
-      <svg
-        width="34"
-        height="34"
-        onClick={onClose} // Close the modal on click
-      >
-        <use href="#CloseSvg"></use>
-      </svg>
-      </button>
+          <svg
+            width="34"
+            height="34"
+            onClick={onClose}
+          >
+            <use href="#CloseSvg"></use>
+          </svg>
+        </button>
 
         <h1 className="text-3xl font-MorabbaBold">
           {banner?._id ? "ویرایش بنر" : "افزودن بنر"}
         </h1>
       </div>
-      {/* /////////////////////form//////////////////////////// */}
 
       <form
         onSubmit={handleSubmit((data) => {
@@ -147,8 +144,7 @@ function AddBanner({ banner = {}, onClose }) {
         })}
         className="flex flex-col gap-4 p-2 md:p-4"
       >
-        {/* /////////////////////banner status//////////////////////////// */}
-
+        {/* Banner Status */}
         <div className="flex items-center">
           <label htmlFor="BannerStatus" className="w-1/5 text-xs md:text-sm">
             وضعیت بنر
@@ -161,27 +157,8 @@ function AddBanner({ banner = {}, onClose }) {
             {...register("BannerStatus")}
           />
         </div>
-        {/* /////////////////////ShopId////////////////////////////
 
-        <div className="flex items-center">
-          <label htmlFor="ShopId" className="w-1/5 text-xs md:text-sm">
-            عنوان بنر
-          </label>
-          <input
-            className="inputStyle grow w-4/5"
-            type="text"
-            name="ShopId"
-            id="ShopId"
-            {...register("ShopId")}
-          />
-        </div>
-        {errors.ShopId && (
-          <div className="text-xs text-red-400">
-            {errors.ShopId.message}
-          </div>
-        )}        */}
-         {/* /////////////////////BannerBigTitle//////////////////////////// */}
-
+        {/* BannerBigTitle */}
         <div className="flex items-center">
           <label htmlFor="BannerBigTitle" className="w-1/5 text-xs md:text-sm">
             عنوان بنر
@@ -199,7 +176,8 @@ function AddBanner({ banner = {}, onClose }) {
             {errors.BannerBigTitle.message}
           </div>
         )}
-        {/* /////////////////////BannersmallDiscription//////////////////////////// */}
+
+        {/* BannersmallDiscription */}
         <div className="flex items-center">
           <label
             htmlFor="BannersmallDiscription"
@@ -220,8 +198,8 @@ function AddBanner({ banner = {}, onClose }) {
             {errors.BannersmallDiscription.message}
           </div>
         )}
-        {/* /////////////////////BannerDiscription//////////////////////////// */}
 
+        {/* BannerDiscription */}
         <div className="flex items-center">
           <label
             htmlFor="BannerDiscription"
@@ -241,8 +219,8 @@ function AddBanner({ banner = {}, onClose }) {
             {errors.BannerDiscription.message}
           </div>
         )}
-        {/* /////////////////////BannerStep//////////////////////////// */}
 
+        {/* BannerStep */}
         <div className="flex items-center">
           <label htmlFor="BannerStep" className="w-1/5 text-xs md:text-sm">
             نوبت بنر
@@ -260,8 +238,8 @@ function AddBanner({ banner = {}, onClose }) {
             {errors.BannerStep.message}
           </div>
         )}
-        {/* /////////////////////BannerLink//////////////////////////// */}
 
+        {/* BannerLink */}
         <div className="flex items-center">
           <label htmlFor="BannerLink" className="w-1/5 text-xs md:text-sm">
             لینک بنر
@@ -279,8 +257,8 @@ function AddBanner({ banner = {}, onClose }) {
             {errors.BannerLink.message}
           </div>
         )}
-        {/* /////////////////////Bannerimage and color//////////////////////////// */}
 
+        {/* BannerImage and BannerTextColor */}
         <div className="flex items-center">
           <div className="w-1/2">
             {selectedImage ? (
@@ -316,8 +294,8 @@ function AddBanner({ banner = {}, onClose }) {
               </div>
             )}
           </div>
-          {/* /////////////////////Banner color//////////////////////////// */}
 
+          {/* BannerTextColor */}
           <div className="w-1/2">
             <label
               htmlFor="BannerTextColor"
@@ -339,8 +317,8 @@ function AddBanner({ banner = {}, onClose }) {
             </div>
           )}
         </div>
-        {/* /////////////////////button//////////////////////////// */}
 
+        {/* Submit Button */}
         <button
           type="submit"
           className={
@@ -353,7 +331,6 @@ function AddBanner({ banner = {}, onClose }) {
           {isSubmit ? "در حال ثبت" : "ثبت"}
           {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
         </button>
-        {/* <DevTool control={control} /> */}
         <Toaster />
       </form>
     </div>

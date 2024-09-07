@@ -1,14 +1,10 @@
-import ShopPage from "@/templates/ShopPage/ShopPage";
-
-
+import AllShopCards from "@/templates/Shop/AllShopCards"
 function page() {
-
   return (
     <div>
-      <ShopPage/>
+<AllShopCards/>
     </div>
   )
 }
 
 export default page
-

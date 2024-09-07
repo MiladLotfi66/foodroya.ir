@@ -132,6 +132,8 @@ function ShopManage() {
               key={Shop._id}
               Shop={Shop}
               editfunction={() => handleEditClick(Shop)}
+              editable={true}
+              followable={false}
             />
           ))}
         </div>

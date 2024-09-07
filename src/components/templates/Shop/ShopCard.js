@@ -6,6 +6,7 @@ import ShareSvg from "@/module/svgs/ShareSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import Image from "next/image";
+import UserPlus from "@/module/svgs/UserPlus";
 
 import {
   ShopServerDisableActions,
@@ -15,8 +16,19 @@ import {
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 
-function ShopCard({ Shop, editfunction }) {
-  const enableFunc = async () => {
+function ShopCard({ Shop, editfunction ,editable ,followable}) {
+  const followFunc = async () => {
+    try {
+      const res = await ShopServerEnableActions(Shop._id);
+      if (res.status === 200 || res.status === 201) {
+        window.location.reload();
+      } else {
+        toast.error(res.error);
+      }
+    } catch (error) {
+      console.error("خطا در غیرفعال‌سازی بنر:", error);
+    }
+  }; const enableFunc = async () => {
     try {
       const res = await ShopServerEnableActions(Shop._id);
       if (res.status === 200 || res.status === 201) {
@@ -70,9 +82,11 @@ function ShopCard({ Shop, editfunction }) {
         <ShareSvg />
         <EyeSvg />
         <EyeslashSvg />
+        <UserPlus />
       </div>
       <div className="absolute top-2 right-2 z-20 p-2">
-        <div className="flex items-center gap-2 child-hover:text-orange-300">
+        <div className={editable?"flex items-center gap-2 child-hover:text-orange-300":"hidden"}>
+        
           {/* ///////////////////////////delete icone////////////////////////////////// */}
           <svg
             width="34"
@@ -128,6 +142,19 @@ function ShopCard({ Shop, editfunction }) {
             </svg>
           )}
         </div>
+          {/* ///////////////////////////follow icone////////////////////////////////// */}
+          <div className={followable ? "flexCenter flex-row text-center px-2 border-black border rounded-md  hover:border-orange-300 hover:text-orange-300":"hidden"}>
+          <p className="pl-2">دنبال کردن</p>
+          <svg
+            width="34"
+            height="34"
+            className=" cursor-pointer "
+            aria-label="delete"
+            onClick={followFunc}
+            >
+            <use href="#UserPlus"></use>
+          </svg> 
+            </div>
       </div>
       <div
         className="absolute bottom-2 left-2 z-20 p-2"

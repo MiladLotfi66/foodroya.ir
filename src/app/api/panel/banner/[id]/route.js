@@ -2,7 +2,7 @@ import connectDB from "@/utils/connectToDB";
 import Banner from "@/models/Banner";
 import { writeFile, unlink } from "fs/promises";
 import path from "path";
-import BannerSchema from "@/utils/yupSchemas/BannerSchema";
+import BannerSchema from "@/utils/yupSchemas/BannerSchima.js";
 import sharp from "sharp";
 
 export async function PATCH(req) {

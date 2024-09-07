@@ -31,6 +31,6 @@ export async function GetAllUsers() {
   }
 }
 
-export {
-  GetAllUsers,
-};
+// export {
+//   GetAllUsers,
+// };

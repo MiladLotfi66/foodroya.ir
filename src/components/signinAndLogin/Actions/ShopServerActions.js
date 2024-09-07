@@ -271,6 +271,24 @@ console.log(newShop);
     return { error: error.message, status: 500 };
 
   }
+}export async function followShopServerAction(ShopData) {
+  try {
+    await connectDB();
+
+    // استخراج توکن JWT
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error("User data not found");
+    }
+   
+
+    return { message: "فروشگاه با موفقیت دنبال شد", status: 201 };
+  } catch (error) {
+    console.error("Error in addShop action:", error);
+    return { error: error.message, status: 500 };
+
+  }
 }
 
 async function GetUserShops() {
@@ -480,13 +498,10 @@ async function DeleteShops(ShopID) {
 }
 
 export {
-  isUniqShop,
   DeleteShops,
   ShopServerEnableActions,
   ShopServerDisableActions,
   GetAllShops,
   GetAllEnableShops,
-  EditShop,
-  AddShopServerAction,
   GetUserShops,
 };

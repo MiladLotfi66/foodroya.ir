@@ -48,7 +48,44 @@ export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
   }
 }
 
-// احراز هویت کاربر
+export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
+  try {
+    // اتصال به دیتابیس
+    console.log("UserId, shopUniqName, RoleId",UserId, shopUniqName, RoleId);
+    await connectDB();
+    // دریافت آی‌دی شاپ
+    if (!shopUniqName) {
+      throw new Error("shopUniqName is required in RoleData");
+    }
+    const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
+    if (!ShopId) {
+      throw new Error("shopId is required in RoleData");
+    }
+
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error("User data not found");
+    }
+    // پیدا کردن و حذف رکورد
+    const result = await RoleInShop.findOneAndDelete({
+      UserId,
+      ShopId,
+      RoleId
+    });
+
+    if (!result) {
+      throw new Error('Record not found');
+    }
+
+    console.log('رکورد با موفقیت حذف شد.');
+    return { success: true, message: 'رکورد با موفقیت حذف شد.' };
+  } catch (error) {
+    console.error('خطا در حذف رکورد:', error);
+    return { success: false, message: 'خطا در حذف رکورد', error };
+  }
+}
+
 export async function authenticateUser() {
   try {
     const cookieStore = cookies();
@@ -352,23 +389,31 @@ export async function GetShopIdByShopUniqueName(ShopUniqueName) {
   }
 }
 
-export const getUsersByRoleId = async (roleId) => {
+export async function  getUsersByRoleId (roleId) {
   try {
     await connectDB();
     // const rolesInShop = await RoleInShop.find({ RoleId: roleId }).populate('UserId');
-    const rolesInShop = await RoleInShop.find({ RoleId: roleId })
-    .populate({path: 'UserId',select: 'username phone role'  // فیلدهای مورد نظر از مدل User
+    const rolesInShop = await RoleInShop.find({ RoleId: roleId }) .populate({
+      path: 'UserId',
+      select: '_id username'
     });
-    console.log("roleId",rolesInShop);
 
-    // const userNames = rolesInShop.map((roleInShop) => roleInShop.UserId.name);
+    const users = rolesInShop.map(roleInShop => {
+      const user = roleInShop.UserId;
+      return user ? { _id: user._id, username: user.username } : null;
+    }).filter(user => user !== null); // حذف موارد null
 
-    // return userNames;
+    // بررسی داده‌های برگردانده شده
+    console.log("users:", users);
+
+    return users;
   } catch (error) {
-    console.error("Error fetching user names by RoleId:", error);
-    throw new Error("Error fetching user names by RoleId");
+    console.error("Error fetching user names by RoleId:", error.message);
+     throw new Error("Error fetching user names by RoleId");
   }
 };
+
+
 
 export async function GetUserRolsAtShop({ userId, shopId }) {
   try {
@@ -396,16 +441,16 @@ export async function GetUserRolsAtShop({ userId, shopId }) {
 
 
 
-export {
-  AddRoleServerAction,
-  EditRole,
-  DeleteRole,
-  EnableRole,
-  DisableRole,
-  GetShopRolesByShopUniqName,
+// export {
+//   AddRoleServerAction,
+//   EditRole,
+//   DeleteRole,
+//   EnableRole,
+//   DisableRole,
+//   GetShopRolesByShopUniqName,
  
-  CheckRolePermissionsServerAction,
-  GetUserRolsAtShop,
-  GetShopIdByShopUniqueName,
-  getUsersByRoleId,
-};
+//   CheckRolePermissionsServerAction,
+//   GetUserRolsAtShop,
+//   GetShopIdByShopUniqueName,
+//   getUsersByRoleId,
+// };

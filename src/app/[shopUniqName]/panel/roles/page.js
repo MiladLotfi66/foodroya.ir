@@ -1,12 +1,11 @@
 import RolsManage from "@/templates/panel/rols/RolsManage"
 
-function page({ params }) {
+function page() {
   return (
     <div>
-      <RolsManage params={params}/>
+      <RolsManage/>
     </div>
   )
 }
 
 export default page
-
