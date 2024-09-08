@@ -1,9 +1,10 @@
 import connectDB from "@/utils/connectToDB";
 import Banner from "@/models/Banner";
-import { writeFile, unlink } from "fs/promises";
+import { writeFile } from "fs/promises";
 import path from "path";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import sharp from "sharp";
+import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 
 export async function PUT(req) {
   try {
@@ -11,6 +12,21 @@ export async function PUT(req) {
 
     const formData = await req.formData();
 
+    // دریافت نام یکتای فروشگاه
+    const shopUniqName = formData.get("shopUniqName");
+
+    if (!shopUniqName) {
+      throw new Error("shopUniqName is required");
+    }
+
+    // دریافت آی‌دی فروشگاه
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required");
+    }
+    const ShopId = shopResponse.ShopID;
+
+    // اعتبارسنجی داده‌های ورودی
     const validatedData = await BannerSchima.validate(
       {
         BannerBigTitle: formData.get("BannerBigTitle"),
@@ -38,8 +54,9 @@ export async function PUT(req) {
       BannerLink,
     } = validatedData;
 
+    // پردازش تصویر بنر
     const buffer = Buffer.from(await BannerImage[0].arrayBuffer());
-    const now = process.hrtime.bigint(); // استفاده از میکروثانیه‌ها
+    const now = process.hrtime.bigint();
     const fileName = `${now}.webp`;
     const filePath = path.join(process.cwd(), "public/Uploads/" + fileName);
     const optimizedBuffer = await sharp(buffer)
@@ -48,6 +65,7 @@ export async function PUT(req) {
     await writeFile(filePath, optimizedBuffer);
     const imageUrl = "/Uploads/" + fileName;
 
+    // ایجاد بنر جدید با آی‌دی فروشگاه
     const newBanner = new Banner({
       BannerBigTitle,
       BannersmallDiscription,
@@ -57,6 +75,7 @@ export async function PUT(req) {
       BannerTextColor,
       BannerStatus,
       BannerLink,
+      ShopId,  // اضافه کردن آی‌دی فروشگاه
     });
 
     await newBanner.save();
@@ -73,22 +92,4 @@ export async function PUT(req) {
     });
   }
 }
-
-export async function GET(req) {
-  try {
-    await connectDB();
-
-    const banners = await Banner.find({}).lean();
-
-    return new Response(JSON.stringify({ banners }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error in GET API:", error);
-    return new Response(JSON.stringify({ message: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-}
+``

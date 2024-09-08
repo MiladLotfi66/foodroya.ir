@@ -18,7 +18,17 @@ export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
     if (!shopUniqName) {
       throw new Error("shopUniqName is required in RoleData");
     }
-    const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
+
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required in RoleData");
+    }
+
+    const ShopId = shopResponse.ShopID;
+ 
+ 
+ 
+ 
     if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
@@ -57,8 +67,12 @@ export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
     if (!shopUniqName) {
       throw new Error("shopUniqName is required in RoleData");
     }
-    const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
-    if (!ShopId) {
+   const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required in RoleData");
+    }
+
+    const ShopId = shopResponse.ShopID;    if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
 
@@ -144,8 +158,12 @@ export async function AddRoleServerAction(RoleData) {
       throw new Error("shopUniqName is required in RoleData");
     }
 
-    const shopId = await GetShopIdByShopUniqueName(shopUniqName);
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required in RoleData");
+    }
 
+    const ShopId = shopResponse.ShopID;
     if (!shopId) {
       throw new Error("shopId is required in RoleData");
     }
@@ -313,8 +331,12 @@ export async function GetShopRolesByShopUniqName(ShopUniqName) {
     if (!userData) {
       throw new Error("User data not found");
     }
-    const ShopId = await GetShopIdByShopUniqueName(ShopUniqName);
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required in RoleData");
+    }
 
+    const ShopId = shopResponse.ShopID;
     if (!ShopId) {
       throw new Error("ShopId not found");
     }
@@ -348,9 +370,7 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
       throw new Error("User data not found");
     }
 
-    console.log("Role IDs received:", roles);
-    console.log("Action to check:", action);
-    console.log("Access to check:", access);
+ 
 
     for (const roleId of roles) {
       const roleData = await RolePerimision.findOne({ _id: roleId }).lean();
@@ -382,7 +402,7 @@ export async function GetShopIdByShopUniqueName(ShopUniqueName) {
       throw new Error("شاپ با این نام پیدا نشد");
     }
 
-    return shop._id.toString(); // آی‌دی شاپ را برگردان
+    return { status: 200, ShopID: shop._id.toString() }; // آی‌دی شاپ و وضعیت را برگردان
   } catch (error) {
     console.error(`خطا در بازیابی آی‌دی شاپ: ${error.message}`);
     throw new Error("مشکلی در بازیابی آی‌دی شاپ وجود دارد");

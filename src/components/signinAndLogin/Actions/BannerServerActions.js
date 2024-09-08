@@ -63,7 +63,7 @@ async function BannerServerDisableActions(BannerID) {
     throw new Error("خطای سرور، تغییر وضعیت بنر انجام نشد");
   }
 }
-async function GetAllBanners() {
+async function GetAllBanners(shopUniqName) {
   try {
     await connectDB();
 
@@ -85,7 +85,7 @@ async function GetAllBanners() {
   }
 }
 
-async function GetAllEnableBanners() {
+async function GetAllEnableBanners(shopUniqName) {
   try {
     await connectDB();
 

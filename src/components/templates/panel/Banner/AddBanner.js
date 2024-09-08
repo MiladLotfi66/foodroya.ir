@@ -9,24 +9,22 @@ import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from 'next/navigation';
-  
- 
+
 function AddBanner({ banner = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(banner?.imageUrl || null);
   const [isMounted, setIsMounted] = useState(false);
 
-  
   const params = useParams();
-  const { shopUniqName} = params;
+  const { shopUniqName } = params;
 
+ 
 
   useEffect(() => {
     if (banner?.imageUrl) {
       setSelectedImage(banner.imageUrl);
       setValue("BannerImage", banner.imageUrl);
     }
-  // }, [banner, setValue]);
   }, [banner]);
 
   useEffect(() => {
@@ -74,11 +72,9 @@ function AddBanner({ banner = {}, onClose }) {
       } else if (formData.BannerImage) {
         formDataObj.append("BannerImage", formData.BannerImage);
       }
-      formDataObj.append("ShopId", shopUniqName);
+      formDataObj.append("shopUniqName", shopUniqName);
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
-      formDataObj.append("BannersmallDiscription",
-        formData.BannersmallDiscription
-      );
+      formDataObj.append("BannersmallDiscription", formData.BannersmallDiscription);
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
       formDataObj.append("BannerStep", formData.BannerStep);
       formDataObj.append("BannerTextColor", formData.BannerTextColor);
@@ -87,6 +83,7 @@ function AddBanner({ banner = {}, onClose }) {
       if (banner?._id) {
         formDataObj.append("id", banner._id);
       }
+
       const res = await fetch(
         `/api/panel/banner${banner?._id ? `/${banner._id}` : ""}`,
         {
@@ -123,11 +120,11 @@ function AddBanner({ banner = {}, onClose }) {
         <button
             aria-label="close"
             className="hover:text-orange-300"
+            onClick={onClose}
         >
           <svg
             width="34"
             height="34"
-            onClick={onClose}
           >
             <use href="#CloseSvg"></use>
           </svg>

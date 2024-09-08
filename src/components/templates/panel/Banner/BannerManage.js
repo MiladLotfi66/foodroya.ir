@@ -4,7 +4,6 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
 import { GetAllBanners } from "@/components/signinAndLogin/Actions/BannerServerActions";
 import AddBanner from "./AddBanner";
-import { useSession } from "next-auth/react";
 
 
 function BannerManage() {
@@ -52,7 +51,8 @@ function BannerManage() {
   };
 
   const handleSubmit = async (formData, bannerId) => {
-    console.log("addbaner run");
+    console.log("addbanner handle");
+    
     try {
       const formDataObj = new FormData();
       formDataObj.append("BannerImage", formData.BannerImage);

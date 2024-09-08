@@ -8,6 +8,8 @@ import { useEffect, useState, useRef } from "react";
 import EditSvg from "../svgs/EditSvg";
 import DeleteSvg from "../svgs/DeleteSvg";
 import { useRouter } from "next/navigation";
+import { useParams } from 'next/navigation';
+
 import Link from "next/link";
 import { GetAllEnableBanners,  BannerServerEnableActions,
   BannerServerDisableActions,
@@ -20,13 +22,17 @@ import SettingSvg from "../svgs/SettingSvg";
 
 function Banner2() {
   const router=useRouter();
+
+  const params = useParams();
+  const { shopUniqName} = params;
+
   const [banners, setBanners] = useState([]);
   const swiperRef = useRef(null);
 
    useEffect(() => {
     const fetchBanners = async () => {
       try {
-        const response = await GetAllEnableBanners();
+        const response = await GetAllEnableBanners(shopUniqName);
         setBanners(response.banners);
       } catch (error) {
         console.error("Error fetching banners:", error);
