@@ -8,12 +8,19 @@ import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { writeFile, unlink } from "fs/promises";
 import sharp from "sharp";
 import { headers } from "next/headers";
+import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
 
 
 
 async function BannerServerEnableActions(BannerID) {
   try {
     await connectDB(); // اتصال به دیتابیس
+    // دریافت آی‌دی فروشگاه از طریق نام یکتای فروشگاه
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required");
+    }
+    const ShopId = shopResponse.ShopID;
 
     // یافتن بنر با استفاده از BannerID
     const banner = await Banner.findById(BannerID);
@@ -85,12 +92,20 @@ async function GetAllBanners(shopUniqName) {
   }
 }
 
-async function GetAllEnableBanners(shopUniqName) {
+
+export async function GetAllEnableBanners(shopUniqName) {
   try {
     await connectDB();
 
-    // واکشی تمام اطلاعات بنرها از دیتابیس
-    const banners = await Banner.find({ BannerStatus: true }).lean(); // lean() برای بازگشتن به شیء JS ساده بدون مدیریت مدل
+    // دریافت آی‌دی فروشگاه از طریق نام یکتای فروشگاه
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required");
+    }
+    const ShopId = shopResponse.ShopID;
+
+    // واکشی بنرهای فعال که به فروشگاه مدنظر تعلق دارند
+    const banners = await Banner.find({ BannerStatus: true, ShopId }).lean(); // فیلتر بر اساس ShopId و BannerStatus
 
     // تبدیل اشیاء به plain objects
     const plainBanners = banners.map((banner) => ({
@@ -102,10 +117,11 @@ async function GetAllEnableBanners(shopUniqName) {
 
     return { banners: plainBanners, status: 200 };
   } catch (error) {
-    console.error("خطا در تغییر وضعیت بنر:", error);
-    throw new Error("خطای سرور، تغییر وضعیت بنر انجام نشد");
+    console.error("خطا در دریافت بنرها:", error);
+    throw new Error("خطای سرور، دریافت بنرها انجام نشد");
   }
 }
+``
 async function DeleteBanners(BannerID) {
   try {
     await connectDB();
@@ -211,7 +227,6 @@ export {
   BannerServerEnableActions,
   BannerServerDisableActions,
   GetAllBanners,
-  GetAllEnableBanners,
   EditBanner,
   AddBanner,
   AddNewBanner,
