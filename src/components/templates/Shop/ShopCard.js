@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
 import ShareSvg from "@/module/svgs/ShareSvg";
@@ -7,28 +7,58 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import Image from "next/image";
 import UserPlus from "@/module/svgs/UserPlus";
-
 import {
   ShopServerDisableActions,
   ShopServerEnableActions,
+  followShopServerAction,
   DeleteShops,
+  unfollowShopServerAction,
 } from "@/components/signinAndLogin/Actions/ShopServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 
-function ShopCard({ Shop, editfunction ,editable ,followable}) {
+function ShopCard({ Shop, editfunction, editable, followable, user }) {
+  
+  
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  // بررسی وضعیت فالو
+  useEffect(() => {
+    if (user && Shop) {
+      const followedShop = user.following.includes(Shop._id);
+      setIsFollowing(followedShop);
+    }
+  }, [user, Shop]);
   const followFunc = async () => {
+
     try {
-      const res = await ShopServerEnableActions(Shop._id);
+      const res = await followShopServerAction(Shop._id); // استفاده از سرور اکشن جدید
       if (res.status === 200 || res.status === 201) {
+        toast.success("فروشگاه با موفقیت دنبال شد");
         window.location.reload();
       } else {
         toast.error(res.error);
       }
     } catch (error) {
-      console.error("خطا در غیرفعال‌سازی بنر:", error);
+      console.error("خطا در دنبال کردن فروشگاه:", error);
     }
-  }; const enableFunc = async () => {
+  };
+
+  const unfollowFunc = async () => {
+    try {
+      const res = await unfollowShopServerAction(Shop._id);
+      if (res.status === 200 || res.status === 201) {
+        toast.success("فروشگاه با موفقیت از دنبال‌شدگان حذف شد");
+        setIsFollowing(false);
+      } else {
+        toast.error(res.error);
+      }
+    } catch (error) {
+      console.error("خطا در حذف فالو:", error);
+    }
+  };
+
+  const enableFunc = async () => {
     try {
       const res = await ShopServerEnableActions(Shop._id);
       if (res.status === 200 || res.status === 201) {
@@ -85,8 +115,13 @@ function ShopCard({ Shop, editfunction ,editable ,followable}) {
         <UserPlus />
       </div>
       <div className="absolute top-2 right-2 z-20 p-2">
-        <div className={editable?"flex items-center gap-2 child-hover:text-orange-300":"hidden"}>
-        
+        <div
+          className={
+            editable
+              ? "flex items-center gap-2 child-hover:text-orange-300"
+              : "hidden"
+          }
+        >
           {/* ///////////////////////////delete icone////////////////////////////////// */}
           <svg
             width="34"
@@ -142,23 +177,29 @@ function ShopCard({ Shop, editfunction ,editable ,followable}) {
             </svg>
           )}
         </div>
-          {/* ///////////////////////////follow icone////////////////////////////////// */}
-          <div className={followable ? "flexCenter flex-row text-center px-2 border-black border rounded-md  hover:border-orange-300 hover:text-orange-300":"hidden"}>
-          <p className="pl-2">دنبال کردن</p>
-          <svg
-            width="34"
-            height="34"
-            className=" cursor-pointer "
-            aria-label="delete"
-            onClick={followFunc}
-            >
-            <use href="#UserPlus"></use>
-          </svg> 
-            </div>
+        {/* ///////////////////////////follow icone////////////////////////////////// */}
+        {followable && (
+  <div
+    onClick={isFollowing ? unfollowFunc : followFunc}
+    className={`flexCenter bg-opacity-60 cursor-pointer flex-row text-center px-2  rounded-md ${
+      isFollowing ? "bg-gray-500 border-gray-500" : "bg-blue-500 border-blue-500"
+    } hover:border-orange-300 hover:text-orange-300`}
+  >
+    <p className="pl-2">{isFollowing ? "دنبال نکردن" : "دنبال کردن"}</p>
+    <svg
+      width="34"
+      height="34"
+      className="cursor-pointer"
+      aria-label={isFollowing ? "unfollow" : "follow"}
+    >
+      <use href="#UserPlus"></use>
+    </svg>
+  </div>
+)}
+
       </div>
       <div
         className="absolute bottom-2 left-2 z-20 p-2"
-        // style={{ color: Shop.BannerTextColor }}
       >
         <div
           className="bg-white
@@ -172,7 +213,11 @@ function ShopCard({ Shop, editfunction ,editable ,followable}) {
               width={30}
               height={30}
               quality={30}
+              style={{ objectFit: "cover" }}  // استفاده از objectFit برای تنظیم تناسب تصویر
+            
             />
+
+
             <span className="font-MorabbaBold text-sm md:text-xl">
               {Shop.ShopName}
             </span>

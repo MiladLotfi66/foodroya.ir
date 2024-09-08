@@ -15,6 +15,12 @@ const schema = new Schema(
       minlength: 5,   // حداقل 5 کاراکتر
       maxlength: 255   // حداکثر 30 کاراکتر
     },
+    followers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Users', 
+      },
+    ],
 
     ShopSmallDiscription: {
       type: String,

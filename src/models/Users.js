@@ -21,6 +21,15 @@ const UserSchema = new Schema(
       default: "user",
       required: true,
     },
+
+    following: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'shops',  // فرض می‌کنیم که مدل فروشگاه شما 'Shop' نام دارد
+      },
+    ],
+
+
     refreshToken:String,
   },
   { timestamps: true } );

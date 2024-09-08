@@ -7,33 +7,38 @@ import path from "path";
 import ShopSchema from "@/utils/yupSchemas/ShopSchema";
 import { writeFile, unlink } from "fs/promises";
 import sharp from "sharp";
+import Users from "@/models/Users";
 
+const simplifyFollowers = (followers) =>
+  followers.map((follower) => follower.toString());
 
-export async function isUniqShop(uniqueIdentifier){
+export async function isUniqShop(uniqueIdentifier) {
   await connectDB();
   try {
     const shop = await shops.findOne({ ShopUniqueName: uniqueIdentifier });
     const isUnique = !shop;
-    console.log(shop,isUnique,uniqueIdentifier);
+    console.log(shop, isUnique, uniqueIdentifier);
     if (isUnique) {
-      return { message:"این نام فروشگاه تکراری نمی باشد", status: 200 };
-    }else{
+      return { message: "این نام فروشگاه تکراری نمی باشد", status: 200 };
+    } else {
       return { error: "این نام فروشگاه تکراری نمی باشد", status: 400 };
     }
-
   } catch (error) {
     return { error: error.message, status: 500 };
-
   }
-
 }
 const processAndSaveImage = async (image, oldUrl) => {
   if (image && typeof image !== "string") {
     const buffer = Buffer.from(await image.arrayBuffer());
     const now = process.hrtime.bigint(); // استفاده از میکروثانیه‌ها
     const fileName = `${now}.webp`;
-    const filePath = path.join(process.cwd(), "/public/Uploads/Shops/" + fileName);
-    const optimizedBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+    const filePath = path.join(
+      process.cwd(),
+      "/public/Uploads/Shops/" + fileName
+    );
+    const optimizedBuffer = await sharp(buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
     await writeFile(filePath, optimizedBuffer);
 
     if (oldUrl) {
@@ -62,12 +67,9 @@ const hasUserAccess = async (userId) => {
     const userDataId = userData.id.trim();
     const userIdStr = userId.toString().trim();
 
-
-
     if (userDataId === userIdStr) {
       return true;
     } else {
-
       return false;
     }
   } catch (error) {
@@ -75,7 +77,6 @@ const hasUserAccess = async (userId) => {
     return false; // در صورت وقوع خطا، false را برگردانید
   }
 };
-
 
 export async function authenticateUser() {
   try {
@@ -106,7 +107,36 @@ export async function authenticateUser() {
 
     return session.user;
   } catch (error) {
-    console.error("Error in authenticateUser:", err);
+    console.error("Error in authenticateUser:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
+export async function GetUserbyUserId(userId) {
+  try {
+    // اتصال به پایگاه داده
+    await connectDB();
+
+    // پیدا کردن کاربر و دریافت لیست شناسه‌های فروشگاه‌های فالو شده
+    const user = await Users.findById(userId).lean();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // تبدیل شناسه‌ها و مقادیر پیچیده به فرمت‌های قابل سریالایز
+    const plainUser = {
+      ...user,
+      _id: user._id.toString(),
+      following: user.following.map((shop) => shop._id.toString()),
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
+
+    // برگرداندن اطلاعات کاربر
+    return { user: plainUser, status: 200 };
+  } catch (error) {
+    console.error("Error fetching user:", error);
     return { error: error.message, status: 500 };
   }
 }
@@ -130,16 +160,13 @@ export async function EditShop(ShopData) {
     if (!Shop) {
       console.error("Shop not found");
       throw new Error("فروشگاهی با این آی‌دی یافت نشد");
-
     }
 
-    if (! await hasUserAccess(Shop.CreatedBy)) {
+    if (!(await hasUserAccess(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
-
     }
     const validatedData = await ShopSchema.validate(
       {
-      
         ShopUniqueName: ShopData.get("ShopUniqueName"),
         ShopName: ShopData.get("ShopName"),
         ShopSmallDiscription: ShopData.get("ShopSmallDiscription"),
@@ -175,8 +202,14 @@ export async function EditShop(ShopData) {
 
     const LogoUrl = await processAndSaveImage(Logo, Shop.LogoUrl);
     const TextLogoUrl = await processAndSaveImage(TextLogo, Shop.TextLogoUrl);
-    const BackGroundShopUrl = await processAndSaveImage(BackGroundShop, Shop.BackGroundShopUrl);
-    const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel, Shop.BackGroundpanelUrl);
+    const BackGroundShopUrl = await processAndSaveImage(
+      BackGroundShop,
+      Shop.BackGroundShopUrl
+    );
+    const BackGroundpanelUrl = await processAndSaveImage(
+      BackGroundpanel,
+      Shop.BackGroundpanelUrl
+    );
 
     const updatedShop = {
       ShopUniqueName,
@@ -194,9 +227,10 @@ export async function EditShop(ShopData) {
       LastEditedBy: userData.id,
     };
 
-    const updatedShopDoc = await shops.findByIdAndUpdate(ShopID, updatedShop, { new: true });
+    const updatedShopDoc = await shops.findByIdAndUpdate(ShopID, updatedShop, {
+      new: true,
+    });
     return { message: "ویرایش فروشگاه با موفقیت انجام شد", status: 200 };
-
   } catch (error) {
     return { error: error.message, status: 500 };
   }
@@ -261,61 +295,99 @@ export async function AddShopServerAction(ShopData) {
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
     });
-console.log("ShopUniqueName",ShopUniqueName);
-console.log(newShop);
+    console.log("ShopUniqueName", ShopUniqueName);
+    console.log(newShop);
     await newShop.save();
 
     return { message: "فروشگاه با موفقیت ثبت شد", status: 201 };
   } catch (error) {
     console.error("Error in addShop action:", error);
     return { error: error.message, status: 500 };
-
   }
-}export async function followShopServerAction(ShopData) {
+}
+export async function followShopServerAction(ShopID) {
   try {
     await connectDB();
 
-    // استخراج توکن JWT
+    // اعتبارسنجی کاربر
     const userData = await authenticateUser();
-
     if (!userData) {
       throw new Error("User data not found");
     }
-   
 
-    return { message: "فروشگاه با موفقیت دنبال شد", status: 201 };
+    // پیدا کردن فروشگاه
+    const Shop = await shops.findById(ShopID);
+    if (!Shop) {
+      throw new Error("فروشگاهی با این آی‌دی یافت نشد");
+    }
+
+    // بررسی اینکه آیا کاربر قبلاً فروشگاه را دنبال کرده است یا خیر
+    const userAlreadyFollows = Shop.followers.includes(userData.id);
+    if (userAlreadyFollows) {
+      return {
+        message: "شما قبلاً این فروشگاه را دنبال کرده‌اید",
+        status: 400,
+      };
+    }
+
+    // اضافه کردن کاربر به فالوورهای فروشگاه
+    Shop.followers.push(userData.id);
+    await Shop.save();
+
+    // اضافه کردن فروشگاه به فالوورهای کاربر
+    const user = await Users.findById(userData.id);
+    user.following.push(ShopID);
+    await user.save();
+
+    return { message: "فروشگاه با موفقیت دنبال شد", status: 200 };
   } catch (error) {
-    console.error("Error in addShop action:", error);
+    console.error("Error in followShopServerAction:", error);
     return { error: error.message, status: 500 };
-
   }
 }
 
-async function GetUserShops() {
+export async function unfollowShopServerAction(ShopID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
 
+    // اعتبارسنجی کاربر
+    const userData = await authenticateUser();
     if (!userData) {
       throw new Error("User data not found");
     }
 
-    const Shops = await shops.find({ CreatedBy: userData.id }).lean();
+    // پیدا کردن فروشگاه
+    const Shop = await shops.findById(ShopID);
+    if (!Shop) {
+      throw new Error("فروشگاهی با این آی‌دی یافت نشد");
+    }
 
-    const plainShops = Shops.map((Shop) => ({
-      ...Shop,
-      _id: Shop._id.toString(),
-      CreatedBy: Shop.CreatedBy.toString(),
-      LastEditedBy: Shop.LastEditedBy.toString(),
-      createdAt: Shop.createdAt.toISOString(),
-      updatedAt: Shop.updatedAt.toISOString(),
-    }));
+    // بررسی اینکه آیا کاربر فروشگاه را دنبال کرده است یا خیر
+    const userFollowsShop = Shop.followers.includes(userData.id);
+    if (!userFollowsShop) {
+      return { message: "شما این فروشگاه را دنبال نکرده‌اید", status: 400 };
+    }
 
-    return { Shops: plainShops, status: 200 };
+    // حذف کاربر از لیست فالوورهای فروشگاه
+    Shop.followers = Shop.followers.filter(
+      (followerId) => followerId.toString() !== userData.id
+    );
+    await Shop.save();
+
+    // حذف فروشگاه از لیست فروشگاه‌های دنبال‌شده کاربر
+    const user = await Users.findById(userData.id);
+    user.following = user.following.filter(
+      (followingShopId) => followingShopId.toString() !== ShopID
+    );
+    await user.save();
+
+    return {
+      message: "شما با موفقیت این فروشگاه را آنفالو کردید",
+      status: 200,
+    };
   } catch (error) {
-    console.error("خطا در دریافت فروشگاه‌ها:", error);
+    console.error("Error in unfollowShopServerAction:", error);
     return { error: error.message, status: 500 };
-
   }
 }
 
@@ -328,12 +400,10 @@ async function ShopServerEnableActions(ShopID) {
 
     if (!Shop) {
       throw new Error("فروشگاهی با این آی‌دی یافت نشد");
-
     }
 
-    if (! await hasUserAccess(Shop.CreatedBy)) {
+    if (!(await hasUserAccess(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
-
     }
 
     Shop.ShopStatus = true;
@@ -347,7 +417,6 @@ async function ShopServerEnableActions(ShopID) {
   } catch (error) {
     console.error("خطا در تغییر وضعیت فروشگاه:", error);
     return { error: error.message, status: 500 };
-
   }
 }
 
@@ -358,14 +427,12 @@ async function ShopServerDisableActions(ShopID) {
 
     const Shop = await shops.findById(ShopID);
 
-
     if (!Shop) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    if (! await hasUserAccess(Shop.CreatedBy)) {
+    if (!(await hasUserAccess(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
-
     }
 
     Shop.ShopStatus = false;
@@ -379,7 +446,6 @@ async function ShopServerDisableActions(ShopID) {
   } catch (error) {
     console.error("خطا در تغییر وضعیت فروشگاه:", error);
     return { error: error.message, status: 500 };
-
   }
 }
 
@@ -396,6 +462,7 @@ async function GetAllShops() {
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
       updatedAt: Shop.updatedAt.toISOString(),
+      followers: simplifyFollowers(Shop.followers),
     }));
 
     return { Shops: plainShops, status: 200 };
@@ -418,6 +485,7 @@ async function GetAllEnableShops() {
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
       updatedAt: Shop.updatedAt.toISOString(),
+      followers: simplifyFollowers(Shop.followers),
     }));
 
     return { Shops: plainShops, status: 200 };
@@ -438,9 +506,8 @@ async function DeleteShops(ShopID) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    if (! await hasUserAccess(Shop.CreatedBy)) {
+    if (!(await hasUserAccess(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
-
     }
 
     const LogoUrl = path.join(process.cwd(), "public", Shop.LogoUrl);
@@ -503,5 +570,4 @@ export {
   ShopServerDisableActions,
   GetAllShops,
   GetAllEnableShops,
-  GetUserShops,
 };
