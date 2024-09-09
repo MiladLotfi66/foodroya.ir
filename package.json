@@ -2,10 +2,11 @@
   "name": "foodroya",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
-    "dev": "concurrently \"next dev \" \"npx tailwindcss -i ./src/styles/input.css -o ./src/styles/app.css --watch\"",
+    "dev": "concurrently \"node server.mjs \" \"npx tailwindcss -i ./src/styles/input.css -o ./src/styles/app.css --watch\"",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "next-auth": "^4.24.7",
     "next-themes": "^0.2.1",
     "nodemailer": "^6.9.13",
+    "nodemon": "^3.1.4",
     "react": "^18.3.1",
     "react-devtools": "^5.0.0",
     "react-dom": "^18.3.1",
@@ -38,6 +40,8 @@
     "request": "^2.88.2",
     "sharp": "^0.30.4",
     "slick-carousel": "^1.8.1",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
     "swiper": "^11.0.7",
     "yup": "^1.4.0"
   },

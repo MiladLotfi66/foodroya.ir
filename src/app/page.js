@@ -1,17 +1,44 @@
-import NewProduct from "@/module/home/NewProduct";
-import Banner2 from "@/module/home/Banner2";
-import CategoryBanner from "@/module/home/CategoryBanner";
-import ProductCategori from "@/module/home/ProductCategori";
-import BestSalling from "@/module/home/BestSalling";
+"use client";
+
+import { useEffect, useState } from "react";
+import { socket } from "./socket";
 
 export default function Home() {
+  const [isConnected, setIsConnected] = useState(false);
+  const [transport, setTransport] = useState("N/A");
+
+  useEffect(() => {
+    if (socket.connected) {
+      onConnect();
+    }
+
+    function onConnect() {
+      setIsConnected(true);
+      setTransport(socket.io.engine.transport.name);
+
+      socket.io.engine.on("upgrade", (transport) => {
+        setTransport(transport.name);
+      });
+    }
+
+    function onDisconnect() {
+      setIsConnected(false);
+      setTransport("N/A");
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, []);
+
   return (
-    <>
-      <Banner2 />
-      <NewProduct />
-      <CategoryBanner />
-      <ProductCategori />
-      <BestSalling />
-    </>
+    <div>
+      <p>Status: { isConnected ? "connected" : "disconnected" }</p>
+      <p>Transport: { transport }</p>
+    </div>
   );
 }
