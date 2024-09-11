@@ -1,3 +1,4 @@
+
 import { dana } from "@/utils/fonts";
 import "@/styles/app.css";
 import { ThemeProviders } from "@/providers/ThemeProviders";
@@ -8,6 +9,8 @@ import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
+
+
 
 const APP_NAME = "فود رویا";
 const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
@@ -57,6 +60,7 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+
   return (
     <html
       lang="fa"
@@ -74,6 +78,7 @@ export default function RootLayout({ children }) {
               <MobileMenu />
               <AosInit/>
               {children}
+
             </Providers>
           </ThemeProviders>
         </NextAuthProvider>

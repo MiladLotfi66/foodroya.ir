@@ -1,4 +1,5 @@
 "use client";
+import io from "socket.io-client";
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
@@ -17,25 +18,27 @@ import {
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 
+
 function ShopCard({ Shop, editfunction, editable, followable, user }) {
-  
-  
   const [isFollowing, setIsFollowing] = useState(false);
 
-  // بررسی وضعیت فالو
+   
+
   useEffect(() => {
+    // بررسی وضعیت فالو در زمان بارگذاری
     if (user && Shop) {
       const followedShop = user.following.includes(Shop._id);
       setIsFollowing(followedShop);
     }
   }, [user, Shop]);
-  const followFunc = async () => {
 
+  const followFunc = async () => {
     try {
-      const res = await followShopServerAction(Shop._id); // استفاده از سرور اکشن جدید
+      const res = await followShopServerAction(Shop._id);
       if (res.status === 200 || res.status === 201) {
         toast.success("فروشگاه با موفقیت دنبال شد");
-        window.location.reload();
+        setIsFollowing(true);
+
       } else {
         toast.error(res.error);
       }
@@ -50,11 +53,13 @@ function ShopCard({ Shop, editfunction, editable, followable, user }) {
       if (res.status === 200 || res.status === 201) {
         toast.success("فروشگاه با موفقیت از دنبال‌شدگان حذف شد");
         setIsFollowing(false);
+
+        // socket.emit("unfollowShop", Shop._id); // ارسال رویداد لغو فالو به سرور
       } else {
         toast.error(res.error);
       }
     } catch (error) {
-      console.error("خطا در حذف فالو:", error);
+      console.error("خطا در لغو دنبال کردن فروشگاه:", error);
     }
   };
 

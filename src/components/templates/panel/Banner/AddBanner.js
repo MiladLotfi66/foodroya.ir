@@ -9,8 +9,9 @@ import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from 'next/navigation';
+import { AddBannerAction,EditBannerAction } from "@/components/signinAndLogin/Actions/BannerServerActions";
 
-function AddBanner({ banner = {}, onClose }) {
+function AddBanner({ banner = {}, onClose ,refreshBanners}) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(banner?.imageUrl || null);
   const [isMounted, setIsMounted] = useState(false);
@@ -84,27 +85,37 @@ function AddBanner({ banner = {}, onClose }) {
         formDataObj.append("id", banner._id);
       }
 
-      const res = await fetch(
-        `/api/panel/banner${banner?._id ? `/${banner._id}` : ""}`,
-        {
-          method: banner?._id ? "PATCH" : "PUT",
-          body: formDataObj,
-        }
-      );
-
-      const result = await res.json();
-      if (res.ok) {
-        toast.success("بنر با موفقیت ثبت شد");
+      let result;
+      if (banner?._id) {
+        // اگر بنر برای ویرایش است
+      
+        result = await  EditBannerAction(formDataObj,shopUniqName);
+      } else {
+        // اگر بنر جدید باشد
+        result = await AddBannerAction(formDataObj);
+      }
+      
+      if (result.status === 201) {
+       await refreshBanners();
+        const successMessage = banner && banner.id ? "بنر با موفقیت ویرایش شد!" : "بنر با موفقیت ایجاد شد!";
+        toast.success(successMessage);
+        
         setSelectedImage(null);
         reset();
+        onClose();
       } else {
-        toast.error(result.message || "خطایی رخ داده است");
+        const errorMessage = banner && banner.id ? "خطایی در ویرایش بنر رخ داد." : "خطایی در ایجاد بنر رخ داد.";
+        toast.error(errorMessage);
       }
-    } catch (error) {
-      toast.error(error.message || "خطایی در ارسال درخواست به سرور رخ داد");
-    }
-    setIsSubmit(false);
-  };
+      } catch (error) {
+      console.error("Error handling banner:", error);
+      toast.error("مشکلی در پردازش بنر وجود دارد.");
+      } finally {
+      setIsSubmit(false);
+      }
+      };
+      
+  
 
   const formsubmitting = async (formData) => {
     await handleFormSubmit(formData);
@@ -303,6 +314,7 @@ function AddBanner({ banner = {}, onClose }) {
                 type="color"
                 name="BannerTextColor"
                 id="BannerTextColor"
+                defaultValue={"#000000"}
                 {...register("BannerTextColor")}
               />
               <span className="hidden md:inline-block">انتخاب رنگ متن</span>
@@ -335,3 +347,6 @@ function AddBanner({ banner = {}, onClose }) {
 }
 
 export default AddBanner;
+
+
+

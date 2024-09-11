@@ -4,6 +4,8 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
 import { GetAllBanners } from "@/components/signinAndLogin/Actions/BannerServerActions";
 import AddBanner from "./AddBanner";
+import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { useParams } from 'next/navigation';
 
 
 function BannerManage() {
@@ -11,18 +13,42 @@ function BannerManage() {
   const [isOpenAddBanner, setIsOpenAddBanner] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [selectedBannerFile, setSelectedBannerFile] = useState(null); // افزودن استیت جدید
+  const params = useParams();
+  const { shopUniqName } = params;
+
+ 
 
   useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const response = await GetAllBanners();
-        setBanners(response.banners);
-      } catch (error) {
-        console.error("Error fetching banners:", error);
-      }
-    };
-    fetchBanners();
+    refreshBanners();
   }, []);
+
+  const refreshBanners = async () => {
+    
+    try {
+      if (!shopUniqName) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+  
+      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
+  
+      if (!ShopId) {
+        console.error("فروشگاهی با این نام یافت نشد.");
+        return;
+      }
+      
+      const response = await GetAllBanners(ShopId.ShopID);
+      
+      setBanners(response.banners);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  };
+
+  const handleDeleteBanner = (bannerId) => {
+    setBanners(banners.filter(banner => banner._id !== bannerId)); // حذف بنر از لیست
+  };
+
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -50,42 +76,7 @@ function BannerManage() {
     setSelectedBannerFile(null);
   };
 
-  const handleSubmit = async (formData, bannerId) => {
-    console.log("addbanner handle");
-    
-    try {
-      const formDataObj = new FormData();
-      formDataObj.append("BannerImage", formData.BannerImage);
-      formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
-      formDataObj.append("BannersmallDiscription",formData.BannersmallDiscription);
-      formDataObj.append("BannerDiscription", formData.BannerDiscription);
-      formDataObj.append("BannerStep", formData.BannerStep);
-      formDataObj.append("BannerTextColor", formData.BannerTextColor);
-      formDataObj.append("BannerStatus", formData.BannerStatus);
-      formDataObj.append("BannerLink", formData.BannerLink);
-
-      const res = await fetch(
-        `/api/panel/banner${bannerId ? `/${bannerId}` : ""}`,
-        {
-          method: bannerId ? "PATCH" : "PUT",
-          body: formDataObj,
-        }
-      );
-
-      const result = await res.json();
-      if (res.ok) {
-        toast.success("بنر با موفقیت ثبت شد");
-        setSelectedBanner(null);
-        setSelectedBannerFile(null); // ریست کردن فایل بنر پس از ثبت موفقیت‌آمیز
-        setIsOpenAddBanner(false);
-        // Refresh banners list after successful submission
-      } else {
-        toast.error(result.message || "خطایی رخ داده است");
-      }
-    } catch (error) {
-      toast.error("خطایی در ارسال درخواست به سرور رخ داد");
-    }
-  };
+ 
 
   return (
     <FormTemplate>
@@ -101,8 +92,9 @@ function BannerManage() {
             <AddBanner
               banner={selectedBanner}
               bannerFile={selectedBannerFile}
-              onSubmit={handleSubmit}
               onClose={handleCloseModal}
+              refreshBanners={refreshBanners} // اضافه کردن این خط
+
             />
           </div>
         </div>
@@ -128,7 +120,9 @@ function BannerManage() {
               key={banner._id}
               banner={banner}
               editfunction={() => handleEditClick(banner)}
-            />
+              onDelete={() => handleDeleteBanner(banner._id)} // پاس دادن تابع حذف
+
+              />
           ))}
         </div>
       </div>

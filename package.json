@@ -2,9 +2,8 @@
   "name": "foodroya",
   "version": "0.1.0",
   "private": true,
-
   "scripts": {
-    "dev": "concurrently \"node server.mjs \" \"npx tailwindcss -i ./src/styles/input.css -o ./src/styles/app.css --watch\"",
+    "dev": "concurrently \"next dev \" \"npx tailwindcss -i ./src/styles/input.css -o ./src/styles/app.css --watch\"",
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint"
@@ -24,6 +23,7 @@
     "jose": "^5.6.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.2.1",
+    "multer": "^1.4.5-lts.1",
     "next": "^14.2.5",
     "next-auth": "^4.24.7",
     "next-themes": "^0.2.1",

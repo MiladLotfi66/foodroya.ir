@@ -8,6 +8,7 @@ import ShopSchema from "@/utils/yupSchemas/ShopSchema";
 import { writeFile, unlink } from "fs/promises";
 import sharp from "sharp";
 import Users from "@/models/Users";
+import { revalidatePath } from "next/cache";
 
 const simplifyFollowers = (followers) =>
   followers.map((follower) => follower.toString());
@@ -305,6 +306,7 @@ export async function AddShopServerAction(ShopData) {
     return { error: error.message, status: 500 };
   }
 }
+
 export async function followShopServerAction(ShopID) {
   try {
     await connectDB();
@@ -338,6 +340,8 @@ export async function followShopServerAction(ShopID) {
     const user = await Users.findById(userData.id);
     user.following.push(ShopID);
     await user.save();
+    revalidatePath("/Shop/allShop")
+
 
     return { message: "فروشگاه با موفقیت دنبال شد", status: 200 };
   } catch (error) {
@@ -345,6 +349,7 @@ export async function followShopServerAction(ShopID) {
     return { error: error.message, status: 500 };
   }
 }
+
 
 export async function unfollowShopServerAction(ShopID) {
   try {
@@ -380,6 +385,8 @@ export async function unfollowShopServerAction(ShopID) {
       (followingShopId) => followingShopId.toString() !== ShopID
     );
     await user.save();
+    revalidatePath("/Shop/allShop")
+
 
     return {
       message: "شما با موفقیت این فروشگاه را آنفالو کردید",
@@ -563,7 +570,6 @@ async function DeleteShops(ShopID) {
     return { error: error.message, status: 500 };
   }
 }
-
 
 export {
   DeleteShops,

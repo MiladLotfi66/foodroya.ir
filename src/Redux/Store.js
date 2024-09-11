@@ -1,15 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import mobileMenuReducer from "./features/mobileMenu/mobileMenuSlice"
-import { DevTool } from "@hookform/devtools";
+import mobileMenuReducer from "./features/mobileMenu/mobileMenuSlice";
 
 const store = configureStore({
     reducer: {
         mobileMenu: mobileMenuReducer,
-        devtools:false
     },
+    devTools: false, // غیرفعال کردن DevTools
 });
 
-export default store
-
-
-
+export default store;

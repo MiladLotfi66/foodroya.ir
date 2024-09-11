@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState , useEffect} from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
 import ShareSvg from "@/module/svgs/ShareSvg";
@@ -11,11 +11,19 @@ import {
   DeleteBanners,
 } from "@/components/signinAndLogin/Actions/BannerServerActions";
 
-function BannerCard({ banner, editfunction }) {
+function BannerCard({ banner: initialBanner, editfunction ,onDelete}) {
+  const [banner, setBanner] = useState(initialBanner); // مدیریت وضعیت بنر
+  
+    useEffect(() => {
+      // هر بار که props بنر تغییر می‌کند، state محلی به‌روزرسانی می‌شود
+      setBanner(initialBanner);
+    }, [initialBanner]);
+
+
   const enableFunc = async () => {
     try {
       await BannerServerEnableActions(banner._id);
-      window.location.reload();
+      setBanner({ ...banner, BannerStatus: true }); // بروزرسانی وضعیت بنر بدون رفرش
     } catch (error) {
       console.error("خطا در فعال‌سازی بنر:", error);
     }
@@ -24,7 +32,7 @@ function BannerCard({ banner, editfunction }) {
   const disableFunc = async () => {
     try {
       await BannerServerDisableActions(banner._id);
-      window.location.reload();
+      setBanner({ ...banner, BannerStatus: false }); // بروزرسانی وضعیت بنر بدون رفرش
     } catch (error) {
       console.error("خطا در غیرفعال‌سازی بنر:", error);
     }
@@ -33,7 +41,7 @@ function BannerCard({ banner, editfunction }) {
   const deleteFunc = async () => {
     try {
       await DeleteBanners(banner._id);
-      window.location.reload();
+      onDelete(); // حذف بنر از لیست
     } catch (error) {
       console.error("خطا در حذف بنر:", error);
     }

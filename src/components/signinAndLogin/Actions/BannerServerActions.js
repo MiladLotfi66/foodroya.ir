@@ -3,25 +3,21 @@
 import Banner from "@/models/Banner";
 import connectDB from "@/utils/connectToDB";
 import fs from "fs";
+import multer from 'multer';
 import path from "path";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { writeFile, unlink } from "fs/promises";
 import sharp from "sharp";
 import { headers } from "next/headers";
 import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
+import BannerSchema from "@/utils/yupSchemas/BannerSchima";
 
+import { revalidatePath } from 'next/cache';
 
 
 async function BannerServerEnableActions(BannerID) {
   try {
     await connectDB(); // اتصال به دیتابیس
-    // دریافت آی‌دی فروشگاه از طریق نام یکتای فروشگاه
-    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
-    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
-      throw new Error(shopResponse.error || "shopId is required");
-    }
-    const ShopId = shopResponse.ShopID;
-
     // یافتن بنر با استفاده از BannerID
     const banner = await Banner.findById(BannerID);
 
@@ -70,12 +66,13 @@ async function BannerServerDisableActions(BannerID) {
     throw new Error("خطای سرور، تغییر وضعیت بنر انجام نشد");
   }
 }
-async function GetAllBanners(shopUniqName) {
+async function GetAllBanners(ShopId) {
+  
   try {
     await connectDB();
 
     // واکشی تمام اطلاعات بنرها از دیتابیس
-    const banners = await Banner.find({}).lean(); // lean() برای بازگشتن به شیء JS ساده بدون مدیریت مدل
+    const banners = await Banner.find({ShopId:ShopId}).lean(); // lean() برای بازگشتن به شیء JS ساده بدون مدیریت مدل
 
     // تبدیل اشیاء به plain objects
     const plainBanners = banners.map((banner) => ({
@@ -83,6 +80,7 @@ async function GetAllBanners(shopUniqName) {
       _id: banner._id.toString(), // تبدیل ObjectId به رشته
       createdAt: banner.createdAt.toISOString(), // تبدیل Date به رشته
       updatedAt: banner.updatedAt.toISOString(), // تبدیل Date به رشته
+      ShopId: banner.ShopId.toString(), // تبدیل Date به رشته
     }));
 
     return { banners: plainBanners, status: 200 };
@@ -121,7 +119,7 @@ export async function GetAllEnableBanners(shopUniqName) {
     throw new Error("خطای سرور، دریافت بنرها انجام نشد");
   }
 }
-``
+
 async function DeleteBanners(BannerID) {
   try {
     await connectDB();
@@ -142,6 +140,7 @@ async function DeleteBanners(BannerID) {
     }
 
     // حذف فایل تصویر بنر
+    // await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
     fs.unlink(imagePath, (err) => {
       if (err) {
         console.error("خطا در حذف فایل تصویر:", err);
@@ -156,68 +155,166 @@ async function DeleteBanners(BannerID) {
   }
 }
 
-async function EditBanner(bannerID, bannerData) {
+function formDataToObject(formData) {
+  const object = {};
+  formData.forEach((value, key) => {
+    object[key] = value;
+  });
+  return object;
+}
+
+const processAndSaveImage = async (image) => {
+  if (image && typeof image !== "string") {
+    const buffer = Buffer.from(await image.arrayBuffer());
+    const now = process.hrtime.bigint(); 
+    const fileName = `${now}.webp`;
+    const filePath = path.join(process.cwd(), "public/Uploads/Banners/" + fileName);
+    const optimizedBuffer = await sharp(buffer)
+      .webp({ quality: 80 })
+      .toBuffer();
+    await writeFile(filePath, optimizedBuffer);
+    return "/Uploads/Banners/" + fileName;
+  }
+  return image;
+};
+export async function AddBannerAction(data) {
+
   try {
-    await connectDB(); // اتصال به دیتابیس
+    await connectDB();
 
-    const validatedData = await BannerSchima.validate(bannerData, { abortEarly: false });
+    // تبدیل FormData به آبجکت ساده ساخته شده
+    const formDataObject = formDataToObject(data);
 
-    const banner = await Banner.findById(bannerID);
+    const shopUniqName = formDataObject.shopUniqName;
 
-    if (!banner) {
-      throw new Error("بنر مورد نظر یافت نشد");
+    if (!shopUniqName) {
+      throw new Error("shopUniqName is required");
     }
 
-    // به روزرسانی بنر با داده‌های جدید
-    Object.assign(banner, validatedData);
-    await banner.save();
+    // دریافت آی‌دی فروشگاه
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required");
+    }
+    const ShopId = shopResponse.ShopID;
 
+    // اعتبارسنجی داده‌های ورودی
+    const validatedData = await BannerSchima.validate(formDataObject, {
+      abortEarly: false,
+    });
 
-    return { message: "بنر با موفقیت ویرایش شد", status: 200 };
-  } catch (error) {
-    console.error("خطا در ویرایش بنر:", error);
-    throw new Error("خطای سرور، ویرایش بنر انجام نشد");
-  }
-}
+    const {
+      BannerBigTitle,
+      BannersmallDiscription,
+      BannerDiscription,
+      BannerStep,
+      BannerImage,
+      BannerTextColor,
+      BannerStatus,
+      BannerLink,
+    } = validatedData;
 
-async function AddBanner({bannerData}) {
-    console.log("bannerData-->",bannerData);
-  try {
-    await connectDB(); // اتصال به دیتابیس
+    
+    const imageUrl = await processAndSaveImage(BannerImage);
 
-    // اعتبارسنجی داده‌ها با استفاده از yup
-    const validatedData = await BannerSchima.validate(bannerData, { abortEarly: false });
+    // ایجاد بنر جدید با آی‌دی فروشگاه
+    const newBanner = new Banner({
+      BannerBigTitle,
+      BannersmallDiscription,
+      BannerDiscription,
+      BannerStep,
+      imageUrl,
+      BannerTextColor,
+      BannerStatus,
+      BannerLink,
+      ShopId, // اضافه کردن آی‌دی فروشگاه
+    });
 
-    const newBanner = new Banner(validatedData);
     await newBanner.save();
 
-    return { message: "بنر با موفقیت اضافه شد", status: 201 };
+    return { status: 201, message: "آپلود فایل با موفقیت انجام شد" };
   } catch (error) {
-    console.error("خطا در افزودن بنر:", error);
-    throw new Error("خطای سرور، افزودن بنر انجام نشد");
+    console.error("Error in AddBannerAction:", error);
+    return { status: 500, message: error.message };
   }
 }
 
-async function AddNewBanner() {
-  const headersList = headers();
-  const referer = headersList.get('referer')
 
-  console.log(`Requested URL:`);
+export async function EditBannerAction(data,shopUniqName) {
+  try {
+    await connectDB();
+    const formDataObject = formDataToObject(data);
 
-console.log("referer",referer);
+    const bannerId = formDataObject.id;
 
-headersList.forEach((value, key) => {
-  console.log(`${key}: ${value}`);
-});
- 
-if (referer) {
-  const url = new URL(referer);
-  const params = new URLSearchParams(url.search);
+    if (!bannerId) {
+      console.error("Banner ID is missing");
+      return { status: 400, message: "آی‌دی بنر ارسال نشده است" };
+    }
 
-    // استخراج مقدار shopUniqName از پارامترها
-    const shopUniqName = params.get('shopUniqName');
-    console.log('shopUniqName:', shopUniqName);
+    const banner = await Banner.findById(bannerId);
 
+    if (!banner) {
+      console.error("Banner not found");
+      return { status: 404, message: "بنری با این آی‌دی یافت نشد" };
+    }
+
+    const validatedData = await BannerSchema.validate(formDataObject, {
+      abortEarly: false,
+    });
+
+    const {
+      BannerBigTitle,
+      BannersmallDiscription,
+      BannerDiscription,
+      BannerStep,
+      BannerTextColor,
+      BannerStatus,
+      BannerLink,
+      BannerImage,
+    } = validatedData;
+
+   let imageUrl
+    if (typeof(BannerImage)!=="string") {
+      
+      console.log("BannerImage---->>>>>>>",BannerImage);
+   imageUrl = await processAndSaveImage(BannerImage);
+}else {
+   imageUrl =BannerImage
+}
+
+    const updatedBanner = {
+      BannerBigTitle,
+      BannersmallDiscription,
+      BannerDiscription,
+      BannerStep,
+      BannerTextColor,
+      BannerStatus,
+      BannerLink,
+      imageUrl,
+    };
+
+    const updatedBannerDoc = await Banner.findByIdAndUpdate(
+      bannerId,
+      updatedBanner,
+      { new: true }
+    );
+
+    if (BannerImage && formDataObject.BannerImage) {
+      try {
+        await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
+          } catch (unlinkError) {
+        console.error("Error deleting old image", unlinkError);
+      }
+    }
+
+    revalidatePath(`/${shopUniqName}/panel/banners`);
+
+    return { status: 201, message: "ویرایش بنر با موفقیت انجام شد" };
+
+  } catch (error) {
+    console.error("Error in EditBannerAction:", error);
+    return { status: 500, message: error.message };
   }
 }
 
@@ -227,9 +324,7 @@ export {
   BannerServerEnableActions,
   BannerServerDisableActions,
   GetAllBanners,
-  EditBanner,
-  AddBanner,
-  AddNewBanner,
+  
 };
 
 
