@@ -12,9 +12,6 @@ import { headers } from "next/headers";
 import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
 import BannerSchema from "@/utils/yupSchemas/BannerSchima";
 
-import { revalidatePath } from 'next/cache';
-
-
 async function BannerServerEnableActions(BannerID) {
   try {
     await connectDB(); // اتصال به دیتابیس
@@ -89,7 +86,6 @@ async function GetAllBanners(ShopId) {
     throw new Error("خطای سرور، تغییر وضعیت بنر انجام نشد");
   }
 }
-
 
 export async function GetAllEnableBanners(shopUniqName) {
   try {
@@ -277,8 +273,14 @@ export async function EditBannerAction(data,shopUniqName) {
    let imageUrl
     if (typeof(BannerImage)!=="string") {
       
-      console.log("BannerImage---->>>>>>>",BannerImage);
    imageUrl = await processAndSaveImage(BannerImage);
+   try {
+    console.log("image delete=----------------->");
+    
+    await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
+      } catch (unlinkError) {
+    console.error("Error deleting old image", unlinkError);
+  }
 }else {
    imageUrl =BannerImage
 }
@@ -300,17 +302,7 @@ export async function EditBannerAction(data,shopUniqName) {
       { new: true }
     );
 
-    if (BannerImage && formDataObject.BannerImage) {
-      try {
-        await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
-          } catch (unlinkError) {
-        console.error("Error deleting old image", unlinkError);
-      }
-    }
-
-    revalidatePath(`/${shopUniqName}/panel/banners`);
-
-    return { status: 201, message: "ویرایش بنر با موفقیت انجام شد" };
+       return { status: 201, message: "ویرایش بنر با موفقیت انجام شد" };
 
   } catch (error) {
     console.error("Error in EditBannerAction:", error);
