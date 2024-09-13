@@ -5,10 +5,6 @@ function RoleName({ name , onClickfunction}) {
       <div className="flex-col items-center justify-center ">
         <p className="text-center mb-4">{name}</p>
 
-      
-        
-        
-         
       </div>
     </div>
   );

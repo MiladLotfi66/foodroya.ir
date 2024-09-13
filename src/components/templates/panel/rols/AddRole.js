@@ -15,7 +15,7 @@ import { AddRoleServerAction } from "@/components/signinAndLogin/Actions/RolesPe
 
 
 
-function AddRole({ role = {}, onClose ,shopUniqName}) {
+function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [bannerPermissionState, setBannerPermissionState] = useState(role?.bannersPermissions || []);
   const [rolePermissionState, setRolePermissionState] = useState(role?.rolesPermissions || []);
@@ -62,9 +62,9 @@ function AddRole({ role = {}, onClose ,shopUniqName}) {
 
       let res = await AddRoleServerAction(formData);
       if (res.status === 200 || res.status === 201 ) {
+        refreshRols()
         onClose()
-        window.location.reload();
-       } else {
+        } else {
         toast.error(res.error || "خطایی رخ داده است");
       }
     } catch (error) {

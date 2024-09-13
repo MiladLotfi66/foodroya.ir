@@ -3,7 +3,7 @@ const BannerSchema = new Schema(
   {
     ShopId: {
       type: Schema.Types.ObjectId,
-      ref: 'shops',    },
+      ref: 'Shop',    },
 
     BannerBigTitle: {
       type: String,
@@ -27,11 +27,11 @@ const BannerSchema = new Schema(
 
     LastEditedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'Users',    },
+      ref: 'User',    },
 
     CreatedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'Users',    },
+      ref: 'User',    },
 
 
     imageUrl: { type: String, required: true },

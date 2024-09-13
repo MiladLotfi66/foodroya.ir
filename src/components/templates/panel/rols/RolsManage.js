@@ -1,17 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect ,useCallback} from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import RoleName from "@/templates/panel/rols/RoleName";
 import AddRole from "./AddRole";
 import UsersListModal from "@/module/User/UsersListModal"; // اضافه کردن ایمپورت UsersListModal
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 
- 
 ///////////////////////server actions////////////////////////
 import {
   DeleteRole,
   DisableRole,
   EnableRole,
+  GetAllFollowedUsers,
+  GetShopIdByShopUniqueName,
   GetShopRolesByShopUniqName,
   getUsersByRoleId,
   RemoveUserFromRole,
@@ -25,6 +26,7 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import UserMinus from "@/module/svgs/UserMinus";
 import UserPlus from "@/module/svgs/UserPlus";
+import RoleCard from "./RoleCard";
 /////////////////////////////////////////
 function RolsManage() {
   const [isOpenAddRole, setIsOpenAddRole] = useState(false);
@@ -34,47 +36,77 @@ function RolsManage() {
   const [userListButtenName, setUserListButtenName] = useState("");
 
   const params = useParams();
-  const { shopUniqName} = params;
+  const { shopUniqName } = params;
   const [rols, setRols] = useState([]);
-
+  const [shopId, setShopId] = useState([]);
+  
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const response = await GetShopRolesByShopUniqName(shopUniqName);
-        setRols(response.Roles);
-      } catch (error) {
-        console.error("Error fetching banners:", error);
-      }
-    };
-    fetchRoles();
-  }, [shopUniqName]); // اضافه کردن shopUniqName به آرایه وابستگی
+    refreshRols();
+  }, []);
 
-  const handlerAddUserToRole = async (UserId) => {
-    console.log("UserId, shopUniqName-------->", UserId, shopUniqName);
-    let res = await AddRoleToUser(UserId, shopUniqName, selectedRole);
-    console.log(res);
+  const refreshRols = async () => {
+    try {
+      if (!shopUniqName) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const Shop = await GetShopIdByShopUniqueName(shopUniqName);
+      if (Shop.status!==200) {
+        console.error("فروشگاهی با این نام یافت نشد.");
+        return;
+      }
+      setShopId(Shop.ShopID);
+      const response = await GetShopRolesByShopUniqName(shopUniqName);
+      setRols(response.Roles);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
   };
 
-  const handlerRemoveUserToRole = async (UserId) => {
-    console.log("remove user:", UserId);
+  const handlerAddUserToRole = useCallback(async (UserId) => {
+    let res = await AddRoleToUser(UserId, shopUniqName, selectedRole);
+    if (res.success === true ) {
+      setSelectedUsers((prevUsers) => prevUsers.filter(user => user.id !== UserId));
+    } else {
+      console.error("خطایی در تخصیص نقش به کاربر رخ داد:", res.error);
+    }
+  }, [shopUniqName, selectedRole]);
+
+  const handlerRemoveUserToRole = useCallback(async (UserId) => {
     let res = await RemoveUserFromRole(UserId, shopUniqName, selectedRole);
     console.log(res);
-  }; 
-   const handleEnableRole = async (RoleID) => {
-    console.log("enable Role:", RoleID);
+  }, [shopUniqName, selectedRole]);
+
+  const handleEnableRole = useCallback(async (RoleID) => {
     let res = await EnableRole(RoleID);
-    console.log(res);
-  }; 
-   const handleDeleteRole = async (RoleID) => {
-    console.log("delete Role:", RoleID);
+    if (res.status === 200) {
+      const updatedRoles = rols.map((role) =>
+        role._id === RoleID ? { ...role, RoleStatus: true } : role
+      );
+      setRols(updatedRoles);  
+    }
+  }, [rols]);
+
+  const handleDeleteRole = useCallback(async (RoleID) => {
     let res = await DeleteRole(RoleID);
-    console.log(res);
-  }; 
-   const handleDisableRole = async (RoleID) => {
-    console.log("disable Role:", RoleID);
+    if (res.status === 200) {
+      const updatedRoles = rols.filter((role) => role._id !== RoleID);
+      setRols(updatedRoles);
+    } else {
+      console.error("Error deleting role:", res.status);
+    }
+  }, [rols]);
+
+  const handleDisableRole = useCallback(async (RoleID) => {
     let res = await DisableRole(RoleID);
-    console.log(res);
-  };
+    if (res.status===200) {
+      const updatedRoles = rols.map((role) =>
+        role._id === RoleID ? { ...role, RoleStatus: false } : role
+      );
+      setRols(updatedRoles);  
+    }
+  }, [rols]);
 
   const handleAddRoleClick = () => {
     setIsOpenAddRole(true);
@@ -115,19 +147,20 @@ function RolsManage() {
       setSelectedUsers([]);
     }
   }
-  
-  
 
-  async function handleAllUsers(roleId) {
+  const handleAllUsers = useCallback(async (roleId) => {
+    if (!shopId) return; // مطمئن شوید که ShopId مقداردهی شده است
     setIsOpenUsersList(true);
-    let res = await GetAllUsers();
-    setSelectedUsers(res.data); // فرض بر این است که هر نقش دارای یک ویژگی users است
+    let res = await GetAllFollowedUsers(shopId);
+    console.log(res);
+    
+    setSelectedUsers(res.data);
     setUserListButtenName("افزودن");
     setSelectedRole(roleId);
-  }
-
+  }, [shopId]);
+  
   const handleSubmit = async (formData) => {
-    console.log("addbaner run");
+    console.log("handleSubmit run");
     // ارسال داده‌های فرم به سرور
   };
 
@@ -147,6 +180,7 @@ function RolsManage() {
               onSubmit={handleSubmit}
               onClose={handleCloseModal}
               shopUniqName={shopUniqName}
+              refreshRols={refreshRols} // اضافه کردن این خط
             />
           </div>
         </div>
@@ -157,7 +191,7 @@ function RolsManage() {
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={handleOverlayClick}
         >
-           <div
+          <div
             className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
             onClick={(e) => e.stopPropagation()}
           >
@@ -195,67 +229,16 @@ function RolsManage() {
         </div>
 
         <div className=" grid grid-cols-2 gap-6 lg:grid-cols-3 xl:grid-cols-3  p-4 pb-16 justify-items-center ">
-          {rols?.map((Role) => (
-              <div key={Role._id}  className="bg-cover bg-center  bg-[url('../../public/Images/webp/rols.webp')] rounded-xl">
-              <div className="flex  bg-black/50 bg-opacity-10 rounded-xl">
-              <div className={!Role.RoleStatus ? "bg-black/50 bg-opacity-60 rounded-xl":""}>
-
-                       <div  className="flex-col gap-4 ">
-                         <RoleName
-                           name={Role.RoleTitle}
-                           Role={Role}
-                           />
-           
-                         <div className="flexCenter gap-3 md:gap-4 my-2 md:my-4 ">
-                         <div className=" flexCenter m-auto child-hover:text-orange-300 mx-2 md:mx-4  gap-2 md:gap-3 bg-gray-300 dark:bg-black dark:bg-opacity-50 bg-opacity-50 rounded-xl  h-10">
-                         <svg className="h-5 w-5 md:h-7 md:w-7">
-                               <use href="#EditSvg"></use>
-                             </svg>
-           
-                             <svg className="h-5 w-5 md:h-7 md:w-7"
-                              onClick={() => handleDeleteRole(Role._id)}
-                            >
-                               <use href="#DeleteSvg"></use>
-                             </svg>
-           
-                             <svg 
-                             className={Role.RoleStatus ? "hidden":"h-5 w-5 md:h-7 md:w-7"}
-                             onClick={() => handleEnableRole(Role._id)}
-           
-                             >
-                               <use href="#EyeSvg" ></use>
-                             </svg>  
-                             
-                             <svg 
-                             className={!Role.RoleStatus ? "hidden":"h-5 w-5 md:h-7 md:w-7"}
-                             onClick={() => handleDisableRole(Role._id)}
-                             >
-                               <use href="#EyeslashSvg"  ></use>
-                             </svg>
-                           </div>
-                           <div className=" flexCenter m-auto child-hover:text-orange-300 mx-2 md:mx-4  gap-2 md:gap-3 bg-gray-300 dark:bg-black dark:bg-opacity-50 bg-opacity-50 rounded-xl  h-10">
-                           <svg
-                             className="h-5 w-5 md:h-7 md:w-7"
-                             onClick={() => handleAllUsers(Role._id)}
-                           >
-                             <use href="#UserPlus"></use>
-                           </svg>
-                           <svg
-                             className="h-5 w-5 md:h-7 md:w-7"
-                             onClick={() => handleUsersAtRole(Role._id)}
-                           >
-                             <use href="#UserMinus"></use>
-                           </svg>
-                           </div>
-           
-                         </div>
-                       </div>
-                    
-                     </div>
-                     </div>
-            
-          
-          </div>
+          {rols?.map((role) => (
+            <RoleCard
+              key={role._id}
+              role={role}
+              handleDeleteRole={handleDeleteRole}
+              handleEnableRole={handleEnableRole}
+              handleDisableRole={handleDisableRole}
+              handleAllUsers={handleAllUsers}
+              handleUsersAtRole={handleUsersAtRole}
+            />
           ))}
         </div>
       </div>

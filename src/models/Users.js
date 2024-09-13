@@ -5,7 +5,6 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
-
     phone: {
       type: String,
       unique: true,
@@ -15,22 +14,20 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
-
     role: {
       type: String,
       default: "user",
       required: true,
     },
-
     following: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'shops',  // فرض می‌کنیم که مدل فروشگاه شما 'Shop' نام دارد
+        ref: 'Shop', // فرض بر این است که مدل فروشگاه 'Shop' نام دارد
       },
     ],
-
-
-    refreshToken:String,
+    refreshToken: String,
   },
-  { timestamps: true } );
+  { timestamps: true }
+);
+
 export default models.User || model("User", UserSchema);

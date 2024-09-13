@@ -5,8 +5,8 @@ import { cookies } from "next/headers";
 import RoleSchema from "@/utils/yupSchemas/RoleSchema";
 import AuthenticateUser from "@/utils/authenticateUserInActions";
 import RoleInShop from "@/models/RoleInShop";
-import shops from "@/models/shops";
-import Users from "@/models/Users";
+import Shop from "@/models/shops";
+import User from "@/models/Users";
 
 
 export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
@@ -164,7 +164,7 @@ export async function AddRoleServerAction(RoleData) {
     }
 
     const ShopId = shopResponse.ShopID;
-    if (!shopId) {
+    if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
 
@@ -180,7 +180,7 @@ export async function AddRoleServerAction(RoleData) {
 
     const newRole = new RolePerimision({
       ...validatedData,
-      ShopId: shopId, // ذخیره آی‌دی شاپ در دیتابیس
+      ShopId: ShopId, // ذخیره آی‌دی شاپ در دیتابیس
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
     });
@@ -323,6 +323,28 @@ export async function DisableRole(RoleID) {
   }
 }
 
+export async function GetAllFollowedUsers(ShopId){
+  try {
+  await connectDB()
+
+  const shop = await Shop.findOne({ _id : ShopId }).populate({path: 'followers', select: 'username'}).lean();
+  
+  const followers = shop.followers.map(follower => ({
+    ...follower,
+    _id: follower._id.toString(), // تبدیل ObjectId به رشته
+  }));
+
+
+  return { "status": 200, "data": followers }; // فقط لیست کاربران را برگردانید
+
+
+
+} catch (error) {
+  console.error("خطا در دریافت فالور ها:", error);
+  return { error: error.message, status: 500 };
+}
+}
+
 export async function GetShopRolesByShopUniqName(ShopUniqName) {
   try {
     await connectDB();
@@ -331,7 +353,7 @@ export async function GetShopRolesByShopUniqName(ShopUniqName) {
     if (!userData) {
       throw new Error("User data not found");
     }
-    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    const shopResponse = await GetShopIdByShopUniqueName(ShopUniqName);
     if (shopResponse.status !== 200 || !shopResponse.ShopID) {
       throw new Error(shopResponse.error || "shopId is required in RoleData");
     }
@@ -396,7 +418,7 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
 export async function GetShopIdByShopUniqueName(ShopUniqueName) {
   try {
     await connectDB();
-    const shop = await shops.findOne({ ShopUniqueName }).lean();
+    const shop = await Shop.findOne({ ShopUniqueName }).lean();
 
     if (!shop) {
       throw new Error("شاپ با این نام پیدا نشد");

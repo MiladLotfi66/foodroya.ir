@@ -8,20 +8,20 @@ const schema = new Schema(
     
     ShopId: {
       type: Schema.Types.ObjectId,
-      ref: "shops",
+      ref: "Shop",
       required: true
 
     },
 
     LastEditedBy: {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       required: true
     },
 
     CreatedBy: {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
       required: true
     },
 
