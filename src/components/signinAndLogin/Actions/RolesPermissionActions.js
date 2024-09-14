@@ -59,6 +59,7 @@ export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
 }
 
 export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
+  
   try {
     // اتصال به دیتابیس
     console.log("UserId, shopUniqName, RoleId",UserId, shopUniqName, RoleId);
@@ -195,7 +196,9 @@ export async function AddRoleServerAction(RoleData) {
 }
 
 // ویرایش نقش
-export async function EditRole(RoleData) {
+export async function EditRole(RoleData , roleId) {
+  console.log(roleId);
+  
   try {
     await connectDB();
     const userData = await authenticateUser();
@@ -204,11 +207,11 @@ export async function EditRole(RoleData) {
       throw new Error("User data not found");
     }
 
-    const RoleID = RoleData.get("id");
-    if (!RoleID) {
+   
+    if (!roleId) {
       throw new Error("آی‌دی نقش ارسال نشده است");
     }
-    const Role = await RolePerimision.findById(RoleID);
+    const Role = await RolePerimision.findById(roleId);
 
     if (!Role) {
       throw new Error("نقشی با این آی‌دی یافت نشد");
@@ -220,10 +223,10 @@ export async function EditRole(RoleData) {
 
     const validatedData = await RoleSchema.validate(
       {
-        RoleTitle: RoleData.get("RoleTitle"),
-        RoleStatus: RoleData.get("RoleStatus"),
-        bannersPermissions: RoleData.get("bannersPermissions"),
-        rolesPermissions: RoleData.get("rolesPermissions"),
+        RoleTitle: RoleData.RoleTitle ,
+        RoleStatus: RoleData.RoleStatus,
+        bannersPermissions: RoleData.bannersPermissions,
+        rolesPermissions: RoleData.rolesPermissions,
       },
       { abortEarly: false }
     );
@@ -233,7 +236,7 @@ export async function EditRole(RoleData) {
       LastEditedBy: userData.id,
     };
 
-    await RolePerimision.findByIdAndUpdate(RoleID, updatedRole, { new: true });
+    await RolePerimision.findByIdAndUpdate(roleId, updatedRole, { new: true });
     return { message: "ویرایش نقش با موفقیت انجام شد", status: 200 };
   } catch (error) {
     return { error: error.message, status: 500 };
@@ -344,6 +347,41 @@ export async function GetAllFollowedUsers(ShopId){
   return { error: error.message, status: 500 };
 }
 }
+
+export async function GetAllFollowedUsersWithRoles(ShopId, roleId) {
+  try {
+    await connectDB();
+
+    // دریافت فالورهای فروشگاه
+    const shop = await Shop.findOne({ _id: ShopId })
+      .populate({ path: 'followers', select: 'username' })
+      .lean();
+
+    const followersWithRoles = await Promise.all(
+      shop.followers.map(async (follower) => {
+        // بررسی اینکه آیا این فالور برای این فروشگاه نقش خاصی دارد یا خیر
+        const roleInShop = await RoleInShop.findOne({
+          UserId: follower._id,
+          ShopId: ShopId,
+          RoleId: roleId,
+        });
+
+        return {
+          ...follower,
+          _id: follower._id.toString(),
+          hasRole: !!roleInShop, // اگر نقش وجود داشت، مقدار true برمی‌گرداند
+        };
+      })
+    );
+
+    return { status: 200, data: followersWithRoles };
+  } catch (error) {
+    console.error("خطا در دریافت فالورها و بررسی نقش:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
+
 
 export async function GetShopRolesByShopUniqName(ShopUniqName) {
   try {
@@ -480,19 +518,3 @@ export async function GetUserRolsAtShop({ userId, shopId }) {
   }
 }
 
-
-
-
-// export {
-//   AddRoleServerAction,
-//   EditRole,
-//   DeleteRole,
-//   EnableRole,
-//   DisableRole,
-//   GetShopRolesByShopUniqName,
- 
-//   CheckRolePermissionsServerAction,
-//   GetUserRolsAtShop,
-//   GetShopIdByShopUniqueName,
-//   getUsersByRoleId,
-// };

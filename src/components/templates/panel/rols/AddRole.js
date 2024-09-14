@@ -11,19 +11,15 @@ import CreateSvg from "@/module/svgs/CreateSvg";
 import ViewDocumentSvg from "@/module/svgs/ViewDocumentSvg"; 
 import PermissionSVG from "./PermissionSVG";
 import { useState, useEffect } from "react";
-import { AddRoleServerAction } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
-
-
+import { AddRoleServerAction, EditRole } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 
 function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
+  
   const [isSubmit, setIsSubmit] = useState(false);
   const [bannerPermissionState, setBannerPermissionState] = useState(role?.bannersPermissions || []);
   const [rolePermissionState, setRolePermissionState] = useState(role?.rolesPermissions || []);
- 
 
-
-
-  const { register, handleSubmit, setValue, getValues, watch, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, setValue,formState: { errors } } = useForm({
     mode: "all",
     resolver: yupResolver(RoleSchema),
     defaultValues: {
@@ -32,7 +28,6 @@ function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
       bannersPermissions: bannerPermissionState,
       rolesPermissions: rolePermissionState,
       shopUniqName:shopUniqName,
-
     },
   });
 
@@ -50,30 +45,43 @@ function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
     }
   };
 
-
-  
   const formSubmitting = async (formData) => {
     setIsSubmit(true);
-    console.log(formData);
-
+  
     try {
-      
       await RoleSchema.validate(formData, { abortEarly: false });
-
-      let res = await AddRoleServerAction(formData);
-      if (res.status === 200 || res.status === 201 ) {
-        refreshRols()
-        onClose()
+  
+      let res;
+      // بررسی می‌کنیم که آیا در حالت ویرایش هستیم یا در حال افزودن نقش جدید
+      if (role?._id) {
+        // درخواست ویرایش نقش را ارسال کنید
+        res = await EditRole(formData, role._id);
+        
+      } else {
+        // درخواست ایجاد نقش جدید را ارسال کنید
+        res = await AddRoleServerAction(formData);
+      }
+  
+      if (res.status === 200 || res.status === 201) {
+        // refreshRols();  // به‌روزرسانی لیست نقش‌ها
+        if (role?._id) {
+          toast.success("ویرایبش با موفقیت انجام شد");
         } else {
+          // درخواست ایجاد نقش جدید را ارسال کنید
+        toast.success(" نقش جدید با موفقیت ثبت شد");
+      }
+      onClose();      // بستن پنجره مودال
+
+      } else {
         toast.error(res.error || "خطایی رخ داده است");
       }
     } catch (error) {
       toast.error(error.message || "خطایی در ارسال درخواست به سرور رخ داد");
-    }finally{
-
+    } finally {
       setIsSubmit(false);
     }
   };
+  
 
   return (
     <div className="overflow-y-auto max-h-screen">
