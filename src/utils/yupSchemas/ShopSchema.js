@@ -39,17 +39,7 @@ const imageValidationSchema = yup
 
 const ShopSchema = yup.object().shape({
 
-  ShopUniqueName: yup
-  .string()
-  .required("وارد کردن نام منحصر به فرد فروشگاه الزامیست")
-  .min(5, "نام منحصر به فرد فروشگاه باید حداقل 5 کاراکتر باشد")
-  .max(30, "نام منحصر به فرد فروشگاه نمی‌تواند بیشتر از 30 کاراکتر باشد")
-  .matches(/^\w+$/, "نام منحصر به فرد فروشگاه باید فقط شامل حروف، اعداد و زیرخط باشد")
-  .test("isUnique", "این نام فروشگاه تکراری می باشد", async function (value) {
-    const { error } = await isUniqShop(value);
-    return !error;
-  })
-  ,
+ 
   
   ShopName: yup
     .string()
@@ -89,6 +79,17 @@ const ShopSchema = yup.object().shape({
   TextLogo: imageValidationSchema,
   BackGroundShop: imageValidationSchema,
   BackGroundpanel: imageValidationSchema,
+  ShopUniqueName: yup
+  .string()
+  .required("وارد کردن نام منحصر به فرد فروشگاه الزامیست")
+  .min(5, "نام منحصر به فرد فروشگاه باید حداقل 5 کاراکتر باشد")
+  .max(30, "نام منحصر به فرد فروشگاه نمی‌تواند بیشتر از 30 کاراکتر باشد")
+  .matches(/^\w+$/, "نام منحصر به فرد فروشگاه باید فقط شامل حروف، اعداد و زیرخط باشد")
+  .test("isUnique", "این نام فروشگاه تکراری می باشد", async function (value) {
+    const { error } = await isUniqShop(value);
+    return !error;
+  })
+  ,
 });
 
 export default ShopSchema;

@@ -10,15 +10,31 @@ import sharp from "sharp";
 import Users from "@/models/Users";
 import { revalidatePath } from "next/cache";
 
-const simplifyFollowers = (followers) =>
-  followers.map((follower) => follower.toString());
+const simplifyFollowers = (followers) => {
+
+  // چک کردن اگر followers یک آرایه خالی باشد یا undefined باشد
+  if (!Array.isArray(followers) || followers.length === 0) {
+    return []; // آرایه خالی را برمی‌گرداند
+  }
+
+  return followers.map((follower) => {
+    if (follower && typeof follower.toHexString === 'function') {
+      return follower.toHexString();
+    } else {
+      console.error('Invalid follower object:', follower);
+      return null; // در صورت نامعتبر بودن فالوور، می‌توان مقدار null یا مقدار پیش‌فرض دیگری برگرداند
+    }
+  }).filter(follower => follower !== null); // حذف مقادیر null در صورت وجود
+};
+
+
 
 export async function isUniqShop(uniqueIdentifier) {
+  
   await connectDB();
   try {
     const shop = await shops.findOne({ ShopUniqueName: uniqueIdentifier });
     const isUnique = !shop;
-    console.log(shop, isUnique, uniqueIdentifier);
     if (isUnique) {
       return { message: "این نام فروشگاه تکراری نمی باشد", status: 200 };
     } else {
@@ -26,6 +42,34 @@ export async function isUniqShop(uniqueIdentifier) {
     }
   } catch (error) {
     return { error: error.message, status: 500 };
+  }
+}
+export async function GetUserShops() {
+  try {
+    await connectDB();
+
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error("User data not found");
+    }
+
+    const Shops = await shops.find({ CreatedBy: userData.id }).lean();
+
+    const plainShops = Shops.map((Shop) => ({
+      ...Shop,
+      _id: Shop._id.toString(),
+      CreatedBy: Shop.CreatedBy.toString(),
+      LastEditedBy: Shop.LastEditedBy.toString(),
+      createdAt: Shop.createdAt.toISOString(),
+      updatedAt: Shop.updatedAt.toISOString(),
+    }));
+
+    return { Shops: plainShops, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت فروشگاه‌ها:", error);
+    return { error: error.message, status: 500 };
+
   }
 }
 const processAndSaveImage = async (image, oldUrl) => {
@@ -81,12 +125,14 @@ const hasUserAccess = async (userId) => {
 
 export async function authenticateUser() {
   try {
+    
     const cookieStore = cookies();
     const accessToken = cookieStore.get("next-auth.session-token")?.value;
-
+    
     if (!accessToken) {
       throw new Error("Access token not found");
     }
+    // console.log("authenticateUser",res);
 
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
       headers: {
@@ -105,6 +151,7 @@ export async function authenticateUser() {
     if (!session.user) {
       throw new Error("No user data found in session");
     }
+
 
     return session.user;
   } catch (error) {
@@ -296,8 +343,6 @@ export async function AddShopServerAction(ShopData) {
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
     });
-    console.log("ShopUniqueName", ShopUniqueName);
-    console.log(newShop);
     await newShop.save();
 
     return { message: "فروشگاه با موفقیت ثبت شد", status: 201 };
@@ -485,22 +530,26 @@ async function GetAllEnableShops() {
 
     const Shops = await shops.find({ ShopStatus: true }).lean();
 
-    const plainShops = Shops.map((Shop) => ({
-      ...Shop,
-      _id: Shop._id.toString(),
-      CreatedBy: Shop.CreatedBy.toString(),
-      LastEditedBy: Shop.LastEditedBy.toString(),
-      createdAt: Shop.createdAt.toISOString(),
-      updatedAt: Shop.updatedAt.toISOString(),
-      followers: simplifyFollowers(Shop.followers),
-    }));
+    const plainShops = Shops.map((Shop) => {
+
+      return {
+        ...Shop,
+        _id: Shop._id?.toString() || null, // تبدیل ObjectId به string
+        CreatedBy: Shop.CreatedBy?.toString() || null, // تبدیل ObjectId به string
+        LastEditedBy: Shop.LastEditedBy?.toString() || null, // تبدیل ObjectId به string
+        createdAt: Shop.createdAt?.toISOString() || null, // تبدیل تاریخ به ISO string
+        updatedAt: Shop.updatedAt?.toISOString() || null, // تبدیل تاریخ به ISO string
+        followers: simplifyFollowers(Shop.followers), // تبدیل followers
+      };
+    });
 
     return { Shops: plainShops, status: 200 };
   } catch (error) {
-    console.error("خطا در دریافت فروشگاه‌ها:", error);
+    console.error("خطا در دریافت فروشگاه‌ها:", error); 
     return { error: error.message, status: 500 };
   }
 }
+
 
 async function DeleteShops(ShopID) {
   try {

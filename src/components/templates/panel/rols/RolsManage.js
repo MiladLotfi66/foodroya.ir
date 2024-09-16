@@ -37,29 +37,30 @@ function RolsManage() {
   const [shopId, setShopId] = useState([]);
   
   useEffect(() => {
+    const refreshRols = async () => {
+      try {
+        if (!shopUniqName) {
+          console.error("نام یکتای فروشگاه موجود نیست.");
+          return;
+        }
+  
+        const Shop = await GetShopIdByShopUniqueName(shopUniqName);
+        if (Shop.status!==200) {
+          console.error("فروشگاهی با این نام یافت نشد.");
+          return;
+        }
+        setShopId(Shop.ShopID);
+        const response = await GetShopRolesByShopUniqName(shopUniqName);
+        setRols(response.Roles);
+        
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      }
+    };
     refreshRols();
-  }, []);
+  }, [shopUniqName]);
 
-  const refreshRols = async () => {
-    try {
-      if (!shopUniqName) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
 
-      const Shop = await GetShopIdByShopUniqueName(shopUniqName);
-      if (Shop.status!==200) {
-        console.error("فروشگاهی با این نام یافت نشد.");
-        return;
-      }
-      setShopId(Shop.ShopID);
-      const response = await GetShopRolesByShopUniqName(shopUniqName);
-      setRols(response.Roles);
-      
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  };
 
   const handleEditClick = (role) => {
     setSelectedRole(role); // نقش انتخابی برای ویرایش
