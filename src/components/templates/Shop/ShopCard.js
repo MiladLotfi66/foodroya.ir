@@ -19,7 +19,7 @@ import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 
 
-function ShopCard({ Shop, editfunction, editable, followable, user }) {
+function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , handleEnableShop, handleDisableShop, }) {
   const [isFollowing, setIsFollowing] = useState(false);
 
    
@@ -63,45 +63,10 @@ function ShopCard({ Shop, editfunction, editable, followable, user }) {
     }
   };
 
-  const enableFunc = async () => {
-    try {
-      const res = await ShopServerEnableActions(Shop._id);
-      if (res.status === 200 || res.status === 201) {
-        window.location.reload();
-      } else {
-        toast.error(res.error);
-      }
-    } catch (error) {
-      console.error("خطا در غیرفعال‌سازی بنر:", error);
-    }
-  };
-
-  const disableFunc = async () => {
-    try {
-      const res = await ShopServerDisableActions(Shop._id);
-      if (res.status === 200 || res.status === 201) {
-        window.location.reload();
-      } else {
-        toast.error(res.error);
-      }
-    } catch (error) {
-      console.error("خطا در غیرفعال‌سازی بنر:", error);
-    }
-  };
-
-  const deleteFunc = async () => {
-    try {
-      const res = await DeleteShops(Shop._id);
-      console.log(res.error);
-      if (res.status === 200 || res.status === 201) {
-        window.location.reload();
-      } else {
-        toast.error(res.error);
-      }
-    } catch (error) {
-      console.error("خطا در حذف بنر:", error);
-    }
-  };
+ 
+ 
+ 
+ 
 
   return (
     <div
@@ -133,7 +98,7 @@ function ShopCard({ Shop, editfunction, editable, followable, user }) {
             height="34"
             className=" cursor-pointer "
             aria-label="delete"
-            onClick={deleteFunc}
+            onClick={()=>deleteFunc(Shop._id)}
           >
             <use href="#DeleteSvg"></use>
           </svg>
@@ -165,7 +130,9 @@ function ShopCard({ Shop, editfunction, editable, followable, user }) {
               height="34"
               className=" cursor-pointer"
               aria-label="enable"
-              onClick={enableFunc}
+              
+              onClick={() => handleEnableShop(Shop._id)}
+
             >
               <use href="#EyeSvg"></use>
             </svg>
@@ -176,7 +143,7 @@ function ShopCard({ Shop, editfunction, editable, followable, user }) {
               height="34"
               className=" cursor-pointer"
               aria-label="disable"
-              onClick={disableFunc}
+              onClick={() => handleDisableShop(Shop._id)}
             >
               <use href="#EyeslashSvg"></use>
             </svg>

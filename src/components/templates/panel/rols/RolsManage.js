@@ -112,7 +112,18 @@ function RolsManage() {
       setRols(updatedRoles);  
     }
   }, [rols]);
+  
+  const handleDisableRole = useCallback(async (RoleID) => {
+    let res = await DisableRole(RoleID);
+    if (res.status===200) {
+      const updatedRoles = rols.map((role) =>
+        role._id === RoleID ? { ...role, RoleStatus: false } : role
+      );
+      setRols(updatedRoles);  
+    }
+  }, [rols]);
 
+  
   const handleDeleteRole = useCallback(async (RoleID) => {
     let res = await DeleteRole(RoleID);
     if (res.status === 200) {
@@ -123,15 +134,6 @@ function RolsManage() {
     }
   }, [rols]);
 
-  const handleDisableRole = useCallback(async (RoleID) => {
-    let res = await DisableRole(RoleID);
-    if (res.status===200) {
-      const updatedRoles = rols.map((role) =>
-        role._id === RoleID ? { ...role, RoleStatus: false } : role
-      );
-      setRols(updatedRoles);  
-    }
-  }, [rols]);
 
   const handleAddRoleClick = () => {
     setIsOpenAddRole(true);

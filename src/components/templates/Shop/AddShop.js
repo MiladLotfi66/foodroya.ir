@@ -3,15 +3,17 @@ import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ShopSchema from "@/utils/yupSchemas/ShopSchema";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 // import { DevTool } from "@hookform/devtools";
 import { AddShopServerAction,EditShop } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
-function AddShop({ Shop = {}, onClose }) {
+function AddShop({ Shop = {}, onClose ,refreshShops}) {
   const [isSubmit, setIsSubmit] = useState(false);
+  const initialShopUniqueName = useRef(Shop?.ShopUniqueName || "");
+
   const [selectedLogoImage, setSelectedLogoImage] = useState(
     Shop?.LogoUrl || null
   );
@@ -58,8 +60,14 @@ function AddShop({ Shop = {}, onClose }) {
   useEffect(() => {
     async function validateShopUniqueName() {
       try {
-        await ShopSchema.fields.ShopUniqueName.validate(shopUniqueName);
-        setError('ShopUniqueName', {});
+        // چک کردن تغییر شناسه فروشگاه
+        if (shopUniqueName !== initialShopUniqueName.current) {
+          await ShopSchema.fields.ShopUniqueName.validate(shopUniqueName);
+          setError('ShopUniqueName', {});
+        } else {
+          // اگر شناسه تغییر نکرده باشد، خطا را خالی کنید
+          setError('ShopUniqueName', {});
+        }
       } catch (error) {
         setError('ShopUniqueName', { type: 'manual', message: error.message });
       }
@@ -169,8 +177,8 @@ function AddShop({ Shop = {}, onClose }) {
 
       // const result = await res.json();
       if (res.status === 200 || res.status === 201 ) {
+        refreshShops();
         onClose()
-        window.location.reload();
        } else {
         toast.error(res.error || "خطایی رخ داده است");
       }

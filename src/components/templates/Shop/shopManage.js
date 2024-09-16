@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ShopCard from "./ShopCard";
-import { GetUserShops  } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { DeleteShops, GetUserShops, ShopServerDisableActions, ShopServerEnableActions  } from "@/components/signinAndLogin/Actions/ShopServerActions";
 import AddShop from "./AddShop";
+import { Toaster, toast } from "react-hot-toast";
 
 
 function ShopManage() {
@@ -14,7 +15,10 @@ function ShopManage() {
   const [selectedShopFile, setSelectedShopFile] = useState(null); // افزودن استیت جدید
 
   useEffect(() => {
-    const fetchShops = async () => {
+    refreshShops();
+  }, []);
+
+  const refreshShops = async () => {
       try {
         const response = await GetUserShops();
         // const response = await GetAllShops();
@@ -22,9 +26,8 @@ function ShopManage() {
       } catch (error) {
         console.error("Error fetching shops:", error);
       }
-    };
-    fetchShops();
-  }, []);
+   
+  };
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -34,10 +37,62 @@ function ShopManage() {
     }
   };
 
+  const handleEnableShop = async (ShopId) => {
+    
+    try {
+      const res = await ShopServerEnableActions(ShopId);
+      
+      if (res.status === 200||res.status === 201) {
+        const updatedShop = Shops.map((shop) =>
+          shop._id === ShopId ? { ...shop, ShopStatus: true } : shop
+        );
+        setShops(updatedShop);  
+      }
+    } catch (error) {
+      console.error("خطا در غیرفعال‌سازی بنر:", error);
+    }
+  };
+
+  const handleDisableShop = async (ShopId) => {
+
+    try {
+      const res = await ShopServerDisableActions(ShopId);
+      if (res.status === 200||res.status === 201) {
+        const updatedShop = Shops.map((shop) =>
+          shop._id === ShopId ? { ...shop, ShopStatus: false } : shop
+        );
+        setShops(updatedShop);  
+      }
+    } catch (error) {
+      console.error("خطا در غیرفعال‌سازی بنر:", error);
+    }
+  };
   const handleEditClick = (Shop) => {
     setSelectedShop(Shop);
     setSelectedShopFile(null); // ریست کردن فایل فروشگاه در حالت ویرایش
     setIsOpenAddShop(true);
+  };
+  const deleteFunc = async (ShopId) => {
+    
+    try {
+      const isConfirmed = confirm("آیا مطمئن هستید که می‌خواهید این فروشگاه را حذف کنید؟");
+
+      if (!isConfirmed) {
+        return; // اگر کاربر تایید نکرد، عملیات لغو شود.
+      }
+    
+      const res = await DeleteShops(ShopId);
+      if (res.status === 200 || res.status === 201) {
+        toast.success("فروشگاه با موفقیت حذف گردید");
+
+        setShops(prevShops => prevShops.filter((shop) => shop._id !== ShopId));
+
+        } else {
+        toast.error(res.error);
+      }
+    } catch (error) {
+      console.error("خطا در حذف بنر:", error);
+    }
   };
 
   const handleAddShopClick = () => {
@@ -53,7 +108,6 @@ function ShopManage() {
   };
 
   const handleSubmit = async (formData, ShopId) => {
-    console.log("addShop run");
     try {
       const formDataObj = new FormData();
       formDataObj.append("Logo", formData.Logo);
@@ -107,6 +161,8 @@ function ShopManage() {
               ShopFile={selectedShopFile}
               onSubmit={handleSubmit}
               onClose={handleCloseModal}
+              refreshShops={refreshShops} // ارسال تابع به AddShop
+
             />
           </div>
         </div>
@@ -132,11 +188,17 @@ function ShopManage() {
               key={Shop._id}
               Shop={Shop}
               editfunction={() => handleEditClick(Shop)}
+              deleteFunc={() => deleteFunc(Shop._id)}
+              handleEnableShop={handleEnableShop}
+              handleDisableShop={handleDisableShop}
+
               editable={true}
               followable={false}
             />
           ))}
         </div>
+        <Toaster />
+
       </div>
     </FormTemplate>
   );

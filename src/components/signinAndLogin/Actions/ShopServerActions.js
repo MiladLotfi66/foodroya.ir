@@ -63,6 +63,8 @@ export async function GetUserShops() {
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
       updatedAt: Shop.updatedAt.toISOString(),
+      followers: simplifyFollowers(Shop.followers),
+
     }));
 
     return { Shops: plainShops, status: 200 };
