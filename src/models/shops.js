@@ -48,6 +48,19 @@ const schema = new Schema(
     BackGroundShopUrl: { type: String, required: true },
     BackGroundpanelUrl: { type: String, required: true },
     ShopStatus: { type: Boolean, required: true },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deleted_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    deleted_at: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

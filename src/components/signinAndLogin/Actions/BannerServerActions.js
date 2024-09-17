@@ -2,12 +2,13 @@
 
 import Banner from "@/models/Banner";
 import connectDB from "@/utils/connectToDB";
-import fs from "fs";
+import fs from 'fs';
+import path from 'path';
+import sharp from 'sharp';
+import { promisify } from 'util';
 import multer from 'multer';
-import path from "path";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { writeFile, unlink } from "fs/promises";
-import sharp from "sharp";
 import { headers } from "next/headers";
 import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
 import BannerSchema from "@/utils/yupSchemas/BannerSchima";
@@ -161,20 +162,39 @@ function formDataToObject(formData) {
   return object;
 }
 
-const processAndSaveImage = async (image) => {
+// const writeFile = promisify(fs.writeFile);
+const mkdir = promisify(fs.mkdir);
+const access = promisify(fs.access);
+
+const processAndSaveImage = async (image, shopId,directory) => {
   if (image && typeof image !== "string") {
     const buffer = Buffer.from(await image.arrayBuffer());
     const now = process.hrtime.bigint(); 
     const fileName = `${now}.webp`;
-    const filePath = path.join(process.cwd(), "public/Uploads/Banners/" + fileName);
+    const directoryPath = path.join(process.cwd(), `public/Uploads/Shop/${shopId}/${directory}/`);
+    const filePath = path.join(directoryPath, fileName);
+
+    // ایجاد دایرکتوری در صورت عدم وجود
+    try {
+      await access(directoryPath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        await mkdir(directoryPath, { recursive: true });
+      } else {
+        throw error;
+      }
+    }
+
     const optimizedBuffer = await sharp(buffer)
       .webp({ quality: 80 })
       .toBuffer();
+
     await writeFile(filePath, optimizedBuffer);
-    return "/Uploads/Banners/" + fileName;
+    return `/Uploads/Shop/${shopId}/${directory}/` + fileName;
   }
   return image;
 };
+
 export async function AddBannerAction(data) {
 
   try {
@@ -213,7 +233,7 @@ export async function AddBannerAction(data) {
     } = validatedData;
 
     
-    const imageUrl = await processAndSaveImage(BannerImage);
+    const imageUrl = await processAndSaveImage(BannerImage,ShopId,"banners");
 
     // ایجاد بنر جدید با آی‌دی فروشگاه
     const newBanner = new Banner({
@@ -241,6 +261,20 @@ export async function AddBannerAction(data) {
 export async function EditBannerAction(data,shopUniqName) {
   try {
     await connectDB();
+
+    if (!shopUniqName) {
+      throw new Error("shopUniqName is required");
+    }
+
+    // دریافت آی‌دی فروشگاه
+    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+
+    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
+      throw new Error(shopResponse.error || "shopId is required");
+    }
+    const ShopId = shopResponse.ShopID;
+
+
     const formDataObject = formDataToObject(data);
 
     const bannerId = formDataObject.id;
@@ -275,9 +309,8 @@ export async function EditBannerAction(data,shopUniqName) {
    let imageUrl
     if (typeof(BannerImage)!=="string") {
       
-   imageUrl = await processAndSaveImage(BannerImage);
+   imageUrl = await processAndSaveImage(BannerImage,ShopId,"banners");
    try {
-    console.log("image delete=----------------->");
     
     await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
       } catch (unlinkError) {

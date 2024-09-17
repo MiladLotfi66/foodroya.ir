@@ -54,7 +54,7 @@ export async function GetUserShops() {
       throw new Error("User data not found");
     }
 
-    const Shops = await shops.find({ CreatedBy: userData.id }).lean();
+    const Shops = await shops.find({ CreatedBy: userData.id , is_deleted:false}).lean();
 
     const plainShops = Shops?.map((Shop) => ({
       ...Shop,
@@ -63,6 +63,8 @@ export async function GetUserShops() {
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
       updatedAt: Shop.updatedAt.toISOString(),
+      deleted_by: Shop.deleted_by?.toString() || null, // تبدیل ObjectId به string
+      deleted_at: Shop.deleted_at?.toISOString() || null, // تبدیل تاریخ به ISO string
       followers: simplifyFollowers(Shop.followers),
 
     }));
@@ -507,7 +509,7 @@ async function GetAllShops() {
   try {
     await connectDB();
 
-    const Shops = await shops.find({}).lean();
+    const Shops = await shops.find({is_deleted:false}).lean();
 
     const plainShops = Shops?.map((Shop) => ({
       ...Shop,
@@ -516,6 +518,8 @@ async function GetAllShops() {
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
       updatedAt: Shop.updatedAt.toISOString(),
+      deleted_by: Shop.deleted_by?.toString(), // تبدیل ObjectId به string
+      deleted_at: Shop.deleted_at?.toISOString(), // تبدیل تاریخ به ISO string
       followers: simplifyFollowers(Shop.followers),
     }));
 
@@ -530,7 +534,7 @@ async function GetAllEnableShops() {
   try {
     await connectDB();
 
-    const Shops = await shops.find({ ShopStatus: true }).lean();
+    const Shops = await shops.find({ ShopStatus: true , is_deleted: false}).lean();
 
     const plainShops = Shops?.map((Shop) => {
 
@@ -538,9 +542,11 @@ async function GetAllEnableShops() {
         ...Shop,
         _id: Shop._id?.toString() || null, // تبدیل ObjectId به string
         CreatedBy: Shop.CreatedBy?.toString() || null, // تبدیل ObjectId به string
+        deleted_by: Shop.deleted_by?.toString() || null, // تبدیل ObjectId به string
         LastEditedBy: Shop.LastEditedBy?.toString() || null, // تبدیل ObjectId به string
         createdAt: Shop.createdAt?.toISOString() || null, // تبدیل تاریخ به ISO string
         updatedAt: Shop.updatedAt?.toISOString() || null, // تبدیل تاریخ به ISO string
+        deleted_at: Shop.deleted_at?.toISOString() || null, // تبدیل تاریخ به ISO string
         followers: simplifyFollowers(Shop.followers), // تبدیل followers
       };
     });
@@ -557,6 +563,7 @@ async function DeleteShops(ShopID) {
   try {
     await connectDB();
     const userData = await authenticateUser();
+    
 
     const Shop = await shops.findById(ShopID);
 
@@ -581,11 +588,21 @@ async function DeleteShops(ShopID) {
       Shop.BackGroundpanelUrl
     );
 
-    const result = await Shop.deleteOne({ _id: ShopID });
-
-    if (result.deletedCount === 0) {
-      throw new Error("فروشگاه مورد نظر حذف نشد");
-    }
+      // به‌روزرسانی حذف امن
+      const result = await shops.updateOne(
+        { _id: ShopID },
+        {
+          $set: {
+            is_deleted: true,
+            deleted_by: userData.id, // شناسه کاربر حذف‌کننده
+            deleted_at: new Date(), // زمان حذف
+          },
+        }
+      );
+  
+      if (result.nModified === 0) {
+        throw new Error("فروشگاه مورد نظر حذف نشد");
+      }
 
     fs.unlink(LogoUrl, (err) => {
       if (err) {
