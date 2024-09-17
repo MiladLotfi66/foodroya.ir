@@ -63,7 +63,7 @@ function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
       }
   
       if (res.status === 200 || res.status === 201) {
-        // refreshRols();  // به‌روزرسانی لیست نقش‌ها
+        refreshRols();  // به‌روزرسانی لیست نقش‌ها
         if (role?._id) {
           toast.success("ویرایبش با موفقیت انجام شد");
         } else {

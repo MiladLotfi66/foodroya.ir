@@ -72,7 +72,7 @@ async function GetAllBanners(ShopId) {
     const banners = await Banner.find({ShopId:ShopId}).lean(); // lean() برای بازگشتن به شیء JS ساده بدون مدیریت مدل
 
     // تبدیل اشیاء به plain objects
-    const plainBanners = banners.map((banner) => ({
+    const plainBanners = banners?.map((banner) => ({
       ...banner,
       _id: banner._id.toString(), // تبدیل ObjectId به رشته
       createdAt: banner.createdAt.toISOString(), // تبدیل Date به رشته
@@ -93,18 +93,20 @@ export async function GetAllEnableBanners(shopUniqName) {
 
     // دریافت آی‌دی فروشگاه از طریق نام یکتای فروشگاه
     const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+    
     if (shopResponse.status !== 200 || !shopResponse.ShopID) {
       throw new Error(shopResponse.error || "shopId is required");
     }
     const ShopId = shopResponse.ShopID;
-
     // واکشی بنرهای فعال که به فروشگاه مدنظر تعلق دارند
     const banners = await Banner.find({ BannerStatus: true, ShopId }).lean(); // فیلتر بر اساس ShopId و BannerStatus
-
+    // اگر بنری پیدا نشد، لیست خالی بازگردانید
+  
     // تبدیل اشیاء به plain objects
-    const plainBanners = banners.map((banner) => ({
+    const plainBanners = banners?.map((banner) => ({
       ...banner,
       _id: banner._id.toString(), // تبدیل ObjectId به رشته
+      ShopId: banner.ShopId.toString(), // تبدیل ObjectId به رشته
       createdAt: banner.createdAt.toISOString(), // تبدیل Date به رشته
       updatedAt: banner.updatedAt.toISOString(), // تبدیل Date به رشته
     }));

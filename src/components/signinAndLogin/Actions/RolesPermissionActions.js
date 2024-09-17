@@ -332,7 +332,7 @@ export async function GetAllFollowedUsers(ShopId){
 
   const shop = await Shop.findOne({ _id : ShopId }).populate({path: 'followers', select: 'username'}).lean();
   
-  const followers = shop.followers.map(follower => ({
+  const followers = shop.followers?.map(follower => ({
     ...follower,
     _id: follower._id.toString(), // تبدیل ObjectId به رشته
   }));
@@ -358,7 +358,7 @@ export async function GetAllFollowedUsersWithRoles(ShopId, roleId) {
       .lean();
 
     const followersWithRoles = await Promise.all(
-      shop.followers.map(async (follower) => {
+      shop.followers?.map(async (follower) => {
         // بررسی اینکه آیا این فالور برای این فروشگاه نقش خاصی دارد یا خیر
         const roleInShop = await RoleInShop.findOne({
           UserId: follower._id,
@@ -404,7 +404,7 @@ export async function GetShopRolesByShopUniqName(ShopUniqName) {
     const Roles = await RolePerimision.find({ ShopId }).lean();
 
     // تبدیل فیلدهای خاص به plain strings
-    const plainRoles = Roles.map(role => ({
+    const plainRoles = Roles?.map(role => ({
       ...role,
       _id: role._id.toString(),
       ShopId: role.ShopId.toString(),  // تبدیل ShopId به رشته
@@ -478,7 +478,7 @@ export async function  getUsersByRoleId (roleId) {
       select: '_id username'
     });
 
-    const users = rolesInShop.map(roleInShop => {
+    const users = rolesInShop?.map(roleInShop => {
       const user = roleInShop.UserId;
       return user ? { _id: user._id, username: user.username } : null;
     }).filter(user => user !== null); // حذف موارد null
@@ -509,7 +509,7 @@ export async function GetUserRolsAtShop({ userId, shopId }) {
     const rolesInShop = await RoleInShop.find({ UserId: userId, ShopId: shopId }).populate('RoleId');
     
     // استخراج آی‌دی‌های نقش‌ها و ایجاد یک آرایه
-    const roleIds = rolesInShop.map(item => item.RoleId._id.toString());
+    const roleIds = rolesInShop?.map(item => item.RoleId._id.toString());
 
     return { message: "Roles retrieved successfully", status: 200, data: roleIds };
   } catch (error) {

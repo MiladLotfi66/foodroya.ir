@@ -17,7 +17,7 @@ const simplifyFollowers = (followers) => {
     return []; // آرایه خالی را برمی‌گرداند
   }
 
-  return followers.map((follower) => {
+  return followers?.map((follower) => {
     if (follower && typeof follower.toHexString === 'function') {
       return follower.toHexString();
     } else {
@@ -56,7 +56,7 @@ export async function GetUserShops() {
 
     const Shops = await shops.find({ CreatedBy: userData.id }).lean();
 
-    const plainShops = Shops.map((Shop) => ({
+    const plainShops = Shops?.map((Shop) => ({
       ...Shop,
       _id: Shop._id.toString(),
       CreatedBy: Shop.CreatedBy.toString(),
@@ -178,7 +178,7 @@ export async function GetUserbyUserId(userId) {
     const plainUser = {
       ...user,
       _id: user._id.toString(),
-      following: user.following.map((shop) => shop._id.toString()),
+      following: user.following?.map((shop) => shop._id.toString()),
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
@@ -509,7 +509,7 @@ async function GetAllShops() {
 
     const Shops = await shops.find({}).lean();
 
-    const plainShops = Shops.map((Shop) => ({
+    const plainShops = Shops?.map((Shop) => ({
       ...Shop,
       _id: Shop._id.toString(),
       CreatedBy: Shop.CreatedBy.toString(),
@@ -532,7 +532,7 @@ async function GetAllEnableShops() {
 
     const Shops = await shops.find({ ShopStatus: true }).lean();
 
-    const plainShops = Shops.map((Shop) => {
+    const plainShops = Shops?.map((Shop) => {
 
       return {
         ...Shop,
