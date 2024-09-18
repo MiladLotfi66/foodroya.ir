@@ -1,5 +1,4 @@
 "use client";
-import io from "socket.io-client";
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
@@ -8,6 +7,7 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import Image from "next/image";
 import UserPlus from "@/module/svgs/UserPlus";
+import CommentSvg from "@/module/svgs/CommentSvg";
 import {
   ShopServerDisableActions,
   ShopServerEnableActions,
@@ -17,12 +17,20 @@ import {
 } from "@/components/signinAndLogin/Actions/ShopServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
+import CommentComponent from "../comment/CommentComponent";
 
-
-function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , handleEnableShop, handleDisableShop, }) {
+function ShopCard({
+  Shop,
+  editfunction,
+  editable,
+  followable,
+  user,
+  deleteFunc,
+  handleEnableShop,
+  handleDisableShop,
+}) {
   const [isFollowing, setIsFollowing] = useState(false);
-
-   
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
 
   useEffect(() => {
     // بررسی وضعیت فالو در زمان بارگذاری
@@ -38,7 +46,6 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
       if (res.status === 200 || res.status === 201) {
         toast.success("فروشگاه با موفقیت دنبال شد");
         setIsFollowing(true);
-
       } else {
         toast.error(res.error);
       }
@@ -63,10 +70,9 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
     }
   };
 
- 
- 
- 
- 
+  const handleComment =()=>{
+    setIsCommentOpen(!isCommentOpen)
+  }
 
   return (
     <div
@@ -76,6 +82,9 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
       {!Shop.ShopStatus && (
         <div className="absolute inset-0 bg-black/60 rounded-lg"></div>
       )}
+      {
+        isCommentOpen&& <CommentComponent/>
+      }
       <div className="hidden">
         <DeleteSvg />
         <EditSvg />
@@ -83,6 +92,7 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
         <EyeSvg />
         <EyeslashSvg />
         <UserPlus />
+        <CommentSvg />
       </div>
       <div className="absolute top-2 right-2 z-20 p-2">
         <div
@@ -98,7 +108,7 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
             height="34"
             className=" cursor-pointer "
             aria-label="delete"
-            onClick={()=>deleteFunc(Shop._id)}
+            onClick={() => deleteFunc(Shop._id)}
           >
             <use href="#DeleteSvg"></use>
           </svg>
@@ -130,9 +140,7 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
               height="34"
               className=" cursor-pointer"
               aria-label="enable"
-              
               onClick={() => handleEnableShop(Shop._id)}
-
             >
               <use href="#EyeSvg"></use>
             </svg>
@@ -148,31 +156,39 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
               <use href="#EyeslashSvg"></use>
             </svg>
           )}
+          <svg
+            width="34"
+            height="34"
+            className="cursor-pointer"
+            aria-label="comment"
+            onClick={() => handleComment(Shop._id)}
+          >
+            <use href="#CommentSvg"></use>
+          </svg>
         </div>
         {/* ///////////////////////////follow icone////////////////////////////////// */}
         {followable && (
-  <div
-    onClick={isFollowing ? unfollowFunc : followFunc}
-    className={`flexCenter bg-opacity-60 cursor-pointer flex-row text-center px-2  rounded-md ${
-      isFollowing ? "bg-gray-500 border-gray-500" : "bg-blue-500 border-blue-500"
-    } hover:border-orange-300 hover:text-orange-300`}
-  >
-    <p className="pl-2">{isFollowing ? "دنبال نکردن" : "دنبال کردن"}</p>
-    <svg
-      width="34"
-      height="34"
-      className="cursor-pointer"
-      aria-label={isFollowing ? "unfollow" : "follow"}
-    >
-      <use href="#UserPlus"></use>
-    </svg>
-  </div>
-)}
-
+          <div
+            onClick={isFollowing ? unfollowFunc : followFunc}
+            className={`flexCenter bg-opacity-60 cursor-pointer flex-row text-center px-2  rounded-md ${
+              isFollowing
+                ? "bg-gray-500 border-gray-500"
+                : "bg-blue-500 border-blue-500"
+            } hover:border-orange-300 hover:text-orange-300`}
+          >
+            <p className="pl-2">{isFollowing ? "دنبال نکردن" : "دنبال کردن"}</p>
+            <svg
+              width="34"
+              height="34"
+              className="cursor-pointer"
+              aria-label={isFollowing ? "unfollow" : "follow"}
+            >
+              <use href="#UserPlus"></use>
+            </svg>
+          </div>
+        )}
       </div>
-      <div
-        className="absolute bottom-2 left-2 z-20 p-2"
-      >
+      <div className="absolute bottom-2 left-2 z-20 p-2">
         <div
           className="bg-white
  bg-opacity-50 dark:bg-zinc-700 dark:bg-opacity-50 rounded-md p-3"
@@ -185,10 +201,8 @@ function ShopCard({ Shop, editfunction, editable, followable, user,deleteFunc , 
               width={30}
               height={30}
               quality={30}
-              style={{ objectFit: "cover" }}  // استفاده از objectFit برای تنظیم تناسب تصویر
-            
+              style={{ objectFit: "cover" }} // استفاده از objectFit برای تنظیم تناسب تصویر
             />
-
 
             <span className="font-MorabbaBold text-sm md:text-xl">
               {Shop.ShopName}
