@@ -78,15 +78,15 @@ function CommentComponent({ isOpen, onClose }) {
                     height={20}
                     quality={30}
                   />
-                  <span className="pr-2 mr-1 text-gray-500 text-sm">
+                  <button className="pr-2 mr-1 text-gray-500 text-sm hover:text-orange-300">
                     {" "}
                     میلاد لطفی
-                  </span>
+                  </button>
                   <span className="pr-2 mr-1 text-gray-500 text-sm"> ۷روز</span>
                 </div>
 
                 <div className="flex  items-center">
-                  <div className=" p-1 rounded-md">
+                  <div className=" p-1 rounded-md hover:text-orange-300">
                     <svg
                       width="24"
                       height="24"
@@ -95,7 +95,7 @@ function CommentComponent({ isOpen, onClose }) {
                       <use href="#DislikeSvg"></use>
                     </svg>
                   </div>
-                  <div className=" p-1 rounded-md">
+                  <div className=" p-1 rounded-md hover:text-orange-300">
                     <svg
                       width="24"
                       height="24"
@@ -113,9 +113,9 @@ function CommentComponent({ isOpen, onClose }) {
               </span>
 
               <div className="flex items-center justify-between m-2 ">
-                <span className="text-gray-500 text-sm">پاسخ دادن</span>
+                <button className="text-gray-500 text-sm  hover:text-orange-300">پاسخ دادن</button>
                 <span className="bg-gray-500 h-1 w-10"></span>
-                <span className="text-gray-500 text-sm">دیدن سایر پاسخ ها</span>
+                <button className="text-gray-500 text-sm  hover:text-orange-300 ">دیدن سایر پاسخ ها</button>
               </div>
             </div>
             {/* /////////////////////newcomment//////////////////////////// */}
