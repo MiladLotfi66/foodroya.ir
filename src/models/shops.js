@@ -20,6 +20,13 @@ const schema = new Schema(
         ref: 'User', // تغییر نام از 'Users' به 'User'
       },
     ],
+    comments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Comment', // اشاره به مدل 'Comment'
+      },
+    ],
+
     ShopSmallDiscription: {
       type: String,
     },
