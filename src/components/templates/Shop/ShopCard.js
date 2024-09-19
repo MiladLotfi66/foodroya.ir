@@ -40,6 +40,10 @@ function ShopCard({
     }
   }, [user, Shop]);
 
+    // تابع بستن کامپوننت کامنت
+    function handleClose() {
+      setIsCommentOpen(false);
+    }
   const followFunc = async () => {
     try {
       const res = await followShopServerAction(Shop._id);
@@ -83,7 +87,8 @@ function ShopCard({
         <div className="absolute inset-0 bg-black/60 rounded-lg"></div>
       )}
       {
-        isCommentOpen&& <CommentComponent/>
+        isCommentOpen&& <CommentComponent isOpen={isCommentOpen} onClose={handleClose} />
+
       }
       <div className="hidden">
         <DeleteSvg />

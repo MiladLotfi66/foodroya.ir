@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
@@ -10,15 +11,36 @@ import ArrowUpSvg from "@/module/svgs/ArrowUpSvg";
 import usericone from "@/public/Images/jpg/user.webp";
 import HeartSvg from "@/module/svgs/HeartSvg";
 import DislikeSvg from "@/module/svgs/DislikeSvg";
-
+// const [isOpenState,setIsOLpenState]=useState(false)
 // import { DevTool } from "@hookform/devtools";
 
-function CommentComponent(isOpen, onClose) {
+function CommentComponent({ isOpen, onClose }) {
+    const commentRef = useRef(null);
+
+    useEffect(() => {
+      // اضافه کردن listener برای کلیک خارج از کامپوننت
+      function handleClickOutside(event) {
+        if (commentRef.current && !commentRef.current.contains(event.target)) {
+          onClose(); // بستن کامپوننت وقتی کاربر خارج از آن کلیک می‌کند
+        }
+      }
+  
+      // اضافه کردن event listener
+      document.addEventListener("mousedown", handleClickOutside);
+  
+      // تمیز کردن event listener وقتی کامپوننت از بین می‌رود
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [commentRef, onClose]);
+  
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
-      <div className="bg-white w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-6 ">
+      <div 
+      ref={commentRef} // اینجا رفرنس به کامپوننت اضافه می‌شود
+      className="bg-white w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-6 ">
         <div className="h-full ">
           {/* <div className=" overflow-y-auto max-h-screen"> */}
             <div className="hidden">
@@ -34,7 +56,7 @@ function CommentComponent(isOpen, onClose) {
                 <svg
                   width="34"
                   height="34"
-                  //   onClick={onClose} // Close the modal on click
+                    onClick={onClose} // Close the modal on click
                 >
                   <use href="#CloseSvg"></use>
                 </svg>
