@@ -874,6 +874,33 @@ video {
   transform: rotate(-10deg);
 }
 
+.comment-container {
+  display: flex;
+  flex-direction: column;
+  /* این چینش عمودی است که برای لیست نظرات استفاده می‌شود */
+  width: 100%;
+}
+
+.my-comment {
+  align-self: flex-end;
+  /* موقعیت یابی در سمت راست */
+  background-color: #e0ffe0;
+  /* رنگ متفاوت برای کامنت کاربر */
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+}
+
+.other-comment {
+  align-self: flex-start;
+  /* موقعیت یابی در سمت چپ */
+  background-color: #f0f0f0;
+  /* رنگ متفاوت برای کامنت‌های دیگران */
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+}
+
 .invisible {
   visibility: hidden;
 }
@@ -1117,6 +1144,13 @@ video {
   -webkit-line-clamp: 2;
 }
 
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .line-clamp-6 {
   overflow: hidden;
   display: -webkit-box;
@@ -1285,14 +1319,6 @@ video {
 
 .h-px {
   height: 1px;
-}
-
-.h-3 {
-  height: 0.75rem;
-}
-
-.h-32 {
-  height: 8rem;
 }
 
 .max-h-screen {
@@ -1665,6 +1691,14 @@ video {
   overflow: auto;
 }
 
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -1727,11 +1761,6 @@ video {
 .border-blue-500 {
   --tw-border-opacity: 1;
   border-color: rgb(59 130 246 / var(--tw-border-opacity));
-}
-
-.border-gray-200 {
-  --tw-border-opacity: 1;
-  border-color: rgb(229 231 235 / var(--tw-border-opacity));
 }
 
 .border-gray-500 {
@@ -1952,11 +1981,6 @@ video {
   padding-bottom: 0.75rem;
 }
 
-.py-4 {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
 .py-\[2px\] {
   padding-top: 2px;
   padding-bottom: 2px;
@@ -1980,6 +2004,10 @@ video {
 
 .pr-2 {
   padding-right: 0.5rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
 }
 
 .pr-7 {
@@ -2012,10 +2040,6 @@ video {
 
 .pt-\[21px\] {
   padding-top: 21px;
-}
-
-.pr-4 {
-  padding-right: 1rem;
 }
 
 .text-center {
@@ -2110,6 +2134,11 @@ video {
   letter-spacing: -.065em;
 }
 
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity));
+}
+
 .text-gray-300 {
   --tw-text-opacity: 1;
   color: rgb(209 213 219 / var(--tw-text-opacity));
@@ -2118,16 +2147,6 @@ video {
 .text-gray-400 {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity));
-}
-
-.text-gray-500 {
-  --tw-text-opacity: 1;
-  color: rgb(107 114 128 / var(--tw-text-opacity));
-}
-
-.text-gray-700 {
-  --tw-text-opacity: 1;
-  color: rgb(55 65 81 / var(--tw-text-opacity));
 }
 
 .text-green-500 {

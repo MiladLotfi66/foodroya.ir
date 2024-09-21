@@ -17,16 +17,18 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   const [text, setText] = useState(""); // حالت برای متن ورودی کاربر
   const [comments, setComments] = useState([]); // حالت برای ذخیره نظرات
   const [loading, setLoading] = useState(true); // حالت بارگذاری نظرات
-  const commentRef = useRef(null);
+  const [expandedComments, setExpandedComments] = useState({}); // حالت جدید برای ذخیره باز و بسته بودن نظرات
+  const [showExpandButton, setShowExpandButton] = useState({}); // حالت برای نمایش دکمه نمایش بیشتر
+
+  const commentRef = useRef({});
 
   useEffect(() => {
-    // تابع برای درخواست نظرات از سرور
     async function getComments() {
       try {
-        setLoading(true); // شروع بارگذاری
-        const res = await GetCommentsByReference(referenceId, type); // درخواست نظرات
+        setLoading(true);
+        const res = await GetCommentsByReference(referenceId, type);
         if (res.status === 200) {
-          setComments(res.comments); // ذخیره نظرات در حالت
+          setComments(res.comments);
         } else {
           toast.error("خطا در دریافت نظرات");
         }
@@ -34,27 +36,26 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
         console.error("خطا در دریافت نظرات:", error);
         toast.error("خطا در دریافت نظرات");
       } finally {
-        setLoading(false); // پایان بارگذاری
+        setLoading(false);
       }
     }
 
     if (isOpen) {
-      getComments(); // فقط وقتی کامپوننت باز است، نظرات دریافت شود
+      getComments();
     }
-  }, [isOpen, referenceId, type]); // وابسته به باز شدن و تغییرات referenceId یا type
+  }, [isOpen, referenceId, type]);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (commentRef.current && !commentRef.current.contains(event.target)) {
-        onClose();
+    comments.forEach((comment) => {
+      if (commentRef.current[comment._id]) {
+        const { scrollHeight, clientHeight } = commentRef.current[comment._id];
+        // اگر متن بیش از حد طولانی باشد و محدود به سه خط شده باشد
+        if (scrollHeight > clientHeight) {
+          setShowExpandButton((prev) => ({ ...prev, [comment._id]: true }));
+        }
       }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [commentRef, onClose]);
+    });
+  }, [comments]);
 
   async function onSendHandler() {
     try {
@@ -66,18 +67,17 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       if (res.status === 201) {
         toast.success(res.message || "نظر شما با موفقیت ثبت شد");
 
-        // ساخت یک شیء جدید برای نظر و افزودن آن به لیست نظرات
         const newComment = {
-          _id: new Date().getTime().toString(), // تبدیل شناسه به رشته برای اطمینان
+          _id: new Date().getTime().toString(),
           text: text,
-          author: "شما", // می‌توانید نام کاربر فعلی را استفاده کنید
+          author: "شما",
           likesCount: 0,
           dislikesCount: 0,
           repliesCount: 0,
         };
 
-        setComments((prevComments) => [newComment, ...prevComments]); // افزودن نظر جدید به لیست
-        setText(""); // خالی کردن ورودی پس از ارسال موفق
+        setComments((prevComments) => [newComment, ...prevComments]);
+        setText("");
       } else {
         toast.error(res.error || "خطا در ذخیره نظرات");
       }
@@ -89,81 +89,82 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
   async function handleLike(commentId) {
     setComments((prevComments) =>
-        prevComments.map((comment) => {
-            if (comment._id === commentId) {
-                if (comment.likedByCurrentUser) {
-                    // اگر قبلاً لایک کرده باشد
-                    return {
-                        ...comment,
-                        likesCount: comment.likesCount - 1,
-                        likedByCurrentUser: false,
-                    };
-                } else {
-                    // اگر لایک نکرده باشد
-                    return {
-                        ...comment,
-                        likesCount: comment.likesCount + 1,
-                        likedByCurrentUser: true,
-                    };
-                }
-            }
-            return comment;
-        })
+      prevComments.map((comment) => {
+        if (comment._id === commentId) {
+          if (comment.likedByCurrentUser) {
+            return {
+              ...comment,
+              likesCount: comment.likesCount - 1,
+              likedByCurrentUser: false,
+            };
+          } else {
+            return {
+              ...comment,
+              likesCount: comment.likesCount + 1,
+              likedByCurrentUser: true,
+            };
+          }
+        }
+        return comment;
+      })
     );
 
     try {
-        const res = await likeComment(commentId);
-        if (res.status !== 200) {
-            toast.error("خطا در ثبت لایک");
-        }
-    } catch (error) {
-        console.error("خطا در ثبت لایک:", error);
+      const res = await likeComment(commentId);
+      if (res.status !== 200) {
         toast.error("خطا در ثبت لایک");
+      }
+    } catch (error) {
+      console.error("خطا در ثبت لایک:", error);
+      toast.error("خطا در ثبت لایک");
     }
-}
+  }
 
-async function handleDislike(commentId) {
-  setComments((prevComments) =>
+  async function handleDislike(commentId) {
+    setComments((prevComments) =>
       prevComments.map((comment) => {
-          if (comment._id === commentId) {
-              if (comment.dislikedByCurrentUser) {
-                  // اگر قبلاً دیس‌لایک کرده باشد
-                  return {
-                      ...comment,
-                      dislikesCount: comment.dislikesCount - 1,
-                      dislikedByCurrentUser: false,
-                  };
-              } else {
-                  // اگر دیس‌لایک نکرده باشد
-                  return {
-                      ...comment,
-                      dislikesCount: comment.dislikesCount + 1,
-                      dislikedByCurrentUser: true,
-                  };
-              }
+        if (comment._id === commentId) {
+          if (comment.dislikedByCurrentUser) {
+            return {
+              ...comment,
+              dislikesCount: comment.dislikesCount - 1,
+              dislikedByCurrentUser: false,
+            };
+          } else {
+            return {
+              ...comment,
+              dislikesCount: comment.dislikesCount + 1,
+              dislikedByCurrentUser: true,
+            };
           }
-          return comment;
+        }
+        return comment;
       })
-  );
+    );
 
-  try {
+    try {
       const res = await dislikeComment(commentId);
       if (res.status !== 200) {
-          toast.error("خطا در ثبت دیس‌لایک");
+        toast.error("خطا در ثبت دیس‌لایک");
       }
-  } catch (error) {
+    } catch (error) {
       console.error("خطا در ثبت دیس‌لایک:", error);
       toast.error("خطا در ثبت دیس‌لایک");
+    }
   }
-}
 
+  function toggleCommentExpand(commentId) {
+    setExpandedComments((prevState) => ({
+      ...prevState,
+      [commentId]: !prevState[commentId],
+    }));
+  }
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
       <div
-        ref={commentRef}
         className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 "
       >
         <div className="h-full">
@@ -192,56 +193,61 @@ async function handleDislike(commentId) {
               </div>
             ) : (
               <div className="space-y-4 overflow-y-auto flex-grow">
-                {/* نمایش نظرات موجود */}
-                {comments?.map((comment) => (
-                  <div
-                    key={comment._id}
-                    className="border-b border-gray-200 py-2"
-                  >
-                    <div className="flex justify-between items-center mb-2 ">
-                      <div className="flex items-center">
-                        <Image
-                          src={usericone}
-                          alt="تصویر کاربر"
-                          width={30}
-                          height={30}
-                          className="rounded-full"
-                        />
-                        <span className="ml-2 font-bold">{comment.author}</span>
+                {comments.map((comment) => {
+                  const isExpanded = expandedComments[comment._id];
+
+                  return (
+                    <div key={comment._id} className={`comment-container ${comment.author === 'شما' ? 'my-comment' : 'other-comment'}`}>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center">
+                          <Image
+                            src={usericone}
+                            alt="تصویر کاربر"
+                            width={30}
+                            height={30}
+                            className="rounded-full"
+                          />
+                          <span className="ml-2 font-bold">{comment.author}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                          <div onClick={() => handleLike(comment._id)}>
+                            <HeartSvg isLiked={comment.likedByCurrentUser} />
+                          </div>
+                          <span className="ml-1">{comment.likesCount}</span>
+
+                          <div onClick={() => handleDislike(comment._id)}>
+                            <DislikeSvg isDisliked={comment.dislikedByCurrentUser} />
+                          </div>
+                          <span className="ml-1">{comment.dislikesCount}</span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center">
-                        {/* کامپوننت لایک */}
-                        <div
-                          onClick={() => handleLike(comment._id)} // تابع لایک
-                        >
-                          <HeartSvg
-                            isLiked={comment.likedByCurrentUser} // پاس دادن وضعیت لایک
-                          />
-                        </div>
-                        <span className="ml-1">{comment.likesCount}</span>
+                      <p
+                        ref={(el) => (commentRef.current[comment._id] = el)}
+                        className={`mb-2 pr-4 text-wrap overflow-hidden ${isExpanded ? '' : 'line-clamp-3'}`}
+                      >
+                        {comment.text}
+                      </p>
 
-                        {/* کامپوننت دیسلایک */}
-                        <div
-                          onClick={() => handleDislike(comment._id)} // تابع دیسلایک
+                      {showExpandButton[comment._id] && (
+                        <button
+                          className="text-blue-500"
+                          onClick={() => toggleCommentExpand(comment._id)}
                         >
-                          <DislikeSvg
-                            isDisliked={comment.dislikedByCurrentUser} // پاس دادن وضعیت دیسلایک
-                          />
-                        </div>
-                        <span className="ml-1">{comment.dislikesCount}</span>
+                          {isExpanded ? "بستن" : "نمایش بیشتر"}
+                        </button>
+                      )}
+
+                      <div className="flex justify-between">
+                        <span>{comment.repliesCount} پاسخ</span>
                       </div>
                     </div>
-                    <p className="mb-2 pr-4">{comment.text}</p>
-                    <div className="flex justify-between">
-                      <span>{comment.repliesCount} پاسخ</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
-            {/* دایو ورودی نظر که باید به پایین بچسبد */}
             <div className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700">
               <Image
                 className="rounded-full w-[10%]"
@@ -252,10 +258,10 @@ async function handleDislike(commentId) {
                 quality={60}
               />
               <input
-                className="pr-2 mr-1 w-[80%] h-8  rounded-md dark:bg-zinc-700"
+                className="pr-2 mr-1 w-[80%] h-8 rounded-md dark:bg-zinc-700"
                 placeholder="افزودن نظر ..."
                 value={text}
-                onChange={(e) => setText(e.target.value)} // به‌روزرسانی متن ورودی کاربر
+                onChange={(e) => setText(e.target.value)}
               />
               <div className="bg-blue-400 p-1 rounded-md w-[10%]">
                 <svg width="34" height="34" onClick={onSendHandler}>

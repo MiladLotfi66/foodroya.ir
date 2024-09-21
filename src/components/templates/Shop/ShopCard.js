@@ -9,14 +9,11 @@ import Image from "next/image";
 import UserPlus from "@/module/svgs/UserPlus";
 import CommentSvg from "@/module/svgs/CommentSvg";
 import {
-  ShopServerDisableActions,
-  ShopServerEnableActions,
+
   followShopServerAction,
-  DeleteShops,
   unfollowShopServerAction,
-  GetShopCommentsArray,
+  
 } from "@/components/signinAndLogin/Actions/ShopServerActions";
-import { GetCommentFromArray } from "@/components/signinAndLogin/Actions/CommentServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 import CommentComponent from "../comment/CommentComponent";
@@ -77,22 +74,9 @@ function ShopCard({
     }
   };
 
-  const handleComment = async (shopId) => {
+  const handleComment =  () => {
     setIsCommentOpen(!isCommentOpen);
-    if (!isCommentOpen) {
-      // فقط زمانی که مودال باز می‌شود، کامنت‌ها را لود کن
-      try {
-        const res = await GetShopCommentsArray(shopId);
-        if (res.status === 200 && res.comments) {
-          setCommetList(res.comments);
-        } else {
-          toast.error(res.error || "خطا در دریافت کامنت‌ها");
-        }
-      } catch (error) {
-        console.error("خطا در دریافت کامنت‌ها:", error);
-        toast.error("خطا در دریافت کامنت‌ها");
-      }
-    } }
+    }
   return (
     <div
       className="relative bg-no-repeat bg-cover bg-center h-[150px] md:h-[300px] w-full rounded-lg"
@@ -105,7 +89,6 @@ function ShopCard({
         <CommentComponent
           isOpen={isCommentOpen}
           onClose={handleClose}
-          comments={commentList} // ارسال لیست کامنت‌ها به کامپوننت
           referenceId={Shop._id} // ارسال لیست کامنت‌ها به کامپوننت
           type={"shop"} // ارسال لیست کامنت‌ها به کامپوننت
 
@@ -182,18 +165,11 @@ function ShopCard({
               <use href="#EyeslashSvg"></use>
             </svg>
           )}
-          <svg
-            width="34"
-            height="34"
-            className="cursor-pointer"
-            aria-label="comment"
-            onClick={() => handleComment(Shop._id)}
-          >
-            <use href="#CommentSvg"></use>
-          </svg>
+         
         </div>
         {/* ///////////////////////////follow icone////////////////////////////////// */}
         {followable && (
+          <div className="flex gap-1">
           <div
             onClick={isFollowing ? unfollowFunc : followFunc}
             className={`flexCenter bg-opacity-60 cursor-pointer flex-row text-center px-2  rounded-md ${
@@ -212,6 +188,17 @@ function ShopCard({
               <use href="#UserPlus"></use>
             </svg>
           </div>
+           <svg
+           width="34"
+           height="34"
+           className="cursor-pointer"
+           aria-label="comment"
+           onClick={() => handleComment(Shop._id)}
+         >
+           <use href="#CommentSvg"></use>
+         </svg>
+         </div>
+
         )}
       </div>
       <div className="absolute bottom-2 left-2 z-20 p-2">
