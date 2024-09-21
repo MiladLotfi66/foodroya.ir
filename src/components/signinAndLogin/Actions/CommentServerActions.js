@@ -189,4 +189,34 @@ export async function dislikeComment(commentId) {
   }
 }
 
-  
+export async function saveReply(text, parentCommentId) {
+  try {
+    // اتصال به دیتابیس
+    await connectDB();
+
+    // احراز هویت کاربر
+    const userData = await authenticateUser();
+
+    // بررسی اینکه همه فیلدهای لازم ارسال شده باشند
+    if (!text || !userData.id || !parentCommentId) {
+      return { message: 'لطفا همه اطلاعات مورد نیاز را ارسال کنید.', status: 400 };
+    }
+
+    // ایجاد یک کامنت جدید با نوع reply
+    const newReply = new Comment({
+      text,
+      author: userData.id,
+      type: "reply",  // نوع کامنت "reply" خواهد بود
+      referenceId: parentCommentId  // اشاره به کامنت والد
+    });
+
+    // ذخیره پاسخ در دیتابیس
+    await newReply.save();
+
+    return { message: 'پاسخ با موفقیت ذخیره شد.', status: 201 };
+
+  } catch (error) {
+    console.error('خطا در ذخیره‌سازی پاسخ:', error);
+    return { error: error.message, status: 500 };
+  }
+}

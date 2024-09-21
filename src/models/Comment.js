@@ -12,7 +12,7 @@ const commentSchema = new Schema(
       ref: "User",
       required: true,
     },
-    type: { type: String, enum: ["shop", "person", "product"], required: true }, // نوع مولفه
+    type: { type: String, enum: ["shop", "person", "product", "reply"], required: true }, // اضافه شدن "reply"
     referenceId: { type: mongoose.Schema.Types.ObjectId, required: true }, // شناسه مرجع (مثلا shopId یا productId)
 
     likes: [

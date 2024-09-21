@@ -1113,6 +1113,10 @@ video {
   margin-top: 2.5rem;
 }
 
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
 .mt-3 {
   margin-top: 0.75rem;
 }
@@ -1738,6 +1742,10 @@ video {
   border-top-right-radius: 0.5rem;
 }
 
+.border {
+  border-width: 1px;
+}
+
 .border-b {
   border-bottom-width: 1px;
 }
@@ -1990,6 +1998,10 @@ video {
   padding-bottom: 1.25rem;
 }
 
+.pl-1 {
+  padding-left: 0.25rem;
+}
+
 .pl-2 {
   padding-left: 0.5rem;
 }
@@ -2032,10 +2044,6 @@ video {
 
 .pt-\[21px\] {
   padding-top: 21px;
-}
-
-.pl-1 {
-  padding-left: 0.25rem;
 }
 
 .text-center {

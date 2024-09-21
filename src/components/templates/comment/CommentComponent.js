@@ -9,9 +9,10 @@ import DislikeSvg from "@/module/svgs/DislikeSvg";
 import {
   saveComment,
   GetCommentsByReference,
+  saveReply, // تابع برای ذخیره پاسخ
   likeComment,
   dislikeComment,
-} from "@/components/signinAndLogin/Actions/CommentServerActions"; // فرض می‌کنیم fetchComments تابعی برای دریافت نظرات است
+} from "@/components/signinAndLogin/Actions/CommentServerActions";
 
 function CommentComponent({ isOpen, onClose, referenceId, type }) {
   const [text, setText] = useState(""); // حالت برای متن ورودی کاربر
@@ -19,6 +20,8 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   const [loading, setLoading] = useState(true); // حالت بارگذاری نظرات
   const [expandedComments, setExpandedComments] = useState({}); // حالت جدید برای ذخیره باز و بسته بودن نظرات
   const [showExpandButton, setShowExpandButton] = useState({}); // حالت برای نمایش دکمه نمایش بیشتر
+  const [replyText, setReplyText] = useState({}); // حالت برای ذخیره پاسخ‌ها
+  const [replyingTo, setReplyingTo] = useState(null); // تعیین اینکه کاربر به کدام کامنت در حال پاسخ است
 
   const commentRef = useRef({});
 
@@ -87,69 +90,35 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     }
   }
 
-  async function handleLike(commentId) {
-    setComments((prevComments) =>
-      prevComments.map((comment) => {
-        if (comment._id === commentId) {
-          if (comment.likedByCurrentUser) {
-            return {
-              ...comment,
-              likesCount: comment.likesCount - 1,
-              likedByCurrentUser: false,
-            };
-          } else {
-            return {
-              ...comment,
-              likesCount: comment.likesCount + 1,
-              likedByCurrentUser: true,
-            };
-          }
-        }
-        return comment;
-      })
-    );
-
+  async function handleReplySend(commentId) {
     try {
-      const res = await likeComment(commentId);
-      if (res.status !== 200) {
-        toast.error("خطا در ثبت لایک");
+      const reply = replyText[commentId]?.trim();
+      if (!reply) {
+        toast.error("پاسخ خالی است");
+        return;
+      }
+      const res = await saveReply(reply, commentId);
+      if (res.status === 201) {
+        toast.success("پاسخ شما با موفقیت ثبت شد");
+
+        // به‌روزرسانی پاسخ‌ها در کامنت
+        setComments((prevComments) =>
+          prevComments.map((comment) =>
+            comment._id === commentId
+              ? { ...comment, repliesCount: comment.repliesCount + 1 }
+              : comment
+          )
+        );
+
+        // پاک کردن حالت پاسخ
+        setReplyingTo(null);
+        setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+      } else {
+        toast.error(res.error || "خطا در ذخیره پاسخ");
       }
     } catch (error) {
-      console.error("خطا در ثبت لایک:", error);
-      toast.error("خطا در ثبت لایک");
-    }
-  }
-
-  async function handleDislike(commentId) {
-    setComments((prevComments) =>
-      prevComments.map((comment) => {
-        if (comment._id === commentId) {
-          if (comment.dislikedByCurrentUser) {
-            return {
-              ...comment,
-              dislikesCount: comment.dislikesCount - 1,
-              dislikedByCurrentUser: false,
-            };
-          } else {
-            return {
-              ...comment,
-              dislikesCount: comment.dislikesCount + 1,
-              dislikedByCurrentUser: true,
-            };
-          }
-        }
-        return comment;
-      })
-    );
-
-    try {
-      const res = await dislikeComment(commentId);
-      if (res.status !== 200) {
-        toast.error("خطا در ثبت دیس‌لایک");
-      }
-    } catch (error) {
-      console.error("خطا در ثبت دیس‌لایک:", error);
-      toast.error("خطا در ثبت دیس‌لایک");
+      console.error("خطا در ذخیره پاسخ:", error);
+      toast.error("خطا در ذخیره پاسخ");
     }
   }
 
@@ -164,9 +133,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
-      <div
-        className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 "
-      >
+      <div className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 ">
         <div className="h-full">
           <div className="hidden">
             <CloseSvg />
@@ -213,12 +180,12 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                         <div className="flex items-center gap-3">
                           <div className="flex" onClick={() => handleLike(comment._id)}>
                             <HeartSvg isLiked={comment.likedByCurrentUser} />
-                          <span className="ml-1">{comment.likesCount}</span>
+                            <span className="ml-1">{comment.likesCount}</span>
                           </div>
 
                           <div className="flex" onClick={() => handleDislike(comment._id)}>
                             <DislikeSvg isDisliked={comment.dislikedByCurrentUser} />
-                          <span className="ml-1">{comment.dislikesCount}</span>
+                            <span className="ml-1">{comment.dislikesCount}</span>
                           </div>
                         </div>
                       </div>
@@ -241,7 +208,36 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
                       <div className="flex justify-between">
                         <span>{comment.repliesCount} پاسخ</span>
+                        <button
+                          className="text-blue-500"
+                          onClick={() => setReplyingTo(comment._id)}
+                        >
+                          پاسخ
+                        </button>
                       </div>
+
+                      {replyingTo === comment._id && (
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            className="w-full p-2 border rounded-md dark:bg-zinc-600"
+                            placeholder="پاسخ خود را بنویسید..."
+                            value={replyText[comment._id] || ""}
+                            onChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [comment._id]: e.target.value,
+                              }))
+                            }
+                          />
+                          <button
+                            className="mt-1 p-1 bg-blue-500 text-white rounded-md"
+                            onClick={() => handleReplySend(comment._id)}
+                          >
+                            ارسال پاسخ
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
