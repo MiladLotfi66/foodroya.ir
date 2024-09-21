@@ -7,7 +7,7 @@ function HeartSvg({ isLiked }) {
       fill={isLiked ? 'red' : 'none'} // تغییر رنگ بر اساس وضعیت لایک
       viewBox="0 0 24 24"
       strokeWidth={1.5}
-      stroke="currentColor"
+      stroke={isLiked ? 'red' : 'currentColor'} // تغییر رنگ خط دور
       className="size-6"
       id="HeartSvg"
     >

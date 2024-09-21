@@ -205,21 +205,21 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                             alt="تصویر کاربر"
                             width={30}
                             height={30}
-                            className="rounded-full"
+                            className="rounded-full pl-1"
                           />
                           <span className="ml-2 font-bold">{comment.author}</span>
                         </div>
 
-                        <div className="flex items-center">
-                          <div onClick={() => handleLike(comment._id)}>
+                        <div className="flex items-center gap-3">
+                          <div className="flex" onClick={() => handleLike(comment._id)}>
                             <HeartSvg isLiked={comment.likedByCurrentUser} />
-                          </div>
                           <span className="ml-1">{comment.likesCount}</span>
-
-                          <div onClick={() => handleDislike(comment._id)}>
-                            <DislikeSvg isDisliked={comment.dislikedByCurrentUser} />
                           </div>
+
+                          <div className="flex" onClick={() => handleDislike(comment._id)}>
+                            <DislikeSvg isDisliked={comment.dislikedByCurrentUser} />
                           <span className="ml-1">{comment.dislikesCount}</span>
+                          </div>
                         </div>
                       </div>
 

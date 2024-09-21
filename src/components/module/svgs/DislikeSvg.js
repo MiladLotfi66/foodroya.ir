@@ -6,7 +6,7 @@ function DislikeSvg({ isDisliked }) {
       fill={isDisliked ? 'blue' : 'none'} // تغییر رنگ بر اساس وضعیت دیسلایک
       viewBox="0 0 24 24"
       strokeWidth={1.5}
-      stroke="currentColor"
+      stroke={isDisliked ? 'blue' : 'currentColor'} // تغییر رنگ خط دور
       className="size-6"
       id="DislikeSvg"
     >

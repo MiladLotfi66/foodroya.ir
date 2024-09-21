@@ -884,8 +884,6 @@ video {
 .my-comment {
   align-self: flex-end;
   /* موقعیت یابی در سمت راست */
-  background-color: #e0ffe0;
-  /* رنگ متفاوت برای کامنت کاربر */
   padding: 10px;
   border-radius: 10px;
   margin: 5px 0;
@@ -894,8 +892,6 @@ video {
 .other-comment {
   align-self: flex-start;
   /* موقعیت یابی در سمت چپ */
-  background-color: #f0f0f0;
-  /* رنگ متفاوت برای کامنت‌های دیگران */
   padding: 10px;
   border-radius: 10px;
   margin: 5px 0;
@@ -1695,10 +1691,6 @@ video {
   overflow: hidden;
 }
 
-.overflow-scroll {
-  overflow: scroll;
-}
-
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -2040,6 +2032,10 @@ video {
 
 .pt-\[21px\] {
   padding-top: 21px;
+}
+
+.pl-1 {
+  padding-left: 0.25rem;
 }
 
 .text-center {
