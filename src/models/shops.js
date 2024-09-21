@@ -24,6 +24,8 @@ const schema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: 'Comment', // اشاره به مدل 'Comment'
+        default: [],
+
       },
     ],
 

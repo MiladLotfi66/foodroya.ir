@@ -14,7 +14,9 @@ import {
   followShopServerAction,
   DeleteShops,
   unfollowShopServerAction,
+  GetShopCommentsArray,
 } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { GetCommentFromArray } from "@/components/signinAndLogin/Actions/CommentServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 import CommentComponent from "../comment/CommentComponent";
@@ -31,6 +33,7 @@ function ShopCard({
 }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [commentList , setCommetList]=useState([])
 
   useEffect(() => {
     // بررسی وضعیت فالو در زمان بارگذاری
@@ -74,10 +77,22 @@ function ShopCard({
     }
   };
 
-  const handleComment =()=>{
-    setIsCommentOpen(!isCommentOpen)
-  }
-
+  const handleComment = async (shopId) => {
+    setIsCommentOpen(!isCommentOpen);
+    if (!isCommentOpen) {
+      // فقط زمانی که مودال باز می‌شود، کامنت‌ها را لود کن
+      try {
+        const res = await GetShopCommentsArray(shopId);
+        if (res.status === 200 && res.comments) {
+          setCommetList(res.comments);
+        } else {
+          toast.error(res.error || "خطا در دریافت کامنت‌ها");
+        }
+      } catch (error) {
+        console.error("خطا در دریافت کامنت‌ها:", error);
+        toast.error("خطا در دریافت کامنت‌ها");
+      }
+    } }
   return (
     <div
       className="relative bg-no-repeat bg-cover bg-center h-[150px] md:h-[300px] w-full rounded-lg"
@@ -86,10 +101,16 @@ function ShopCard({
       {!Shop.ShopStatus && (
         <div className="absolute inset-0 bg-black/60 rounded-lg"></div>
       )}
-      {
-        isCommentOpen&& <CommentComponent isOpen={isCommentOpen} onClose={handleClose} />
+           {isCommentOpen && (
+        <CommentComponent
+          isOpen={isCommentOpen}
+          onClose={handleClose}
+          comments={commentList} // ارسال لیست کامنت‌ها به کامپوننت
+          referenceId={Shop._id} // ارسال لیست کامنت‌ها به کامپوننت
+          type={"shop"} // ارسال لیست کامنت‌ها به کامپوننت
 
-      }
+        />
+      )}
       <div className="hidden">
         <DeleteSvg />
         <EditSvg />

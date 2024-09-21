@@ -1,5 +1,6 @@
 "use server";
 import shops from "@/models/shops";
+import Comment from "@/models/Comment";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import fs from "fs";
@@ -76,6 +77,48 @@ export async function GetUserShops() {
 
   }
 }
+export async function GetShopCommentsArray(shopId) {
+  try {
+    // اتصال به دیتابیس
+    await connectDB();
+
+    // احراز هویت کاربر
+    const userData = await authenticateUser();
+    if (!userData) {
+      throw new Error("User data not found");
+    }
+
+    // پیدا کردن رکورد شاپ و آوردن کامنت‌ها
+    const shop = await shops.findById(shopId)
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'name' }
+      })
+      .lean();
+
+    if (!shop) {
+      return { error: "Shop not found", status: 404 };
+    }
+
+    // ساده‌سازی کامنت‌ها قبل از ارسال
+    const simplifiedComments = shop?.comments?.map(comment => ({
+      _id: comment._id,
+      text: comment.text, // متن کامنت
+      author: comment.author?.name || 'Unknown', // نویسنده کامنت
+      likesCount: comment.likes?.length || 0, // تعداد لایک‌ها
+      dislikesCount: comment.dislikes?.length || 0, // تعداد دیسلایک‌ها
+      repliesCount: comment.replies?.length || 0, // تعداد پاسخ‌ها
+      isDeleted: comment.is_deleted || false, // وضعیت حذف شده بودن
+    }));
+
+    return { comments: simplifiedComments, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت کامنت‌ها:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
+
 const processAndSaveImage = async (image, oldUrl) => {
   if (image && typeof image !== "string") {
     const buffer = Buffer.from(await image.arrayBuffer());

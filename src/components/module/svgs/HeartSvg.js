@@ -1,10 +1,10 @@
 import React from "react";
 
-function HeartSvg() {
+function HeartSvg({ isLiked }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      fill="none"
+      fill={isLiked ? 'red' : 'none'} // تغییر رنگ بر اساس وضعیت لایک
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"

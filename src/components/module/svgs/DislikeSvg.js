@@ -1,9 +1,9 @@
 
-function DislikeSvg() {
+function DislikeSvg({ isDisliked }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      fill="none"
+      fill={isDisliked ? 'blue' : 'none'} // تغییر رنگ بر اساس وضعیت دیسلایک
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"

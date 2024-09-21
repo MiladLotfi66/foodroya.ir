@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
 const commentSchema = new Schema(
   {
@@ -9,25 +9,28 @@ const commentSchema = new Schema(
     },
     author: {
       type: Schema.Types.ObjectId, // ارجاع به کاربر نویسنده
-      ref: 'User',
+      ref: "User",
       required: true,
     },
+    type: { type: String, enum: ["shop", "person", "product"], required: true }, // نوع مولفه
+    referenceId: { type: mongoose.Schema.Types.ObjectId, required: true }, // شناسه مرجع (مثلا shopId یا productId)
+
     likes: [
       {
         type: Schema.Types.ObjectId, // ارجاع به کاربرانی که لایک کردند
-        ref: 'User',
+        ref: "User",
       },
     ],
     dislikes: [
       {
         type: Schema.Types.ObjectId, // ارجاع به کاربرانی که دیسلایک کردند
-        ref: 'User',
+        ref: "User",
       },
     ],
     replies: [
       {
         type: Schema.Types.ObjectId, // لیست پاسخ‌ها (کامنت‌هایی که پاسخ هستند)
-        ref: 'Comment',
+        ref: "Comment",
       },
     ],
     is_deleted: {
