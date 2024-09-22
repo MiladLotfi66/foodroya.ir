@@ -6,6 +6,7 @@ import ArrowUpSvg from "@/module/svgs/ArrowUpSvg";
 import usericone from "@/public/Images/jpg/user.webp";
 import HeartSvg from "@/module/svgs/HeartSvg";
 import DislikeSvg from "@/module/svgs/DislikeSvg";
+import ChevronDown from "@/module/svgs/ChevronDown";
 import {
   saveComment,
   GetCommentsByReference,
@@ -24,6 +25,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   const [replyingTo, setReplyingTo] = useState(null); // تعیین اینکه کاربر به کدام کامنت در حال پاسخ است
 
   const commentRef = useRef({});
+  const overlayRef = useRef(null);
 
   useEffect(() => {
     async function getComments() {
@@ -49,6 +51,23 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   }, [isOpen, referenceId, type]);
 
   useEffect(() => {
+    // تابعی که کامپوننت را می‌بندد
+    const handleOverlayClick = (event) => {
+      if (overlayRef.current && overlayRef.current.contains(event.target)) {
+        onClose(); // تابع بستن کامپوننت را فراخوانی کنید
+      }
+    };
+
+    // اضافه کردن Event Listener
+    document.addEventListener("mousedown", handleOverlayClick);
+
+    // تمیز کردن Event Listener
+    return () => {
+      document.removeEventListener("mousedown", handleOverlayClick);
+    };
+  }, []);
+
+  useEffect(() => {
     comments.forEach((comment) => {
       if (commentRef.current[comment._id]) {
         const { scrollHeight, clientHeight } = commentRef.current[comment._id];
@@ -59,7 +78,6 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       }
     });
   }, [comments]);
-
   async function onSendHandler() {
     try {
       if (text.trim() === "") {
@@ -129,11 +147,80 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     }));
   }
 
+  async function handleLike(commentId) {
+    setComments((prevComments) =>
+      prevComments.map((comment) => {
+        if (comment._id === commentId) {
+          if (comment.likedByCurrentUser) {
+            return {
+              ...comment,
+              likesCount: comment.likesCount - 1,
+              likedByCurrentUser: false,
+            };
+          } else {
+            return {
+              ...comment,
+              likesCount: comment.likesCount + 1,
+              likedByCurrentUser: true,
+            };
+          }
+        }
+        return comment;
+      })
+    );
+
+    try {
+      const res = await likeComment(commentId);
+      if (res.status !== 200) {
+        toast.error("خطا در ثبت لایک");
+      }
+    } catch (error) {
+      console.error("خطا در ثبت لایک:", error);
+      toast.error("خطا در ثبت لایک");
+    }
+  }
+
+  async function handleDislike(commentId) {
+    setComments((prevComments) =>
+      prevComments.map((comment) => {
+        if (comment._id === commentId) {
+          if (comment.dislikedByCurrentUser) {
+            return {
+              ...comment,
+              dislikesCount: comment.dislikesCount - 1,
+              dislikedByCurrentUser: false,
+            };
+          } else {
+            return {
+              ...comment,
+              dislikesCount: comment.dislikesCount + 1,
+              dislikedByCurrentUser: true,
+            };
+          }
+        }
+        return comment;
+      })
+    );
+
+    try {
+      const res = await dislikeComment(commentId);
+      if (res.status !== 200) {
+        toast.error("خطا در ثبت دیس‌لایک");
+      }
+    } catch (error) {
+      console.error("خطا در ثبت دیس‌لایک:", error);
+      toast.error("خطا در ثبت دیس‌لایک");
+    }
+  }
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 ">
+    <div ref={overlayRef}  className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
+      <div
+        ref={commentRef}
+        className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 "
+      >
         <div className="h-full">
           <div className="hidden">
             <CloseSvg />
@@ -164,7 +251,14 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                   const isExpanded = expandedComments[comment._id];
 
                   return (
-                    <div key={comment._id} className={`comment-container ${comment.author === 'شما' ? 'my-comment' : 'other-comment'}`}>
+                    <div
+                      key={comment._id}
+                      className={`comment-container ${
+                        comment.author === "شما"
+                          ? "my-comment"
+                          : "other-comment"
+                      }`}
+                    >
                       <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center">
                           <Image
@@ -174,25 +268,43 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                             height={30}
                             className="rounded-full pl-1"
                           />
-                          <span className="ml-2 font-bold">{comment.author}</span>
+                          <span className="ml-2 font-bold">
+                            {comment.author}
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <div className="flex" onClick={() => handleLike(comment._id)}>
+                          <div
+                            className="flex"
+                            onClick={() => handleLike(comment._id)}
+                          >
                             <HeartSvg isLiked={comment.likedByCurrentUser} />
                             <span className="ml-1">{comment.likesCount}</span>
                           </div>
 
-                          <div className="flex" onClick={() => handleDislike(comment._id)}>
-                            <DislikeSvg isDisliked={comment.dislikedByCurrentUser} />
-                            <span className="ml-1">{comment.dislikesCount}</span>
+                          <div
+                            className="flex"
+                            onClick={() => handleDislike(comment._id)}
+                          >
+                            <DislikeSvg
+                              isDisliked={comment.dislikedByCurrentUser}
+                            />
+                            <span className="ml-1">
+                              {comment.dislikesCount}
+                            </span>
                           </div>
                         </div>
                       </div>
 
                       <p
-                        ref={(el) => (commentRef.current[comment._id] = el)}
-                        className={`mb-2 pr-4 text-wrap overflow-hidden ${isExpanded ? '' : 'line-clamp-3'}`}
+                        ref={(el) => {
+                          if (el) {
+                            commentRef.current[comment._id] = el;
+                          }
+                        }}
+                        className={`mb-2 pr-4 text-wrap overflow-hidden ${
+                          isExpanded ? "" : "line-clamp-3"
+                        }`}
                       >
                         {comment.text}
                       </p>
@@ -207,13 +319,20 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                       )}
 
                       <div className="flex justify-between">
-                        <span>{comment.repliesCount} پاسخ</span>
                         <button
                           className="text-blue-500"
                           onClick={() => setReplyingTo(comment._id)}
                         >
                           پاسخ
                         </button>
+                        {comment.repliesCount > 0 ? (
+                          <div className="flex cursor-pointer">
+                            <span>{comment.repliesCount} پاسخ</span>
+                            <ChevronDown />
+                          </div>
+                        ) : (
+                          ""
+                        )}
                       </div>
 
                       {replyingTo === comment._id && (

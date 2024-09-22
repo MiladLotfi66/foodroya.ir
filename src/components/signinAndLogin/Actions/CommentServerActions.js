@@ -202,7 +202,7 @@ export async function saveReply(text, parentCommentId) {
       return { message: 'لطفا همه اطلاعات مورد نیاز را ارسال کنید.', status: 400 };
     }
 
-    // ایجاد یک کامنت جدید با نوع reply
+    // ایجاد یک کامنت جدید با نوع "reply"
     const newReply = new Comment({
       text,
       author: userData.id,
@@ -211,7 +211,14 @@ export async function saveReply(text, parentCommentId) {
     });
 
     // ذخیره پاسخ در دیتابیس
-    await newReply.save();
+    const savedReply = await newReply.save();
+
+    // پیدا کردن کامنت والد و اضافه کردن شناسه پاسخ به آرایه "replies"
+    const parentComment = await Comment.findById(parentCommentId);
+    if (parentComment) {
+      parentComment.replies.push(savedReply._id); // اضافه کردن شناسه پاسخ به آرایه replies
+      await parentComment.save();
+    }
 
     return { message: 'پاسخ با موفقیت ذخیره شد.', status: 201 };
 
@@ -220,3 +227,4 @@ export async function saveReply(text, parentCommentId) {
     return { error: error.message, status: 500 };
   }
 }
+
