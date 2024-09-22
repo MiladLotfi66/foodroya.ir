@@ -228,3 +228,39 @@ export async function saveReply(text, parentCommentId) {
   }
 }
 
+
+export async function GetRepliesByCommentId(commentId) {
+  try {
+    // اتصال به دیتابیس
+    await connectDB();
+
+    // چک کردن شناسه کامنت
+    if (!commentId) {
+      throw new Error("شناسه کامنت الزامی است.");
+    }
+
+    // پیدا کردن کامنت والد و دریافت پاسخ‌های آن
+    const comment = await Comment.findById(commentId).populate('replies');
+    if (!comment) {
+      throw new Error("کامنت پیدا نشد.");
+    }
+
+    // برگرداندن پاسخ‌ها با جزئیات کامل
+    const replies = await Comment.find({ _id: { $in: comment.replies } }).lean();
+
+    // ساده‌سازی پاسخ‌ها قبل از ارسال
+    const simplifiedReplies = replies.map(reply => ({
+      _id: reply._id,
+      text: reply.text,
+      author: reply.author || "Unknown",
+      likesCount: reply.likes?.length || 0,
+      dislikesCount: reply.dislikes?.length || 0,
+      createdAt: reply.createdAt
+    }));
+
+    return { replies: simplifiedReplies, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت پاسخ‌ها:", error);
+    return { error: error.message, status: 500 };
+  }
+}

@@ -13,6 +13,7 @@ import {
   saveReply, // تابع برای ذخیره پاسخ
   likeComment,
   dislikeComment,
+  GetRepliesByCommentId,
 } from "@/components/signinAndLogin/Actions/CommentServerActions";
 
 function CommentComponent({ isOpen, onClose, referenceId, type }) {
@@ -23,6 +24,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   const [showExpandButton, setShowExpandButton] = useState({}); // حالت برای نمایش دکمه نمایش بیشتر
   const [replyText, setReplyText] = useState({}); // حالت برای ذخیره پاسخ‌ها
   const [replyingTo, setReplyingTo] = useState(null); // تعیین اینکه کاربر به کدام کامنت در حال پاسخ است
+  const [expandedReplies, setExpandedReplies] = useState({});
 
   const commentRef = useRef({});
   const overlayRef = useRef(null);
@@ -58,16 +60,15 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
         onClose(); // تابع بستن کامپوننت را فراخوانی کنید
       }
     };
-  
+
     // اضافه کردن Event Listener
     document.addEventListener("mousedown", handleOverlayClick);
-  
+
     // تمیز کردن Event Listener
     return () => {
       document.removeEventListener("mousedown", handleOverlayClick);
     };
   }, []);
-  
 
   useEffect(() => {
     comments.forEach((comment) => {
@@ -214,15 +215,120 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       toast.error("خطا در ثبت دیس‌لایک");
     }
   }
+////////////////////////////////////////////////
+async function handleReplyLike(replyId, commentId) {
+  setComments((prevComments) =>
+    prevComments.map((comment) => {
+      if (comment._id === commentId) {
+        return {
+          ...comment,
+          replies: comment.replies.map((reply) =>
+            reply._id === replyId
+              ? {
+                  ...reply,
+                  likesCount: reply.likedByCurrentUser
+                    ? reply.likesCount - 1
+                    : reply.likesCount + 1,
+                  likedByCurrentUser: !reply.likedByCurrentUser,
+                }
+              : reply
+          ),
+        };
+      }
+      return comment;
+    })
+  );
+
+  try {
+    const res = await likeComment(replyId); // فرض می‌کنیم `likeComment` قابلیت مدیریت پاسخ‌ها را دارد.
+    if (res.status !== 200) {
+      toast.error("خطا در ثبت لایک پاسخ");
+    }
+  } catch (error) {
+    console.error("خطا در ثبت لایک پاسخ:", error);
+    toast.error("خطا در ثبت لایک پاسخ");
+  }
+}
+
+async function handleReplyDislike(replyId, commentId) {
+  setComments((prevComments) =>
+    prevComments.map((comment) => {
+      if (comment._id === commentId) {
+        return {
+          ...comment,
+          replies: comment.replies.map((reply) =>
+            reply._id === replyId
+              ? {
+                  ...reply,
+                  dislikesCount: reply.dislikedByCurrentUser
+                    ? reply.dislikesCount - 1
+                    : reply.dislikesCount + 1,
+                  dislikedByCurrentUser: !reply.dislikedByCurrentUser,
+                }
+              : reply
+          ),
+        };
+      }
+      return comment;
+    })
+  );
+
+  try {
+    const res = await dislikeComment(replyId); // فرض می‌کنیم `dislikeComment` هم پاسخ‌ها را مدیریت می‌کند.
+    if (res.status !== 200) {
+      toast.error("خطا در ثبت دیسلایک پاسخ");
+    }
+  } catch (error) {
+    console.error("خطا در ثبت دیسلایک پاسخ:", error);
+    toast.error("خطا در ثبت دیسلایک پاسخ");
+  }
+}
+
+////////////////////////////////////////////////
+  async function loadReplies(commentId) {
+    // اگر پاسخ‌ها باز بودند، بسته می‌شوند
+    if (expandedReplies[commentId]) {
+      setExpandedReplies((prev) => ({
+        ...prev,
+        [commentId]: false,
+      }));
+      return;
+    }
+  
+    // اگر پاسخ‌ها بسته بودند، آن‌ها را لود و باز می‌کنیم
+    try {
+      const res = await GetCommentsByReference(commentId , "reply");
+      
+      if (res.status === 200) {
+        setComments((prevComments) =>
+          prevComments.map((comment) =>
+            comment._id === commentId
+              ? { ...comment, replies: res.comments }
+              : comment
+          )
+        );
+        setExpandedReplies((prev) => ({
+          ...prev,
+          [commentId]: true,
+        }));
+      } else {
+        toast.error(res.error || "خطا در دریافت پاسخ‌ها");
+      }
+    } catch (error) {
+      console.error("خطا در دریافت پاسخ‌ها:", error);
+      toast.error("خطا در دریافت پاسخ‌ها");
+    }
+  }
+  
 
   if (!isOpen) return null;
 
   return (
-    <div  ref={overlayRef} className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
-      <div
-        
-        className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 "
-      >
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50"
+    >
+      <div className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 ">
         <div className="h-full">
           <div className="hidden">
             <CloseSvg />
@@ -320,7 +426,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                         </button>
                       )}
 
-                      <div className="flex justify-between">
+                      <div className="flex  justify-between text-xs">
                         <button
                           className="text-blue-500"
                           onClick={() => setReplyingTo(comment._id)}
@@ -328,14 +434,51 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                           پاسخ
                         </button>
                         {comment.repliesCount > 0 ? (
-                          <div className="flex cursor-pointer">
+                          <div
+                            className="flex cursor-pointer items-center"
+                            onClick={() => loadReplies(comment._id)}
+                          >
                             <span>{comment.repliesCount} پاسخ</span>
-                            <ChevronDown />
+
+                            <div className={expandedReplies[comment._id]?"rotate-180":"" }>
+                            <ChevronDown  />
+                          </div>
                           </div>
                         ) : (
                           ""
                         )}
                       </div>
+                      {/* //////////////////////////پاسخ ها////////////////////////// */}
+                      {expandedReplies[comment._id] && comment.replies && comment.replies.length > 0 && (
+  <div className="ml-5 border-l-2 border-gray-300 text-xs">
+    {comment.replies.map((reply) =>      
+      (
+      <div key={reply._id} className="flex flex-col mb-2">
+        <div className="flex justify-between items-center">
+          <span className="font-bold">{reply.author}</span>
+          
+        </div>
+        <p>{reply.text}</p>
+
+        <div className="flex items-center gap-3">
+          <div className="flex" onClick={() => handleReplyLike(reply._id, comment._id)}>
+            <HeartSvg isLiked={reply.likedByCurrentUser} />
+            <span className="ml-1">{reply.likesCount}</span>
+          </div>
+
+          <div className="flex" onClick={() => handleReplyDislike(reply._id, comment._id)}>
+            <DislikeSvg isDisliked={reply.dislikedByCurrentUser} />
+            <span className="ml-1">{reply.dislikesCount}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+
+
+                      {/* //////////////////////////////////////////////////// */}
 
                       {replyingTo === comment._id && (
                         <div className="mt-2">
