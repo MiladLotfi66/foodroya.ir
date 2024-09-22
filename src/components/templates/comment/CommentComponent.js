@@ -53,19 +53,21 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   useEffect(() => {
     // تابعی که کامپوننت را می‌بندد
     const handleOverlayClick = (event) => {
-      if (overlayRef.current && overlayRef.current.contains(event.target)) {
+      // بررسی کنید که کلیک روی overlay باشد، نه محتوای داخلی
+      if (event.target === overlayRef.current) {
         onClose(); // تابع بستن کامپوننت را فراخوانی کنید
       }
     };
-
+  
     // اضافه کردن Event Listener
     document.addEventListener("mousedown", handleOverlayClick);
-
+  
     // تمیز کردن Event Listener
     return () => {
       document.removeEventListener("mousedown", handleOverlayClick);
     };
   }, []);
+  
 
   useEffect(() => {
     comments.forEach((comment) => {
@@ -216,9 +218,9 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   if (!isOpen) return null;
 
   return (
-    <div ref={overlayRef}  className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
+    <div  ref={overlayRef} className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50">
       <div
-        ref={commentRef}
+        
         className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 "
       >
         <div className="h-full">
