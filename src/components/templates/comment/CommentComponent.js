@@ -1,4 +1,6 @@
+"use client";
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { Toaster, toast } from "react-hot-toast";
 import CloseSvg from "@/module/svgs/CloseSvg";
@@ -17,6 +19,8 @@ import {
 } from "@/components/signinAndLogin/Actions/CommentServerActions";
 
 function CommentComponent({ isOpen, onClose, referenceId, type }) {
+  const { data: session } = useSession();
+
   const [text, setText] = useState(""); // حالت برای متن ورودی کاربر
   const [comments, setComments] = useState([]); // حالت برای ذخیره نظرات
   const [loading, setLoading] = useState(true); // حالت بارگذاری نظرات
@@ -384,7 +388,14 @@ async function handleReplyDislike(replyId, commentId) {
                         <div className="flex items-center gap-3">
                           <div
                             className="flex"
-                            onClick={() => handleLike(comment._id)}
+                            onClick={() => {
+                              if (session) {
+                                handleLike(comment._id);
+                              } else {
+                                // پیام به کاربر در صورت عدم ورود
+                                alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+                              }
+                            }}                            
                           >
                             <HeartSvg isLiked={comment.likedByCurrentUser} />
                             <span className="ml-1">{comment.likesCount}</span>
@@ -392,7 +403,14 @@ async function handleReplyDislike(replyId, commentId) {
 
                           <div
                             className="flex"
-                            onClick={() => handleDislike(comment._id)}
+                            onClick={() => {
+                              if (session) {
+                                handleDislike(comment._id)
+                              } else {
+                                // پیام به کاربر در صورت عدم ورود
+                                alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+                              }
+                            }}
                           >
                             <DislikeSvg
                               isDisliked={comment.dislikedByCurrentUser}
@@ -461,12 +479,30 @@ async function handleReplyDislike(replyId, commentId) {
         <p>{reply.text}</p>
 
         <div className="flex items-center gap-3">
-          <div className="flex" onClick={() => handleReplyLike(reply._id, comment._id)}>
+          <div className="flex"
+           onClick={() => {
+            if (session) {
+              handleReplyLike(reply._id, comment._id)
+            } else {
+              // پیام به کاربر در صورت عدم ورود
+              alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+            }
+          }}
+           >
             <HeartSvg isLiked={reply.likedByCurrentUser} />
             <span className="ml-1">{reply.likesCount}</span>
           </div>
 
-          <div className="flex" onClick={() => handleReplyDislike(reply._id, comment._id)}>
+          <div className="flex"
+           onClick={() => {
+            if (session) {
+              handleReplyDislike(reply._id, comment._id)}
+               else {
+              // پیام به کاربر در صورت عدم ورود
+              alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+            }
+          }}
+            >
             <DislikeSvg isDisliked={reply.dislikedByCurrentUser} />
             <span className="ml-1">{reply.dislikesCount}</span>
           </div>
@@ -507,8 +543,8 @@ async function handleReplyDislike(replyId, commentId) {
                 })}
               </div>
             )}
-
-            <div className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700">
+{/* ///////////////////////////////////ارسال کامنت جدید////////////////////////////////// */}
+           {!session?"":  <div className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700">
               <Image
                 className="rounded-full w-[10%]"
                 src={usericone}
@@ -528,7 +564,8 @@ async function handleReplyDislike(replyId, commentId) {
                   <use href="#ArrowUpSvg"></use>
                 </svg>
               </div>
-            </div>
+            </div>}
+           
           </div>
         </div>
         <Toaster />

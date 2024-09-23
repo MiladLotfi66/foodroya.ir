@@ -46,35 +46,47 @@ export async function GetCommentFromArray(commentIds) {
     try {
       // اتصال به دیتابیس
       await connectDB();
-      const userData = await authenticateUser();
+  
+      // تلاش برای احراز هویت کاربر
+      let userData;
+      try {
+        userData = await authenticateUser();
+        
+      } catch {
+        // اگر کاربر احراز هویت نشد، ادامه می‌دهیم
+        userData = null;
+      }
+      
 
-      // بررسی اینکه referenceId و type به درستی ارسال شده‌اند
+      // بررسی اینکه referenceId و type ارسال شده‌اند
       if (!referenceId || !type) {
         throw new Error("referenceId و type ضروری هستند.");
       }
   
-      // جستجوی کامنت‌ها بر اساس referenceId و type
+      // جستجوی کامنت‌ها
       const comments = await Comment.find({ referenceId, type })
-        .populate('author', 'username')  // اطلاعات نویسنده کامنت
-        .populate('replies', '_id')  // فقط شناسه‌های پاسخ‌ها
-        .sort({ createdAt: -1 })  // مرتب‌سازی بر اساس زمان ایجاد، جدیدترین‌ها اول
-
+        .populate('author', 'username')
+        .populate('replies', '_id')
+        .sort({ createdAt: -1 })
         .lean();
 
-      // ساده‌سازی کامنت‌ها قبل از ارسال
-      const simplifiedComments = comments.map(comment => ({
-        _id: comment._id.toString(), // تبدیل ObjectId به رشته
-        text: comment.text, // متن کامنت
-        author: comment.author?._id.toString() === userData.id ? 'شما' : comment.author?.username || 'Unknown', // بررسی نویسنده و جایگزینی با "شما"
-        likesCount: comment.likes?.length || 0, // تعداد لایک‌ها
-        dislikesCount: comment.dislikes?.length || 0, // تعداد دیسلایک‌ها
-        repliesCount: comment.replies?.length || 0, // تعداد پاسخ‌ها
-        isDeleted: comment.is_deleted || false, // وضعیت حذف شده بودن
-        likedByCurrentUser: comment.likes?.some(like => like.toString() === userData.id) || false, // بررسی اینکه کاربر فعلی لایک کرده یا نه
-        dislikedByCurrentUser: comment.dislikes?.some(dislike => dislike.toString() === userData.id) || false, // بررسی اینکه کاربر فعلی دیسلایک کرده یا نه
-  
-      }));
-  
+      // ساده‌سازی کامنت‌ها
+      const simplifiedComments = comments.map(comment => 
+      
+          (
+        
+        {
+        _id: comment._id.toString(),
+        text: comment.text,
+        author: !userData ? comment.author?.username || 'Unknown' : (comment.author?._id.toString() === userData.id ? 'شما' : comment.author?.username || 'Unknown'),
+        likesCount: comment.likes?.length || 0,
+        dislikesCount: comment.dislikes?.length || 0,
+        repliesCount: comment.replies?.length || 0,
+        isDeleted: comment.is_deleted || false,
+        likedByCurrentUser: userData ? comment.likes?.some(like => like && like.toString() === userData.id) : false,
+        dislikedByCurrentUser: userData ? comment.dislikes?.some(dislike => dislike && dislike.toString() === userData.id) : false,
+              }));
+
       return { comments: simplifiedComments, status: 200 };
   
     } catch (error) {
@@ -83,17 +95,25 @@ export async function GetCommentFromArray(commentIds) {
     }
   }
   
+  
   export async function saveComment(text, type, referenceId) {
     
     try {
       await connectDB();
   
       // احراز هویت کاربر
-      const userData = await authenticateUser();
-      
+      let userData;
+      try {
+        userData = await authenticateUser();
+        
+      } catch {
+        // اگر کاربر احراز هویت نشد، ادامه می‌دهیم
+        userData = null;
+      }
+        
   
       // بررسی اینکه همه فیلدهای لازم ارسال شده باشند
-      if (!text || !userData.id || !type || !referenceId) {
+      if (!text || !userData?.id || !type || !referenceId) {
         return { message: 'لطفا همه اطلاعات مورد نیاز را ارسال کنید.', status: 400 };
   
       }
@@ -123,8 +143,20 @@ export async function GetCommentFromArray(commentIds) {
         await connectDB();
 
         // احراز هویت کاربر
-        const userData = await authenticateUser();
+  // احراز هویت کاربر
+      let userData;
+      try {
+        userData = await authenticateUser();
+        
+      } catch {
+        // اگر کاربر احراز هویت نشد، ادامه می‌دهیم
+        userData = null;
+      }
 
+      if (!userData) {
+        throw new Error("لطفا با نام کاربری خود ورود کنید.");
+
+      }
         if (!commentId) {
             throw new Error("شناسه کامنت الزامی است.");
         }
@@ -159,8 +191,19 @@ export async function dislikeComment(commentId) {
       await connectDB();
 
       // احراز هویت کاربر
-      const userData = await authenticateUser();
+      let userData;
+      try {
+        userData = await authenticateUser();
+        
+      } catch {
+        // اگر کاربر احراز هویت نشد، ادامه می‌دهیم
+        userData = null;
+      }
 
+      if (!userData) {
+        throw new Error("لطفا با نام کاربری خود ورود کنید.");
+
+      }
       if (!commentId) {
           throw new Error("شناسه کامنت الزامی است.");
       }
@@ -195,8 +238,19 @@ export async function saveReply(text, parentCommentId) {
     await connectDB();
 
     // احراز هویت کاربر
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+      
+    } catch {
+      // اگر کاربر احراز هویت نشد، ادامه می‌دهیم
+      userData = null;
+    }
 
+    if (!userData) {
+      throw new Error("لطفا با نام کاربری خود ورود کنید.");
+
+    }
     // بررسی اینکه همه فیلدهای لازم ارسال شده باشند
     if (!text || !userData.id || !parentCommentId) {
       return { message: 'لطفا همه اطلاعات مورد نیاز را ارسال کنید.', status: 400 };

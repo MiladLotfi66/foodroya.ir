@@ -13,8 +13,11 @@ function AllShopCards() {
       try {
         // احراز هویت کاربر
         const userData = await authenticateUser();
-        const userFullData=await GetUserbyUserId(userData.id)
-        setUser(userFullData);
+        if (userData) {
+          
+          const userFullData=await GetUserbyUserId(userData.id)
+          setUser(userFullData);
+        }
 
         // دریافت لیست فروشگاه‌ها
         const response = await GetAllEnableShops();
@@ -39,7 +42,7 @@ function AllShopCards() {
               className="p-2 md:p-4"
               key={Shop._id}
               Shop={Shop}
-              user={user.user} // ارسال اطلاعات کاربر به ShopCard
+              user={user?.user} // ارسال اطلاعات کاربر به ShopCard
               editable={false}
               followable={true}
             />

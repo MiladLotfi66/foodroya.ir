@@ -177,9 +177,9 @@ export async function authenticateUser() {
     const accessToken = cookieStore.get("next-auth.session-token")?.value;
     
     if (!accessToken) {
-      throw new Error("Access token not found");
-    }
-    // console.log("authenticateUser",res);
+      console.log("Token not found. User is not logged in.");
+      return null; // یا یک مقدار پیش‌فرض برای کاربر مهمان
+      }
 
     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
       headers: {
@@ -203,7 +203,7 @@ export async function authenticateUser() {
     return session.user;
   } catch (error) {
     console.error("Error in authenticateUser:", error);
-    return { error: error.message, status: 500 };
+    return null;
   }
 }
 
