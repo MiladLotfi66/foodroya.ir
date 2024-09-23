@@ -103,7 +103,7 @@ function ShopCard({
         <UserPlus />
         <CommentSvg />
       </div>
-      <div className="absolute top-2 right-2 z-20 p-2">
+      <div className="absolute top-2 flex gap-2 right-2 z-20 p-2">
         <div
           className={
             editable
@@ -188,7 +188,9 @@ function ShopCard({
               <use href="#UserPlus"></use>
             </svg>
           </div>
-           <svg
+         </div>
+        )}
+         <svg
            width="34"
            height="34"
            className="cursor-pointer"
@@ -197,9 +199,6 @@ function ShopCard({
          >
            <use href="#CommentSvg"></use>
          </svg>
-         </div>
-
-        )}
       </div>
       <div className="absolute bottom-2 left-2 z-20 p-2">
         <div

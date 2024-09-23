@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useForm } from "react-hook-form"; // اضافه کردن useForm
 import { Toaster, toast } from "react-hot-toast";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import ArrowUpSvg from "@/module/svgs/ArrowUpSvg";
@@ -15,13 +16,12 @@ import {
   saveReply, // تابع برای ذخیره پاسخ
   likeComment,
   dislikeComment,
-  GetRepliesByCommentId,
+  
 } from "@/components/signinAndLogin/Actions/CommentServerActions";
 
 function CommentComponent({ isOpen, onClose, referenceId, type }) {
   const { data: session } = useSession();
-
-  const [text, setText] = useState(""); // حالت برای متن ورودی کاربر
+  const { register, handleSubmit, reset } = useForm(); // استفاده از useForm
   const [comments, setComments] = useState([]); // حالت برای ذخیره نظرات
   const [loading, setLoading] = useState(true); // حالت بارگذاری نظرات
   const [expandedComments, setExpandedComments] = useState({}); // حالت جدید برای ذخیره باز و بسته بودن نظرات
@@ -57,18 +57,14 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   }, [isOpen, referenceId, type]);
 
   useEffect(() => {
-    // تابعی که کامپوننت را می‌بندد
     const handleOverlayClick = (event) => {
-      // بررسی کنید که کلیک روی overlay باشد، نه محتوای داخلی
       if (event.target === overlayRef.current) {
-        onClose(); // تابع بستن کامپوننت را فراخوانی کنید
+        onClose(); 
       }
     };
 
-    // اضافه کردن Event Listener
     document.addEventListener("mousedown", handleOverlayClick);
 
-    // تمیز کردن Event Listener
     return () => {
       document.removeEventListener("mousedown", handleOverlayClick);
     };
@@ -78,14 +74,16 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     comments.forEach((comment) => {
       if (commentRef.current[comment._id]) {
         const { scrollHeight, clientHeight } = commentRef.current[comment._id];
-        // اگر متن بیش از حد طولانی باشد و محدود به سه خط شده باشد
         if (scrollHeight > clientHeight) {
           setShowExpandButton((prev) => ({ ...prev, [comment._id]: true }));
         }
       }
     });
   }, [comments]);
-  async function onSendHandler() {
+
+  // مدیریت ارسال فرم جدید با react-hook-form
+  const onSubmitHandler = async (data) => {
+    const { text } = data;
     try {
       if (text.trim() === "") {
         toast.error("متن نظر خالی است");
@@ -105,7 +103,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
         };
 
         setComments((prevComments) => [newComment, ...prevComments]);
-        setText("");
+        reset(); // پاک کردن فرم پس از ارسال موفق
       } else {
         toast.error(res.error || "خطا در ذخیره نظرات");
       }
@@ -113,9 +111,9 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       console.error("خطا در ذخیره نظرات:", error);
       toast.error("خطا در ذخیره نظرات");
     }
-  }
+  };
 
-  async function handleReplySend(commentId) {
+    async function handleReplySend(commentId) {
     try {
       const reply = replyText[commentId]?.trim();
       if (!reply) {
@@ -147,13 +145,12 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     }
   }
 
-  function toggleCommentExpand(commentId) {
+    function toggleCommentExpand(commentId) {
     setExpandedComments((prevState) => ({
       ...prevState,
       [commentId]: !prevState[commentId],
     }));
   }
-
   async function handleLike(commentId) {
     setComments((prevComments) =>
       prevComments.map((comment) => {
@@ -289,42 +286,41 @@ async function handleReplyDislike(replyId, commentId) {
 }
 
 ////////////////////////////////////////////////
-  async function loadReplies(commentId) {
-    // اگر پاسخ‌ها باز بودند، بسته می‌شوند
-    if (expandedReplies[commentId]) {
+async function loadReplies(commentId) {
+  // اگر پاسخ‌ها باز بودند، بسته می‌شوند
+  if (expandedReplies[commentId]) {
+    setExpandedReplies((prev) => ({
+      ...prev,
+      [commentId]: false,
+    }));
+    return;
+  }
+
+  // اگر پاسخ‌ها بسته بودند، آن‌ها را لود و باز می‌کنیم
+  try {
+    const res = await GetCommentsByReference(commentId , "reply");
+    
+    if (res.status === 200) {
+      setComments((prevComments) =>
+        prevComments.map((comment) =>
+          comment._id === commentId
+            ? { ...comment, replies: res.comments }
+            : comment
+        )
+      );
       setExpandedReplies((prev) => ({
         ...prev,
-        [commentId]: false,
+        [commentId]: true,
       }));
-      return;
+    } else {
+      toast.error(res.error || "خطا در دریافت پاسخ‌ها");
     }
-  
-    // اگر پاسخ‌ها بسته بودند، آن‌ها را لود و باز می‌کنیم
-    try {
-      const res = await GetCommentsByReference(commentId , "reply");
-      
-      if (res.status === 200) {
-        setComments((prevComments) =>
-          prevComments.map((comment) =>
-            comment._id === commentId
-              ? { ...comment, replies: res.comments }
-              : comment
-          )
-        );
-        setExpandedReplies((prev) => ({
-          ...prev,
-          [commentId]: true,
-        }));
-      } else {
-        toast.error(res.error || "خطا در دریافت پاسخ‌ها");
-      }
-    } catch (error) {
-      console.error("خطا در دریافت پاسخ‌ها:", error);
-      toast.error("خطا در دریافت پاسخ‌ها");
-    }
+  } catch (error) {
+    console.error("خطا در دریافت پاسخ‌ها:", error);
+    toast.error("خطا در دریافت پاسخ‌ها");
   }
-  
-
+}
+////////////////////////////////
   if (!isOpen) return null;
 
   return (
@@ -334,11 +330,10 @@ async function handleReplyDislike(replyId, commentId) {
     >
       <div className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 ">
         <div className="h-full">
-          <div className="hidden">
-            <CloseSvg />
-            <ArrowUpSvg />
-          </div>
-
+        <div className="hidden">
+//             <CloseSvg />
+//             <ArrowUpSvg />
+//           </div>
           <div className="flex justify-between p-2 md:p-5 h-[10%]">
             <button aria-label="close" className="hover:text-orange-300">
               <svg width="34" height="34" onClick={onClose}>
@@ -392,10 +387,9 @@ async function handleReplyDislike(replyId, commentId) {
                               if (session) {
                                 handleLike(comment._id);
                               } else {
-                                // پیام به کاربر در صورت عدم ورود
                                 alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
                               }
-                            }}                            
+                            }}
                           >
                             <HeartSvg isLiked={comment.likedByCurrentUser} />
                             <span className="ml-1">{comment.likesCount}</span>
@@ -405,9 +399,8 @@ async function handleReplyDislike(replyId, commentId) {
                             className="flex"
                             onClick={() => {
                               if (session) {
-                                handleDislike(comment._id)
+                                handleDislike(comment._id);
                               } else {
-                                // پیام به کاربر در صورت عدم ورود
                                 alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
                               }
                             }}
@@ -444,78 +437,73 @@ async function handleReplyDislike(replyId, commentId) {
                         </button>
                       )}
 
-                      <div className="flex  justify-between text-xs">
+                      <div className="flex justify-between text-xs">
                         <button
                           className="text-blue-500"
                           onClick={() => setReplyingTo(comment._id)}
                         >
                           پاسخ
                         </button>
-                        {comment.repliesCount > 0 ? (
+                        {comment.repliesCount > 0 && (
                           <div
                             className="flex cursor-pointer items-center"
                             onClick={() => loadReplies(comment._id)}
                           >
                             <span>{comment.repliesCount} پاسخ</span>
 
-                            <div className={expandedReplies[comment._id]?"rotate-180":"" }>
-                            <ChevronDown  />
+                            <div className={expandedReplies[comment._id] ? "rotate-180" : ""}>
+                              <ChevronDown />
+                            </div>
                           </div>
-                          </div>
-                        ) : (
-                          ""
                         )}
                       </div>
-                      {/* //////////////////////////پاسخ ها////////////////////////// */}
-                      {expandedReplies[comment._id] && comment.replies && comment.replies.length > 0 && (
-  <div className="ml-5 border-l-2 border-gray-300 text-xs">
-    {comment.replies.map((reply) =>      
-      (
-      <div key={reply._id} className="flex flex-col mb-2">
-        <div className="flex justify-between items-center">
-          <span className="font-bold">{reply.author}</span>
-          
-        </div>
-        <p>{reply.text}</p>
 
-        <div className="flex items-center gap-3">
-          <div className="flex"
-           onClick={() => {
-            if (session) {
-              handleReplyLike(reply._id, comment._id)
-            } else {
-              // پیام به کاربر در صورت عدم ورود
-              alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
-            }
-          }}
-           >
-            <HeartSvg isLiked={reply.likedByCurrentUser} />
-            <span className="ml-1">{reply.likesCount}</span>
-          </div>
+                      {/* مدیریت پاسخ‌ها */}
 
-          <div className="flex"
-           onClick={() => {
-            if (session) {
-              handleReplyDislike(reply._id, comment._id)}
-               else {
-              // پیام به کاربر در صورت عدم ورود
-              alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
-            }
-          }}
-            >
-            <DislikeSvg isDisliked={reply.dislikedByCurrentUser} />
-            <span className="ml-1">{reply.dislikesCount}</span>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+                      {expandedReplies[comment._id] &&
+                        comment.replies &&
+                        comment.replies.length > 0 && (
+                          <div className="ml-5 border-l-2 border-gray-300 text-xs">
+                            {comment.replies.map((reply) => (
+                              <div key={reply._id} className="flex flex-col mb-2">
+                                <span className="font-bold">{reply.author}</span>
+                                <p>{reply.text}</p>
 
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className="flex"
+                                    onClick={() => {
+                                      if (session) {
+                                        handleReplyLike(reply._id, comment._id);
+                                      } else {
+                                        alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+                                      }
+                                    }}
+                                  >
+                                    <HeartSvg isLiked={reply.likedByCurrentUser} />
+                                    <span className="ml-1">{reply.likesCount}</span>
+                                  </div>
 
+                                  <div
+                                    className="flex"
+                                    onClick={() => {
+                                      if (session) {
+                                        handleReplyDislike(reply._id, comment._id);
+                                      } else {
+                                        alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+                                      }
+                                    }}
+                                  >
+                                    <DislikeSvg isDisliked={reply.dislikedByCurrentUser} />
+                                    <span className="ml-1">{reply.dislikesCount}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
-                      {/* //////////////////////////////////////////////////// */}
-
+                      {/* پاسخ دادن */}
                       {replyingTo === comment._id && (
                         <div className="mt-2">
                           <input
@@ -543,29 +531,33 @@ async function handleReplyDislike(replyId, commentId) {
                 })}
               </div>
             )}
-{/* ///////////////////////////////////ارسال کامنت جدید////////////////////////////////// */}
-           {!session?"":  <div className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700">
-              <Image
-                className="rounded-full w-[10%]"
-                src={usericone}
-                alt="تصویر کاربر"
-                width={30}
-                height={30}
-                quality={60}
-              />
-              <input
-                className="pr-2 mr-1 w-[80%] h-8 rounded-md dark:bg-zinc-700"
-                placeholder="افزودن نظر ..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-              />
-              <div className="bg-blue-400 p-1 rounded-md w-[10%]">
-                <svg width="34" height="34" onClick={onSendHandler}>
-                  <use href="#ArrowUpSvg"></use>
-                </svg>
-              </div>
-            </div>}
-           
+
+            {/* فرم ارسال کامنت جدید */}
+            {session && (
+              <form
+                className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700"
+                onSubmit={handleSubmit(onSubmitHandler)}
+              >
+                <Image
+                  className="rounded-full w-[10%]"
+                  src={usericone}
+                  alt="تصویر کاربر"
+                  width={30}
+                  height={30}
+                  quality={60}
+                />
+                <input
+                  className="pr-2 mr-1 w-[80%] h-8 rounded-md dark:bg-zinc-700"
+                  placeholder="افزودن نظر ..."
+                  {...register("text", { required: true })}
+                />
+                <button type="submit" className="bg-blue-400 p-1 rounded-md w-[10%]">
+                  <svg width="34" height="34">
+                    <use href="#ArrowUpSvg"></use>
+                  </svg>
+                </button>
+              </form>
+            )}
           </div>
         </div>
         <Toaster />
