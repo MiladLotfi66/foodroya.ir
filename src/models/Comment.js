@@ -5,7 +5,7 @@ const commentSchema = new Schema(
     text: {
       type: String,
       required: true,
-      maxlength: 1000, // محدودیت طول متن کامنت
+      maxlength: 300, // محدودیت طول متن کامنت
     },
     author: {
       type: Schema.Types.ObjectId, // ارجاع به کاربر نویسنده

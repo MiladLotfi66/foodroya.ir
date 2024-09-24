@@ -43,7 +43,7 @@ function ShopManage() {
       const res = await ShopServerEnableActions(ShopId);
       
       if (res.status === 200||res.status === 201) {
-        const updatedShop = Shops.map((shop) =>
+        const updatedShop = Shops?.map((shop) =>
           shop._id === ShopId ? { ...shop, ShopStatus: true } : shop
         );
         setShops(updatedShop);  
@@ -58,7 +58,7 @@ function ShopManage() {
     try {
       const res = await ShopServerDisableActions(ShopId);
       if (res.status === 200||res.status === 201) {
-        const updatedShop = Shops.map((shop) =>
+        const updatedShop = Shops?.map((shop) =>
           shop._id === ShopId ? { ...shop, ShopStatus: false } : shop
         );
         setShops(updatedShop);  
@@ -182,7 +182,7 @@ function ShopManage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {Shops.map((Shop) => (
+          {Shops?.map((Shop) => (
             <ShopCard
               className="p-2 md:p-4"
               key={Shop._id}
