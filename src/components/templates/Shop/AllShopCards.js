@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ShopCard from "./ShopCard";
-import { GetAllEnableShops, authenticateUser,GetUserbyUserId } from "@/components/signinAndLogin/Actions/ShopServerActions";
-
+import { GetAllEnableShops, authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { GetUserbyUserId } from "@/components/signinAndLogin/Actions/UsersServerActions";
 function AllShopCards() {
   const [Shops, setShops] = useState([]);
   const [user, setUser] = useState(null);

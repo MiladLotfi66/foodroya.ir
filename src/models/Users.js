@@ -4,6 +4,18 @@ const UserSchema = new Schema(
     username: {
       type: String,
       required: true,
+    },  
+    userImage: {
+      type: String,
+    }, 
+    email: {
+      type: String,
+      required: false,
+    }, 
+    userUniqName: {
+      type: String,
+      unique: true,
+      required: false,
     },
     phone: {
       type: String,
@@ -25,6 +37,7 @@ const UserSchema = new Schema(
         ref: 'Shop', // فرض بر این است که مدل فروشگاه 'Shop' نام دارد
       },
     ],
+
     refreshToken: String,
   },
   { timestamps: true }

@@ -207,34 +207,7 @@ export async function authenticateUser() {
   }
 }
 
-export async function GetUserbyUserId(userId) {
-  try {
-    // اتصال به پایگاه داده
-    await connectDB();
 
-    // پیدا کردن کاربر و دریافت لیست شناسه‌های فروشگاه‌های فالو شده
-    const user = await Users.findById(userId).lean();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // تبدیل شناسه‌ها و مقادیر پیچیده به فرمت‌های قابل سریالایز
-    const plainUser = {
-      ...user,
-      _id: user._id.toString(),
-      following: user.following?.map((shop) => shop._id.toString()),
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
-    };
-
-    // برگرداندن اطلاعات کاربر
-    return { user: plainUser, status: 200 };
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    return { error: error.message, status: 500 };
-  }
-}
 
 export async function EditShop(ShopData) {
   try {
