@@ -85,4 +85,64 @@ export async function GetUserData() {
   }
 }
 
+export async function UpdateUserProfile(profileData) {
+  console.log( profileData);
+  
+  try {
+    // اتصال به پایگاه داده
+    await connectDB();
+
+    // احراز هویت کاربر
+    const userData = await authenticateUser();
+    if (!userData || userData.error) {
+      throw new Error(userData.error || "اطلاعات کاربر یافت نشد");
+    }
+
+    const userId = userData.id;
+
+    // پیدا کردن کاربر در پایگاه داده
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("کاربر یافت نشد");
+    }
+
+    // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
+    // توجه: فقط فیلدهای مجاز باید به‌روزرسانی شوند
+    const allowedUpdates = ["username", "userImage", "email", "userUniqName", "phone", "bio", "address"];
+    allowedUpdates.forEach((field) => {
+      if (profileData[field] !== undefined) {
+        user[field] = profileData[field];
+      }
+    });
+
+    // در صورت نیاز به به‌روزرسانی پسورد:
+    // if (profileData.password) {
+    //   user.password = await hashPassword(profileData.password); // فرض بر این است که تابع hashPassword وجود دارد
+    // }
+console.log(user);
+
+    // ذخیره تغییرات در پایگاه داده
+    await user.save();
+
+    // تبدیل داده‌ها به فرمت قابل سریالایز
+    const plainUser = {
+      _id: user._id.toString(),
+      username: user.username,
+      userImage: user.userImage,
+      email: user.email,
+      userUniqName: user.userUniqName,
+      phone: user.phone,
+      bio: user.bio,
+      address: user.address,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
+
+    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200, data: plainUser };
+  } catch (error) {
+    console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
+    return { error: error.message, status: 500 };
+  }
+}
+
 

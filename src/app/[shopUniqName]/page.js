@@ -1,7 +1,7 @@
 import ShopPage from "@/templates/ShopPage/ShopPage";
 
 
-function page() {
+function Page() {
 
   return (
     <div>
@@ -10,5 +10,5 @@ function page() {
   )
 }
 
-export default page
+export default Page
 
