@@ -1518,6 +1518,10 @@ video {
   flex: 1 1 0%;
 }
 
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
 .shrink-0 {
   flex-shrink: 0;
 }
@@ -1728,6 +1732,10 @@ video {
   overflow: hidden;
 }
 
+.overflow-scroll {
+  overflow: scroll;
+}
+
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -1740,6 +1748,10 @@ video {
 
 .text-wrap {
   text-wrap: wrap;
+}
+
+.break-words {
+  overflow-wrap: break-word;
 }
 
 .rounded {
@@ -2134,6 +2146,10 @@ video {
   text-align: center;
 }
 
+.text-start {
+  text-align: start;
+}
+
 .font-Dana {
   font-family: Dana;
 }
@@ -2419,6 +2435,14 @@ video {
 .child\:child\:gap-x-2>*>* {
   -moz-column-gap: 0.5rem;
        column-gap: 0.5rem;
+}
+
+.child\:overflow-auto>* {
+  overflow: auto;
+}
+
+.child\:break-words>* {
+  overflow-wrap: break-word;
 }
 
 .child\:text-xs>* {

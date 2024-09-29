@@ -87,11 +87,18 @@ function ProfilePage() {
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
     try {
-      const profileData = {
-        ...formData,
-        // اگر نیاز به حذف پیشوند دارید:
-        userImage: formData.userImage.replace(/^data:image\/\w+;base64,/, ''),
-      };
+      const profileData = { ...formData };
+  
+      // بررسی اینکه آیا userImage به‌روزرسانی شده است (به عنوان Base64)
+      if (formData.userImage && formData.userImage.startsWith('data:image/')) {
+        // اگر userImage به صورت Base64 است، آن را پردازش کنید
+        profileData.userImage = formData.userImage.replace(/^data:image\/\w+;base64,/, '');
+      } else {
+        // اگر userImage به‌روزرسانی نشده است، آن را از profileData حذف کنید
+        delete profileData.userImage;
+      }
+  
+      console.log('Profile Data:', profileData); // دیباگ کردن داده‌های پروفایل
   
       const result = await UpdateUserProfile(profileData);
   
@@ -306,15 +313,15 @@ function ProfilePage() {
             </div>
           </div>
           {/* ///////////////////////////////آدرس//////////////////////////////// */}
-          <div className="w-full md:flex text-center justify-center pt-20">
-            <div className="flex gap-2 items-start w-full md:w-1/2 ">
-              <svg width="24" height="24">
+          <div className="w-full md:flex gap-3  justify-center pt-20 ">
+            <div className="flex gap-2 items-start text-start w-full md:w-1/2 ">
+              <svg width="24" height="24" className="flex-shrink-0">
                 <use href="#LocationSvg"></use>
               </svg>
               {editField === "address" ? (
                 <textarea
                   name="address"
-                  className="border border-gray-300 rounded p-1 w-full"
+                  className="border border-gray-300 rounded p-1 w-full "
                   {...register("address", { required: true })}
                   onBlur={() => setEditField(null)}
                   autoFocus
@@ -322,7 +329,7 @@ function ProfilePage() {
               ) : (
                 <span
                   onClick={() => setEditField("address")}
-                  className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                  className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded break-words overflow-auto"
                 >
                   {watchedFields.address || user?.address || "در این قسمت می‌توانید آدرستان را وارد کنید"}
                 </span>
@@ -333,15 +340,15 @@ function ProfilePage() {
             </div>
 
             {/* ///////////////////////////////بیوگرافی//////////////////////////////// */}
-            <div className="w-full flex gap-2 items-start md:w-1/2">
-              <svg width="24" height="24">
+            <div className="w-full flex gap-2 items-start text-start md:w-1/2 break-words">
+              <svg width="24" height="24" className="flex-shrink-0">
                 <use href="#TextPage"></use>
               </svg>
 
               {editField === "bio" ? (
                 <textarea
                   name="bio"
-                  className="border border-gray-300 rounded p-1 w-full"
+                  className="border border-gray-300 rounded p-1 w-full "
                   {...register("bio", { required: true })}
                   onBlur={() => setEditField(null)}
                   autoFocus
@@ -349,7 +356,7 @@ function ProfilePage() {
               ) : (
                 <span
                   onClick={() => setEditField("bio")}
-                  className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                  className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded break-words overflow-auto "
                 >
                   {watchedFields.bio || user?.bio || "اینجا بیوگرافیتان را وارد کنید"}
                 </span>

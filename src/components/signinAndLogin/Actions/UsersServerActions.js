@@ -4,26 +4,28 @@ import User from "@/models/Users"; // بررسی اینکه درست ایمپو�
 import { authenticateUser } from "./RolesPermissionActions";
 import fs from 'fs';
 import path from 'path';
+import sharp from 'sharp'; // ایمپورت کتابخانه‌ی Sharp
 
 export async function saveBase64Image(base64String, userId) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
-      let mimeType;
       let data;
 
       // بررسی وجود پیشوند
       const matches = base64String.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/);
       if (matches && matches.length === 3) {
-        mimeType = matches[1];
         data = matches[2];
       } else {
         // اگر پیشوند وجود ندارد، فرض می‌کنیم که تنها داده‌ی base64 ارسال شده است
-        mimeType = 'image/jpeg'; // نوع پیش‌فرض، در صورت نیاز می‌توانید آن را دریافت کنید
         data = base64String;
       }
 
-      const extension = mimeType.split('/')[1];
       const buffer = Buffer.from(data, 'base64');
+
+      // تبدیل تصویر به فرمت WebP با استفاده از Sharp
+      const webpBuffer = await sharp(buffer)
+        .webp()
+        .toBuffer();
 
       // ایجاد مسیر ذخیره‌سازی
       const uploadDir = path.join(process.cwd(), 'public', 'Uploads', 'userImages');
@@ -31,12 +33,12 @@ export async function saveBase64Image(base64String, userId) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      // ایجاد نام منحصربه‌فرد برای فایل
-      const fileName = `${userId}-${Date.now()}.${extension}`;
+      // ایجاد نام منحصربه‌فرد برای فایل با پسوند .webp
+      const fileName = `${userId}-${Date.now()}.webp`;
       const filePath = path.join(uploadDir, fileName);
 
-      // ذخیره‌سازی فایل
-      fs.writeFile(filePath, buffer, (err) => {
+      // ذخیره‌سازی فایل WebP
+      fs.writeFile(filePath, webpBuffer, (err) => {
         if (err) {
           return reject(err);
         }
@@ -49,7 +51,6 @@ export async function saveBase64Image(base64String, userId) {
     }
   });
 }
-
 
 export async function GetAllUsers() {
   try {
@@ -78,6 +79,7 @@ export async function GetAllUsers() {
     return { error: error.message, status: 500 };
   }
 }
+
 export async function GetUserbyUserId(userId) {
   try {
     // اتصال به پایگاه داده
@@ -106,6 +108,7 @@ export async function GetUserbyUserId(userId) {
     return { error: error.message, status: 500 };
   }
 }
+
 export async function GetUserData() {
   try {
     let userData;
@@ -134,7 +137,7 @@ export async function GetUserData() {
 }
 
 export async function UpdateUserProfile(profileData) {
-  console.log( profileData);
+  console.log(profileData);
   
   try {
     // اتصال به پایگاه داده
@@ -153,19 +156,20 @@ export async function UpdateUserProfile(profileData) {
     if (!user) {
       throw new Error("کاربر یافت نشد");
     }
-   // اگر تصویر جدید ارسال شده است، آن را پردازش کنید
-   if (profileData.userImage) {
-    const imagePath = await saveBase64Image(profileData.userImage, userId);
-    profileData.userImage = imagePath;
 
-    // (اختیاری) حذف تصویر قبلی از سرور، اگر نیاز دارید
-    if (user.userImage) {
-      const oldImagePath = path.join(process.cwd(), 'public', user.userImage);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+    // اگر تصویر جدید ارسال شده است، آن را پردازش کنید
+    if (profileData.userImage) {
+      const imagePath = await saveBase64Image(profileData.userImage, userId);
+      profileData.userImage = imagePath;
+
+      // (اختیاری) حذف تصویر قبلی از سرور، اگر نیاز دارید
+      if (user.userImage) {
+        const oldImagePath = path.join(process.cwd(), 'public', user.userImage);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
       }
     }
-  }
 
     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
     // توجه: فقط فیلدهای مجاز باید به‌روزرسانی شوند
@@ -180,7 +184,7 @@ export async function UpdateUserProfile(profileData) {
     // if (profileData.password) {
     //   user.password = await hashPassword(profileData.password); // فرض بر این است که تابع hashPassword وجود دارد
     // }
-console.log(user);
+    console.log(user);
 
     // ذخیره تغییرات در پایگاه داده
     await user.save();
@@ -205,5 +209,3 @@ console.log(user);
     return { error: error.message, status: 500 };
   }
 }
-
-
