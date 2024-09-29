@@ -2,6 +2,54 @@
 import connectDB from "@/utils/connectToDB";
 import User from "@/models/Users"; // بررسی اینکه درست ایمپورت شده باشد
 import { authenticateUser } from "./RolesPermissionActions";
+import fs from 'fs';
+import path from 'path';
+
+export async function saveBase64Image(base64String, userId) {
+  return new Promise((resolve, reject) => {
+    try {
+      let mimeType;
+      let data;
+
+      // بررسی وجود پیشوند
+      const matches = base64String.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        mimeType = matches[1];
+        data = matches[2];
+      } else {
+        // اگر پیشوند وجود ندارد، فرض می‌کنیم که تنها داده‌ی base64 ارسال شده است
+        mimeType = 'image/jpeg'; // نوع پیش‌فرض، در صورت نیاز می‌توانید آن را دریافت کنید
+        data = base64String;
+      }
+
+      const extension = mimeType.split('/')[1];
+      const buffer = Buffer.from(data, 'base64');
+
+      // ایجاد مسیر ذخیره‌سازی
+      const uploadDir = path.join(process.cwd(), 'public', 'Uploads', 'userImages');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // ایجاد نام منحصربه‌فرد برای فایل
+      const fileName = `${userId}-${Date.now()}.${extension}`;
+      const filePath = path.join(uploadDir, fileName);
+
+      // ذخیره‌سازی فایل
+      fs.writeFile(filePath, buffer, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        // برگرداندن مسیر نسبی تصویر
+        const relativePath = `/Uploads/userImages/${fileName}`;
+        resolve(relativePath);
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 
 export async function GetAllUsers() {
   try {
@@ -105,6 +153,19 @@ export async function UpdateUserProfile(profileData) {
     if (!user) {
       throw new Error("کاربر یافت نشد");
     }
+   // اگر تصویر جدید ارسال شده است، آن را پردازش کنید
+   if (profileData.userImage) {
+    const imagePath = await saveBase64Image(profileData.userImage, userId);
+    profileData.userImage = imagePath;
+
+    // (اختیاری) حذف تصویر قبلی از سرور، اگر نیاز دارید
+    if (user.userImage) {
+      const oldImagePath = path.join(process.cwd(), 'public', user.userImage);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+    }
+  }
 
     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
     // توجه: فقط فیلدهای مجاز باید به‌روزرسانی شوند

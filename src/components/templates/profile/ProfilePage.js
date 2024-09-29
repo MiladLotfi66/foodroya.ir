@@ -22,32 +22,49 @@ function ProfilePage() {
   const [isSubmit, setIsSubmit] = useState(false);
   const [user, setUser] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null); // تصویر انتخاب شده قبل از باز شدن مودال
-  const [avatarUrl, setAvatarUrl] = useState(usericone); // تغییر به useState
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(usericone);
+  const [base64Image, setBase64Image] = useState(null);
 
-  const [editField, setEditField] = useState(null); // مدیریت فیلد در حال ویرایش
+  const [editField, setEditField] = useState(null);
   const fileInputRef = useRef(null);
-
-  const updateAvatar = (imgSrc) => {
-    setAvatarUrl(imgSrc); // به‌روزرسانی state
-    // Optional: به‌روزرسانی محلی یا ارسال به سرور
-  };
 
   const {
     register,
     handleSubmit,
     setValue,
     getValues,
-    reset, // اضافه کردن reset
-
-    watch, // اضافه کردن watch
+    reset,
+    watch,
     formState: { errors, dirtyFields, isDirty },
   } = useForm({
     mode: "all",
+    defaultValues: {
+      userImage: "", // اطمینان از مقدار پیش‌فرض
+    },
   });
 
-  // مشاهده مقادیر فرم
+  // تعریف watchedFields با استفاده از watch()
   const watchedFields = watch();
+
+  // دیباگ: مشاهده وضعیت فرم
+  useEffect(() => {
+  }, [watchedFields, isDirty, dirtyFields]);
+
+  // دیباگ: مشاهده تغییرات base64Image
+  useEffect(() => {
+  }, [base64Image]);
+
+  // به‌روزرسانی userImage با استفاده از setValue و گزینه shouldDirty
+  useEffect(() => {
+    setValue("userImage", base64Image, { shouldDirty: true });
+  }, [base64Image, setValue]);
+
+  const updateAvatar = (imgSrc) => {
+    setAvatarUrl(imgSrc);
+    setBase64Image(imgSrc);
+    setModalOpen(false);
+  };
 
   // دریافت اطلاعات کاربر تنها یک بار در ابتدا
   useEffect(() => {
@@ -55,14 +72,12 @@ function ProfilePage() {
       const res = await GetUserData();
       if (res.status === 200) {
         setUser(res.user);
-        console.log(res.user);
 
-        // استفاده از reset به جای setValue برای تنظیم مقادیر اولیه
         reset(res.user);
 
-        // به‌روزرسانی avatarUrl با تصویر دریافت شده از سرور
         if (res.user.userImage) {
           setAvatarUrl(res.user.userImage);
+          setBase64Image(res.user.userImage);
         }
       }
     };
@@ -72,14 +87,20 @@ function ProfilePage() {
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
     try {
-      const result = await UpdateUserProfile(formData); // فراخوانی سرور اکشن
-
+      const profileData = {
+        ...formData,
+        // اگر نیاز به حذف پیشوند دارید:
+        userImage: formData.userImage.replace(/^data:image\/\w+;base64,/, ''),
+      };
+  
+      const result = await UpdateUserProfile(profileData);
+  
       if (result.status === 200) {
         toast.success(result.message);
         setUser(result.data);
-        // استفاده از reset برای به‌روزرسانی مقادیر اولیه پس از موفقیت
         reset(result.data);
-        setEditField(null); // بستن حالت ویرایش پس از موفقیت
+        setEditField(null);
+        setBase64Image(null);
       } else {
         toast.error(result.error || "خطایی رخ داده است.");
       }
@@ -90,15 +111,14 @@ function ProfilePage() {
       setIsSubmit(false);
     }
   };
+  
 
-  // عملکرد برای باز کردن دیالوگ انتخاب فایل
   const handleEditImage = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
-  // عملکرد برای انتخاب فایل
   const onSelectFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -108,8 +128,7 @@ function ProfilePage() {
     const reader = new FileReader();
     reader.onloadend = () => {
       const imageUrl = reader.result;
-      // بررسی اندازه تصویر
-      const image = new window.Image(); // استفاده از سازنده بومی
+      const image = new window.Image();
       image.src = imageUrl;
       image.onload = () => {
         if (image.width < 150 || image.height < 150) {
@@ -123,7 +142,6 @@ function ProfilePage() {
     };
     reader.readAsDataURL(file);
 
-    // ریست کردن مقدار input
     e.target.value = "";
   };
 
@@ -139,6 +157,12 @@ function ProfilePage() {
           </div>
         </div>
         <form onSubmit={handleSubmit(handleFormSubmit)}>
+          {/* فیلد مخفی userImage بدون ویژگی value */}
+          <input
+            type="hidden"
+            {...register("userImage")}
+          />
+          
           <div className="flex gap-2 items-center justify-around mt-10 mb-20">
             {/* /////////////////////userImage (دایره‌ای) //////////////////////////// */}
             <div className="flex items-center justify-center ">
@@ -153,7 +177,7 @@ function ProfilePage() {
                         name="userUniqName"
                         className="border border-gray-300 rounded p-1 w-full"
                         {...register("userUniqName", { required: true })}
-                        onBlur={() => setEditField(null)} // فقط بستن حالت ویرایش
+                        onBlur={() => setEditField(null)}
                         autoFocus
                       />
                     ) : (
@@ -200,7 +224,7 @@ function ProfilePage() {
                         name="username"
                         className="border border-gray-300 rounded p-1 w-full"
                         {...register("username", { required: true })}
-                        onBlur={() => setEditField(null)} // فقط بستن حالت ویرایش
+                        onBlur={() => setEditField(null)}
                         autoFocus
                       />
                     ) : (
@@ -228,7 +252,7 @@ function ProfilePage() {
                         name="phone"
                         className="border border-gray-300 rounded p-1 w-full"
                         {...register("phone", { required: true })}
-                        onBlur={() => setEditField(null)} // فقط بستن حالت ویرایش
+                        onBlur={() => setEditField(null)}
                         autoFocus
                       />
                     ) : (
@@ -292,7 +316,7 @@ function ProfilePage() {
                   name="address"
                   className="border border-gray-300 rounded p-1 w-full"
                   {...register("address", { required: true })}
-                  onBlur={() => setEditField(null)} // فقط بستن حالت ویرایش
+                  onBlur={() => setEditField(null)}
                   autoFocus
                 ></textarea>
               ) : (
@@ -319,7 +343,7 @@ function ProfilePage() {
                   name="bio"
                   className="border border-gray-300 rounded p-1 w-full"
                   {...register("bio", { required: true })}
-                  onBlur={() => setEditField(null)} // فقط بستن حالت ویرایش
+                  onBlur={() => setEditField(null)}
                   autoFocus
                 ></textarea>
               ) : (
@@ -339,9 +363,9 @@ function ProfilePage() {
           {/* دکمه ارسال */}
           <button
             type="submit"
-            disabled={!isDirty || isSubmit}
+            disabled={(!isDirty && !base64Image) || isSubmit}
             className={`mt-5 p-2 rounded ${
-              !isDirty || isSubmit
+              (!isDirty && !base64Image) || isSubmit
                 ? "bg-blue-300 cursor-not-allowed"
                 : "bg-blue-500 hover:bg-blue-700 text-white"
             }`}
@@ -350,7 +374,6 @@ function ProfilePage() {
           </button>
         </form>
 
-        
         {/* //////////////////////////////////////////////////////////////// */}
 
         <Toaster />
