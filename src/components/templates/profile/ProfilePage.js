@@ -16,6 +16,7 @@ import TextPage from "@/module/svgs/TextPageSvg";
 import PhoneSvg from "@/module/svgs/phoneSvg1";
 import "react-image-crop/dist/ReactCrop.css";
 import Link from "next/link";
+import { GetUserShopsCount } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
 function ProfilePage() {
   const { data: session } = useSession();
@@ -25,6 +26,7 @@ function ProfilePage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(usericone);
   const [base64Image, setBase64Image] = useState(null);
+  const [userShopCounter,setUserShopCounter]=useState(0);
 
   const [editField, setEditField] = useState(null);
   const fileInputRef = useRef(null);
@@ -68,10 +70,18 @@ function ProfilePage() {
 
   // دریافت اطلاعات کاربر تنها یک بار در ابتدا
   useEffect(() => {
+    
     const fetchUserData = async () => {
+const resUserShopCount=await GetUserShopsCount();
+if (resUserShopCount.status===200) {
+  setUserShopCounter(resUserShopCount.shopCount)
+}
       const res = await GetUserData();
+
       if (res.status === 200) {
         setUser(res.user);
+        console.log(res.user);
+        
 
         reset(res.user);
 
@@ -299,14 +309,14 @@ function ProfilePage() {
             <div className="flexCenter gap-5 mt-10">
               <Link href="/Shop/userShop">
                 <div className="flex-col gap-2 text-center">
-                  <p>1</p>
+                  <p>{userShopCounter}</p>
                   <p>فروشگاه‌های من</p>
                 </div>
               </Link>
 
               <Link href="/Shop/allserShop">
                 <div className="flex-col gap-2 text-center">
-                  <p>126</p>
+                  <p>{user?.followingCount||0}</p>
                   <p>فروشگاه‌های دنبال شده</p>
                 </div>
               </Link>

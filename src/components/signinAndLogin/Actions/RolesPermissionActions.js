@@ -381,8 +381,6 @@ export async function GetAllFollowedUsersWithRoles(ShopId, roleId) {
   }
 }
 
-
-
 export async function GetShopRolesByShopUniqName(ShopUniqName) {
   try {
     await connectDB();

@@ -1732,10 +1732,6 @@ video {
   overflow: hidden;
 }
 
-.overflow-scroll {
-  overflow: scroll;
-}
-
 .overflow-y-auto {
   overflow-y: auto;
 }
@@ -2435,14 +2431,6 @@ video {
 .child\:child\:gap-x-2>*>* {
   -moz-column-gap: 0.5rem;
        column-gap: 0.5rem;
-}
-
-.child\:overflow-auto>* {
-  overflow: auto;
-}
-
-.child\:break-words>* {
-  overflow-wrap: break-word;
 }
 
 .child\:text-xs>* {

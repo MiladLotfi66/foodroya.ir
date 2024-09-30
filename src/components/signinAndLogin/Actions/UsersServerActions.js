@@ -5,7 +5,7 @@ import { authenticateUser } from "./RolesPermissionActions";
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp'; // ایمپورت کتابخانه‌ی Sharp
-
+import { simplifyFollowers } from "./ShopServerActions";
 export async function saveBase64Image(base64String, userId) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -111,25 +111,54 @@ export async function GetUserbyUserId(userId) {
 
 export async function GetUserData() {
   try {
+
     let userData;
     try {
-      // احراز هویت کاربر از سمت سرور
       userData = await authenticateUser();
-      
-    } catch {
-      // اگر کاربر احراز هویت نشد
+    } catch (authError) {
       userData = null;
+      console.log("Authentication failed:", authError);
     }
 
     if (!userData) {
       throw new Error("User not found");
     }
 
-    // دریافت اطلاعات کاربر بر اساس ID او
-    const user = await GetUserbyUserId(userData.id);
 
-    // برگرداندن اطلاعات کاربر
-    return user;
+    // اطمینان از اتصال به پایگاه داده
+    await connectDB();
+
+    // تبدیل userData.id به ObjectId با بررسی خطا
+  
+
+    const user = await User.findById(userData.id)
+      .select('-password') // حذف آرایه‌های ناخواسته و فیلد password
+      .lean(); // تبدیل به شیء ساده جاوااسکریپت
+
+    if (!user) {
+      console.log("User data could not be retrieved");
+      throw new Error("User data could not be retrieved");
+    }
+
+
+    // محاسبه تعداد following و followers به صورت جداگانه
+    const followingCount = Array.isArray(user.following) ? user.following.length : 0;
+    // حذف فیلد following از شیء کاربر قبل از ارسال به کلاینت
+    delete user.following;
+    
+    // تبدیل داده‌ها به فرمت قابل سریالایز
+    const plainUser = {
+      ...user,
+      _id: user._id.toString(),
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+      followingCount,
+    };
+
+
+    // return plainUser;
+    return { user:plainUser, status: 200 };
+
   } catch (error) {
     console.error("Error fetching user:", error);
     return { error: error.message, status: 500 };

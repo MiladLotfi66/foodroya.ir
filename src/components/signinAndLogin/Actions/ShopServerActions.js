@@ -11,7 +11,7 @@ import sharp from "sharp";
 import Users from "@/models/Users";
 import { revalidatePath } from "next/cache";
 
-const simplifyFollowers = (followers) => {
+export const simplifyFollowers = (followers) => {
 
   // چک کردن اگر followers یک آرایه خالی باشد یا undefined باشد
   if (!Array.isArray(followers) || followers.length === 0) {
@@ -77,6 +77,31 @@ export async function GetUserShops() {
 
   }
 }
+export async function GetUserShopsCount() {
+  try {
+    // اتصال به پایگاه داده
+    await connectDB();
+
+    // احراز هویت کاربر
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error("اطلاعات کاربر پیدا نشد");
+    }
+
+    // محاسبه تعداد فروشگاه‌ها با استفاده از countDocuments
+    const shopCount = await shops.countDocuments({ 
+      CreatedBy: userData.id, 
+      is_deleted: false 
+    });
+
+    return { shopCount, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت تعداد فروشگاه‌ها:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
 export async function GetShopCommentsArray(shopId) {
   try {
     // اتصال به دیتابیس
