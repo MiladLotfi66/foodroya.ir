@@ -36,6 +36,7 @@
     "react-hook-form": "^7.51.1",
     "react-hot-toast": "^2.4.1",
     "react-image-crop": "^11.0.7",
+    "react-multi-date-picker": "^4.5.2",
     "react-redux": "^9.1.0",
     "react-slick": "^0.30.2",
     "react-spinners": "^0.13.8",

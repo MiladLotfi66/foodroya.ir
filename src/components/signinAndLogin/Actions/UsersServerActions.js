@@ -132,7 +132,7 @@ export async function GetUserData() {
   
 
     const user = await User.findById(userData.id)
-      .select('-password') // حذف آرایه‌های ناخواسته و فیلد password
+      .select('-password -createdAt -updatedAt -role -__v') // حذف آرایه‌های ناخواسته و فیلد password
       .lean(); // تبدیل به شیء ساده جاوااسکریپت
 
     if (!user) {
@@ -145,13 +145,13 @@ export async function GetUserData() {
     const followingCount = Array.isArray(user.following) ? user.following.length : 0;
     // حذف فیلد following از شیء کاربر قبل از ارسال به کلاینت
     delete user.following;
-    
+
     // تبدیل داده‌ها به فرمت قابل سریالایز
     const plainUser = {
       ...user,
       _id: user._id.toString(),
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
+      // createdAt: user.createdAt.toISOString(),
+      // updatedAt: user.updatedAt.toISOString(),
       followingCount,
     };
 
@@ -165,8 +165,81 @@ export async function GetUserData() {
   }
 }
 
+// export async function UpdateUserProfile(profileData) {
+//   console.log(profileData);
+  
+//   try {
+//     // اتصال به پایگاه داده
+//     await connectDB();
+
+//     // احراز هویت کاربر
+//     const userData = await authenticateUser();
+//     if (!userData || userData.error) {
+//       throw new Error(userData.error || "اطلاعات کاربر یافت نشد");
+//     }
+
+//     const userId = userData.id;
+
+//     // پیدا کردن کاربر در پایگاه داده
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       throw new Error("کاربر یافت نشد");
+//     }
+
+//     // اگر تصویر جدید ارسال شده است، آن را پردازش کنید
+//     if (profileData.userImage) {
+//       const imagePath = await saveBase64Image(profileData.userImage, userId);
+//       profileData.userImage = imagePath;
+
+//       // (اختیاری) حذف تصویر قبلی از سرور، اگر نیاز دارید
+//       if (user.userImage) {
+//         const oldImagePath = path.join(process.cwd(), 'public', user.userImage);
+//         if (fs.existsSync(oldImagePath)) {
+//           fs.unlinkSync(oldImagePath);
+//         }
+//       }
+//     }
+
+//     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
+//     // توجه: فقط فیلدهای مجاز باید به‌روزرسانی شوند
+//     const allowedUpdates = ["username", "userImage", "email", "userUniqName", "phone", "bio", "address"];
+//     allowedUpdates.forEach((field) => {
+//       if (profileData[field] !== undefined) {
+//         user[field] = profileData[field];
+//       }
+//     });
+
+//     // در صورت نیاز به به‌روزرسانی پسورد:
+//     // if (profileData.password) {
+//     //   user.password = await hashPassword(profileData.password); // فرض بر این است که تابع hashPassword وجود دارد
+//     // }
+//     console.log(user);
+
+//     // ذخیره تغییرات در پایگاه داده
+//     await user.save();
+
+//     // تبدیل داده‌ها به فرمت قابل سریالایز
+//     const plainUser = {
+//       _id: user._id.toString(),
+//       username: user.username,
+//       userImage: user.userImage,
+//       email: user.email,
+//       userUniqName: user.userUniqName,
+//       phone: user.phone,
+//       bio: user.bio,
+//       address: user.address,
+//       createdAt: user.createdAt.toISOString(),
+//       updatedAt: user.updatedAt.toISOString(),
+//     };
+
+//     return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200, data: plainUser };
+//   } catch (error) {
+//     console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
+//     return { error: error.message, status: 500 };
+//   }
+// }
 export async function UpdateUserProfile(profileData) {
-  console.log(profileData);
+  console.log("Received profile data:", profileData);
   
   try {
     // اتصال به پایگاه داده
@@ -201,11 +274,26 @@ export async function UpdateUserProfile(profileData) {
     }
 
     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
-    // توجه: فقط فیلدهای مجاز باید به‌روزرسانی شوند
-    const allowedUpdates = ["username", "userImage", "email", "userUniqName", "phone", "bio", "address"];
+    // اضافه کردن dateOfBirth به لیست فیلدهای مجاز
+    const allowedUpdates = [
+      "username",
+      "userImage",
+      "email",
+      "userUniqName",
+      "phone",
+      "bio",
+      "address",
+      "dateOfBirth", // اضافه شده
+    ];
+
     allowedUpdates.forEach((field) => {
       if (profileData[field] !== undefined) {
-        user[field] = profileData[field];
+        if (field === "dateOfBirth") {
+          // تبدیل رشته تاریخ به شیء Date
+          user[field] = profileData[field] ? new Date(profileData[field]) : undefined;
+        } else {
+          user[field] = profileData[field];
+        }
       }
     });
 
@@ -213,28 +301,20 @@ export async function UpdateUserProfile(profileData) {
     // if (profileData.password) {
     //   user.password = await hashPassword(profileData.password); // فرض بر این است که تابع hashPassword وجود دارد
     // }
-    console.log(user);
+
+    console.log("Updated user data:", user);
 
     // ذخیره تغییرات در پایگاه داده
     await user.save();
 
     // تبدیل داده‌ها به فرمت قابل سریالایز
-    const plainUser = {
-      _id: user._id.toString(),
-      username: user.username,
-      userImage: user.userImage,
-      email: user.email,
-      userUniqName: user.userUniqName,
-      phone: user.phone,
-      bio: user.bio,
-      address: user.address,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
-    };
+  
 
-    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200, data: plainUser };
+    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200,  };
   } catch (error) {
     console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
     return { error: error.message, status: 500 };
   }
 }
+        
+    

@@ -1,13 +1,21 @@
 "use client";
+import DatePicker from "react-multi-date-picker";
+import { Calendar } from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
 
-import { useForm } from "react-hook-form";
+import BirtdaySvg from "@/module/svgs/BirtdaySvg";
+import { useForm, Controller } from "react-hook-form"; // **اضافه کردن Controller**
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState, useRef } from "react";
 import NextImage from "next/image";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import { useSession } from "next-auth/react";
-import { GetUserData, UpdateUserProfile } from "@/components/signinAndLogin/Actions/UsersServerActions";
+import {
+  GetUserData,
+  UpdateUserProfile,
+} from "@/components/signinAndLogin/Actions/UsersServerActions";
 import usericone from "@/public/Images/jpg/user.webp";
 import PencilIcon from "@/module/svgs/PencilIcon";
 import Modal from "./Modal";
@@ -26,7 +34,7 @@ function ProfilePage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(usericone);
   const [base64Image, setBase64Image] = useState(null);
-  const [userShopCounter,setUserShopCounter]=useState(0);
+  const [userShopCounter, setUserShopCounter] = useState(0);
 
   const [editField, setEditField] = useState(null);
   const fileInputRef = useRef(null);
@@ -38,24 +46,18 @@ function ProfilePage() {
     getValues,
     reset,
     watch,
+    control, // **اضافه کردن control**
     formState: { errors, dirtyFields, isDirty },
   } = useForm({
     mode: "all",
     defaultValues: {
       userImage: "", // اطمینان از مقدار پیش‌فرض
+      dateOfBirth: null, // مقدار پیش‌فرض برای تاریخ تولد
     },
   });
 
   // تعریف watchedFields با استفاده از watch()
   const watchedFields = watch();
-
-  // دیباگ: مشاهده وضعیت فرم
-  useEffect(() => {
-  }, [watchedFields, isDirty, dirtyFields]);
-
-  // دیباگ: مشاهده تغییرات base64Image
-  useEffect(() => {
-  }, [base64Image]);
 
   // به‌روزرسانی userImage با استفاده از setValue و گزینه shouldDirty
   useEffect(() => {
@@ -70,20 +72,26 @@ function ProfilePage() {
 
   // دریافت اطلاعات کاربر تنها یک بار در ابتدا
   useEffect(() => {
-    
     const fetchUserData = async () => {
-const resUserShopCount=await GetUserShopsCount();
-if (resUserShopCount.status===200) {
-  setUserShopCounter(resUserShopCount.shopCount)
-}
+      const resUserShopCount = await GetUserShopsCount();
+      if (resUserShopCount.status === 200) {
+        setUserShopCounter(resUserShopCount.shopCount);
+      }
       const res = await GetUserData();
 
       if (res.status === 200) {
         setUser(res.user);
         console.log(res.user);
-        
 
-        reset(res.user);
+        // تبدیل تاریخ تولد از سرور به فرمت قابل استفاده توسط DatePicker
+        let dateOfBirth = res.user.dateOfBirth
+          ? new Date(res.user.dateOfBirth)
+          : null;
+
+        reset({
+          ...res.user,
+          dateOfBirth: dateOfBirth, // مقداردهی تاریخ تولد
+        });
 
         if (res.user.userImage) {
           setAvatarUrl(res.user.userImage);
@@ -98,20 +106,30 @@ if (resUserShopCount.status===200) {
     setIsSubmit(true);
     try {
       const profileData = { ...formData };
-  
+
+      // تبدیل تاریخ تولد به فرمت قابل ارسال به سرور (ISO String)
+      if (profileData.dateOfBirth) {
+        // اگر از تقویم فارسی استفاده می‌کنید، باید به میلادی تبدیل شود
+        // فرض می‌کنیم تاریخ تولد به صورت Date object است
+        profileData.dateOfBirth = new Date(profileData.dateOfBirth).toISOString();
+      }
+
       // بررسی اینکه آیا userImage به‌روزرسانی شده است (به عنوان Base64)
-      if (formData.userImage && formData.userImage.startsWith('data:image/')) {
+      if (formData.userImage && formData.userImage.startsWith("data:image/")) {
         // اگر userImage به صورت Base64 است، آن را پردازش کنید
-        profileData.userImage = formData.userImage.replace(/^data:image\/\w+;base64,/, '');
+        profileData.userImage = formData.userImage.replace(
+          /^data:image\/\w+;base64,/,
+          ""
+        );
       } else {
         // اگر userImage به‌روزرسانی نشده است، آن را از profileData حذف کنید
         delete profileData.userImage;
       }
-  
-      console.log('Profile Data:', profileData); // دیباگ کردن داده‌های پروفایل
-  
+
+      console.log("Profile Data:", profileData); // دیباگ کردن داده‌های پروفایل
+
       const result = await UpdateUserProfile(profileData);
-  
+
       if (result.status === 200) {
         toast.success(result.message);
         setUser(result.data);
@@ -128,7 +146,6 @@ if (resUserShopCount.status===200) {
       setIsSubmit(false);
     }
   };
-  
 
   const handleEditImage = () => {
     if (fileInputRef.current) {
@@ -171,15 +188,14 @@ if (resUserShopCount.status===200) {
             <LocationSvg />
             <PhoneSvg />
             <TextPage />
+            <BirtdaySvg />
+
           </div>
         </div>
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           {/* فیلد مخفی userImage بدون ویژگی value */}
-          <input
-            type="hidden"
-            {...register("userImage")}
-          />
-          
+          <input type="hidden" {...register("userImage")} />
+
           <div className="flex gap-2 items-center justify-around mt-10 mb-20">
             {/* /////////////////////userImage (دایره‌ای) //////////////////////////// */}
             <div className="flex items-center justify-center ">
@@ -202,7 +218,9 @@ if (resUserShopCount.status===200) {
                         onClick={() => setEditField("userUniqName")}
                         className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
                       >
-                        {watchedFields.userUniqName || user?.userUniqName || "---"}
+                        {watchedFields.userUniqName ||
+                          user?.userUniqName ||
+                          "---"}
                       </span>
                     )}
                     {errors.userUniqName && (
@@ -258,7 +276,8 @@ if (resUserShopCount.status===200) {
                       </p>
                     )}
                   </div>
-                  {/* ///////////////phone/////////// */}
+
+                  {/* /////////phone////////////// */}
                   <div className="w-full flex items-center text-center">
                     <svg className="rotate-90" width="24" height="24">
                       <use href="#PhoneSvg"></use>
@@ -306,6 +325,8 @@ if (resUserShopCount.status===200) {
               )}
             </div>
             {/* ////////////////////////////following////////////////////////////// */}
+         <div>
+
             <div className="flexCenter gap-5 mt-10">
               <Link href="/Shop/userShop">
                 <div className="flex-col gap-2 text-center">
@@ -316,12 +337,57 @@ if (resUserShopCount.status===200) {
 
               <Link href="/Shop/allserShop">
                 <div className="flex-col gap-2 text-center">
-                  <p>{user?.followingCount||0}</p>
+                  <p>{user?.followingCount || 0}</p>
                   <p>فروشگاه‌های دنبال شده</p>
                 </div>
               </Link>
+              </div>
+
+                {/* ///////////////////////////////phone birthday pass email /////////////////////////// */}
+            {/* ///////////////date/////////// */}
+            {/* افزودن فیلد تاریخ تولد */}
+            <div className=" flex mt-4 justify-center">
+              <div className="w-full flex items-center max-w-md">
+              <svg width="24" height="24" className="flex-shrink-0">
+                <use href="#BirtdaySvg"></use>
+              </svg>
+                <Controller
+                  control={control}
+                  name="dateOfBirth"
+                  rules={{
+                    validate: (value) =>
+                      value === null ||
+                      value < new Date() ||
+                      "تاریخ تولد باید در گذشته باشد.",
+                  }}
+                  render={({ field: { onChange, value } }) => (
+                    <DatePicker
+                      calendar={persian}
+                      locale={persian_fa}
+                      calendarPosition="bottom-right"
+                      value={value}
+                      onChange={(date) => {
+                        // تبدیل تاریخ انتخاب شده به Date object
+                        // اگر تاریخ انتخاب شده از نوع Date باشد، نیازی به تبدیل نیست
+                        onChange(date.toDate());
+                      }}
+                      inputClass="w-full border border-gray-300 rounded p-2"
+                      placeholder="انتخاب تاریخ تولد"
+                      // اضافه کردن قابلیت ویرایش
+                    />
+                  )}
+                />
+                {errors.dateOfBirth && (
+                  <p className="text-red-500 text-sm">
+                    {errors.dateOfBirth.message || "تاریخ تولد نامعتبر است."}
+                  </p>
+                )}
+              </div>
             </div>
+            </div>
+          
           </div>
+
           {/* ///////////////////////////////آدرس//////////////////////////////// */}
           <div className="w-full md:flex gap-3  justify-center pt-20 ">
             <div className="flex gap-2 items-start text-start w-full md:w-1/2 ">
@@ -341,7 +407,9 @@ if (resUserShopCount.status===200) {
                   onClick={() => setEditField("address")}
                   className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded break-words overflow-auto"
                 >
-                  {watchedFields.address || user?.address || "در این قسمت می‌توانید آدرستان را وارد کنید"}
+                  {watchedFields.address ||
+                    user?.address ||
+                    "در این قسمت می‌توانید آدرستان را وارد کنید"}
                 </span>
               )}
               {errors.address && (
@@ -354,6 +422,7 @@ if (resUserShopCount.status===200) {
               <svg width="24" height="24" className="flex-shrink-0">
                 <use href="#TextPage"></use>
               </svg>
+            
 
               {editField === "bio" ? (
                 <textarea
@@ -368,7 +437,9 @@ if (resUserShopCount.status===200) {
                   onClick={() => setEditField("bio")}
                   className="block p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 rounded break-words overflow-auto "
                 >
-                  {watchedFields.bio || user?.bio || "اینجا بیوگرافیتان را وارد کنید"}
+                  {watchedFields.bio ||
+                    user?.bio ||
+                    "اینجا بیوگرافیتان را وارد کنید"}
                 </span>
               )}
               {errors.bio && (

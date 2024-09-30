@@ -70,6 +70,20 @@ const UserSchema = new Schema(
       type: String,
       maxlength: 500,     // حداکثر طول برای توکن ریفرش
     },
+        // افزودن فیلد تاریخ تولد
+        dateOfBirth: {
+          type: Date,
+          required: false, // اگر لازم است اجباری باشد، مقدار را `true` تنظیم کنید
+          validate: {
+            validator: function(value) {
+              // بررسی اینکه تاریخ تولد در گذشته باشد
+              return value < new Date();
+            },
+            message: 'تاریخ تولد باید در گذشته باشد.',
+          },
+        },
+    
+
   },
   { timestamps: true }
 );
