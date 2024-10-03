@@ -232,6 +232,12 @@ export async function UpdateUserProfile(profileData) {
           if (!question || !answer) {
             throw new Error("سوال و پاسخ امنیتی نمی‌توانند خالی باشند.");
           }
+
+          // اطمینان حاصل کنید که securityQuestion تعریف شده است
+          if (!user.securityQuestion) {
+            user.securityQuestion = {}; // مقداردهی اولیه به عنوان شیء خالی
+          }
+
           user.securityQuestion.question = question;
           user.securityQuestion.answer = answer; // هش شدن در مدل
         } else {
@@ -251,11 +257,24 @@ export async function UpdateUserProfile(profileData) {
 }
 
 
-export async function VerifySecurityAnswer(userId, providedAnswer) {
+
+export async function VerifySecurityAnswer( providedAnswer) {
   try {
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+    if (!userData) {
+      throw new Error("User not found");
+    }
+
     await connectDB();
 
-    const user = await User.findById(userId).select('securityQuestion').lean();
+    const user = await User.findById(userData.id).select('securityQuestion').lean();
     if (!user || !user.securityQuestion) {
       throw new Error("سوال امنیتی یافت نشد.");
     }
@@ -273,10 +292,21 @@ export async function VerifySecurityAnswer(userId, providedAnswer) {
 }
 
         
-export async function RecoverPassword(userId, providedAnswer, newPassword) {
+export async function RecoverPassword( providedAnswer, newPassword) {
   try {
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+    if (!userData) {
+      throw new Error("User not found");
+    }
     // ابتدا پاسخ سوال امنیتی را بررسی می‌کنیم
-    const verificationResult = await VerifySecurityAnswer(userId, providedAnswer);
+    const verificationResult = await VerifySecurityAnswer(userData.id, providedAnswer);
     if (verificationResult.status !== 200) {
       throw new Error(verificationResult.error || "بررسی پاسخ موفقیت‌آمیز نبود.");
     }
@@ -285,7 +315,7 @@ export async function RecoverPassword(userId, providedAnswer, newPassword) {
     await connectDB();
 
     // پیدا کردن کاربر
-    const user = await User.findById(userId);
+    const user = await User.findById(userData.id);
     if (!user) {
       throw new Error("کاربر یافت نشد.");
     }
@@ -301,11 +331,22 @@ export async function RecoverPassword(userId, providedAnswer, newPassword) {
   }
 }
 
-export async function ChangeSecurityQuestion(userId, newQuestion, newAnswer) {
+export async function ChangeSecurityQuestion( newQuestion, newAnswer) {
   try {
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+    if (!userData) {
+      throw new Error("User not found");
+    }
     await connectDB();
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userData.id);
     if (!user) {
       throw new Error("کاربر یافت نشد.");
     }
