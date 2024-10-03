@@ -1,5 +1,30 @@
 import { Schema, model, models } from "mongoose";
+import bcrypt from "bcryptjs"; // استفاده از bcryptjs به جای bcrypt
 
+const SALT_ROUNDS = 10;
+
+// تعریف اسکیما برای سوال امنیتی
+const SecurityQuestionSchema = new Schema(
+  {
+    question: {
+      type: String,
+      required: true,
+      minlength: 5,
+      maxlength: 255,
+      trim: true,
+    },
+    answer: {
+      type: String,
+      required: true,
+      minlength: 3,
+      maxlength: 255,
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
+// تعریف اسکیما برای کاربر
 const UserSchema = new Schema(
   {
     username: {
@@ -16,7 +41,7 @@ const UserSchema = new Schema(
     email: {
       type: String,
       required: false,
-      match: [/\S+@\S+\.\S+/, 'Please use a valid email address.'], // اعتبارسنجی فرمت ایمیل
+      match: [/\S+@\S+\.\S+/, 'لطفاً از فرمت ایمیل معتبر استفاده کنید.'], // اعتبارسنجی فرمت ایمیل
       maxlength: 100,    // حداکثر 100 کاراکتر
       trim: true,
     }, 
@@ -70,22 +95,63 @@ const UserSchema = new Schema(
       type: String,
       maxlength: 500,     // حداکثر طول برای توکن ریفرش
     },
-        // افزودن فیلد تاریخ تولد
-        dateOfBirth: {
-          type: Date,
-          required: false, // اگر لازم است اجباری باشد، مقدار را `true` تنظیم کنید
-          validate: {
-            validator: function(value) {
-              // بررسی اینکه تاریخ تولد در گذشته باشد
-              return value < new Date();
-            },
-            message: 'تاریخ تولد باید در گذشته باشد.',
-          },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    // افزودن فیلد تاریخ تولد
+    dateOfBirth: {
+      type: Date,
+      required: false, // اگر لازم است اجباری باشد، مقدار را `true` تنظیم کنید
+      validate: {
+        validator: function(value) {
+          // بررسی اینکه تاریخ تولد در گذشته باشد
+          return value < new Date();
         },
-    
-
+        message: 'تاریخ تولد باید در گذشته باشد.',
+      },
+    },
+    // افزودن فیلد سوال امنیتی
+    securityQuestion: {
+      type: SecurityQuestionSchema,
+      required: false, // اگر لازم است اجباری باشد، مقدار را `true` تنظیم کنید
+    },
   },
   { timestamps: true }
 );
+
+// Middleware برای هش کردن پاسخ سوال امنیتی قبل از ذخیره با استفاده از bcryptjs
+UserSchema.pre("save", async function(next) {
+  if (this.isModified("securityQuestion.answer")) {
+    try {
+      const hashedAnswer = await bcrypt.hash(this.securityQuestion.answer, SALT_ROUNDS);
+      this.securityQuestion.answer = hashedAnswer;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    next();
+  }
+});
+
+// متدی برای اعتبارسنجی پاسخ سوال امنیتی
+UserSchema.methods.validateSecurityAnswer = async function(candidateAnswer) {
+  if (!this.securityQuestion || !this.securityQuestion.answer) {
+    return false;
+  }
+  return await bcrypt.compare(candidateAnswer, this.securityQuestion.answer);
+};
+
+// حذف فیلدهای حساس هنگام تبدیل به JSON
+UserSchema.methods.toJSON = function() {
+  const obj = this.toObject();
+  if (obj.securityQuestion) {
+    delete obj.securityQuestion.answer;
+  }
+  delete obj.password;
+  delete obj.refreshToken;
+  return obj;
+};
 
 export default models.User || model("User", UserSchema);

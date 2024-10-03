@@ -5,7 +5,8 @@ import { authenticateUser } from "./RolesPermissionActions";
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp'; // ایمپورت کتابخانه‌ی Sharp
-import { simplifyFollowers } from "./ShopServerActions";
+import bcrypt from 'bcryptjs';
+
 export async function saveBase64Image(base64String, userId) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -165,79 +166,7 @@ export async function GetUserData() {
   }
 }
 
-// export async function UpdateUserProfile(profileData) {
-//   console.log(profileData);
-  
-//   try {
-//     // اتصال به پایگاه داده
-//     await connectDB();
 
-//     // احراز هویت کاربر
-//     const userData = await authenticateUser();
-//     if (!userData || userData.error) {
-//       throw new Error(userData.error || "اطلاعات کاربر یافت نشد");
-//     }
-
-//     const userId = userData.id;
-
-//     // پیدا کردن کاربر در پایگاه داده
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       throw new Error("کاربر یافت نشد");
-//     }
-
-//     // اگر تصویر جدید ارسال شده است، آن را پردازش کنید
-//     if (profileData.userImage) {
-//       const imagePath = await saveBase64Image(profileData.userImage, userId);
-//       profileData.userImage = imagePath;
-
-//       // (اختیاری) حذف تصویر قبلی از سرور، اگر نیاز دارید
-//       if (user.userImage) {
-//         const oldImagePath = path.join(process.cwd(), 'public', user.userImage);
-//         if (fs.existsSync(oldImagePath)) {
-//           fs.unlinkSync(oldImagePath);
-//         }
-//       }
-//     }
-
-//     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
-//     // توجه: فقط فیلدهای مجاز باید به‌روزرسانی شوند
-//     const allowedUpdates = ["username", "userImage", "email", "userUniqName", "phone", "bio", "address"];
-//     allowedUpdates.forEach((field) => {
-//       if (profileData[field] !== undefined) {
-//         user[field] = profileData[field];
-//       }
-//     });
-
-//     // در صورت نیاز به به‌روزرسانی پسورد:
-//     // if (profileData.password) {
-//     //   user.password = await hashPassword(profileData.password); // فرض بر این است که تابع hashPassword وجود دارد
-//     // }
-//     console.log(user);
-
-//     // ذخیره تغییرات در پایگاه داده
-//     await user.save();
-
-//     // تبدیل داده‌ها به فرمت قابل سریالایز
-//     const plainUser = {
-//       _id: user._id.toString(),
-//       username: user.username,
-//       userImage: user.userImage,
-//       email: user.email,
-//       userUniqName: user.userUniqName,
-//       phone: user.phone,
-//       bio: user.bio,
-//       address: user.address,
-//       createdAt: user.createdAt.toISOString(),
-//       updatedAt: user.updatedAt.toISOString(),
-//     };
-
-//     return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200, data: plainUser };
-//   } catch (error) {
-//     console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
-//     return { error: error.message, status: 500 };
-//   }
-// }
 export async function UpdateUserProfile(profileData) {
   console.log("Received profile data:", profileData);
   
@@ -274,7 +203,6 @@ export async function UpdateUserProfile(profileData) {
     }
 
     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
-    // اضافه کردن dateOfBirth به لیست فیلدهای مجاز
     const allowedUpdates = [
       "username",
       "userImage",
@@ -283,38 +211,118 @@ export async function UpdateUserProfile(profileData) {
       "phone",
       "bio",
       "address",
-      "dateOfBirth", // اضافه شده
+      "dateOfBirth",
+      "twoFactorEnabled",
+      "securityQuestion",
     ];
 
     allowedUpdates.forEach((field) => {
       if (profileData[field] !== undefined) {
         if (field === "dateOfBirth") {
-          // تبدیل رشته تاریخ به شیء Date
-          user[field] = profileData[field] ? new Date(profileData[field]) : undefined;
+          const date = new Date(profileData[field]);
+          if (isNaN(date.getTime())) {
+            throw new Error("تاریخ تولد نامعتبر است.");
+          }
+          if (date >= new Date()) {
+            throw new Error("تاریخ تولد باید در گذشته باشد.");
+          }
+          user[field] = date;
+        } else if (field === "securityQuestion") {
+          const { question, answer } = profileData.securityQuestion;
+          if (!question || !answer) {
+            throw new Error("سوال و پاسخ امنیتی نمی‌توانند خالی باشند.");
+          }
+          user.securityQuestion.question = question;
+          user.securityQuestion.answer = answer; // هش شدن در مدل
         } else {
           user[field] = profileData[field];
         }
       }
     });
 
-    // در صورت نیاز به به‌روزرسانی پسورد:
-    // if (profileData.password) {
-    //   user.password = await hashPassword(profileData.password); // فرض بر این است که تابع hashPassword وجود دارد
-    // }
-
-    console.log("Updated user data:", user);
-
     // ذخیره تغییرات در پایگاه داده
     await user.save();
 
-    // تبدیل داده‌ها به فرمت قابل سریالایز
-  
-
-    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200,  };
+    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200 };
   } catch (error) {
     console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
     return { error: error.message, status: 500 };
   }
 }
+
+
+export async function VerifySecurityAnswer(userId, providedAnswer) {
+  try {
+    await connectDB();
+
+    const user = await User.findById(userId).select('securityQuestion').lean();
+    if (!user || !user.securityQuestion) {
+      throw new Error("سوال امنیتی یافت نشد.");
+    }
+
+    const isMatch = await bcrypt.compare(providedAnswer, user.securityQuestion.answer);
+    if (!isMatch) {
+      throw new Error("پاسخ امنیتی صحیح نیست.");
+    }
+
+    return { message: "پاسخ صحیح است.", status: 200 };
+  } catch (error) {
+    console.error("خطا در بررسی پاسخ سوال امنیتی:", error.message);
+    return { error: error.message, status: 500 };
+  }
+}
+
         
-    
+export async function RecoverPassword(userId, providedAnswer, newPassword) {
+  try {
+    // ابتدا پاسخ سوال امنیتی را بررسی می‌کنیم
+    const verificationResult = await VerifySecurityAnswer(userId, providedAnswer);
+    if (verificationResult.status !== 200) {
+      throw new Error(verificationResult.error || "بررسی پاسخ موفقیت‌آمیز نبود.");
+    }
+
+    // اتصال به پایگاه داده
+    await connectDB();
+
+    // پیدا کردن کاربر
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("کاربر یافت نشد.");
+    }
+
+    // به‌روزرسانی رمز عبور
+    user.password = newPassword; // هش شدن در مدل
+    await user.save();
+
+    return { message: "رمز عبور با موفقیت بازیابی شد.", status: 200 };
+  } catch (error) {
+    console.error("خطا در بازیابی رمز عبور:", error.message);
+    return { error: error.message, status: 500 };
+  }
+}
+
+export async function ChangeSecurityQuestion(userId, newQuestion, newAnswer) {
+  try {
+    await connectDB();
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("کاربر یافت نشد.");
+    }
+
+    if (!newQuestion || !newAnswer) {
+      throw new Error("سوال و پاسخ جدید نمی‌توانند خالی باشند.");
+    }
+
+    user.securityQuestion.question = newQuestion;
+    user.securityQuestion.answer = newAnswer; // هش شدن در مدل
+
+    await user.save();
+
+    return { message: "سوال امنیتی با موفقیت تغییر کرد.", status: 200 };
+  } catch (error) {
+    console.error("خطا در تغییر سوال امنیتی:", error.message);
+    return { error: error.message, status: 500 };
+  }
+}
+
