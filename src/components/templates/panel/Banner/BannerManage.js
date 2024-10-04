@@ -1,12 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
 import { GetAllBanners } from "@/components/signinAndLogin/Actions/BannerServerActions";
 import AddBanner from "./AddBanner";
 import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from 'next/navigation';
-
 
 function BannerManage() {
   const [banners, setBanners] = useState([]);
@@ -16,67 +15,62 @@ function BannerManage() {
   const params = useParams();
   const { shopUniqName } = params;
 
- 
-
-  useEffect(() => {
-    refreshBanners();
-  }, []);
-
-  const refreshBanners = async () => {
-    
+  // بهینه‌سازی refreshBanners با استفاده از useCallback
+  const refreshBanners = useCallback(async () => {
     try {
       if (!shopUniqName) {
         console.error("نام یکتای فروشگاه موجود نیست.");
         return;
       }
-  
+
       const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
-  
+
       if (!ShopId) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
-      
+
       const response = await GetAllBanners(ShopId.ShopID);
-      
+
       setBanners(response.banners);
     } catch (error) {
       console.error("Error fetching banners:", error);
     }
-  };
+  }, [shopUniqName]);
 
-  const handleDeleteBanner = (bannerId) => {
-    setBanners(banners.filter(banner => banner._id !== bannerId)); // حذف بنر از لیست
-  };
+  useEffect(() => {
+    refreshBanners();
+  }, [refreshBanners]);
 
+  const handleDeleteBanner = useCallback((bannerId) => {
+    setBanners((prevBanners) => prevBanners.filter(banner => banner._id !== bannerId));
+  }, []);
 
-  const handleOverlayClick = (e) => {
+  const handleOverlayClick = useCallback((e) => {
     if (e.target === e.currentTarget) {
       setIsOpenAddBanner(false);
       setSelectedBanner(null);
       setSelectedBannerFile(null); // ریست کردن فایل بنر
     }
-  };
+  }, []);
 
-  const handleEditClick = (banner) => {
+  const handleEditClick = useCallback((banner) => {
     setSelectedBanner(banner);
     setSelectedBannerFile(null); // ریست کردن فایل بنر در حالت ویرایش
     setIsOpenAddBanner(true);
-  };
+  }, []);
 
-  const handleAddBannerClick = () => {
+  const handleAddBannerClick = useCallback(() => {
     setIsOpenAddBanner(true);
     setSelectedBanner(null);
     setSelectedBannerFile(null); // ریست کردن فایل بنر در حالت افزودن جدید
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsOpenAddBanner(false);
     setSelectedBanner(null);
     setSelectedBannerFile(null);
-  };
-
- 
+  }, []);
 
   return (
     <FormTemplate>
@@ -94,7 +88,6 @@ function BannerManage() {
               bannerFile={selectedBannerFile}
               onClose={handleCloseModal}
               refreshBanners={refreshBanners} // اضافه کردن این خط
-
             />
           </div>
         </div>
@@ -110,7 +103,6 @@ function BannerManage() {
           >
             افزودن بنر
           </button>
-         
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
@@ -121,8 +113,7 @@ function BannerManage() {
               banner={banner}
               editfunction={() => handleEditClick(banner)}
               onDelete={() => handleDeleteBanner(banner._id)} // پاس دادن تابع حذف
-
-              />
+            />
           ))}
         </div>
       </div>

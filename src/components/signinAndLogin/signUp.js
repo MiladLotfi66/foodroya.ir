@@ -11,41 +11,15 @@ import signUpServerAction from "./Actions/signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
-// import { AuthUser } from "@/utils/ServerHelper";
 
-// import { cookies } from "next/headers";
-// import { useCookies } from 'next-client-cookies';
-
-// import { DevTool } from "@hookform/devtools";
-// let count =0
-
- function SignUp() {
+function SignUp() {
   const router = useRouter();
   const [step, SetStep] = useState("GetUser");
   const [isSubmit, setIsSubmit] = useState(false);
 
-  // count++;
-
-  useEffect(() => {
-    // const checkUser = async () => {
-    //   const user = await AuthUser();
-    //   if (user) {
-    //     router.push("/");
-    //   }
-    // };
-
-    // checkUser();
-
-    setValue("username", "", { shouldValidate: true });
-    setValue("password", "", { shouldValidate: true });
-    setValue("phone", "", { shouldValidate: true });
-  }, []);
   // *******************hook use form********************
-
   const {
     register,
-    // control,
-    // reset,
     handleSubmit,
     formState: { errors },
     isSubmitting,
@@ -60,8 +34,14 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
     resolver: yupResolver(RegisterSchema),
   });
 
-  // *******************submit ********************
+  // *******************useEffect با Dependencies صحیح********************
+  useEffect(() => {
+    setValue("username", "", { shouldValidate: true });
+    setValue("password", "", { shouldValidate: true });
+    setValue("phone", "", { shouldValidate: true });
+  }, [setValue]); // افزودن setValue به آرایه dependencies
 
+  // *******************submit ********************
   const formsubmitting = async (data) => {
     setIsSubmit(true);
     try {
@@ -71,8 +51,10 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
       } else {
         toast.error(res.error);
       }
-    } catch (error) {}
-
+    } catch (error) {
+      console.error("خطا در ثبت نام:", error);
+      toast.error("خطا در ثبت نام. لطفاً دوباره تلاش کنید.");
+    }
     setIsSubmit(false);
   };
 
@@ -82,7 +64,6 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
       <div className="container ">
         <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
           {/* *******************header******************** */}
-          {/* <h1>{count/2}</h1> */}
           <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36 mb-6">
             <div className="flex flex-col items-start gap-2.5">
               <h4>
@@ -147,7 +128,6 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
             className="login-form flex flex-col gap-4 p-2 md:p-4 "
           >
             {/* *******************username******************** */}
-
             <div className={step !== "GetUser" ? "hidden" : ""}>
               <div className="flex items-center ">
                 <svg className="  w-5 h-5 ">
@@ -162,8 +142,6 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
                   {...register("username")}
                 />
               </div>
-              {/* در این قسمت چک میکند که اگر فیلد نام کاربری خالی باشد خطا را نمایش میدهد و کلید را غیر */}
-
               {errors.username && (
                 <div className="text-xs container text-red-400 mt-5">
                   {errors.username.message}
@@ -171,15 +149,16 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
               )}
               {/* *******************button**************************** */}
               <button
+                type="button"
                 onClick={() => {
                   SetStep("GetPass");
                 }}
-                disabled={errors.username}
+                disabled={!!errors.username}
                 className={
                   /* if issubmit is true class will be change */
                   errors.username
-                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
-                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
+                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400 cursor-not-allowed"
+                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700 cursor-pointer"
                 }
               >
                 بعدی
@@ -187,7 +166,6 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
             </div>
 
             {/* *******************password******************** */}
-
             <div className={step !== "GetPass" ? "hidden" : ""}>
               <div className="flex items-center ">
                 <svg className="  w-5 h-5 ">
@@ -197,7 +175,7 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
                   className="inputStyle grow  "
                   type="password"
                   name="password"
-                  autoComplete="password"
+                  autoComplete="current-password"
                   placeholder="رمز عبور"
                   {...register("password")}
                 />
@@ -209,15 +187,16 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
               )}
               {/* *******************button**************************** */}
               <button
+                type="button"
                 onClick={() => {
                   SetStep("GetPhone");
                 }}
-                disabled={errors.password}
+                disabled={!!errors.password}
                 className={
                   /* if issubmit is true class will be change */
                   errors.password
-                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
-                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
+                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400 cursor-not-allowed"
+                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700 cursor-pointer"
                 }
               >
                 بعدی
@@ -225,7 +204,6 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
             </div>
 
             {/* *******************Phone******************** */}
-
             <div className={step !== "GetPhone" ? "hidden" : ""}>
               <div className="flex items-center ">
                 <svg className="w-5 h-5 ">
@@ -233,9 +211,9 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
                 </svg>
                 <input
                   className="inputStyle grow"
-                  type="phone"
+                  type="tel"
                   name="phone"
-                  autoComplete="phone"
+                  autoComplete="tel"
                   placeholder="شماره تلفن همراه"
                   {...register("phone")}
                 />
@@ -247,27 +225,17 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
               )}
               {/* *******************button**************************** */}
               <button
-                onClick={() => {
-                  errors.phone || errors.username || errors.password
-                    ? SetStep("GetUser")
-                    : null;
-                }}
                 type="submit"
-                disabled={errors.phone || isSubmit}
+                disabled={!!errors.phone || isSubmit}
                 className={
-                  /* if issubmit is true class will be change */
+                  /* اگر isSubmit یا خطا وجود داشته باشد */
                   errors.phone || isSubmit
-                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400  "
-                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700   "
+                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400 cursor-not-allowed"
+                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700 cursor-pointer"
                 }
               >
-                {/* if issubmit is true button will be change */}
-
-                {errors.phone || errors.username || errors.password
-                  ? "بعدی"
-                  : "ثبت نام"}
-
-                {isSubmit ? <HashLoader size={25} color="#fff" /> : ""}
+                {/* اگر submit در حال انجام باشد */}
+                {isSubmit ? <HashLoader size={25} color="#fff" /> : "ثبت نام"}
               </button>
             </div>
           </form>
@@ -278,4 +246,5 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
     </div>
   );
 }
+
 export default SignUp;

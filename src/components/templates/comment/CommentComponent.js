@@ -30,7 +30,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     formState: { errors },
   } = useForm({
     mode: "all",
-    defaultValues: {comment:"",reply:""},
+    defaultValues: { comment: "", reply: "" },
     resolver: yupResolver(CommentSchima), // اضافه کردن resolver به useForm
   });
   const [comments, setComments] = useState([]); // حالت برای ذخیره نظرات
@@ -79,7 +79,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     return () => {
       document.removeEventListener("mousedown", handleOverlayClick);
     };
-  }, []);
+  }, [onClose]); // افزودن onClose به آرایه dependencies
 
   useEffect(() => {
     comments.forEach((comment) => {
@@ -94,14 +94,13 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
   // مدیریت ارسال فرم جدید با react-hook-form
   const onSubmitHandler = async (data) => {
-
     const { comment } = data;
     try {
       if (comment.trim() === "") {
         toast.error("متن نظر خالی است");
         return;
       }
-      
+
       const res = await saveComment(comment, type, referenceId);
       if (res.status === 201) {
         toast.success(res.message || "نظر شما با موفقیت ثبت شد");
@@ -124,23 +123,23 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       console.error("خطا در ذخیره نظرات:", error);
       toast.error("خطا در ذخیره نظرات");
     }
+    setIsSubmit(false);
   };
-
 
   async function handleReplySend(data, commentId) {
     const { reply } = data; // مقدار reply را از داده‌های فرم دریافت می‌کند
     console.log("data----->", reply);
-  
+
     try {
       if (!reply || reply.trim() === "") {
         toast.error("پاسخ خالی است");
         return;
       }
-  
+
       const res = await saveReply(reply, commentId);
       if (res.status === 201) {
         toast.success("پاسخ شما با موفقیت ثبت شد");
-  
+
         // به‌روزرسانی پاسخ‌ها در کامنت
         setComments((prevComments) =>
           prevComments.map((comment) =>
@@ -149,10 +148,10 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
               : comment
           )
         );
-  
+
         // پاک کردن فرم (ریست کردن تکست باکس)
         reset({ reply: "" }); // این خط مسئول پاک کردن مقدار تکست باکس پس از ارسال موفق است
-  
+
         // بستن حالت پاسخ
         setReplyingTo(null);
       } else {
@@ -163,7 +162,6 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       toast.error("خطا در ذخیره پاسخ");
     }
   }
-  
 
   function toggleCommentExpand(commentId) {
     setExpandedComments((prevState) => ({
@@ -171,6 +169,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       [commentId]: !prevState[commentId],
     }));
   }
+
   async function handleLike(commentId) {
     setComments((prevComments) =>
       prevComments.map((comment) => {
@@ -236,6 +235,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       toast.error("خطا در ثبت دیس‌لایک");
     }
   }
+
   ////////////////////////////////////////////////
   async function handleReplyLike(replyId, commentId) {
     setComments((prevComments) =>
@@ -304,7 +304,6 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       toast.error("خطا در ثبت دیسلایک پاسخ");
     }
   }
-
   ////////////////////////////////////////////////
   async function loadReplies(commentId) {
     // اگر پاسخ‌ها باز بودند، بسته می‌شوند
@@ -341,6 +340,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
     }
   }
   ////////////////////////////////
+
   if (!isOpen) return null;
 
   return (
@@ -351,9 +351,8 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       <div className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 ">
         <div className="h-full">
           <div className="hidden">
-            // <CloseSvg />
-            // <ArrowUpSvg />
-            //{" "}
+            {/* <CloseSvg /> */}
+            {/* <ArrowUpSvg /> */}
           </div>
           <div className="flex justify-between p-2 md:p-5 h-[10%]">
             <button aria-label="close" className="hover:text-orange-300">
@@ -382,9 +381,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                     <div
                       key={comment._id}
                       className={`comment-container ${
-                        comment.author === "شما"
-                          ? "my-comment"
-                          : "other-comment"
+                        comment.author === "شما" ? "my-comment" : "other-comment"
                       }`}
                     >
                       <div className="flex justify-between items-center mb-2">
@@ -426,12 +423,8 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                               }
                             }}
                           >
-                            <DislikeSvg
-                              isDisliked={comment.dislikedByCurrentUser}
-                            />
-                            <span className="ml-1">
-                              {comment.dislikesCount}
-                            </span>
+                            <DislikeSvg isDisliked={comment.dislikedByCurrentUser} />
+                            <span className="ml-1">{comment.dislikesCount}</span>
                           </div>
                         </div>
                       </div>
@@ -551,27 +544,27 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                       {/* پاسخ دادن */}
                       {replyingTo === comment._id && (
                         <div className="mt-2">
-                            <form onSubmit={handleSubmit((data) => handleReplySend(data, comment._id))}>
-
-                            <input
-            className="inputStyle w-[70%]"
-            type="text"
-            placeholder="پاسخ خود را بنویسید..."
-            name="reply"
-            id="reply"
-            {...register("reply")}
-          />
-                          <button
-                                  type="submit"
-
-                            className="mt-1 p-1 bg-blue-500 text-white rounded-md"
+                          <form
+                            onSubmit={handleSubmit((data) =>
+                              handleReplySend(data, comment._id)
+                            )}
                           >
-                            ارسال پاسخ
-                          </button>
-
-                        </form>
+                            <input
+                              className="inputStyle w-[70%]"
+                              type="text"
+                              placeholder="پاسخ خود را بنویسید..."
+                              name="reply"
+                              id="reply"
+                              {...register("reply")}
+                            />
+                            <button
+                              type="submit"
+                              className="mt-1 p-1 bg-blue-500 text-white rounded-md"
+                            >
+                              ارسال پاسخ
+                            </button>
+                          </form>
                         </div>
-
                       )}
                       {errors.reply && (
                         <span className="text-red-500 text-xs">
@@ -586,8 +579,9 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
             {/* فرم ارسال کامنت جدید */}
             {session && (
-              <form onSubmit={handleSubmit((data) => onSubmitHandler(data))}
-              className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700"
+              <form
+                onSubmit={handleSubmit(onSubmitHandler)}
+                className="flex w-full items-center text-center p-1 bg-white dark:bg-zinc-700"
               >
                 <Image
                   className="rounded-full w-[10%]"
@@ -597,19 +591,14 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                   height={30}
                   quality={60}
                 />
-                {/* <input
-                  className="pr-2 mr-1 w-[80%] h-8 rounded-md dark:bg-zinc-700"
+                <input
+                  className="inputStyle w-[80%]"
+                  type="text"
                   placeholder="افزودن نظر ..."
-                  {...register("text", { required: true })}
-                /> */}
-                               <input
-            className="inputStyle w-[80%]"
-            type="text"
-            placeholder="افزودن نظر ..."
-            name="comment"
-            id="comment"
-            {...register("comment")}
-          />
+                  name="comment"
+                  id="comment"
+                  {...register("comment")}
+                />
                 <button
                   type="submit"
                   className="bg-blue-400 p-1 rounded-md w-[10%]"
@@ -619,10 +608,10 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
                   </svg>
                 </button>
                 {errors.comment && (
-                        <span className="text-red-500 text-xs">
-                          {errors.comment.message}
-                        </span>
-                      )}
+                  <span className="text-red-500 text-xs">
+                    {errors.comment.message}
+                  </span>
+                )}
               </form>
             )}
           </div>

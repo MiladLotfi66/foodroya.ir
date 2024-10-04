@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-function page() {
+function Page() {
   const params = useParams();
   const { shopUniqName} = params;
  
@@ -13,4 +13,4 @@ function page() {
   )
 }
 
-export default page
+export default Page

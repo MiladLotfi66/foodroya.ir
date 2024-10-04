@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect ,useCallback} from "react";
+import { useState, useEffect, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import RoleName from "@/templates/panel/rols/RoleName";
 import AddRole from "./AddRole";
@@ -15,8 +15,8 @@ import {
   GetShopIdByShopUniqueName,
   GetShopRolesByShopUniqName,
   RemoveUserFromRole,
+  AddRoleToUser,
 } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
-import { AddRoleToUser } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 ////////////////////////svg////////////////
 import EditSvg from "@/module/svgs/EditSvg";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
@@ -25,6 +25,7 @@ import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import UserPlus from "@/module/svgs/UserPlus";
 import RoleCard from "./RoleCard";
 /////////////////////////////////////////
+
 function RolsManage() {
   const [isOpenAddRole, setIsOpenAddRole] = useState(false);
   const [isOpenUsersList, setIsOpenUsersList] = useState(false); // وضعیت مودال UsersListModal
@@ -35,13 +36,9 @@ function RolsManage() {
   const { shopUniqName } = params;
   const [rols, setRols] = useState([]);
   const [shopId, setShopId] = useState([]);
-  
-  useEffect(() => {
-  
-    refreshRols();
-  }, [shopUniqName]);
 
-  const refreshRols = async () => {
+  // بهینه‌سازی refreshRols با استفاده از useCallback
+  const refreshRols = useCallback(async () => {
     try {
       if (!shopUniqName) {
         console.error("نام یکتای فروشگاه موجود نیست.");
@@ -49,7 +46,7 @@ function RolsManage() {
       }
 
       const Shop = await GetShopIdByShopUniqueName(shopUniqName);
-      if (Shop.status!==200) {
+      if (Shop.status !== 200) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
@@ -60,17 +57,13 @@ function RolsManage() {
     } catch (error) {
       console.error("Error fetching banners:", error);
     }
-  };
+  }, [shopUniqName]);
 
-  const handleEditClick = (role) => {
-    setSelectedRole(role); // نقش انتخابی برای ویرایش
-    setIsOpenAddRole(true);
-
-  };
-
+  useEffect(() => {
+    refreshRols();
+  }, [refreshRols]);
 
   const handlerAddUserToRole = useCallback(async (UserId) => {
-  
     try {
       let res = await AddRoleToUser(UserId, shopUniqName, selectedRole);
       if (res && res.success) {
@@ -85,7 +78,7 @@ function RolsManage() {
       return { success: false };
     }
   }, [shopUniqName, selectedRole]);
-  //////////////////////////////////////////////////////////////////////////////////
+
   const handlerRemoveUserToRole = useCallback(async (UserId) => {
     try {
       let res = await RemoveUserFromRole(UserId, shopUniqName, selectedRole);
@@ -101,7 +94,6 @@ function RolsManage() {
       return { success: false }; // بازگشت نتیجه در صورت خطا
     }
   }, [shopUniqName, selectedRole]);
-  
 
   const handleEnableRole = useCallback(async (RoleID) => {
     let res = await EnableRole(RoleID);
@@ -112,17 +104,16 @@ function RolsManage() {
       setRols(updatedRoles);  
     }
   }, [rols]);
-  
+
   const handleDisableRole = useCallback(async (RoleID) => {
     let res = await DisableRole(RoleID);
-    if (res.status===200) {
+    if (res.status === 200) {
       const updatedRoles = rols.map((role) =>
         role._id === RoleID ? { ...role, RoleStatus: false } : role
       );
       setRols(updatedRoles);  
     }
   }, [rols]);
-
 
   const handleDeleteRole = useCallback(async (RoleID) => {
     let res = await DeleteRole(RoleID);
@@ -133,7 +124,6 @@ function RolsManage() {
       console.error("Error deleting role:", res.status);
     }
   }, [rols]);
-
 
   const handleAddRoleClick = () => {
     setIsOpenAddRole(true);
@@ -161,29 +151,16 @@ function RolsManage() {
     setUserListButtenName("");
   };
 
-  // async function handleUsersAtRole(roleId) {
-  //   setIsOpenUsersList(true);
-  //   try {
-  //     let res = await getUsersByRoleId(roleId);
-  //     setSelectedUsers(res);
-  //     setSelectedRole(roleId);
-  //     setUserListButtenName("حذف");
-  //   } catch (error) {
-  //     console.error("Error handling users at role:", error.message);
-  //     setSelectedUsers([]);
-  //   }
-  // }
-
   const handleAllUsers = useCallback(async (roleId) => {
     if (!shopId) return; // مطمئن شوید که ShopId مقداردهی شده است
     setIsOpenUsersList(true);
-    let res = await GetAllFollowedUsersWithRoles(shopId, roleId)
+    let res = await GetAllFollowedUsersWithRoles(shopId, roleId);
     
     setSelectedUsers(res.data);
     setUserListButtenName("افزودن");
     setSelectedRole(roleId);
   }, [shopId]);
-  
+
   const handleSubmit = async (formData) => {
     // ارسال داده‌های فرم به سرور
   };
@@ -249,7 +226,7 @@ function RolsManage() {
           </button>
         </div>
 
-        <div className=" grid grid-cols-2 gap-6 lg:grid-cols-3 xl:grid-cols-3  p-4 pb-16 justify-items-center ">
+        <div className="grid grid-cols-2 gap-6 lg:grid-cols-3 xl:grid-cols-3 p-4 pb-16 justify-items-center">
           {rols?.map((role) => (
             <RoleCard
               key={role._id}
@@ -259,7 +236,7 @@ function RolsManage() {
               handleDisableRole={handleDisableRole}
               handleEditClick={handleEditClick}
               handleAllUsers={handleAllUsers}
-                 />
+            />
           ))}
         </div>
       </div>

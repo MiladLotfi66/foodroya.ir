@@ -10,6 +10,8 @@ import { writeFile, unlink } from "fs/promises";
 import sharp from "sharp";
 import Users from "@/models/Users";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from 'next-auth/next';
+import { authOption } from "@/app/api/auth/[...nextauth]/route"; // مسیر صحیح فایل auth.js
 
 export const simplifyFollowers = (followers) => {
 
@@ -195,37 +197,53 @@ const hasUserAccess = async (userId) => {
   }
 };
 
+// export async function authenticateUser() {
+//   try {
+    
+//     const cookieStore = cookies();
+//     const accessToken = cookieStore.get("next-auth.session-token")?.value;
+    
+//     if (!accessToken) {
+//       console.log("Token not found. User is not logged in.");
+//       return null; // یا یک مقدار پیش‌فرض برای کاربر مهمان
+//       }
+
+//     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         Cookie: `next-auth.session-token=${accessToken}`,
+//       },
+//       credentials: "include",
+//     });
+
+//     if (!res.ok) {
+//       throw new Error(`Failed to fetch user data. Status: ${res.status}`);
+//     }
+
+//     const session = await res.json();
+
+//     if (!session.user) {
+//       throw new Error("No user data found in session");
+//     }
+
+
+//     return session.user;
+//   } catch (error) {
+//     console.error("Error in authenticateUser:", error);
+//     return null;
+//   }
+// }
+// مثال به‌روزشده تابع authenticateUser
+
 export async function authenticateUser() {
   try {
-    
-    const cookieStore = cookies();
-    const accessToken = cookieStore.get("next-auth.session-token")?.value;
-    
-    if (!accessToken) {
+    const session = await getServerSession(authOption);
+    if (session && session.user) {
+      return session.user;
+    } else {
       console.log("Token not found. User is not logged in.");
-      return null; // یا یک مقدار پیش‌فرض برای کاربر مهمان
-      }
-
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `next-auth.session-token=${accessToken}`,
-      },
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch user data. Status: ${res.status}`);
+      return null;
     }
-
-    const session = await res.json();
-
-    if (!session.user) {
-      throw new Error("No user data found in session");
-    }
-
-
-    return session.user;
   } catch (error) {
     console.error("Error in authenticateUser:", error);
     return null;
