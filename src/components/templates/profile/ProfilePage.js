@@ -156,8 +156,8 @@ function ProfilePage() {
 
       if (result.status === 200) {
         toast.success(result.message);
-        setUser(result.data);
-        reset(result.data);
+        // setUser(result.data);
+        // reset(result.data);
         setEditField(null);
         setBase64Image(null);
       } else {
