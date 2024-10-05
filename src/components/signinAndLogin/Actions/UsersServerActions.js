@@ -166,7 +166,6 @@ export async function GetUserData() {
   }
 }
 
-
 export async function UpdateUserProfile(profileData) {
   console.log("Received profile data:", profileData);
   
@@ -256,8 +255,6 @@ export async function UpdateUserProfile(profileData) {
   }
 }
 
-
-
 export async function VerifySecurityAnswer( providedAnswer) {
   try {
     let userData;
@@ -291,7 +288,6 @@ export async function VerifySecurityAnswer( providedAnswer) {
   }
 }
 
-        
 export async function RecoverPassword( providedAnswer, newPassword) {
   try {
     let userData;
@@ -366,4 +362,3 @@ export async function ChangeSecurityQuestion( newQuestion, newAnswer) {
     return { error: error.message, status: 500 };
   }
 }
-

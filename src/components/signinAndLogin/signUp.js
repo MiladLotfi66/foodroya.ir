@@ -1,32 +1,42 @@
 "use client";
+
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Usersvg from "@/module/svgs/Usersvg";
+import Phonesvg from "@/module/svgs/phoneSvg1";
+import Locksvg from "@/module/svgs/Locksvg";
+import EyeSvg from "@/module/svgs/EyeSvg";
+import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Toaster, toast } from "react-hot-toast";
-import { useEffect, useState } from "react";
-import Phonesvg from "@/module/svgs/phoneSvg1";
-import Locksvg from "@/module/svgs/Locksvg";
-import signUpServerAction from "./Actions/signUpServerAction";
 import HashLoader from "react-spinners/HashLoader";
 import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
-
+import FormStep from "@/module/User/FormStep";
+import InputField from "@/module/User/InputField";
+import { checkUsernameUnique ,signUpServerAction } from "./Actions/signUpServerAction";
 function SignUp() {
   const router = useRouter();
-  const [step, SetStep] = useState("GetUser");
+  const [step, setStep] = useState(1);
   const [isSubmit, setIsSubmit] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // وضعیت نمایش رمز عبور
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
 
   // *******************hook use form********************
   const {
     register,
     handleSubmit,
     formState: { errors },
-    isSubmitting,
-    setValue,
+    setError,
+    clearErrors,
+    watch,
+    trigger,
   } = useForm({
     mode: "all",
     defaultValues: {
+      name: "",
       username: "",
       password: "",
       phone: "",
@@ -34,12 +44,36 @@ function SignUp() {
     resolver: yupResolver(RegisterSchema),
   });
 
-  // *******************useEffect با Dependencies صحیح********************
+  // *******************بررسی یکتایی نام کاربری با Debounce********************
   useEffect(() => {
-    setValue("username", "", { shouldValidate: true });
-    setValue("password", "", { shouldValidate: true });
-    setValue("phone", "", { shouldValidate: true });
-  }, [setValue]); // افزودن setValue به آرایه dependencies
+    const checkUsername = async () => {
+      const username = watch("username");
+      if (username && username.trim().length >= 3) {
+        setIsCheckingUsername(true);
+        const result = await checkUsernameUnique(username.trim());
+        setIsCheckingUsername(false);
+        if (result.exists) {
+          setError("username", {
+            type: "manual",
+            message: "این نام کاربری قبلاً استفاده شده است",
+          });
+          setUsernameAvailable(false);
+        } else {
+          clearErrors("username");
+          setUsernameAvailable(true);
+        }
+      } else {
+        setUsernameAvailable(null);
+        clearErrors("username");
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      checkUsername();
+    }, 500); // تاخیر ۵۰۰ میلی‌ثانیه
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [watch("username"), setError, clearErrors]);
 
   // *******************submit ********************
   const formsubmitting = async (data) => {
@@ -47,9 +81,13 @@ function SignUp() {
     try {
       const res = await signUpServerAction(data);
       if (res.status === 201) {
+        toast.success(
+          res.message ||
+            "ثبت‌نام موفقیت‌آمیز بود. لطفاً وارد حساب کاربری خود شوید."
+        );
         router.push("/signin");
       } else {
-        toast.error(res.error);
+        toast.error(res.error || "خطا در ثبت نام.");
       }
     } catch (error) {
       console.error("خطا در ثبت نام:", error);
@@ -58,189 +96,249 @@ function SignUp() {
     setIsSubmit(false);
   };
 
+  // *******************تغییر مرحله********************
+  const nextStep = async () => {
+    const currentStepFields = getCurrentStepFields();
+    const valid = await trigger(currentStepFields);
+    if (valid) {
+      setStep((prev) => prev + 1);
+    }
+  };
+  const prevStep = () => setStep((prev) => prev - 1);
+
+  // *******************دریافت فیلدهای مرحله فعلی********************
+  const getCurrentStepFields = () => {
+    switch (step) {
+      case 1:
+        return ["name"];
+      case 2:
+        return ["username"];
+      case 3:
+        return ["password"];
+      case 4:
+        return ["phone"];
+      default:
+        return [];
+    }
+  };
+
+  // *******************مدیریت کلید Enter********************
+  const handleKeyDown = async (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (step < 4) {
+        await nextStep();
+      } else {
+        handleSubmit(formsubmitting)();
+      }
+    }
+  };
+
+  // *******************تغییر وضعیت نمایش رمز عبور********************
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   // *******************jsx********************
   return (
-    <div className="absolute bg-no-repeat bg-cover bg-center  bg-[url('../../public/Images/jpg/chefSign.webp')] w-[100%] h-[90%] md:h-full ">
-      <div className="container ">
-        <div className=" bg-white dark:bg-zinc-700   shadow-normal  rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] ">
-          {/* *******************header******************** */}
-          <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36 mb-6">
-            <div className="flex flex-col items-start gap-2.5">
-              <h4>
-                خوش آمدید به
-                <Link
-                  href="/"
-                  rel="nofollow"
-                  className="text-orange-300 font-MorabbaMedium"
-                >
-                  {" "}
-                  فود رویا
-                </Link>
-              </h4>
-              <h1 className="text-3xl font-MorabbaBold">ثبت نام </h1>
-            </div>
-            <div className="flex flex-col items-start gap-3">
-              <h4>قبلا ثبت نام کرده اید؟</h4>
-              <Link
-                href="/signin"
-                rel="nofollow"
-                className="text-orange-300 cursor-pointer font-MorabbaMedium"
-              >
-                ورود{" "}
+    <div className="min-h-screen flex items-center justify-center bg-cover bg-center bg-[url('../../public/Images/jpg/chefSign.webp')] p-4">
+      <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl w-full max-w-md p-6">
+        {/* *******************header******************** */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h4 className="text-sm">
+              خوش آمدید به
+              <Link href="/" className="text-orange-300 font-MorabbaMedium ml-1">
+                {" فود رویا"}
               </Link>
-            </div>
+            </h4>
+            <h1 className="text-2xl font-MorabbaBold">ثبت نام</h1>
           </div>
-
-          {/* *******************step line******************** */}
-          <div className="flex justify-center gap-x-2">
-            <span
-              onClick={() => {
-                SetStep("GetUser");
-              }}
-              className={`block w-[100px]  rounded ${
-                step !== "GetUser" ? "h-1.5" : "h-2 "
-              } ${errors.username ? "bg-orange-300" : "bg-teal-500"}`}
-            ></span>
-
-            <span
-              onClick={() => {
-                SetStep("GetPass");
-              }}
-              className={`block w-[100px]  rounded ${
-                step !== "GetPass" ? "h-1.5" : "h-2 "
-              } ${errors.password ? "bg-orange-300" : "bg-teal-500"}`}
-            ></span>
-
-            <span
-              onClick={() => {
-                SetStep("GetPhone");
-              }}
-              className={`block w-[100px]  rounded ${
-                step !== "GetPhone" ? "h-1.5" : "h-2 "
-              } ${errors.phone ? "bg-orange-300" : "bg-teal-500"}`}
-            ></span>
+          <div className="text-right">
+            <h4 className="text-sm">قبلا ثبت نام کرده اید؟</h4>
+            <Link
+              href="/signin"
+              className="text-orange-300 cursor-pointer font-MorabbaMedium"
+            >
+              ورود
+            </Link>
           </div>
-          {/* *******************main******************** */}
+        </div>
 
-          <form
-            noValidate
-            onSubmit={handleSubmit(formsubmitting)}
-            className="login-form flex flex-col gap-4 p-2 md:p-4 "
-          >
-            {/* *******************username******************** */}
-            <div className={step !== "GetUser" ? "hidden" : ""}>
-              <div className="flex items-center ">
-                <svg className="  w-5 h-5 ">
-                  <Usersvg />
-                </svg>
-                <input
-                  className="inputStyle grow "
-                  type="text"
-                  name="username"
-                  autoComplete="username"
-                  placeholder="نام"
-                  {...register("username")}
-                />
-              </div>
-              {errors.username && (
-                <div className="text-xs container text-red-400 mt-5">
-                  {errors.username.message}
-                </div>
+        {/* *******************progress bar******************** */}
+        <div className="flex justify-between mb-6">
+          {[1, 2, 3, 4].map((s) => (
+            <div key={s} className="flex-1 flex items-center">
+              <div
+                className={`w-full h-2 rounded-full ${
+                  step >= s ? "bg-teal-500" : "bg-gray-300"
+                }`}
+              ></div>
+              {s < 4 && (
+                <div className="w-4 h-4 bg-teal-500 rounded-full -ml-2 border-2 border-white"></div>
               )}
-              {/* *******************button**************************** */}
+            </div>
+          ))}
+        </div>
+
+        {/* *******************main******************** */}
+        <form
+          noValidate
+          onSubmit={handleSubmit(formsubmitting)}
+          className="flex flex-col gap-4"
+          onKeyDown={handleKeyDown}
+        >
+          {/* *******************مرحله 1: نام ******************** */}
+          <FormStep isActive={step === 1}>
+            <InputField
+              label="نام"
+              Icon={Usersvg}
+              register={register}
+              name="name"
+              type="text"
+              placeholder="نام"
+              error={errors.name}
+              iconSize="w-4 h-4" // کاهش اندازه آیکون
+            />
+            <div className="flex justify-end mt-4">
               <button
                 type="button"
-                onClick={() => {
-                  SetStep("GetPass");
-                }}
-                disabled={!!errors.username}
-                className={
-                  /* if issubmit is true class will be change */
-                  errors.username
-                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400 cursor-not-allowed"
-                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700 cursor-pointer"
-                }
+                onClick={nextStep}
+                disabled={!!errors.name}
+                className={`w-full py-2 px-4 rounded-xl text-white ${
+                  errors.name
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
               >
                 بعدی
               </button>
             </div>
+          </FormStep>
 
-            {/* *******************password******************** */}
-            <div className={step !== "GetPass" ? "hidden" : ""}>
-              <div className="flex items-center ">
-                <svg className="  w-5 h-5 ">
-                  <Locksvg />
-                </svg>
-                <input
-                  className="inputStyle grow  "
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  placeholder="رمز عبور"
-                  {...register("password")}
-                />
-              </div>
-              {errors.password && (
-                <div className="text-xs container text-red-400 mt-5">
-                  {errors.password.message}
-                </div>
-              )}
-              {/* *******************button**************************** */}
+          {/* *******************مرحله 2: نام کاربری ******************** */}
+          <FormStep isActive={step === 2}>
+            <InputField
+              label="نام کاربری"
+              Icon={Usersvg}
+              register={register}
+              name="username"
+              type="text"
+              placeholder="نام کاربری"
+              error={errors.username}
+              iconSize="w-4 h-4" // کاهش اندازه آیکون
+            />
+            {isCheckingUsername && (
+              <p className="text-sm text-gray-500 mt-1">در حال بررسی...</p>
+            )}
+            {usernameAvailable && (
+              <p className="text-sm text-green-500 mt-1">این نام کاربری در دسترس است</p>
+            )}
+            {errors.username && (
+              <p className="text-sm text-red-500 mt-1">{errors.username.message}</p>
+            )}
+            <div className="flex justify-between mt-4">
               <button
                 type="button"
-                onClick={() => {
-                  SetStep("GetPhone");
-                }}
+                onClick={prevStep}
+                className="w-full py-2 px-4 rounded-xl text-white bg-gray-400 hover:bg-gray-500 mr-2"
+              >
+                قبلی
+              </button>
+              <button
+                type="button"
+                onClick={nextStep}
+                disabled={!!errors.username || isCheckingUsername}
+                className={`w-full py-2 px-4 rounded-xl text-white ${
+                  errors.username || isCheckingUsername
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
+              >
+                بعدی
+              </button>
+            </div>
+          </FormStep>
+
+          {/* *******************مرحله 3: رمز عبور ******************** */}
+          <FormStep isActive={step === 3}>
+            <InputField
+              label="رمز عبور"
+              Icon={Locksvg}
+              register={register}
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="رمز عبور"
+              error={errors.password}
+              iconSize="w-4 h-4" // کاهش اندازه آیکون
+              rightElement={
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? "پنهان کردن رمز عبور" : "نمایش رمز عبور"}
+                  className="focus:outline-none"
+                >
+                  {showPassword ? <EyeslashSvg /> : <EyeSvg />}
+                </button>
+              }
+            />
+            <div className="flex justify-between mt-4">
+              <button
+                type="button"
+                onClick={prevStep}
+                className="w-full py-2 px-4 rounded-xl text-white bg-gray-400 hover:bg-gray-500 mr-2"
+              >
+                قبلی
+              </button>
+              <button
+                type="button"
+                onClick={nextStep}
                 disabled={!!errors.password}
-                className={
-                  /* if issubmit is true class will be change */
+                className={`w-full py-2 px-4 rounded-xl text-white ${
                   errors.password
-                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400 cursor-not-allowed"
-                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700 cursor-pointer"
-                }
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
               >
                 بعدی
               </button>
             </div>
+          </FormStep>
 
-            {/* *******************Phone******************** */}
-            <div className={step !== "GetPhone" ? "hidden" : ""}>
-              <div className="flex items-center ">
-                <svg className="w-5 h-5 ">
-                  <Phonesvg />
-                </svg>
-                <input
-                  className="inputStyle grow"
-                  type="tel"
-                  name="phone"
-                  autoComplete="tel"
-                  placeholder="شماره تلفن همراه"
-                  {...register("phone")}
-                />
-              </div>
-              {errors.phone && (
-                <div className="text-xs container text-red-400 mt-5">
-                  {errors.phone.message}
-                </div>
-              )}
-              {/* *******************button**************************** */}
+          {/* *******************مرحله 4: شماره تلفن ******************** */}
+          <FormStep isActive={step === 4}>
+            <InputField
+              label="شماره تلفن همراه"
+              Icon={Phonesvg}
+              register={register}
+              name="phone"
+              type="tel"
+              placeholder="شماره تلفن همراه"
+              error={errors.phone}
+              // اندازه آیکون تلفن بدون تغییر
+            />
+            <div className="flex justify-between mt-4 items-center">
+              <button
+                type="button"
+                onClick={prevStep}
+                className="w-full py-2 px-4 rounded-xl text-white bg-gray-400 hover:bg-gray-500 mr-2"
+              >
+                قبلی
+              </button>
               <button
                 type="submit"
                 disabled={!!errors.phone || isSubmit}
-                className={
-                  /* اگر isSubmit یا خطا وجود داشته باشد */
+                className={`w-full py-2 px-4 rounded-xl text-white flex items-center justify-center ${
                   errors.phone || isSubmit
-                    ? "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-gray-400 cursor-not-allowed"
-                    : "h-11 w-full md:h-14 rounded-xl flexCenter gap-x-2 mt-4 text-white bg-teal-600 hover:bg-teal-700 cursor-pointer"
-                }
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
               >
-                {/* اگر submit در حال انجام باشد */}
-                {isSubmit ? <HashLoader size={25} color="#fff" /> : "ثبت نام"}
+                {isSubmit ? <HashLoader size={20} color="#fff" /> : "ثبت نام"}
               </button>
             </div>
-          </form>
-          {/* <DevTool control={control} /> */}
-        </div>
+          </FormStep>
+        </form>
       </div>
       <Toaster />
     </div>

@@ -27,7 +27,7 @@ const SecurityQuestionSchema = new Schema(
 // تعریف اسکیما برای کاربر
 const UserSchema = new Schema(
   {
-    username: {
+    name: {
       type: String,
       required: true,
       minlength: 3,      // حداقل 3 کاراکتر
@@ -44,14 +44,19 @@ const UserSchema = new Schema(
       match: [/\S+@\S+\.\S+/, 'لطفاً از فرمت ایمیل معتبر استفاده کنید.'], // اعتبارسنجی فرمت ایمیل
       maxlength: 100,    // حداکثر 100 کاراکتر
       trim: true,
+      lowercase: true, // تبدیل به حروف کوچک
+      unique: true,
+
     }, 
     userUniqName: {
       type: String,
       unique: true,
-      required: false,
+      required: true,
       minlength: 3,
       maxlength: 30,
       trim: true,
+      lowercase: true, // تبدیل به حروف کوچک
+
     },
     phone: {
       type: String,

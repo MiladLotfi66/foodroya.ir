@@ -4,9 +4,6 @@ import connectDB from "@/utils/connectToDB";
 import OTP from "@/models/OTP";
 import {  p2e } from "@/utils/ReplaceNumber";
 
-
-
-
 export async function verifyOTP(phone, otp) {
   await connectDB();
 
@@ -44,27 +41,8 @@ export async function verifyOTP(phone, otp) {
     return { error: "اعتبار کد یکبار مصرف به اتمام رسیده است", status: 410 };
   }
 
-  // Reset useStep and lastFailedAttempt after successful verification
   otpRecord.useStep = 0;
   otpRecord.lastFailedAttempt = null;
   await otpRecord.save();
-
-  
-    // ایجاد توکن‌های دسترسی و تازه‌سازی
-    // const accessToken = generateAccessToken({ phone });
-    // const refreshToken = generateRefreshToken({ phone });
-    
-    // به‌روزرسانی توکن در دیتابیس
-    // await Users.findOneAndUpdate({ phone }, { $set: { refreshToken } });
-
-    // ست کردن کوکی‌ها
-    // cookies().set({
-    //     name: "token",
-    //     value: accessToken,
-    //     httpOnly: true,
-    //     path: "/",
-    // });
-
-  // Return success message
   return { message: "اعتبار سنجی با موفقیت انجام شد", status: 200 };
 }
