@@ -32,7 +32,8 @@ export const authOption = {
         return { 
           id: user._id,
           phone: user.phone,
-          username: user.username,
+          name: user.name,
+          userImage: user.userImage,
         };
       },
     }),
@@ -90,7 +91,7 @@ CredentialsProvider({
       throw new Error("کاربر یافت نشد");
     }
 
-    return { id: user._id, phone: user.phone, username: user.username };
+    return { id: user._id, phone: user.phone, name: user.name ,userImage: user.userImage };
   },
 }),
 
@@ -99,13 +100,15 @@ CredentialsProvider({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.username = user.username;
+        token.name = user.name;
+        token.userImage= user.userImage;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.id;
-      session.user.username = token.username;
+      session.user.name = token.name;
+      session.user.userImage= token.userImage
       return session;
     },
   },

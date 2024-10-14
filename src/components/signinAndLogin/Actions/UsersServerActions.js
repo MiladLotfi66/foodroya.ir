@@ -203,7 +203,7 @@ export async function UpdateUserProfile(profileData) {
 
     // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
     const allowedUpdates = [
-      "username",
+      "name",
       "userImage",
       "email",
       "userUniqName",
@@ -327,7 +327,9 @@ export async function RecoverPassword( providedAnswer, newPassword) {
   }
 }
 
-export async function ChangeSecurityQuestion( newQuestion, newAnswer) {
+export async function ChangeSecurityQuestion(newQuestion, newAnswer) {
+  console.log("dddddd", newQuestion, newAnswer);
+  
   try {
     let userData;
     try {
@@ -351,8 +353,14 @@ export async function ChangeSecurityQuestion( newQuestion, newAnswer) {
       throw new Error("سوال و پاسخ جدید نمی‌توانند خالی باشند.");
     }
 
+    // اطمینان از وجود شی securityQuestion
+    if (!user.securityQuestion) {
+      user.securityQuestion = {}; // اینجا شی securityQuestion را ایجاد می‌کنیم
+    }
+
+    // تنظیم سوال و پاسخ جدید
     user.securityQuestion.question = newQuestion;
-    user.securityQuestion.answer = newAnswer; // هش شدن در مدل
+    user.securityQuestion.answer = newAnswer; // هش شدن در middleware قبل از ذخیره
 
     await user.save();
 
@@ -362,3 +370,4 @@ export async function ChangeSecurityQuestion( newQuestion, newAnswer) {
     return { error: error.message, status: 500 };
   }
 }
+

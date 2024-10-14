@@ -239,10 +239,10 @@ function ProfilePage() {
     <>
       {/* Head برای SEO */}
       <Head>
-        <title>{user ? `${user.username} | پروفایل` : "نمایه کاربری"}</title>
+        <title>{user ? `${user.name} | پروفایل` : "نمایه کاربری"}</title>
         <meta
           name="description"
-          content={user ? `پروفایل کاربری ${user.username} در وب‌سایت ما.` : "ویرایش پروفایل کاربری خود را انجام دهید."}
+          content={user ? `پروفایل کاربری ${user.name} در وب‌سایت ما.` : "ویرایش پروفایل کاربری خود را انجام دهید."}
         />
         <meta name="keywords" content="پروفایل, ویرایش پروفایل, اطلاعات کاربری" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -254,7 +254,7 @@ function ProfilePage() {
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "Person",
-                "name": user.username,
+                "name": user.name,
                 "url": `/profile/${user.userUniqName}`,
                 "image": avatarUrl,
                 "description": user.bio || "",
@@ -294,7 +294,7 @@ function ProfilePage() {
                 <div className="relative w-32 h-32">
                   <NextImage
                     src={avatarUrl}
-                    alt={`پروفایل ${user?.username || "کاربر"}`}
+                    alt={`پروفایل ${user?.name || "کاربر"}`}
                     width={128}
                     height={128}
                     className="rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
@@ -356,42 +356,42 @@ function ProfilePage() {
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* نام کامل */}
                 <div className="w-full flex flex-col">
-                  {editField === "username" ? (
+                  {editField === "name" ? (
                     <>
-                      <label htmlFor="username" className="mb-2 text-gray-700 dark:text-gray-300">
+                      <label htmlFor="name" className="mb-2 text-gray-700 dark:text-gray-300">
                         نام کامل
                       </label>
                       <input
                         type="text"
-                        id="username"
-                        name="username"
+                        id="name"
+                        name="name"
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-600 dark:border-zinc-500 text-gray-800 dark:text-gray-200"
-                        {...register("username", { required: "نام کامل الزامی است." })}
+                        {...register("name", { required: "نام کامل الزامی است." })}
                         onBlur={() => setEditField(null)}
                         autoFocus
                         aria-required="true"
                       />
-                      {errors.username && (
-                        <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+                      {errors.name && (
+                        <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
                       )}
                     </>
                   ) : (
                     <>
-                      <label htmlFor="username" className="mb-2 text-gray-700 dark:text-gray-300">
+                      <label htmlFor="name" className="mb-2 text-gray-700 dark:text-gray-300">
                         نام کامل
                       </label>
                       <span
-                        onClick={() => setEditField("username")}
+                        onClick={() => setEditField("name")}
                         className="cursor-pointer p-2 bg-gray-100 dark:bg-zinc-600 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-500 transition duration-200"
                         tabIndex={0}
                         role="button"
-                        onKeyPress={(e) => e.key === 'Enter' && setEditField("username")}
+                        onKeyPress={(e) => e.key === 'Enter' && setEditField("name")}
                         aria-label="ویرایش نام کامل"
                       >
-                        {watchedFields.username || user?.username || "نام کامل خود را وارد کنید"}
+                        {watchedFields.name || user?.name || "نام کامل خود را وارد کنید"}
                       </span>
-                      {errors.username && (
-                        <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+                      {errors.name && (
+                        <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
                       )}
                     </>
                   )}
@@ -540,116 +540,133 @@ function ProfilePage() {
                 </div>
               </section>
 
-              {/* سوال امنیتی */}
-              <section className="bg-gray-100 dark:bg-zinc-600 p-6 rounded-lg shadow-inner">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-MorabbaBold text-gray-800 dark:text-gray-200">
-                    سوال امنیتی
-                  </h2>
-                  {user?.securityQuestion?.question && user?.securityQuestion?.answer && (
-                    <button
-                      type="button"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                      onClick={() => setIsEditingSecurityQuestion(true)}
-                      aria-label="ویرایش سوال امنیتی"
-                    >
-                      ویرایش
-                    </button>
-                  )}
-                </div>
-                {user?.securityQuestion?.question && user?.securityQuestion?.answer && !isEditingSecurityQuestion ? (
-                  <div>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      سوال امنیتی شما به صورت زیر است:
-                    </p>
-                    <p className="mt-2 text-gray-900 dark:text-gray-100 font-semibold">
-                      {user.securityQuestion.question}
-                    </p>
-                  </div>
-                ) : (
-                  isEditingSecurityQuestion && (
-                    <div className="space-y-4">
-                      <div className="flex flex-col">
-                        <label htmlFor="newQuestion" className="mb-2 text-gray-700 dark:text-gray-300">
-                          پرسش امنیتی جدید
-                        </label>
-                        <input
-                          type="text"
-                          id="newQuestion"
-                          name="newQuestion"
-                          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                            securityQuestionForm.formState.errors.question
-                              ? "border-red-500 focus:ring-red-500"
-                              : "border-gray-300 focus:ring-blue-500 dark:border-zinc-500"
-                          } dark:bg-zinc-700 text-gray-800 dark:text-gray-200`}
-                          {...securityQuestionForm.register("question", {
-                            required: "پرسش امنیتی الزامی است.",
-                            minLength: { value: 5, message: "پرسش باید حداقل ۵ حرف باشد." },
-                          })}
-                          aria-required="true"
-                          aria-label="پرسش امنیتی جدید"
-                          placeholder="پرسش امنیتی جدید خود را وارد کنید"
-                        />
-                        {securityQuestionForm.formState.errors.question && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {securityQuestionForm.formState.errors.question.message}
-                          </p>
-                        )}
-                      </div>
+      {/* سوال امنیتی */}
+<section className="bg-gray-100 dark:bg-zinc-600 p-6 rounded-lg shadow-inner">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-xl font-MorabbaBold text-gray-800 dark:text-gray-200">
+      سوال امنیتی
+    </h2>
+    {user?.securityQuestion?.question && user?.securityQuestion?.answer ? (
+      <button
+        type="button"
+        className="text-blue-600 dark:text-blue-400 hover:underline"
+        onClick={() => setIsEditingSecurityQuestion(true)}
+        aria-label="ویرایش سوال امنیتی"
+      >
+        ویرایش
+      </button>
+    ) : (
+      <button
+        type="button"
+        className="text-green-600 dark:text-green-400 hover:underline"
+        onClick={() => setIsEditingSecurityQuestion(true)}
+        aria-label="افزودن سوال امنیتی"
+      >
+        افزودن
+      </button>
+    )}
+  </div>
 
-                      <div className="flex flex-col">
-                        <label htmlFor="newAnswer" className="mb-2 text-gray-700 dark:text-gray-300">
-                          پاسخ امنیتی جدید
-                        </label>
-                        <input
-                          type="text"
-                          id="newAnswer"
-                          name="newAnswer"
-                          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                            securityQuestionForm.formState.errors.answer
-                              ? "border-red-500 focus:ring-red-500"
-                              : "border-gray-300 focus:ring-blue-500 dark:border-zinc-500"
-                          } dark:bg-zinc-700 text-gray-800 dark:text-gray-200`}
-                          {...securityQuestionForm.register("answer", {
-                            required: "پاسخ امنیتی الزامی است.",
-                            minLength: { value: 3, message: "پاسخ باید حداقل ۳ حرف باشد." },
-                          })}
-                          aria-required="true"
-                          aria-label="پاسخ امنیتی جدید"
-                          placeholder="پاسخ امنیتی جدید خود را وارد کنید"
-                        />
-                        {securityQuestionForm.formState.errors.answer && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {securityQuestionForm.formState.errors.answer.message}
-                          </p>
-                        )}
-                      </div>
+  {!user?.securityQuestion?.question || !user?.securityQuestion?.answer ? (
+    <p className="text-gray-700 dark:text-gray-300">
+      شما هنوز سوال امنیتی تعریف نکرده‌اید. لطفاً با کلیک روی دکمه "افزودن" سوال و پاسخ امنیتی خود را تعیین کنید.
+    </p>
+  ) : null}
 
-                      <div className="flex justify-end space-x-4">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsEditingSecurityQuestion(false);
-                            securityQuestionForm.reset();
-                          }}
-                          className="px-4 py-2 bg-gray-300 dark:bg-zinc-500 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-zinc-400 transition duration-200"
-                          aria-label="لغو ویرایش سوال امنیتی"
-                        >
-                          لغو
-                        </button>
-                        <button
-                          type="button"
-                          onClick={securityQuestionForm.handleSubmit(onSubmitSecurityQuestion)}
-                          className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition duration-200"
-                          aria-label="ذخیره سوال امنیتی جدید"
-                        >
-                          ذخیره
-                        </button>
-                      </div>
-                    </div>
-                  )
-                )}
-              </section>
+  {user?.securityQuestion?.question && user?.securityQuestion?.answer && !isEditingSecurityQuestion ? (
+    <div>
+      <p className="text-gray-700 dark:text-gray-300">
+        سوال امنیتی شما به صورت زیر است:
+      </p>
+      <p className="mt-2 text-gray-900 dark:text-gray-100 font-semibold">
+        {user.securityQuestion.question}
+      </p>
+    </div>
+  ) : (
+    isEditingSecurityQuestion && (
+      <div className="space-y-4">
+        <div className="flex flex-col">
+          <label htmlFor="newQuestion" className="mb-2 text-gray-700 dark:text-gray-300">
+            پرسش امنیتی جدید
+          </label>
+          <input
+            type="text"
+            id="newQuestion"
+            name="newQuestion"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              securityQuestionForm.formState.errors.question
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 focus:ring-blue-500 dark:border-zinc-500"
+            } dark:bg-zinc-700 text-gray-800 dark:text-gray-200`}
+            {...securityQuestionForm.register("question", {
+              required: "پرسش امنیتی الزامی است.",
+              minLength: { value: 5, message: "پرسش باید حداقل ۵ حرف باشد." },
+            })}
+            aria-required="true"
+            aria-label="پرسش امنیتی جدید"
+            placeholder="پرسش امنیتی جدید خود را وارد کنید"
+          />
+          {securityQuestionForm.formState.errors.question && (
+            <p className="text-red-500 text-sm mt-1">
+              {securityQuestionForm.formState.errors.question.message}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col">
+          <label htmlFor="newAnswer" className="mb-2 text-gray-700 dark:text-gray-300">
+            پاسخ امنیتی جدید
+          </label>
+          <input
+            type="text"
+            id="newAnswer"
+            name="newAnswer"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              securityQuestionForm.formState.errors.answer
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 focus:ring-blue-500 dark:border-zinc-500"
+            } dark:bg-zinc-700 text-gray-800 dark:text-gray-200`}
+            {...securityQuestionForm.register("answer", {
+              required: "پاسخ امنیتی الزامی است.",
+              minLength: { value: 3, message: "پاسخ باید حداقل ۳ حرف باشد." },
+            })}
+            aria-required="true"
+            aria-label="پاسخ امنیتی جدید"
+            placeholder="پاسخ امنیتی جدید خود را وارد کنید"
+          />
+          {securityQuestionForm.formState.errors.answer && (
+            <p className="text-red-500 text-sm mt-1">
+              {securityQuestionForm.formState.errors.answer.message}
+            </p>
+          )}
+        </div>
+
+        <div className="flex justify-end space-x-4">
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditingSecurityQuestion(false);
+              securityQuestionForm.reset();
+            }}
+            className="px-4 py-2 bg-gray-300 dark:bg-zinc-500 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-zinc-400 transition duration-200"
+            aria-label="لغو ویرایش سوال امنیتی"
+          >
+            لغو
+          </button>
+          <button
+            type="button"
+            onClick={securityQuestionForm.handleSubmit(onSubmitSecurityQuestion)}
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition duration-200"
+            aria-label="ذخیره سوال امنیتی جدید"
+          >
+            ذخیره
+          </button>
+        </div>
+      </div>
+    )
+  )}
+</section>
+
 
               {/* آدرس و بیوگرافی */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
