@@ -130,6 +130,11 @@ function RolsManage() {
     setSelectedRole(null);
   };
 
+   const handleEditClick = (roleId) => {
+    setIsOpenAddRole(true);
+    setSelectedRole(roleId);
+  };
+
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       setIsOpenAddRole(false);
@@ -234,7 +239,7 @@ function RolsManage() {
               handleDeleteRole={handleDeleteRole}
               handleEnableRole={handleEnableRole}
               handleDisableRole={handleDisableRole}
-              handleEditClick={handleEditClick}
+              handleEditClick={()=>handleEditClick(role)}
               handleAllUsers={handleAllUsers}
             />
           ))}

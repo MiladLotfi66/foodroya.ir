@@ -354,7 +354,7 @@ export async function GetAllFollowedUsersWithRoles(ShopId, roleId) {
 
     // دریافت فالورهای فروشگاه
     const shop = await Shop.findOne({ _id: ShopId })
-      .populate({ path: 'followers', select: 'username' })
+      .populate({ path: 'followers', select: 'name userImage' })
       .lean();
 
     const followersWithRoles = await Promise.all(

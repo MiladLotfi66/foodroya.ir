@@ -706,7 +706,7 @@ function ProfilePage() {
                 !user?.securityQuestion?.answer ? (
                   <p className="text-gray-700 dark:text-gray-300">
                     شما هنوز سوال امنیتی تعریف نکرده‌اید. لطفاً با کلیک روی دکمه
-                    "افزودن" سوال و پاسخ امنیتی خود را تعیین کنید.
+                     افزودن سوال و پاسخ امنیتی خود را تعیین کنید.
                   </p>
                 ) : null}
 
