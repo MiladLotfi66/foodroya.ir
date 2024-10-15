@@ -99,7 +99,7 @@ function Header() {
             {session ? (
               <>
                 <li className="flex items-center">
-                  <a href="#">پنل مدیریتی</a>
+                  <a href="/panel">پنل مدیریتی</a>
                 </li>
                 <li className="flex items-center">
                   <button

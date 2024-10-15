@@ -69,6 +69,8 @@ export async function GetUserShops() {
       deleted_by: Shop.deleted_by?.toString() || null, // تبدیل ObjectId به string
       deleted_at: Shop.deleted_at?.toISOString() || null, // تبدیل تاریخ به ISO string
       followers: simplifyFollowers(Shop.followers),
+      avatarUrl: Shop.LogoUrl, // اطمینان از وجود LogoUrl
+
 
     }));
 
@@ -144,7 +146,6 @@ export async function GetShopCommentsArray(shopId) {
     return { error: error.message, status: 500 };
   }
 }
-
 
 const processAndSaveImage = async (image, oldUrl) => {
   if (image && typeof image !== "string") {
@@ -249,8 +250,6 @@ export async function authenticateUser() {
     return null;
   }
 }
-
-
 
 export async function EditShop(ShopData) {
   try {
@@ -617,7 +616,6 @@ async function GetAllEnableShops() {
   }
 }
 
-
 async function DeleteShops(ShopID) {
   try {
     await connectDB();
@@ -694,6 +692,41 @@ async function DeleteShops(ShopID) {
     return { message: "فروشگاه و فایل تصویر با موفقیت حذف شدند", status: 200 };
   } catch (error) {
     console.error("خطا در حذف فروشگاه:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
+export async function GetUserFollowingShops() {
+  try {
+    await connectDB();
+    const userData = await authenticateUser();
+
+    if (!userData) {
+      throw new Error("User data not found");
+    }
+
+    // یافتن کاربر بر اساس شناسه و پرپاپولیت کردن فیلد following
+    const user = await Users.findById(userData.id).populate({
+      path: 'following',
+      select: 'ShopUniqueName ShopName LogoUrl', // انتخاب فیلدهای مورد نیاز
+      match: { is_deleted: false }, // فقط شاپ‌هایی که حذف نشده‌اند
+    }).lean();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // استخراج شاپ‌های دنبال‌شده
+    const followingShops = user.following.map(shop => ({
+      shopId: shop._id.toString(),
+      name: shop.ShopName,
+      uniqueName: shop.ShopUniqueName,
+      avatarUrl: shop.LogoUrl,
+    }));
+
+    return { shops: followingShops, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت شاپ‌های دنبال‌شده:", error);
     return { error: error.message, status: 500 };
   }
 }

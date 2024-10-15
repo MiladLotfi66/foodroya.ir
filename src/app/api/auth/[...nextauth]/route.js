@@ -106,11 +106,19 @@ CredentialsProvider({
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.name = token.name;
-      session.user.userImage= token.userImage
+      await connectDB();
+      const user = await Users.findById(token.id).lean();
+  
+      if (user) {
+        session.user.id = user._id;
+        session.user.name = user.name;
+        session.user.userImage = user.userImage;
+        // اضافه کردن سایر فیلدهای مورد نیاز
+      }
+  
       return session;
     },
+  
   },
 };
 
