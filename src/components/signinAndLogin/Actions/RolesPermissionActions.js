@@ -473,12 +473,12 @@ export async function  getUsersByRoleId (roleId) {
     // const rolesInShop = await RoleInShop.find({ RoleId: roleId }).populate('UserId');
     const rolesInShop = await RoleInShop.find({ RoleId: roleId }) .populate({
       path: 'UserId',
-      select: '_id username'
+      select: '_id name userImage'
     });
 
     const users = rolesInShop?.map(roleInShop => {
       const user = roleInShop.UserId;
-      return user ? { _id: user._id, username: user.username } : null;
+      return user ? { _id: user._id.toString(), name: user.name , userImage:user.userImage} : null;
     }).filter(user => user !== null); // حذف موارد null
 
     // بررسی داده‌های برگردانده شده

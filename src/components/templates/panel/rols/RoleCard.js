@@ -1,6 +1,6 @@
 // components/RoleCard.jsx
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import EditSvg from "@/module/svgs/EditSvg";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
@@ -9,6 +9,8 @@ import UserPlus from "@/module/svgs/UserPlus";
 import RoleName from "@/templates/panel/rols/RoleName";
 import ActionButton from "./ActionButton";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { getUsersByRoleId } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import AvatarGroupTailwind from "@/module/User/AvatarGroupTailwind.js";
 
 function RoleCard({
   role,
@@ -18,6 +20,34 @@ function RoleCard({
   handleAllUsers,
   handleEditClick,
 }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const fetchedUsers = await getUsersByRoleId(role._id);
+        console.log("fetchedUsers",fetchedUsers);
+        
+        setUsers(fetchedUsers);
+      } catch (err) {
+        setError("خطا در دریافت کاربران نقش");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [role._id]);
+
+  // استخراج URLهای آواتارها از کاربران
+  const avatarUrls = users.map(user => user.userImage ).filter(Boolean);
+console.log("avatarUrls",avatarUrls);
+
   return (
     <div
       className={`relative rounded-xl bg-white dark:bg-zinc-700 shadow-md p-6 transition-transform duration-300 hover:scale-105 ${
@@ -25,11 +55,7 @@ function RoleCard({
       }`}
     >
       {/* بیج وضعیت */}
-      <div
-        className={`absolute top-4 ${
-          role.RoleStatus ? "right-4" : "right-4"
-        }`}
-      >
+      <div className={`absolute top-4 right-4`}>
         <span
           className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${
             role.RoleStatus
@@ -51,6 +77,24 @@ function RoleCard({
           }`}
         >
           <RoleName name={role.RoleTitle} Role={role} />
+        </div>
+
+        {/* نمایش لیست کاربران */}
+        <div className="w-full">
+          {loading ? (
+            <div className="text-center text-gray-500">در حال بارگذاری...</div>
+          ) : error ? (
+            <div className="text-center text-red-500">{error}</div>
+          ) : avatarUrls.length > 0 ? (
+            <AvatarGroupTailwind 
+              avatars={avatarUrls} 
+              max={4} 
+              size={30} 
+              overlap={15} 
+            />
+          ) : (
+            <div className="text-center text-gray-500">هیچ کاربری به این نقش اختصاص داده نشده است.</div>
+          )}
         </div>
 
         {/* دکمه‌های عملیات */}
@@ -123,25 +167,24 @@ function RoleCard({
               )}
             </Tooltip.Provider>
 
-          {/* دکمه افزودن کاربر به نقش */}
-          <Tooltip.Provider>
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <ActionButton
-                  onClick={() => handleAllUsers(role._id)}
-                  Icon={UserPlus}
-                  label="افزودن کاربر به نقش"
-                  className="bg-purple-500 text-white hover:bg-purple-600 focus:ring-purple-400"
-                />
-              </Tooltip.Trigger>
-              <Tooltip.Content className="px-2 py-1 bg-gray-700 text-white text-xs rounded-md">
-                افزودن کاربر به نقش
-                <Tooltip.Arrow className="fill-gray-700" />
-              </Tooltip.Content>
-            </Tooltip.Root>
-          </Tooltip.Provider>
+            {/* دکمه افزودن کاربر به نقش */}
+            <Tooltip.Provider>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <ActionButton
+                    onClick={() => handleAllUsers(role._id)}
+                    Icon={UserPlus}
+                    label="افزودن کاربر به نقش"
+                    className="bg-purple-500 text-white hover:bg-purple-600 focus:ring-purple-400"
+                  />
+                </Tooltip.Trigger>
+                <Tooltip.Content className="px-2 py-1 bg-gray-700 text-white text-xs rounded-md">
+                  افزودن کاربر به نقش
+                  <Tooltip.Arrow className="fill-gray-700" />
+                </Tooltip.Content>
+              </Tooltip.Root>
+            </Tooltip.Provider>
           </div>
-
         </div>
       </div>
     </div>
