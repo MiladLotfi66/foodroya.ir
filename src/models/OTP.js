@@ -1,19 +1,20 @@
 import { Schema, model, models } from "mongoose";
+
 const OTPSchema = new Schema(
   {
-    phone: {
-      type: String,
-      required: true,
-    },
+    identifier: { type: String, required: true, unique: true }, // شماره تلفن، ایمیل یا نام کاربری
+
+    // phone: {
+    //   type: String,
+    //   required: true,
+    // },
 
     otp: {
       type: String,
       required: true,
     },
-    expTime: {
-      type: Number,
-      required: true,
-    },
+    expTime: { type: Date, required: true }, // نوع Date تنظیم شده است
+
     useStep: {
       type: Number,
       required: true,

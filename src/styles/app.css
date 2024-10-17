@@ -1775,6 +1775,10 @@ video {
   text-wrap: wrap;
 }
 
+.rounded {
+  border-radius: 0.25rem;
+}
+
 .rounded-2xl {
   border-radius: 1rem;
 }

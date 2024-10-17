@@ -2,7 +2,6 @@ import Image from "next/image";
 import usericone from "@/public/Images/jpg/user.webp";
 
 function UserMicroCard({ user }) {
-  console.log("user",user);
   
   return (
     <span className="flex items-center gap-2">
