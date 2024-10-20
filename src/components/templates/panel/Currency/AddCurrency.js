@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg"; // در صورت نیاز به یک SVG برای عکس
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from 'next/navigation';
-import { AddCurrencyAction,EditCurrencyAction } from "@/components/signinAndLogin/Actions/currencies";
+import { AddCurrencyAction,EditCurrencyAction } from "@/components/signinAndLogin/Actions/currenciesServerActions";
 
 
 function AddCurrency({ currency = {}, onClose, refreshCurrencies }) {

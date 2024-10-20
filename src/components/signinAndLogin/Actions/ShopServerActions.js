@@ -1,6 +1,8 @@
 "use server";
+import mongoose from 'mongoose';
 import shops from "@/models/shops";
 import Comment from "@/models/Comment";
+import Account from "@/models/Account";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import fs from "fs";
@@ -347,14 +349,15 @@ export async function EditShop(ShopData) {
 }
 
 export async function AddShopServerAction(ShopData) {
-  try {
-    await connectDB();
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // استخراج توکن JWT
+  try {
+    // استخراج توکن JWT و احراز هویت کاربر
     const userData = await authenticateUser();
 
     if (!userData) {
-      throw new Error("User data not found");
+      throw new Error("داده‌های کاربر یافت نشد");
     }
 
     // تبدیل FormData به شیء ساده
@@ -389,6 +392,7 @@ export async function AddShopServerAction(ShopData) {
     const BackGroundShopUrl = await processAndSaveImage(BackGroundShop);
     const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel);
 
+    // ایجاد فروشگاه جدید با استفاده از نشست تراکنش
     const newShop = new shops({
       ShopUniqueName,
       ShopName,
@@ -405,14 +409,97 @@ export async function AddShopServerAction(ShopData) {
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
     });
-    await newShop.save();
 
-    return { message: "فروشگاه با موفقیت ثبت شد", status: 201 };
+    await newShop.save({ session });
+
+    // تعریف حساب‌های پیش‌فرض
+    const defaultAccounts = [
+      {
+        accountCode: '1000',
+        title: 'دارایی',
+        store: newShop._id,
+        parentAccount: null,
+        accountType: 'حساب عادی',
+        accountNature: 'بستانکار', // اصلاح شده
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '2000',
+        title: 'بدهی',
+        store: newShop._id,
+        parentAccount: null,
+        accountType: 'حساب عادی',
+        accountNature: 'بدهی',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '3000',
+        title: 'سرمایه',
+        store: newShop._id,
+        parentAccount: null,
+        accountType: 'حساب عادی',
+        accountNature: 'بستانکار',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '4000',
+        title: 'درآمد',
+        store: newShop._id,
+        parentAccount: null,
+        accountType: 'حساب عادی',
+        accountNature: 'بستانکار',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '5000',
+        title: 'هزینه',
+        store: newShop._id,
+        parentAccount: null,
+        accountType: 'حساب عادی',
+        accountNature: 'بدهکار',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '6000',
+        title: 'حساب انتظامی',
+        store: newShop._id,
+        parentAccount: null,
+        accountType: 'بدون ماهیت',
+        accountNature: 'بدهکار', // می‌توانید اصلاح کنید بر اساس نیاز
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+    ];
+    
+
+    // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش
+    await Account.insertMany(defaultAccounts, { session });
+
+    // تکمیل تراکنش
+    await session.commitTransaction();
+    session.endSession();
+
+    return { message: "فروشگاه و حساب‌های مرتبط با موفقیت ثبت شدند", status: 201 };
   } catch (error) {
-    console.error("Error in addShop action:", error);
+    // ابورت تراکنش در صورت بروز خطا
+    await session.abortTransaction();
+    session.endSession();
+    console.error("خطا در عملیات افزودن فروشگاه:", error);
     return { error: error.message, status: 500 };
   }
 }
+
 
 export async function followShopServerAction(ShopID) {
   try {
@@ -730,6 +817,8 @@ export async function GetUserFollowingShops() {
     return { error: error.message, status: 500 };
   }
 }
+
+
 
 export {
   DeleteShops,

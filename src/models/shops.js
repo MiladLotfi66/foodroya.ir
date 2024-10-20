@@ -75,3 +75,4 @@ const schema = new Schema(
 );
 
 export default models.Shop || model("Shop", schema);
+

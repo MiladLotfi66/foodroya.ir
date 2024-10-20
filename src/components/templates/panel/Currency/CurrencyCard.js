@@ -10,7 +10,7 @@ import {
   EnableCurrencyAction,
   DisableCurrencyAction,
   DeleteCurrencies,
-} from "@/components/signinAndLogin/Actions/currencies";
+} from "@/components/signinAndLogin/Actions/currenciesServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function CurrencyCard({ currency: initialCurrency, editFunction, onDelete }) {

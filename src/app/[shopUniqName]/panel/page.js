@@ -10,6 +10,7 @@ function Page() {
       <Link className='p-3' href={`/${shopUniqName}/panel/banners`} >بنر ها</Link>
       <Link className='p-3' href={`/${shopUniqName}/panel/roles`} >نقش ها</Link>
       <Link className='p-3' href={`/${shopUniqName}/panel/currency`} >ارز ها</Link>
+      <Link className='p-3' href={`/${shopUniqName}/panel/account`} >حساب ها</Link>
     </div>
   )
 }
