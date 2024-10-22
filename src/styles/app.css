@@ -1345,6 +1345,10 @@ video {
   height: 1px;
 }
 
+.max-h-60 {
+  max-height: 15rem;
+}
+
 .max-h-screen {
   max-height: 100vh;
 }
@@ -1367,6 +1371,10 @@ video {
 
 .w-10 {
   width: 2.5rem;
+}
+
+.w-11\/12 {
+  width: 91.666667%;
 }
 
 .w-16 {
@@ -3213,6 +3221,10 @@ video {
 
   .lg\:h-8 {
     height: 2rem;
+  }
+
+  .lg\:w-1\/3 {
+    width: 33.333333%;
   }
 
   .lg\:w-14 {

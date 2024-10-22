@@ -56,13 +56,6 @@ export async function saveBase64Image(base64String, userId) {
 export async function GetAllUsers() {
   try {
     await connectDB(); // متصل شدن به دیتابیس
-
-    // اعتبارسنجی کاربر
-    const userData = await authenticateUser();
-    if (!userData || userData.error) {
-      throw new Error(userData.error || "User data not found");
-    }
-
     // یافتن تمامی کاربران
     const users = await User.find().lean();
 
