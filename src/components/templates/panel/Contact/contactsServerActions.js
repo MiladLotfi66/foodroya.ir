@@ -4,6 +4,7 @@ import connectDB from "@/utils/connectToDB";
 import Contact from "./Contact";
 import { GetShopIdByShopUniqueName, authenticateUser } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import mongoose from "mongoose";
+import { p2e } from "@/utils/ReplaceNumber";
 /**
  * تبدیل مستندات Mongoose به اشیاء ساده
  * @param {Array} docs - آرایه‌ای از مستندات
@@ -54,7 +55,7 @@ export async function AddContactAction(formData) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
 
-  const { 
+  let { 
     name,
     address,
     phoneNumber,
@@ -75,12 +76,19 @@ export async function AddContactAction(formData) {
     return { status: 400, message: 'ایمیل باید معتبر باشد.' };
   }
 
-  if (nationalId && !/^\d{10}$/.test(nationalId)) {
-    return { status: 400, message: 'شماره ملی باید 10 رقم باشد.' };
+  if (nationalId) {
+    nationalId = p2e(nationalId);
+    if (!/^\d{10}$/.test(nationalId)) {
+      return { status: 400, message: 'شماره ملی باید 10 رقم باشد.' };
+    }
   }
-
-  if (economicCode && !/^\d{10}$/.test(economicCode)) {
-    return { status: 400, message: 'کد اقتصادی باید 10 رقم باشد.' };
+  console.log("111111");
+  
+  if (economicCode) {
+    economicCode = p2e(economicCode);
+    if (!/^\d{10}$/.test(economicCode)) {
+      return { status: 400, message: 'کد اقتصادی باید 10 رقم باشد.' };
+    }
   }
 
   // اعتبارسنجی userAccount در صورت نیاز
@@ -104,18 +112,21 @@ export async function AddContactAction(formData) {
     createdBy,
     updatedBy,
   };
+  console.log("۲۲۲۲۲");
 
-  // بررسی یکتایی نام مخاطب
-  const existingContact = await Contact.findOne({ name }).lean();
-  if (existingContact) {
-    return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
-  }
 
   // دریافت shopId از shopUniqueName
   const shopId = await GetShopIdByShopUniqueName(shopUniqName);
   if (!shopId || !shopId.ShopID) {
     return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
   }
+
+  // بررسی یکتایی نام مخاطب
+  const existingContact = await Contact.findOne({ name  , shop : shopId.ShopID}).lean();
+  if (existingContact) {
+    return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
+  }
+  console.log("۳۳۳۳۳۳");
 
   // اضافه کردن shopId به داده‌های مخاطب
   contactData.shop = shopId.ShopID;
@@ -147,7 +158,7 @@ export async function EditContactAction(formData) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   console.log("formData--------------",formData);
-  const { 
+  let { 
     id,
     name,
     address,
@@ -172,15 +183,22 @@ export async function EditContactAction(formData) {
   }
   console.log("111111");
 
-  if (nationalId && !/^\d{10}$/.test(nationalId)) {
-    return { status: 400, message: 'شماره ملی باید 10 رقم باشد.' };
+  if (nationalId) {
+    nationalId = p2e(nationalId);
+    if (!/^\d{10}$/.test(nationalId)) {
+      return { status: 400, message: 'شماره ملی باید 10 رقم باشد.' };
+    }
   }
   console.log("111111");
-
-  if (economicCode && !/^\d{10}$/.test(economicCode)) {
-    return { status: 400, message: 'کد اقتصادی باید 10 رقم باشد.' };
+  
+  if (economicCode) {
+    economicCode = p2e(economicCode);
+    if (!/^\d{10}$/.test(economicCode)) {
+      return { status: 400, message: 'کد اقتصادی باید 10 رقم باشد.' };
+    }
   }
   console.log("222222");
+console.log(userAccount._id);
 
   // اعتبارسنجی userAccount در صورت نیاز
   if (userAccount && !mongoose.Types.ObjectId.isValid(userAccount)) {

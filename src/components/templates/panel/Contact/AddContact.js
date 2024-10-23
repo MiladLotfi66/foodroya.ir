@@ -13,6 +13,7 @@ import UserSelector from "@/module/User/UserSelector"; // وارد کردن کا
 import UserMiniInfo from "@/module/home/UserMiniInfo";
 
 function AddContact({ contact = {}, onClose, refreshContacts }) {
+  
   const [isSubmit, setIsSubmit] = useState(false);
   const { shopUniqName } = useParams();
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false); // کنترل باز بودن UserSelector
@@ -31,7 +32,7 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
     defaultValues: {
       name: contact?.name || "",
       economicCode: contact?.economicCode || "",
-      userAccount: contact?.userAccount || "",
+      userAccount: selectedUser,
       address: contact?.address || "",
       phoneNumber: contact?.phone || "",
       email: contact?.email || "",
@@ -55,12 +56,12 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
       formDataObj.append("email", formData.email);
       formDataObj.append("nationalId", formData.nationalId);
       formDataObj.append("economicCode", formData.economicCode);
-      formDataObj.append("userAccount", formData.userAccount);
-
+      if (selectedUser) {
+        formDataObj.append("userAccount",selectedUser?._id);
+      }
       if (contact?._id) {
         formDataObj.append("id", contact._id);
       }
-
       let result;
       if (contact?._id) {
         // اگر مخاطب برای ویرایش است
