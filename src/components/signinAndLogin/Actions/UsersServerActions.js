@@ -53,11 +53,11 @@ export async function saveBase64Image(base64String, userId) {
   });
 }
 
-export async function GetAllUsers() {
+export async function GetAllUsersIdNameImageUniqName() {
   try {
     await connectDB(); // متصل شدن به دیتابیس
     // یافتن تمامی کاربران
-    const users = await User.find().lean();
+    const users = await User.find().select('-password -dateOfBirth -role -following -twoFactorEnabled -isVIP -securityQuestion -phoneNumberUsages -__v -refreshToken').lean();
 
     // تبدیل فیلدهای خاص به plain strings
     const plainUsers = users?.map(user => ({
@@ -66,10 +66,10 @@ export async function GetAllUsers() {
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString()
     }));
-
+    
     return { message: "Users retrieved successfully", status: 200, data: plainUsers };
   } catch (error) {
-    console.error("Error in GetAllUsers action:", error.message);
+    console.error("Error in GetAllUsersIdNameImageUniqName action:", error.message);
     return { error: error.message, status: 500 };
   }
 }

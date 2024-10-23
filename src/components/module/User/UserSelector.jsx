@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import { GetAllUsers } from "@/components/signinAndLogin/Actions/UsersServerActions";
+import { GetAllUsersIdNameImageUniqName } from "@/components/signinAndLogin/Actions/UsersServerActions";
 
 function UserSelector({ isOpen, onClose, onSelect }) {
   const [users, setUsers] = useState([]);
@@ -13,7 +13,7 @@ function UserSelector({ isOpen, onClose, onSelect }) {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await GetAllUsers(); // مسیر API را بر اساس نیاز خود تنظیم کنید
+      const response = await GetAllUsersIdNameImageUniqName(); // مسیر API را بر اساس نیاز خود تنظیم کنید
       console.log(response);
       
       if (response.status===200) {

@@ -99,7 +99,7 @@ function ContactManager() {
 
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">مدیریت مخاطبها</h1>
+          <h1 className="text-3xl font-MorabbaBold">مدیریت مخاطب ها</h1>
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add contact"

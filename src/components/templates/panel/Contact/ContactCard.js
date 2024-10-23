@@ -3,149 +3,86 @@
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
-import ShareSvg from "@/module/svgs/ShareSvg";
-import EyeSvg from "@/module/svgs/EyeSvg";
-import EyeslashSvg from "@/module/svgs/EyeslashSvg";
-import {
-  EnableContactAction,
-  DisableContactAction,
-  DeleteCurrencies,
-} from "@/components/signinAndLogin/Actions/currenciesServerActions";
-import { Toaster, toast } from "react-hot-toast";
+import UserMiniInfo from "@/module/home/UserMiniInfo";
+import { DeleteContacts } from "./contactsServerActions";
 
 function ContactCard({ contact: initialContact, editFunction, onDelete }) {
-  const [contact, setContact] = useState(initialContact); // مدیریت وضعیت مخاطب
+  const [contact, setContact] = useState(initialContact);
 
   useEffect(() => {
-    // هر بار که props مخاطب تغییر می‌کند، state محلی به‌روزرسانی می‌شود
     setContact(initialContact);
   }, [initialContact]);
 
-  const enableFunc = async () => {
-    try {
-      const response = await EnableContactAction(contact._id);
-      if (response.status === 200) {
-        setContact({ ...contact, status: "فعال" }); // بروزرسانی وضعیت مخاطب بدون رفرش
-        toast.success("مخاطب فعال شد.");
-      } else {
-        throw new Error(response.message || "خطا در فعال‌سازی مخاطب.");
-      }
-    } catch (error) {
-      console.error("خطا در فعال‌سازی مخاطب:", error);
-      toast.error("خطا در فعال‌سازی مخاطب.");
-    }
-  };
-
-  const disableFunc = async () => {
-    try {
-      const response = await DisableContactAction(contact._id);
-      if (response.status === 200) {
-        setContact({ ...contact, status: "غیرفعال" }); // بروزرسانی وضعیت مخاطب بدون رفرش
-        toast.success("مخاطب غیرفعال شد.");
-      } else {
-        throw new Error(response.message || "خطا در غیرفعال‌سازی مخاطب.");
-      }
-    } catch (error) {
-      console.error("خطا در غیرفعال‌سازی مخاطب:", error);
-      toast.error("خطا در غیرفعال‌سازی مخاطب.");
-    }
-  };
-
   const deleteFunc = async () => {
     try {
-      const response = await DeleteCurrencies(contact._id);
+      const response = await DeleteContacts(contact._id);
       if (response.status === 200) {
-        onDelete(); // حذف مخاطب از لیست
-        // toast.success("مخاطب با موفقیت حذف شد.");
+        onDelete(); // حذف ارز از لیست
+        // toast.success("ارز با موفقیت حذف شد.");
       } else {
-        throw new Error(response.message || "خطا در حذف مخاطب.");
+        throw new Error(response.message || "خطا در حذف ارز.");
       }
     } catch (error) {
-      console.error("خطا در حذف مخاطب:", error);
-      toast.error("خطا در حذف مخاطب.");
+      console.error("خطا در حذف ارز:", error);
+      toast.error("خطا در حذف ارز.");
     }
   };
-
   return (
-    <div className="relative bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl p-4">
-      <div className="flex justify-between items-center">
-        <div className="hidden">
-          <DeleteSvg />
-          <EditSvg />
-          <ShareSvg />
-          <EyeSvg />
-          <EyeslashSvg />
+    <div className="relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-6 transition-transform transform hover:scale-105">
+      <div className="flex justify-between items-start">
+        {/* بخش اطلاعات مخاطب */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 truncate">
+            {contact.name} 
+          </h2> 
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 truncate">
+             ({contact.phone})
+          </h2>
+          {contact.userAccount && (
+                       <UserMiniInfo
+                       userImage={contact.userAccount.userImage}
+                       name={contact.userAccount.name}
+                       username={contact.userAccount.userUniqName}
+                     />
+                   )}
+          <div className="mt-3 space-y-1">
+            {contact.email && (
+              <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+                <span className="font-medium truncate">ایمیل:</span> {contact.email}
+              </p>
+            )}
+            {contact.address && (
+              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                <span className="font-medium ">آدرس:</span> {contact.address}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <h2 className="text-xl font-bold">
-            {contact.title} ({contact.shortName})
-          </h2>
-          <p className="text-sm">نرخ برابری: {contact.exchangeRate}</p>
-          <p className="text-sm">تعداد اعشار: {contact.decimalPlaces}</p>
-          <p
-            className={`text-sm ${
-              contact.status === "فعال" ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            وضعیت: {contact.status}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Delete Icon */}
-          <svg
-            width="24"
-            height="24"
-            className="cursor-pointer"
-            aria-label="delete"
-            onClick={deleteFunc}
-          >
-            <use href="#DeleteSvg"></use>
-          </svg>
-          {/* Edit Icon */}
-          <svg
-            width="24"
-            height="24"
-            className="cursor-pointer"
-            aria-label="edit"
-            onClick={editFunction}
-          >
-            <use href="#EditSvg"></use>
-          </svg>
-          {/* Share Icon */}
-          <svg
-            width="24"
-            height="24"
-            className="cursor-pointer"
-            aria-label="share"
-          >
-            <use href="#ShareSvg"></use>
-          </svg>
-          {/* Enable/Disable Icon */}
-          {contact.status === "فعال" ? (
-            <svg
-              width="24"
-              height="24"
-              className="cursor-pointer"
-              aria-label="disable"
-              onClick={disableFunc}
+        {/* بخش آیکون‌های عملیات */}
+        <div className="flex flex-col items-end space-y-2">
+          {/* دکمه‌های عملیات */}
+          <div className="flex gap-2">
+            <button
+              aria-label="حذف"
+              className="text-red-500 hover:text-red-700"
+              onClick={deleteFunc}
             >
-              <use href="#EyeslashSvg"></use>
-            </svg>
-          ) : (
-            <svg
-              width="24"
-              height="24"
-              className="cursor-pointer"
-              aria-label="enable"
-              onClick={enableFunc}
+              <DeleteSvg />
+            </button>
+            <button
+              aria-label="ویرایش"
+              className="text-blue-500 hover:text-blue-700"
+              onClick={editFunction}
             >
-              <use href="#EyeSvg"></use>
-            </svg>
-          )}
+              <EditSvg />
+            </button>
+           
+          </div>
+
+        
         </div>
       </div>
-      <Toaster />
     </div>
   );
 }

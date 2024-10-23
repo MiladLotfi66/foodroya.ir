@@ -15,7 +15,7 @@ function UserMicroCard({ user }) {
         quality={60}
 
       />
-      <div className="hidden xl:inline-block">{user?.name}</div>
+      <div className="hidden xl:inline-block truncate">{user?.name}</div>
     </span>
   );
 }

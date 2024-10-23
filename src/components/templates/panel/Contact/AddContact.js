@@ -7,15 +7,18 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import ContactSchema from "./ContactSchema";
 import { useEffect, useState } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 import { AddContactAction, EditContactAction } from "./contactsServerActions";
 import UserSelector from "@/module/User/UserSelector"; // وارد کردن کامپوننت UserSelector
+import UserMiniInfo from "@/module/home/UserMiniInfo";
 
 function AddContact({ contact = {}, onClose, refreshContacts }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const { shopUniqName } = useParams();
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false); // کنترل باز بودن UserSelector
-console.log("shopUniqName",shopUniqName);
+  const [selectedUser, setSelectedUser] = useState(
+    contact?.userAccount || null
+  ); // State to store selected User
 
   const {
     register,
@@ -30,7 +33,7 @@ console.log("shopUniqName",shopUniqName);
       economicCode: contact?.economicCode || "",
       userAccount: contact?.userAccount || "",
       address: contact?.address || "",
-      phoneNumber: contact?.phoneNumber || "",
+      phoneNumber: contact?.phone || "",
       email: contact?.email || "",
       nationalId: contact?.nationalId || "",
       shopUniqName: shopUniqName || "",
@@ -69,14 +72,16 @@ console.log("shopUniqName",shopUniqName);
 
       if (result.status === 201 || result.status === 200) {
         await refreshContacts();
-        const successMessage = contact && contact.id ? "مخاطب با موفقیت ویرایش شد!" : "مخاطب با موفقیت ایجاد شد!";
+        const successMessage =
+          contact && contact.id
+            ? "مخاطب با موفقیت ویرایش شد!"
+            : "مخاطب با موفقیت ایجاد شد!";
         toast.success(successMessage);
 
         reset();
         onClose();
       } else {
-        const errorMessage = contact && contact.id ? "خطایی در ویرایش مخاطب رخ داد." : "خطایی در ایجاد مخاطب رخ داد.";
-        toast.error(errorMessage);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error("Error handling contact:", error);
@@ -92,8 +97,8 @@ console.log("shopUniqName",shopUniqName);
 
   // تابع برای دریافت کاربر انتخاب شده
   const handleUserSelect = (user) => {
-    setValue("userAccount", user._id); // فرض بر این است که `user.id` شناسه کاربر است
-    // در صورت نیاز می‌توانید اطلاعات بیشتری از کاربر ذخیره کنید
+    setValue("userAccount", user._id);
+    setSelectedUser(user); // Set the selected user
   };
 
   return (
@@ -139,7 +144,7 @@ console.log("shopUniqName",shopUniqName);
           />
           {errors.name && <p className="text-red-500">{errors.name.message}</p>}
         </div>
-        
+
         {/* فیلد کد اقتصادی */}
         <div>
           <label className="block mb-1">کد اقتصادی</label>
@@ -153,20 +158,44 @@ console.log("shopUniqName",shopUniqName);
             })}
             className="w-full border rounded px-3 py-2"
           />
-          {errors.economicCode && <p className="text-red-500">{errors.economicCode.message}</p>}
-        </div> 
-        
-        {/* فیلد کاربر با دکمه انتخاب */}
+          {errors.economicCode && (
+            <p className="text-red-500">{errors.economicCode.message}</p>
+          )}
+        </div>
+
+        {/* فیلد کاربر با نمایش UserMiniInfo */}
         <div className="relative">
-          <label className="block mb-1">کاربر</label>
-          <div className="flex">
-            <input
-              type="text"
-              {...register("userAccount")}
-              className="w-full border rounded px-3 py-2"
-              readOnly
-              placeholder="انتخاب کاربر"
-            />
+          <label htmlFor="userAccount" className="block mb-1">
+            کاربر
+          </label>
+          {selectedUser ? (
+            <div className="flex items-center gap-2">
+              <UserMiniInfo
+                userImage={selectedUser.userImage}
+                name={selectedUser.name}
+                username={selectedUser.userUniqName}
+              />
+
+              <button
+                type="button"
+                className="ml-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                onClick={() => {
+                  setSelectedUser(null);
+                  setValue("userAccount", "");
+                  setIsUserSelectorOpen(true);
+                }}
+              >
+                تغییر کاربر
+              </button>
+              <button
+                type="button"
+                className="ml-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                onClick={() => setSelectedUser(null)}
+              >
+                حذف
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
               className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -174,8 +203,10 @@ console.log("shopUniqName",shopUniqName);
             >
               انتخاب
             </button>
-          </div>
-          {errors.userAccount && <p className="text-red-500">{errors.userAccount.message}</p>}
+          )}
+          {errors.userAccount && (
+            <p className="text-red-500">{errors.userAccount.message}</p>
+          )}
         </div>
 
         {/* فیلد آدرس */}
@@ -190,9 +221,10 @@ console.log("shopUniqName",shopUniqName);
               },
             })}
             className="w-full border rounded px-3 py-2"
-            
           />
-          {errors.address && <p className="text-red-500">{errors.address.message}</p>}
+          {errors.address && (
+            <p className="text-red-500">{errors.address.message}</p>
+          )}
         </div>
 
         {/* فیلد شماره تماس */}
@@ -210,7 +242,9 @@ console.log("shopUniqName",shopUniqName);
             className="w-full border rounded px-3 py-2"
             required
           />
-          {errors.phoneNumber && <p className="text-red-500">{errors.phoneNumber.message}</p>}
+          {errors.phoneNumber && (
+            <p className="text-red-500">{errors.phoneNumber.message}</p>
+          )}
         </div>
 
         {/* فیلد ایمیل */}
@@ -225,9 +259,10 @@ console.log("shopUniqName",shopUniqName);
               },
             })}
             className="w-full border rounded px-3 py-2"
-            
           />
-          {errors.email && <p className="text-red-500">{errors.email.message}</p>}
+          {errors.email && (
+            <p className="text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
         {/* فیلد شناسه ملی */}
@@ -243,7 +278,9 @@ console.log("shopUniqName",shopUniqName);
             })}
             className="w-full border rounded px-3 py-2"
           />
-          {errors.nationalId && <p className="text-red-500">{errors.nationalId.message}</p>}
+          {errors.nationalId && (
+            <p className="text-red-500">{errors.nationalId.message}</p>
+          )}
         </div>
 
         <button
@@ -251,7 +288,13 @@ console.log("shopUniqName",shopUniqName);
           className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded"
           disabled={isSubmit}
         >
-          {isSubmit ? <HashLoader size={20} color="#fff" /> : (contact?._id ? "ویرایش مخاطب" : "افزودن مخاطب")}
+          {isSubmit ? (
+            <HashLoader size={20} color="#fff" />
+          ) : contact?._id ? (
+            "ویرایش مخاطب"
+          ) : (
+            "افزودن مخاطب"
+          )}
         </button>
         <Toaster />
       </form>
