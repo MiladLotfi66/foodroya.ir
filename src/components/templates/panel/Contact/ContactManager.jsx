@@ -5,8 +5,13 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ContactCard from "./ContactCard";
 import AddContact from "./AddContact";
 import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
-import { useParams } from 'next/navigation';
-import { AddContactAction, DeleteContacts, EditContactAction ,GetAllContacts} from  "./contactsServerActions";
+import { useParams } from "next/navigation";
+import {
+  AddContactAction,
+  DeleteContacts,
+  EditContactAction,
+  GetAllContacts,
+} from "./contactsServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function ContactManager() {
@@ -46,7 +51,9 @@ function ContactManager() {
   }, [refreshContacts]);
 
   const handleDeleteContact = useCallback((contactId) => {
-    setContacts((prevContacts) => prevContacts.filter(contact => contact._id !== contactId));
+    setContacts((prevContacts) =>
+      prevContacts.filter((contact) => contact._id !== contactId)
+    );
     toast.success("مخاطب با موفقیت حذف شد.");
   }, []);
 
@@ -105,7 +112,8 @@ function ContactManager() {
             aria-label="add contact"
             onClick={handleAddContactClick}
           >
-            افزودن مخاطب
+            <span className="md:hidden">افزودن</span>
+            <span className="hidden md:inline">افزودن مخاطب</span>
           </button>
         </div>
 

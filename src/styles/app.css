@@ -2996,6 +2996,10 @@ video {
     display: inline-block;
   }
 
+  .md\:inline {
+    display: inline;
+  }
+
   .md\:flex {
     display: flex;
   }

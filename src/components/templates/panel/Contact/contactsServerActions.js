@@ -157,7 +157,6 @@ export async function EditContactAction(formData) {
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  console.log("formData--------------",formData);
   let { 
     id,
     name,
@@ -169,19 +168,16 @@ export async function EditContactAction(formData) {
     userAccount,
     shopUniqName 
   } = Object.fromEntries(formData.entries());
-  console.log("111111");
 
   // اعتبارسنجی فیلدهای الزامی
   if (!phoneNumber || typeof phoneNumber !== 'string' || !/^\d{10,15}$/.test(phoneNumber)) {
     return { status: 400, message: 'شماره تماس الزامی است و باید بین 10 تا 15 رقم باشد.' };
   }
-  console.log("111111");
 
   // اعتبارسنجی فیلدهای اختیاری
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { status: 400, message: 'ایمیل باید معتبر باشد.' };
   }
-  console.log("111111");
 
   if (nationalId) {
     nationalId = p2e(nationalId);
@@ -189,7 +185,6 @@ export async function EditContactAction(formData) {
       return { status: 400, message: 'شماره ملی باید 10 رقم باشد.' };
     }
   }
-  console.log("111111");
   
   if (economicCode) {
     economicCode = p2e(economicCode);
@@ -197,7 +192,6 @@ export async function EditContactAction(formData) {
       return { status: 400, message: 'کد اقتصادی باید 10 رقم باشد.' };
     }
   }
-  console.log("222222");
 console.log(userAccount._id);
 
   // اعتبارسنجی userAccount در صورت نیاز
@@ -218,7 +212,6 @@ console.log(userAccount._id);
       return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
     }
   }
-  console.log("333333");
 
   // بررسی یکتایی nationalId اگر تغییر کرده باشد
   if (nationalId && nationalId !== existingContact.nationalId) {
@@ -239,7 +232,6 @@ console.log(userAccount._id);
   } else {
     shopId = existingContact.shop;
   }
-  console.log("555555");
 
   // آماده‌سازی داده‌های آپدیت
   const updateData = {
@@ -253,7 +245,6 @@ console.log(userAccount._id);
     shop: shopId,
     updatedBy: user.id,
   };
-  console.log("666666");
 
   try {
     const updatedContact = await Contact.findByIdAndUpdate(id, updateData, { new: true })
@@ -262,10 +253,8 @@ console.log(userAccount._id);
       .populate('updatedBy')
       .populate('userAccount')
       .lean();
-      console.log("777777");
 
     const plainContact = convertToPlainObjects([updatedContact])[0];
-    console.log("888888");
 
     return { status: 200, contact: plainContact };
 

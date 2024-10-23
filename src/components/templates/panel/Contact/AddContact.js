@@ -74,7 +74,7 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
       if (result.status === 201 || result.status === 200) {
         await refreshContacts();
         const successMessage =
-          contact && contact.id
+          contact && contact._id
             ? "مخاطب با موفقیت ویرایش شد!"
             : "مخاطب با موفقیت ایجاد شد!";
         toast.success(successMessage);
