@@ -21,25 +21,21 @@ function convertToPlainObjects(docs) {
 export async function GetAllCurrencies(shopId) {
   await connectDB();
   const user = await authenticateUser();
-
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-
   try {
     const currencies = await Currency.find({ shop: shopId })
       .populate('shop')
       .populate('createdBy')
       .populate('updatedBy')
       .lean(); // استفاده از lean() برای دریافت اشیاء ساده
-
     return { status: 200, currencies: convertToPlainObjects(currencies) };
   } catch (error) {
     console.error("Error fetching currencies:", error);
     return { status: 500, message: 'خطایی در دریافت ارزها رخ داد.' };
   }
 }
-
 /**
  * افزودن ارز جدید
  * @param {FormData} formData - داده‌های فرم
@@ -48,27 +44,27 @@ export async function GetAllCurrencies(shopId) {
 export async function AddCurrencyAction(formData) {
   await connectDB();
   const user = await authenticateUser();
-
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-
-  console.log("------------------", formData, user);
-
   const { title, shortName, exchangeRate, decimalPlaces, status, shopUniqName } = Object.fromEntries(formData.entries());
-
-  // بررسی یکتایی shortName
-  const existingCurrency = await Currency.findOne({ shortName }).lean();
-  if (existingCurrency) {
-    return { status: 400, message: 'نام اختصاری ارز باید منحصر به فرد باشد.' };
-  }
-
   // دریافت shopId از shopUniqueName
   const shopId = await GetShopIdByShopUniqueName(shopUniqName);
   if (!shopId || !shopId.ShopID) {
     return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
   }
 
+  // بررسی یکتایی shortName
+  const existingCurrency = await Currency.findOne({ shortName ,shop:shopId.ShopID }).lean();
+  
+  if (existingCurrency) {
+    return { status: 400, message: 'نام اختصاری ارز باید منحصر به فرد باشد.' };
+  } 
+  const existingTitleCurrency = await Currency.findOne({ title ,shop:shopId.ShopID }).lean();
+  
+  if (existingTitleCurrency) {
+    return { status: 400, message: 'نام  ارز باید منحصر به فرد باشد.' };
+  }
   // ایجاد ارز جدید
   const newCurrency = new Currency({
     title,
@@ -80,7 +76,6 @@ export async function AddCurrencyAction(formData) {
     createdBy: user.id, // استفاده از _id به جای id
     updatedBy: user.id, // استفاده از _id به جای id
   });
-
   try {
     const savedCurrency = await newCurrency.save();
     const plainCurrency = JSON.parse(JSON.stringify(savedCurrency));

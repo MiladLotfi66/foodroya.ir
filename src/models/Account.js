@@ -2,104 +2,134 @@
 
 import { Schema, model, models } from "mongoose";
 
+const accountSchema = new Schema(
+  {
+    // کدینگ حساب
+    accountCode: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 255, // حداکثر 255 کاراکتر
+    },
+    // عنوان حساب
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50,
+    },
+    // فروشگاه: ارجاع به مدل Store
+    store: {
+      type: Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+    },
 
-const accountSchema = new Schema({
-  // کدینگ حساب
-  accountCode: {
-    type: String,
-    required: true,
-    trim: true ,
-    maxlength: 255,     // حداکثر 255 کاراکتر
+    // حساب والد: ارجاع به مدل Account (خود مدل)
+    parentAccount: {
+      type: Schema.Types.ObjectId,
+      ref: "Account",
+      default: null,
+    },
 
-  },
-  // عنوان حساب
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 50,
-  },
-  // فروشگاه: ارجاع به مدل Store
-  store: {
-    type: Schema.Types.ObjectId,
-    ref: 'Store',
-    required: true
-  },
+    // نوع حساب: صندوق، حساب عادی، حساب بانکی، کالا، دسته بندی کالا، اشخاص حقیقی، اشخاص حقوقی
+    accountType: {
+      type: String,
+      enum: [
+        "صندوق",
+        "حساب عادی",
+        "حساب بانکی",
+        "کالا",
+        "دسته بندی کالا",
+        "اشخاص حقیقی",
+        "اشخاص حقوقی",
+        "حساب انتظامی",
+      ],
+      required: true,
+      maxlength: 255,
+    },
 
-  // حساب والد: ارجاع به مدل Account (خود مدل)
-  parentAccount: {
-    type: Schema.Types.ObjectId,
-    ref: 'Account',
-    default: null
-  },
+    // ماهیت حساب
+    accountNature: {
+      type: String,
+      enum: ["بستانکار","بدون ماهیت","بدهی"],
+      required: true,
+      trim: true,
+      maxlength: 55,
+    },
 
-  // نوع حساب: صندوق، حساب عادی، حساب بانکی، کالا، دسته بندی کالا، اشخاص حقیقی، اشخاص حقوقی
-  accountType: {
-    type: String,
-    enum: [
-      'صندوق',
-      'حساب عادی',
-      'حساب بانکی',
-      'کالا',
-      'دسته بندی کالا',
-      'اشخاص حقیقی',
-      'اشخاص حقوقی',
-      'حساب انتظامی',
-      
-    ],
-    required: true,
-    maxlength: 255,
-  },
+    // وضعیت حساب: فعال یا غیر فعال
+    accountStatus: {
+      type: String,
+      enum: ["فعال", "غیر فعال"],
+      default: "فعال",
+      required: true,
+    },
 
-  // ماهیت حساب
-  accountNature: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 55,
-  },
+    // ایجاد کننده: ارجاع به مدل User
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
-  // وضعیت حساب: فعال یا غیر فعال
-  accountStatus: {
-    type: String,
-    enum: ['فعال', 'غیر فعال'],
-    default: 'فعال',
-    required: true
-  },
+    // ویرایش کننده: ارجاع به مدل User
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
 
-  // ایجاد کننده: ارجاع به مدل User
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+    // تاریخ ایجاد و ویرایش
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
 
-  // ویرایش کننده: ارجاع به مدل User
-  updatedBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    default: null
+    // سیستمی: مشخص می‌کند که حساب جزو حساب‌های سیستمی است یا خیر
+    isSystem: {
+      type: Boolean,
+      default: false,
+    },
+    contact: {
+      type: Schema.Types.ObjectId,
+      ref: "Contact",
+      required: function () {
+        return (
+          this.accountType === "اشخاص حقیقی" ||
+          this.accountType === "اشخاص حقوقی"
+        );
+      },
+    },
+    currency: {
+      type: Schema.Types.ObjectId,
+      ref: "Currency",
+      required: function () {
+        return (
+          this.accountType === "اشخاص حقیقی" ||
+          this.accountType === "اشخاص حقوقی"
+        );
+      },
+    },
+    creditLimit: {
+      type: Number, // یا نوع مناسب دیگر
+      required: function () {
+        return (
+          this.accountType === "اشخاص حقیقی" ||
+          this.accountType === "اشخاص حقوقی"
+        );
+      },
+    },
   },
-
-  // تاریخ ایجاد و ویرایش
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-
-  // سیستمی: مشخص می‌کند که حساب جزو حساب‌های سیستمی است یا خیر
-  isSystem: {
-    type: Boolean,
-    default: false
+  {
+    // افزودن گزینه timestamps برای مدیریت خودکار createdAt و updatedAt
+    timestamps: true,
   }
-}, {
-  // افزودن گزینه timestamps برای مدیریت خودکار createdAt و updatedAt
-  timestamps: true
-});
+);
 
 // تعریف اندیس ترکیبی برای یکتایی accountCode در هر فروشگاه
 accountSchema.index({ accountCode: 1, store: 1 }, { unique: true });
@@ -108,13 +138,13 @@ accountSchema.index({ accountCode: 1, store: 1 }, { unique: true });
 accountSchema.index({ parentAccount: 1, title: 1 }, { unique: true });
 
 // Middleware برای به‌روزرسانی updatedAt قبل از ذخیره
-accountSchema.pre('save', function (next) {
+accountSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
 // Middleware برای به‌روزرسانی updatedAt قبل از بروزرسانی
-accountSchema.pre('findOneAndUpdate', function (next) {
+accountSchema.pre("findOneAndUpdate", function (next) {
   this.set({ updatedAt: Date.now() });
   next();
 });

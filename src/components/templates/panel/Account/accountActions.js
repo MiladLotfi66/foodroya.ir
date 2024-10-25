@@ -10,6 +10,8 @@ import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServer
 
 // ایجاد حساب جدید
 export async function createAccount(data) {
+  console.log("data",data);
+  
   await connectDB();
 
   try {
@@ -19,7 +21,7 @@ export async function createAccount(data) {
       return { success: false, message: "داده‌های کاربر یافت نشد." };
     }
 
-    const { title, accountType, accountStatus, parentAccount, store } = data;
+    const { title, accountType, accountStatus, parentAccount, store,Currency ,contact,creditLimit } = data;
 
     const shopId = await GetShopIdByShopUniqueName(store);
 
@@ -64,19 +66,29 @@ export async function createAccount(data) {
     //     }
     //   }
 
-    const newAccount = new Account({
-      accountCode,
-      title,
+    const newAccountData = new Account({
       accountType,
+      title,
+      accountCode,
       accountStatus,
       parentAccount: parentAccount,
       accountNature:parent.accountNature,
       store:shopId.ShopID,
       createdBy: userData.id, // فرض بر این است که شناسه کاربر از درخواست دریافت شده است
       isSystem: false, // به صورت پیش‌فرض غیر فعال است
+      contact,
+      Currency,
+      creditLimit
     });
 
-    await newAccount.save();
+        // شرط برای ذخیره فیلدهای اضافی بر اساس نوع حساب
+        if (accountType === "اشخاص حقیقی" || accountType === "اشخاص حقوقی") {
+          newAccountData.contact = contact;
+          newAccountData.Currency = Currency;
+          newAccountData.creditLimit = creditLimit;
+        }
+
+    await newAccountData.save();
 
     // در صورت نیاز به به‌روزرسانی کش‌ها
     revalidatePath("/accounts"); // مسیر مربوطه
@@ -344,7 +356,8 @@ export async function GetAllAccounts(storeId, parentId = null) {
       filter.parentAccount = null; // حساب‌های ریشه
     }
   
-    const accounts = await Account.find(filter).sort({ accountCode: 1 }).lean(); // افزودن .lean() اینجا
+    const accounts = await Account.find(filter).sort({ accountCode: 1 }).populate("contact").populate('Currency')
+    .lean(); // افزودن .lean() اینجا
   
     const plainAccounts = accounts?.map((account) => {
       return {

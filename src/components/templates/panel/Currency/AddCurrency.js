@@ -74,8 +74,8 @@ function AddCurrency({ currency = {}, onClose, refreshCurrencies }) {
         reset();
         onClose();
       } else {
-        const errorMessage = currency && currency.id ? "خطایی در ویرایش ارز رخ داد." : "خطایی در ایجاد ارز رخ داد.";
-        toast.error(errorMessage);
+        // const errorMessage = currency && currency.id ? "خطایی در ویرایش ارز رخ داد." : "خطایی در ایجاد ارز رخ داد.";
+        toast.error(result.message );
       }
     } catch (error) {
       console.error("Error handling currency:", error);
@@ -176,9 +176,6 @@ function AddCurrency({ currency = {}, onClose, refreshCurrencies }) {
         </div>
 
         {/* سایر فیلدهای مربوط به ارز می‌تواند اینجا اضافه شود */}
-
-      
-
         <button
           type="submit"
           className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded"

@@ -12,7 +12,6 @@ import User from "@/models/Users";
 export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
   try {
     // اتصال به دیتابیس
-    console.log("UserId, shopUniqName, RoleId",UserId, shopUniqName, RoleId);
     await connectDB();
     // دریافت آی‌دی شاپ
     if (!shopUniqName) {
@@ -50,7 +49,6 @@ export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
     // ذخیره رکورد در دیتابیس
     await newRoleInShop.save();
 
-    console.log('رکورد جدید با موفقیت ذخیره شد.');
     return { success: true, message: 'رکورد جدید با موفقیت ذخیره شد.' };
   } catch (error) {
     console.error('خطا در ذخیره رکورد:', error);
@@ -62,7 +60,6 @@ export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
   
   try {
     // اتصال به دیتابیس
-    console.log("UserId, shopUniqName, RoleId",UserId, shopUniqName, RoleId);
     await connectDB();
     // دریافت آی‌دی شاپ
     if (!shopUniqName) {
@@ -93,7 +90,6 @@ export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
       throw new Error('Record not found');
     }
 
-    console.log('رکورد با موفقیت حذف شد.');
     return { success: true, message: 'رکورد با موفقیت حذف شد.' };
   } catch (error) {
     console.error('خطا در حذف رکورد:', error);
@@ -197,7 +193,6 @@ export async function AddRoleServerAction(RoleData) {
 
 // ویرایش نقش
 export async function EditRole(RoleData , roleId) {
-  console.log(roleId);
   
   try {
     await connectDB();
@@ -435,13 +430,11 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
       if (roleData) {
         if (access in roleData && roleData[access].includes(action)) {
           // دسترسی داینامیک
-          console.log(`Role ${roleId} has the required permission.`);
           return { message: "Permission granted", status: 200, data: true };
         }
       }
     }
 
-    console.log("No roles have the required permissions.");
     
     return { message: "Permission denied", status: 200, data: false };
   } catch (error) {
@@ -454,6 +447,7 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
 export async function GetShopIdByShopUniqueName(ShopUniqueName) {
   try {
     await connectDB();
+    
     const shop = await Shop.findOne({ ShopUniqueName }).lean();
 
     if (!shop) {
@@ -482,7 +476,6 @@ export async function  getUsersByRoleId (roleId) {
     }).filter(user => user !== null); // حذف موارد null
 
     // بررسی داده‌های برگردانده شده
-    console.log("users:", users);
 
     return users;
   } catch (error) {

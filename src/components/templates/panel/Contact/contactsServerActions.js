@@ -20,6 +20,8 @@ function convertToPlainObjects(docs) {
  * @returns {Object} - شامل وضعیت و آرایه‌ای از مخاطبها
  */
 export async function GetAllContacts(shopId) {
+  console.log("---------",shopId);
+  
   await connectDB();
   const user = await authenticateUser();
 

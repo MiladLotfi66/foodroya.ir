@@ -349,8 +349,12 @@ export async function EditShop(ShopData) {
 }
 
 export async function AddShopServerAction(ShopData) {
+  console.log("-----------ShopData------------",ShopData);
+  
   const session = await mongoose.startSession();
+  console.log("-----------111111------------");
   session.startTransaction();
+  console.log("-----------15151515151------------");
 
   try {
     // استخراج توکن JWT و احراز هویت کاربر
@@ -359,17 +363,20 @@ export async function AddShopServerAction(ShopData) {
     if (!userData) {
       throw new Error("داده‌های کاربر یافت نشد");
     }
+    console.log("-----------222222------------");
 
     // تبدیل FormData به شیء ساده
     const shopDataObject = {};
     ShopData.forEach((value, key) => {
       shopDataObject[key] = value;
     });
+    console.log("-----------22222------------");
 
     // اعتبارسنجی داده‌ها
     const validatedData = await ShopSchema.validate(shopDataObject, {
       abortEarly: false,
     });
+    console.log("-----------3333333------------");
 
     const {
       ShopUniqueName,
@@ -385,12 +392,14 @@ export async function AddShopServerAction(ShopData) {
       BackGroundShop,
       BackGroundpanel,
     } = validatedData;
+    console.log("-----------444444------------");
 
     // پردازش و ذخیره تصاویر
     const LogoUrl = await processAndSaveImage(Logo);
     const TextLogoUrl = await processAndSaveImage(TextLogo);
     const BackGroundShopUrl = await processAndSaveImage(BackGroundShop);
     const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel);
+    console.log("-----------555555------------");
 
     // ایجاد فروشگاه جدید با استفاده از نشست تراکنش
     const newShop = new shops({
@@ -409,8 +418,9 @@ export async function AddShopServerAction(ShopData) {
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
     });
-
+    
     await newShop.save({ session });
+    console.log("-----------66666------------");
 
     // تعریف حساب‌های پیش‌فرض
     const defaultAccounts = [
@@ -464,7 +474,7 @@ export async function AddShopServerAction(ShopData) {
         store: newShop._id,
         parentAccount: null,
         accountType: 'حساب عادی',
-        accountNature: 'بدهکار',
+        accountNature: 'بدهی',
         accountStatus: 'فعال',
         createdBy: userData.id,
         isSystem: true,
@@ -474,8 +484,8 @@ export async function AddShopServerAction(ShopData) {
         title: 'حساب انتظامی',
         store: newShop._id,
         parentAccount: null,
-        accountType: 'بدون ماهیت',
-        accountNature: 'بدهکار', // می‌توانید اصلاح کنید بر اساس نیاز
+        accountType: 'حساب عادی',
+        accountNature: 'بدون ماهیت', // می‌توانید اصلاح کنید بر اساس نیاز
         accountStatus: 'فعال',
         createdBy: userData.id,
         isSystem: true,
@@ -485,10 +495,12 @@ export async function AddShopServerAction(ShopData) {
 
     // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش
     await Account.insertMany(defaultAccounts, { session });
+    console.log("-----------777777------------");
 
     // تکمیل تراکنش
     await session.commitTransaction();
     session.endSession();
+    console.log("-----------888888------------");
 
     return { message: "فروشگاه و حساب‌های مرتبط با موفقیت ثبت شدند", status: 201 };
   } catch (error) {
