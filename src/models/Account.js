@@ -124,7 +124,23 @@ const accountSchema = new Schema(
         );
       },
     },
-  },
+    posConected: {
+      type: Boolean, // یا نوع مناسب دیگر
+      required: function () {
+        return (
+          this.accountType === "حساب بانکی");
+      },
+    },
+    bankAcountNumber: {
+      type: String, 
+      maxlength: 55,
+    },
+    bankCardNumber: {
+      type: String,
+      maxlength: 55,
+      },
+    },
+
   {
     // افزودن گزینه timestamps برای مدیریت خودکار createdAt و updatedAt
     timestamps: true,

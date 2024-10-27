@@ -35,6 +35,7 @@ function AccountManage() {
         }
 
         const response = await GetAllAccounts(ShopId.ShopID, parentId);
+console.log(response);
 
         if (response.status === 200) {
           setAccounts(response.Accounts);
@@ -58,7 +59,7 @@ function AccountManage() {
     setAccounts((prevAccounts) =>
       prevAccounts.filter((account) => account._id !== accountId)
     );
-    toast.success("حساب با موفقیت حذف شد.");
+    // toast.success("حساب با موفقیت حذف شد.");
   }, []);
 
   const handleOverlayClick = useCallback((e) => {

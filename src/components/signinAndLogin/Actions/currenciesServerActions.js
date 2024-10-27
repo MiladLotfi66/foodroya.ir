@@ -25,11 +25,9 @@ export async function GetAllCurrencies(shopId) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   try {
-    const currencies = await Currency.find({ shop: shopId })
+    const currencies = await Currency.find({ shop: shopId }).select('-__v')
       .populate('shop')
-      .populate('createdBy')
-      .populate('updatedBy')
-      .lean(); // استفاده از lean() برای دریافت اشیاء ساده
+      .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
     return { status: 200, currencies: convertToPlainObjects(currencies) };
   } catch (error) {
     console.error("Error fetching currencies:", error);

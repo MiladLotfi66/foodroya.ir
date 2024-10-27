@@ -21,6 +21,7 @@ function AddAccount({
   const { shopUniqName } = useParams();
   const [currencies, setCurrencies] = useState([]);
   const [isSubmit, setIsSubmit] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // وضعیت بارگذاری جدید
 
   const [isContactSelectorOpen, setIsContactSelectorOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(
@@ -41,8 +42,11 @@ function AddAccount({
       accountType: "حساب عادی",
       accountStatus: "فعال",
       accountContact: "",
-      creditLimit: "",
-      Currency: "",
+      creditLimit: 0,
+      currency: "",
+      bankAcountNumber:"",
+      bankCardNumber:"",
+      posConected:true,
     },
     resolver: yupResolver(AccountSchema),
   });
@@ -51,25 +55,52 @@ function AddAccount({
 
   useEffect(() => {
     const fetchCurrenciesAndSetValues = async () => {
-      await getCurrencies(shopUniqName);
-      if (account) {
-        reset({
-          title: account.title || "",
-          accountType: account.accountType || "حساب عادی",
-          accountStatus: account.accountStatus || "فعال",
-          accountContact: account.contact?._id || "",
-          creditLimit: account.creditLimit || "",
-          Currency: account.Currency?._id || "",
-        });
-        setSelectedContact(account.contact || null);
+      setIsLoading(true); // شروع بارگذاری
+      try {
+        await getCurrencies(shopUniqName);
+        if (account) {
+          reset({
+            title: account.title || "",
+            accountType: account.accountType || "حساب عادی",
+            accountStatus: account.accountStatus || "فعال",
+            accountContact: account.contact?._id || "",
+            creditLimit: account.creditLimit !== undefined ? account.creditLimit : "",
+            currency: account.currency?._id || "",
+            bankAcountNumber:account.bankAcountNumber||"",
+bankCardNumber:account.bankCardNumber||"",
+posConected:account.posConected||true,
+
+          });
+          setSelectedContact(account.contact || null);
+          console.log(account);
+          
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
+      } finally {
+        setIsLoading(false); // پایان بارگذاری
       }
     };
     fetchCurrenciesAndSetValues();
+    
   }, [shopUniqName, account, reset]);
 
+  function convertPersianToEnglishNumbers(value) {
+    return value.replace(/[۰۱۲۳۴۵۶۷۸۹]/g, function (d) {
+      return d.charCodeAt(0) - 1776;
+    });
+  }
+  
+  function handleInputChange(event) {
+    const englishValue = convertPersianToEnglishNumbers(event.target.value);
+    event.target.value = englishValue;
+  }
+  
   const handleFormSubmit = async (formData) => {
     try {
       await AccountSchema.validate(formData, { abortEarly: false });
+      formData.creditLimit = formData.creditLimit || 0;
 
       setIsSubmit(true);
       toast.dismiss();
@@ -104,11 +135,7 @@ function AddAccount({
         setSelectedContact(null);
         onClose();
       } else {
-        const errorMessage =
-          account && account._id
-            ? "خطایی در ویرایش حساب رخ داد."
-            : "خطایی در ایجاد حساب رخ داد.";
-        toast.error(errorMessage);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error("Error handling account:", error);
@@ -139,6 +166,16 @@ function AddAccount({
     setSelectedContact(contact);
     setIsContactSelectorOpen(false);
   };
+
+  // رندر شرطی برای نمایش لودر در حین بارگذاری
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <HashLoader size={50} color="#36d7b7" />
+        <span className="mt-2 text-gray-700">در حال بارگذاری اطلاعات...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-y-auto max-h-screen p-4">
@@ -184,6 +221,7 @@ function AddAccount({
                 : "border-gray-300 focus:ring-teal-500"
             }`}
             placeholder="عنوان حساب خود را وارد کنید"
+            disabled={isSubmit} // غیرفعال کردن در حالت ارسال
           />
           {errors.title && (
             <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
@@ -201,6 +239,7 @@ function AddAccount({
                 : "border-gray-300 focus:ring-teal-500"
             }`}
             required
+            disabled={isSubmit}
           >
             <option value="صندوق">صندوق</option>
             <option value="حساب عادی">حساب عادی</option>
@@ -228,6 +267,7 @@ function AddAccount({
                 : "border-gray-300 focus:ring-teal-500"
             }`}
             required
+            disabled={isSubmit}
           >
             <option value="فعال">فعال</option>
             <option value="غیر فعال">غیر فعال</option>
@@ -249,7 +289,7 @@ function AddAccount({
               {selectedContact ? (
                 <div className="flex items-center gap-2">
                   <ContactMiniInfo
-                    ContactImage={selectedContact.ContactImage}
+                    // ContactImage={selectedContact.ContactImage}
                     name={selectedContact.name}
                     Contactname={selectedContact.ContactUniqName}
                   />
@@ -262,6 +302,7 @@ function AddAccount({
                       setValue("accountContact", "");
                       setIsContactSelectorOpen(true);
                     }}
+                    disabled={isSubmit}
                   >
                     تغییر مخاطب
                   </button>
@@ -272,6 +313,7 @@ function AddAccount({
                       setSelectedContact(null);
                       setValue("accountContact", "");
                     }}
+                    disabled={isSubmit}
                   >
                     حذف
                   </button>
@@ -281,6 +323,7 @@ function AddAccount({
                   type="button"
                   className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
                   onClick={() => setIsContactSelectorOpen(true)}
+                  disabled={isSubmit}
                 >
                   انتخاب
                 </button>
@@ -303,6 +346,7 @@ function AddAccount({
               <div className="flex-1">
                 <label className="block mb-1 text-gray-700">سقف اعتبار</label>
                 <input
+                min={0}
                   type="number"
                   {...register("creditLimit")}
                   className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
@@ -311,6 +355,9 @@ function AddAccount({
                       : "border-gray-300 focus:ring-teal-500"
                   }`}
                   placeholder="سقف اعتبار را وارد کنید"
+                  disabled={isSubmit}
+                  onInput={handleInputChange}
+
                 />
                 {errors.creditLimit && (
                   <p className="text-red-500 text-sm mt-1">
@@ -322,16 +369,17 @@ function AddAccount({
               <div className="flex-1">
                 <label className="block mb-1 text-gray-700">ارز</label>
                 <select
-                  {...register("Currency")}
+                  {...register("currency")}
                   className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                    errors.Currency
+                    errors.currency
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-teal-500"
                   }`}
                   required
+                  disabled={isSubmit}
                 >
                   {/* گزینه‌ی پیش‌فرض */}
-                  <option value="">انتخاب ارز</option>
+                  <option value="" >انتخاب ارز</option>
 
                   {/* گزینه‌های دینامیک */}
                   {currencies.map((currency) => (
@@ -340,15 +388,78 @@ function AddAccount({
                     </option>
                   ))}
                 </select>
-                {errors.Currency && (
+                {errors.currency && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.Currency.message}
+                    {errors.currency.message}
                   </p>
                 )}
               </div>
             </div>
           </>
         )}
+{/* فیلد حساب بانکی */}
+
+   {/* فیلد حساب بانکی */}
+   {(accountType === "حساب بانکی" && (
+      <div>
+    <div className="flex flex-col md:flex-row gap-4">
+      {/* شماره حساب بانکی */}
+      <div className="flex-1">
+        <label className="block mb-1 text-gray-700">شماره حساب بانکی</label>
+        <input
+          type="text"
+          {...register("bankAcountNumber")}
+          className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+            errors.bankAcountNumber
+              ? "border-red-500 focus:ring-red-500"
+              : "border-gray-300 focus:ring-teal-500"
+          }`}
+          placeholder="شماره حساب بانکی را وارد کنید"
+          disabled={isSubmit}
+          onInput={handleInputChange}
+        />
+        {errors.bankAcountNumber && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.bankAcountNumber.message}
+          </p>
+        )}
+      </div>
+
+      {/* شماره کارت */}
+      <div className="flex-1 gap-2">
+        <label className="block mb-1 text-gray-700">شماره کارت</label>
+        <input
+          type="text"
+          {...register("bankCardNumber")}
+          className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+            errors.bankCardNumber
+              ? "border-red-500 focus:ring-red-500"
+              : "border-gray-300 focus:ring-teal-500"
+          }`}
+          placeholder="شماره کارت را وارد کنید"
+          disabled={isSubmit}
+          onInput={handleInputChange}
+        />
+        {errors.bankCardNumber && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.bankCardNumber.message}
+          </p>
+        )}
+      </div>
+
+   </div>
+     {/* متصل به پوز فروشگاهی */}
+     <div className="flex-1 flex items-center">
+     <label className="block mb-1 text-gray-700 mr-2">متصل به پوز فروشگاهی</label>
+     <input
+       type="checkbox"
+       {...register("posConected")}
+       className="h-4 w-4 text-teal-600 border-gray-300 rounded"
+       disabled={isSubmit}
+     />
+ </div>
+ </div>
+    ))}
 
         {/* دکمه ارسال */}
         <button
@@ -356,7 +467,7 @@ function AddAccount({
           className={`mt-4 flex justify-center items-center bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded ${
             isSubmit ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          disabled={isSubmit}
+          disabled={isSubmit || isLoading} // غیرفعال کردن در حالت ارسال یا بارگذاری
         >
           {isSubmit ? (
             <>
