@@ -10,7 +10,7 @@ import {
   EnablePriceTemplateAction,
   DisablePriceTemplateAction,
   DeletePriceTemplates,
-} from "@/components/signinAndLogin/Actions/priceTemplatesServerActions";
+} from "./PriceTemplateActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, onDelete }) {

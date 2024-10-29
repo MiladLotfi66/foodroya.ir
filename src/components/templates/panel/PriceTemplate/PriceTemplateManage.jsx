@@ -6,7 +6,7 @@ import PriceTemplateCard from "./PriceTemplateCard";
 import AddPriceTemplate from "./AddPriceTemplate";
 import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from 'next/navigation';
-import { AddPriceTemplateAction, DeletePriceTemplates, EditPriceTemplateAction, GetAllPriceTemplates } from "@/components/signinAndLogin/Actions/priceTemplatesServerActions";
+import { AddPriceTemplateAction, DeletePriceTemplates, EditPriceTemplateAction, GetAllPriceTemplates } from "./PriceTemplateActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function PriceTemplateManage() {
@@ -33,6 +33,7 @@ function PriceTemplateManage() {
       }
 
       const response = await GetAllPriceTemplates(ShopId.ShopID);
+console.log("response",response);
 
       setPriceTemplates(response.priceTemplates);
     } catch (error) {
@@ -110,7 +111,7 @@ function PriceTemplateManage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {priceTemplates.map((priceTemplate) => (
+          {priceTemplates?.map((priceTemplate) => (
             <PriceTemplateCard
               className="p-2 md:p-4"
               key={priceTemplate._id}

@@ -1,52 +1,108 @@
-// app/priceTemplates/AddPriceTemplate.jsx
 "use client";
-import { useForm } from "react-hook-form";
-import HashLoader from "react-spinners/HashLoader"; // در صورت نیاز به Loader
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import PriceTemplateSchema from "./PriceTemplateSchema";
 import { useEffect, useState } from "react";
-import PhotoSvg from "@/module/svgs/PhotoSvg"; // در صورت نیاز به یک SVG برای عکس
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from 'next/navigation';
-import { AddPriceTemplateAction, EditPriceTemplateAction } from "@/components/signinAndLogin/Actions/priceTemplatesServerActions";
+import { AddPriceTemplateAction, EditPriceTemplateAction } from "./PriceTemplateActions";
+import Select from 'react-select'; // برای انتخاب چندگانه نقش‌ها
+import { GetShopRolesByShopUniqName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 
 function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const { shopUniqName } = useParams();
+  const [rolesOptions, setRolesOptions] = useState([]);
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     formState: { errors },
     reset,
+    watch,
   } = useForm({
     mode: "all",
     defaultValues: {
-      name: priceTemplate?.name || "",
-      description: priceTemplate?.description || "",
-      basePrice: priceTemplate?.basePrice || "",
-      decimalPlaces: priceTemplate?.decimalPlaces || 2,
+      name: priceTemplate?.title || "",
       status: priceTemplate?.status || "فعال",
       shopUniqName: shopUniqName || "",
+      pricingFormulas: priceTemplate?.pricingFormulas?.length > 0 ? priceTemplate.pricingFormulas.map(formula => ({
+        roles: formula.roles.map(role => role._id),
+        formula: formula.formula,
+      })) : [{ roles: [], formula: "" }],
+      defaultFormula: priceTemplate?.defaultFormula || "",
     },
     resolver: yupResolver(PriceTemplateSchema),
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "pricingFormulas",
+  });
+
+  // واکشی نقش‌ها از سرور
+  useEffect(() => {
+    async function fetchRoles() {
+      try {
+        const response = await GetShopRolesByShopUniqName(shopUniqName);
+        console.log("response", response);
+        
+        if (response.Roles && Array.isArray(response.Roles)) {
+          const options = response.Roles.map(role => ({
+            value: role._id,
+            label: role.RoleTitle,
+          }));
+          setRolesOptions(options);
+        } else {
+          throw new Error("داده‌های نقش‌ها به درستی دریافت نشده‌اند.");
+        }
+      } catch (error) {
+        console.error("خطا در واکشی نقش‌ها:", error);
+        toast.error("مشکلی در واکشی نقش‌ها وجود دارد.");
+      }
+    }
+
+    if (shopUniqName) {
+      fetchRoles();
+    }
+  }, [shopUniqName]);
+
+  // دیباگ کردن مقادیر فرم
+  const watchedFields = watch();
+  useEffect(() => {
+    console.log("Watched Fields:", watchedFields);
+  }, [watchedFields]);
+
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
     try {
-      await PriceTemplateSchema.validate(formData, { abortEarly: false });
+      // تبدیل داده‌ها به شکل مناسب برای ارسال
+      const formattedData = {
+        title: formData.name,
+        status: formData.status,
+        shopUniqName: formData.shopUniqName,
+        pricingFormulas: formData.pricingFormulas.map(formula => ({
+          roles: formula.roles,
+          formula: formula.formula,
+        })),
+        defaultFormula: formData.defaultFormula,
+      };
 
       const formDataObj = new FormData();
+      formDataObj.append("shopUniqName", formattedData.shopUniqName);
+      formDataObj.append("title", formattedData.title);
+      formDataObj.append("status", formattedData.status);
+      formDataObj.append("defaultFormula", formattedData.defaultFormula);
 
-      formDataObj.append("shopUniqName", formData.shopUniqName);
-      formDataObj.append("name", formData.name);
-      formDataObj.append("description", formData.description);
-      formDataObj.append("basePrice", formData.basePrice);
-      formDataObj.append("decimalPlaces", formData.decimalPlaces);
-      formDataObj.append("status", formData.status);
+      // اضافه کردن فرمول‌های قیمت
+      formattedData.pricingFormulas.forEach((formula, index) => {
+        formDataObj.append(`pricingFormulas[${index}][roles]`, JSON.stringify(formula.roles));
+        formDataObj.append(`pricingFormulas[${index}][formula]`, formula.formula);
+      });
 
       if (priceTemplate?._id) {
         formDataObj.append("id", priceTemplate._id);
@@ -54,10 +110,8 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
 
       let result;
       if (priceTemplate?._id) {
-        // اگر قالب قیمتی برای ویرایش است
         result = await EditPriceTemplateAction(formDataObj, shopUniqName);
       } else {
-        // اگر قالب قیمتی جدید باشد
         result = await AddPriceTemplateAction(formDataObj);
       }
 
@@ -109,6 +163,7 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
         onSubmit={handleSubmit(formSubmitting)}
         className="flex flex-col gap-4 p-2 md:p-4"
       >
+        {/* فیلد نام قالب قیمتی */}
         <div>
           <label className="block mb-1">نام قالب قیمتی</label>
           <input
@@ -120,41 +175,7 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
           {errors.name && <p className="text-red-500">{errors.name.message}</p>}
         </div>
 
-        <div>
-          <label className="block mb-1">توضیحات قالب قیمتی</label>
-          <textarea
-            {...register("description")}
-            className="w-full border rounded px-3 py-2"
-            required
-          ></textarea>
-          {errors.description && <p className="text-red-500">{errors.description.message}</p>}
-        </div>
-
-        <div>
-          <label className="block mb-1">قیمت پایه</label>
-          <input
-            type="number"
-            step="0.01"
-            {...register("basePrice")}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-          {errors.basePrice && <p className="text-red-500">{errors.basePrice.message}</p>}
-        </div>
-
-        <div>
-          <label className="block mb-1">تعداد اعشار</label>
-          <input
-            type="number"
-            min="0"
-            max="6"
-            {...register("decimalPlaces")}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-          {errors.decimalPlaces && <p className="text-red-500">{errors.decimalPlaces.message}</p>}
-        </div>
-
+        {/* فیلد وضعیت */}
         <div>
           <label className="block mb-1">وضعیت</label>
           <select
@@ -168,7 +189,88 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
           {errors.status && <p className="text-red-500">{errors.status.message}</p>}
         </div>
 
-        {/* سایر فیلدهای مربوط به قالب قیمتی می‌تواند اینجا اضافه شود */}
+        {/* فیلدهای فرمول‌های قیمت */}
+        <div>
+          <label className="block mb-2 font-semibold">فرمول‌های قیمت</label>
+          {fields.map((field, index) => (
+            <div key={field.id} className="border p-3 mb-3 rounded">
+              {/* انتخاب نقش‌ها */}
+              <div className="mb-2">
+                <label className="block mb-1">نقش‌ها</label>
+                <Controller
+                  name={`pricingFormulas.${index}.roles`}
+                  control={control}
+                  render={({ field: controllerField }) => (
+                    <Select
+                      isMulti
+                      options={rolesOptions}
+                      value={rolesOptions.filter(option => controllerField.value.includes(option.value))}
+                      onChange={(selectedOptions) => {
+                        const selectedValues = selectedOptions.map(option => option.value);
+                        controllerField.onChange(selectedValues);
+                      }}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                    />
+                  )}
+                />
+                {errors.pricingFormulas?.[index]?.roles && (
+                  <p className="text-red-500">{errors.pricingFormulas[index].roles.message}</p>
+                )}
+              </div>
+
+              {/* فیلد فرمول */}
+              <div className="mb-2">
+                <label className="block mb-1">فرمول قیمت</label>
+                <input
+                  type="text"
+                  {...register(`pricingFormulas.${index}.formula`)}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                />
+                {errors.pricingFormulas?.[index]?.formula && (
+                  <p className="text-red-500">{errors.pricingFormulas[index].formula.message}</p>
+                )}
+              </div>
+
+              {/* دکمه حذف فرمول */}
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                حذف فرمول
+              </button>
+            </div>
+          ))}
+
+          {/* دکمه اضافه کردن فرمول جدید */}
+          <button
+            type="button"
+            onClick={() => append({ roles: [], formula: "" })}
+            className="bg-blue-500 text-white px-3 py-2 rounded"
+          >
+            اضافه کردن فرمول قیمت جدید
+          </button>
+
+          {errors.pricingFormulas && typeof errors.pricingFormulas.message === 'string' && (
+            <p className="text-red-500">{errors.pricingFormulas.message}</p>
+          )}
+        </div>
+
+        {/* فیلد فرمول پیش‌فرض */}
+        <div>
+          <label className="block mb-1">فرمول پیش‌فرض قیمت</label>
+          <input
+            type="text"
+            {...register("defaultFormula")}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+          {errors.defaultFormula && <p className="text-red-500">{errors.defaultFormula.message}</p>}
+        </div>
+     
+        {/* دکمه ارسال فرم */}
         <button
           type="submit"
           className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded"
