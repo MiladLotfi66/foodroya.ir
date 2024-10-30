@@ -1,0 +1,22 @@
+// FormulaBuilderModal.jsx
+"use client";
+import React from "react";
+import FormulaBuilder from "./FormulaBuilder";
+
+const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+        <FormulaBuilder
+          variables={variables}
+          onSave={onSave}
+          onCancel={onClose}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default FormulaBuilderModal;

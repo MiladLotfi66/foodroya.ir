@@ -8,14 +8,16 @@ import { useEffect, useState } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from 'next/navigation';
 import { AddPriceTemplateAction, EditPriceTemplateAction } from "./PriceTemplateActions";
-import Select from 'react-select'; // برای انتخاب چندگانه نقش‌ها
+import Select from 'react-select';
 import { GetShopRolesByShopUniqName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
-
+import FormulaBuilderModal from "./FormulaBuilderModal"; // وارد کردن کامپوننت مودال
 function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const { shopUniqName } = useParams();
   const [rolesOptions, setRolesOptions] = useState([]);
-
+  const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
+  const [currentFormulaIndex, setCurrentFormulaIndex] = useState(null);
+const variable=["میانگین قیمت خرید ارزی"   , "آخرین قیمت خرید ارزی","میانگین قیمت خرید به ارز پایه"   , "آخرین قیمت خرید به ارز پایه"]
   const {
     register,
     control,
@@ -39,7 +41,7 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
     resolver: yupResolver(PriceTemplateSchema),
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control,
     name: "pricingFormulas",
   });
@@ -80,7 +82,6 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
     try {
-      // تبدیل داده‌ها به شکل مناسب برای ارسال
       const formattedData = {
         title: formData.name,
         status: formData.status,
@@ -135,6 +136,24 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
 
   const formSubmitting = async (formData) => {
     await handleFormSubmit(formData);
+  };
+
+  // تابع برای باز کردن مودال فرمول
+  const openFormulaModal = (index) => {
+    setCurrentFormulaIndex(index);
+    setIsFormulaModalOpen(true);
+  };
+
+  // تابع برای ذخیره فرمول از مودال
+  const saveFormula = (formula) => {
+    if (currentFormulaIndex !== null) {
+      update(currentFormulaIndex, {
+        ...fields[currentFormulaIndex],
+        formula,
+      });
+      setIsFormulaModalOpen(false);
+      setCurrentFormulaIndex(null);
+    }
   };
 
   return (
@@ -220,24 +239,28 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
               </div>
 
               {/* فیلد فرمول */}
-              <div className="mb-2">
-                <label className="block mb-1">فرمول قیمت</label>
-                <input
-                  type="text"
-                  {...register(`pricingFormulas.${index}.formula`)}
-                  className="w-full border rounded px-3 py-2"
-                  required
-                />
-                {errors.pricingFormulas?.[index]?.formula && (
-                  <p className="text-red-500">{errors.pricingFormulas[index].formula.message}</p>
-                )}
+              <div className="mb-2 flex items-center">
+                <label className="block mb-1 flex-1">فرمول قیمت</label>
+                <button
+                  type="button"
+                  onClick={() => openFormulaModal(index)}
+                  className="bg-blue-500 text-white px-3 py-1 rounded ml-2"
+                >
+                  ویرایش فرمول
+                </button>
               </div>
+              <div className="w-full border rounded px-3 py-2 bg-gray-100">
+                {fields[index].formula || "فرمولی وارد نشده است."}
+              </div>
+              {errors.pricingFormulas?.[index]?.formula && (
+                <p className="text-red-500">{errors.pricingFormulas[index].formula.message}</p>
+              )}
 
               {/* دکمه حذف فرمول */}
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="bg-red-500 text-white px-3 py-1 rounded"
+                className="bg-red-500 text-white px-3 py-1 rounded mt-2"
               >
                 حذف فرمول
               </button>
@@ -280,6 +303,14 @@ function AddPriceTemplate({ priceTemplate = {}, onClose, refreshPriceTemplates }
         </button>
         <Toaster />
       </form>
+
+      {/* کامپوننت مودال فرمول ساز */}
+      <FormulaBuilderModal
+        isOpen={isFormulaModalOpen}
+        onClose={() => setIsFormulaModalOpen(false)}
+        onSave={saveFormula}
+        variables={variable} // فرض می‌کنیم متغیرها از نقش‌ها هستند، در غیر این صورت باید متغیرهای مناسب را ارسال کنید
+      />
     </div>
   );
 }
