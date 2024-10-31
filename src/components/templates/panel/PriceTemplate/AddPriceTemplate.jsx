@@ -4,7 +4,7 @@ import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import PriceTemplateSchema from "./PriceTemplateSchema";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   AddPriceTemplateAction,
@@ -12,12 +12,12 @@ import {
 } from "./PriceTemplateActions";
 import Select from "react-select";
 import { GetShopRolesByShopUniqName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
-import FormulaBuilderModal from "./FormulaBuilderModal"; // وارد کردن کامپوننت مودال
+import FormulaBuilderModal from "./FormulaBuilderModal";
 import {
   XMarkIcon,
   PencilSquareIcon,
   TrashIcon,
-} from "@heroicons/react/24/solid"; // وارد کردن آیکون‌ها از Heroicons v2
+} from "@heroicons/react/24/solid";
 
 function AddPriceTemplate({
   priceTemplate = {},
@@ -30,7 +30,6 @@ function AddPriceTemplate({
   const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
   const [currentFormulaIndex, setCurrentFormulaIndex] = useState(null);
 
-  // تعریف متغیرها به زبان انگلیسی به منظور سازگاری با فرمول ساز
   const variables = [
     "averageBuyPriceForeign",
     "latestBuyPriceForeign",
@@ -70,13 +69,10 @@ function AddPriceTemplate({
     name: "pricingFormulas",
   });
 
-  // واکشی نقش‌ها از سرور
   useEffect(() => {
     async function fetchRoles() {
       try {
         const response = await GetShopRolesByShopUniqName(shopUniqName);
-        console.log("response", response);
-
         if (response.Roles && Array.isArray(response.Roles)) {
           const options = response.Roles.map((role) => ({
             value: role._id,
@@ -97,11 +93,28 @@ function AddPriceTemplate({
     }
   }, [shopUniqName]);
 
-  // دیباگ کردن مقادیر فرم
-  const watchedFields = watch();
-  useEffect(() => {
-    console.log("Watched Fields:", watchedFields);
-  }, [watchedFields]);
+  const watchedFormulas = watch("pricingFormulas");
+
+  // محاسبه نقش‌های استفاده شده
+  const usedRoles = useMemo(() => {
+    const roles = new Set();
+    watchedFormulas.forEach((formula) => {
+      formula.roles.forEach((role) => roles.add(role));
+    });
+    return Array.from(roles);
+  }, [watchedFormulas]);
+
+  // فیلتر کردن نقش‌های قابل انتخاب
+  const availableRolesOptions = useMemo(() => {
+    return rolesOptions.filter(
+      (option) => !usedRoles.includes(option.value)
+    );
+  }, [rolesOptions, usedRoles]);
+
+  const handleRoleChange = (selectedOptions, index) => {
+    const selectedValues = selectedOptions ? selectedOptions.map(option => option.value) : [];
+    setValue(`pricingFormulas.${index}.roles`, selectedValues);
+  };
 
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
@@ -123,7 +136,6 @@ function AddPriceTemplate({
       formDataObj.append("status", formattedData.status);
       formDataObj.append("defaultFormula", formattedData.defaultFormula);
 
-      // اضافه کردن فرمول‌های قیمت
       formattedData.pricingFormulas.forEach((formula, index) => {
         formDataObj.append(
           `pricingFormulas[${index}][roles]`,
@@ -171,13 +183,11 @@ function AddPriceTemplate({
     await handleFormSubmit(formData);
   };
 
-  // تابع برای باز کردن مودال فرمول
   const openFormulaModal = (index) => {
     setCurrentFormulaIndex(index);
     setIsFormulaModalOpen(true);
   };
 
-  // تابع برای ذخیره فرمول از مودال
   const saveFormula = (formula) => {
     if (currentFormulaIndex !== null) {
       if (currentFormulaIndex === "default") {
@@ -193,7 +203,6 @@ function AddPriceTemplate({
     }
   };
 
-  // تابع برای باز کردن مودال برای فرمول سایر نقش‌ها
   const openDefaultFormulaModal = () => {
     setCurrentFormulaIndex("default");
     setIsFormulaModalOpen(true);
@@ -201,7 +210,6 @@ function AddPriceTemplate({
 
   return (
     <div className="overflow-y-auto max-h-screen p-4 ">
-      {/* سربرگ فرم */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
           {priceTemplate?._id ? "ویرایش قالب قیمتی" : "افزودن قالب قیمتی"}
@@ -219,30 +227,33 @@ function AddPriceTemplate({
         onSubmit={handleSubmit(formSubmitting)}
         className="flex flex-col gap-6  p-6 rounded-lg shadow-md"
       >
-              {/* فیلد وضعیت با سوئیچ */}
-              <div className="flex items-center">
-          {/* <label className="block  mb-2 mr-4">وضعیت</label> */}
+        <div className="flex items-center">
           <Controller
             name="status"
             control={control}
             render={({ field }) => (
               <div className="flex items-center">
-                <span >غیرفعال</span>
+                <span>غیرفعال</span>
                 <button
                   type="button"
                   onClick={() =>
                     field.onChange(field.value === "فعال" ? "غیرفعال" : "فعال")
                   }
-                  className={`w-14 h-8 flex items-center bg-gray-300 rounded-full p-2 m-1 duration-300 ease-in-out ${field.value === "فعال" ? 'bg-teal-500' : 'bg-gray-300'}`}
-                  >
-                    <div className={`bg-white w-6 h-6 rounded-full shadow-md transform duration-300 ease-in-out ${field.value === "فعال" ? '-translate-x-6' : ''}`}></div>
-                  </button>
+                  className={`w-14 h-8 flex items-center bg-gray-300 rounded-full p-2 m-1 duration-300 ease-in-out ${
+                    field.value === "فعال" ? "bg-teal-500" : "bg-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-6 h-6 rounded-full shadow-md transform duration-300 ease-in-out ${
+                      field.value === "فعال" ? "-translate-x-6" : ""
+                    }`}
+                  ></div>
+                </button>
                 <span className="ml-1 ">فعال</span>
               </div>
             )}
           />
         </div>
-        {/* فیلد نام قالب قیمتی */}
         <div>
           <label className="block  mb-2">نام قالب قیمتی</label>
           <input
@@ -259,45 +270,43 @@ function AddPriceTemplate({
           )}
         </div>
 
-  
-
-        {/* فیلدهای فرمول‌های قیمت */}
         <div>
-          <label className="block  mb-4 font-semibold">
-            فرمول‌های قیمت
-          </label>
+          <label className="block  mb-4 font-semibold">فرمول‌های قیمت</label>
           {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="border  p-4 mb-4 rounded-lg"
-            >
-              {/* انتخاب نقش‌ها */}
+            <div key={field.id} className="border  p-4 mb-4 rounded-lg">
               <div className="mb-4">
                 <label className="block  mb-2">نقش‌ها</label>
                 <Controller
-  name={`pricingFormulas.${index}.roles`}
-  control={control}
-  render={({ field: controllerField }) => (
-    <Select
-      isMulti
-      options={rolesOptions}
-      value={rolesOptions.filter((option) =>
-        controllerField.value.includes(option.value)
-      )}
-      onChange={(selectedOptions) => {
-        const selectedValues = selectedOptions.map(
-          (option) => option.value
-        );
-        controllerField.onChange(selectedValues);
-      }}
-      className="react-select-container"
-      classNamePrefix="react-select"
-      placeholder="نقش‌ها را انتخاب کنید"
-    />
-  )}
-/>
+                  name={`pricingFormulas.${index}.roles`}
+                  control={control}
+                  render={({ field: controllerField }) => {
+                    // گزینه‌های قابل انتخاب برای این فرمول
+                    const currentSelectedRoles = controllerField.value || [];
 
+                    // فیلتر کردن نقش‌های قابل انتخاب:
+                    // شامل نقش‌های استفاده نشده و نقش‌هایی که در این فرمول انتخاب شده‌اند
+                    const filteredOptions = rolesOptions.map(option => ({
+                      ...option,
+                      isDisabled:
+                        !currentSelectedRoles.includes(option.value) &&
+                        usedRoles.includes(option.value),
+                    }));
 
+                    return (
+                      <Select
+                        isMulti
+                        options={filteredOptions}
+                        value={rolesOptions.filter(option =>
+                          currentSelectedRoles.includes(option.value)
+                        )}
+                        onChange={(selectedOptions) => handleRoleChange(selectedOptions, index)}
+                        className="react-select-container bg-gray-300 dark:bg-zinc-600 text-gray-900 dark:text-gray-100"
+                        classNamePrefix="react-select"
+                        placeholder="نقش‌ها را انتخاب کنید"
+                      />
+                    );
+                  }}
+                />
                 {errors.pricingFormulas?.[index]?.roles && (
                   <p className="text-red-400 text-sm mt-1">
                     {errors.pricingFormulas[index].roles.message}
@@ -305,23 +314,19 @@ function AddPriceTemplate({
                 )}
               </div>
 
-              {/* فیلد فرمول */}
               <div className="flex items-center mb-4">
-                <label className="block  flex-1">
-                  فرمول قیمت
-                </label>
+                <label className="block  flex-1">فرمول قیمت</label>
               </div>
               <div className="flex justify-between w-full border  rounded px-4 py-2 bg-gray-300 dark:bg-zinc-600">
                 {fields[index].formula || "فرمولی وارد نشده است."}
-                  <button
-                    type="button"
-                    onClick={() => openFormulaModal(index)}
-                    className="text-teal-500 hover:text-teal-700 transition-colors"
-                  >
-                    <PencilSquareIcon className="h-5 w-5" />
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => openFormulaModal(index)}
+                  className="text-teal-500 hover:text-teal-700 transition-colors"
+                >
+                  <PencilSquareIcon className="h-5 w-5" />
+                </button>
               </div>
-              {/* دکمه حذف فرمول */}
               <button
                 type="button"
                 onClick={() => remove(index)}
@@ -337,7 +342,6 @@ function AddPriceTemplate({
             </div>
           ))}
 
-          {/* دکمه اضافه کردن فرمول جدید */}
           <button
             type="button"
             onClick={() => append({ roles: [], formula: "" })}
@@ -368,25 +372,21 @@ function AddPriceTemplate({
             )}
         </div>
 
-        {/* فیلد فرمول سایر نقش‌ها */}
         <div>
-          <label className="block  mb-4 font-semibold">
-            فرمول سایر نقش‌ها
-          </label>
-            <div className="w-full border  rounded px-4 py-2  bg-gray-300 dark:bg-zinc-600">
-          <div className="flex items-center justify-between ">
-            <div>
-               {getValues("defaultFormula") || "فرمولی وارد نشده است."}
-            </div>
-              <button
-              type="button"
-              onClick={openDefaultFormulaModal}
-              className="flex items-center text-teal-500 hover:text-teal-700 transition-colors"
-              >
-              <PencilSquareIcon className="h-5 w-5 mr-1" />
-            </button>
+          <label className="block  mb-4 font-semibold">فرمول سایر نقش‌ها</label>
+          <div className="w-full border  rounded px-4 py-2  bg-gray-300 dark:bg-zinc-600">
+            <div className="flex items-center justify-between ">
+              <div>
+                {getValues("defaultFormula") || "فرمولی وارد نشده است."}
               </div>
-           
+              <button
+                type="button"
+                onClick={openDefaultFormulaModal}
+                className="flex items-center text-teal-500 hover:text-teal-700 transition-colors"
+              >
+                <PencilSquareIcon className="h-5 w-5 mr-1" />
+              </button>
+            </div>
           </div>
           {errors.defaultFormula && (
             <p className="text-red-400 text-sm mt-1">
@@ -395,7 +395,6 @@ function AddPriceTemplate({
           )}
         </div>
 
-        {/* دکمه ارسال فرم */}
         <button
           type="submit"
           className="flex justify-center items-center bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
@@ -412,12 +411,11 @@ function AddPriceTemplate({
         <Toaster />
       </form>
 
-      {/* کامپوننت مودال فرمول ساز */}
       <FormulaBuilderModal
         isOpen={isFormulaModalOpen}
         onClose={() => setIsFormulaModalOpen(false)}
         onSave={saveFormula}
-        variables={variables} // ارسال متغیرهای مناسب به فرمول ساز
+        variables={variables}
       />
     </div>
   );

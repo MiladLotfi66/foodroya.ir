@@ -162,50 +162,11 @@
   /* استایل‌های سفارشی برای react-select */
   
   .react-select-container {
-    @apply bg-gray-300 dark:bg-zinc-600 border border-gray-300 dark:border-gray-700 rounded-lg p-2;
+    @apply   border border-gray-300 dark:border-gray-700 rounded-lg p-2;
   }
 
   .react-select__control {
-    @apply bg-gray-300 dark:bg-zinc-600 border border-gray-300 dark:border-gray-700;
+    @apply   border border-gray-300 dark:border-gray-700;
   }
 
-  .react-select__control--is-focused {
-    @apply border-red-500 shadow-none;
-  }
-
-  .react-select__menu {
-    @apply bg-gray-300 dark:bg-zinc-600 ;
-  }
-
-  .react-select__option {
-    @apply text-gray-900 dark:text-gray-100 hover:bg-teal-500 hover:text-white; /* تغییر رنگ روی hover */
-  }
-
-  .react-select__option--is-focused {
-    @apply bg-teal-500 ; /* رنگ متن در حالت فوکوس */
-  }
-
-  .react-select__option--is-selected {
-    @apply bg-teal-600 ; /* رنگ متن در حالت انتخاب‌شده */
-  }
-
-  .react-select__placeholder {
-    @apply text-gray-500 dark:text-gray-400; /* رنگ متن placeholder */
-  }
-
-  .react-select__single-value {
-    @apply text-gray-900 dark:text-gray-400; /* رنگ متن انتخاب‌شده */
-  }
-
-  .react-select__multi-value {
-    @apply bg-teal-300 dark:bg-teal-700 rounded; /* پس‌زمینه برای مقادیر چندگانه */
-  }
-
-  .react-select__multi-value__label {
-    @apply text-gray-900 dark:text-gray-100; /* رنگ متن مقادیر چندگانه */
-  }
-
-  .react-select__multi-value__remove {
-    @apply text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white; /* رنگ آیکون حذف */
-  }
 }
