@@ -8,7 +8,7 @@ const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+      <div className="bg-gray-300 dark:bg-zinc-600 rounded-lg p-6 w-full max-w-lg">
         <FormulaBuilder
           variables={variables}
           onSave={onSave}

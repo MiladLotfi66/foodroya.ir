@@ -7,14 +7,27 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
   const [formula, setFormula] = useState("");
   const [evaluationResult, setEvaluationResult] = useState(null);
   
+  // تعریف متغیرها با حروف اختصاری
   const internalVariables = [
-    { value: 'averageBuyPriceForeign', label: 'میانگین قیمت خرید ارزی' },
-    { value: 'latestBuyPriceForeign', label: 'آخرین قیمت خرید ارزی' },
-    { value: 'averageBuyPriceBaseCurrency', label: 'میانگین قیمت خرید به ارز پایه' },
-    { value: 'latestBuyPriceBaseCurrency', label: 'آخرین قیمت خرید به ارز پایه' }
+    { value: 'averageBuyPriceForeign', label: 'میانگین قیمت خرید ارزی', alias: 'a' },
+    { value: 'latestBuyPriceForeign', label: 'آخرین قیمت خرید ارزی', alias: 'b' },
+    { value: 'averageBuyPriceBaseCurrency', label: 'میانگین قیمت خرید به ارز پایه', alias: 'c' },
+    { value: 'latestBuyPriceBaseCurrency', label: 'آخرین قیمت خرید به ارز پایه', alias: 'd' }
   ];
 
   const inputRef = useRef(null);
+
+  // نقشه حروف اختصاری به متغیرها
+  const aliasToVariableMap = internalVariables.reduce((acc, variable) => {
+    acc[variable.alias] = variable.value;
+    return acc;
+  }, {});
+
+  // نقشه متغیرها به حروف اختصاری
+  const variableToAliasMap = internalVariables.reduce((acc, variable) => {
+    acc[variable.value] = variable.alias;
+    return acc;
+  }, {});
 
   // تابع تبدیل اعداد فارسی به لاتین
   const convertPersianDigitsToEnglish = (input) => {
@@ -34,30 +47,30 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
     setEvaluationResult(null); // ریست کردن نتیجه ارزیابی
   };
 
-  const insertVariable = (variableValue) => {
-    // درج متغیر در مکان کادر نوشته
+  const insertVariable = (alias) => {
+    // درج حروف اختصاری در مکان کرسر
     const cursorPosition = inputRef.current?.selectionStart || formula.length;
-    const newFormula = formula.slice(0, cursorPosition) + variableValue + formula.slice(cursorPosition);
+    const newFormula = formula.slice(0, cursorPosition) + alias + formula.slice(cursorPosition);
     setFormula(newFormula);
     
     // تنظیم مکان کرسر
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
-        inputRef.current.setSelectionRange(cursorPosition + variableValue.length, cursorPosition + variableValue.length);
+        inputRef.current.setSelectionRange(cursorPosition + alias.length, cursorPosition + alias.length);
       }
     }, 0);
   };
 
-  const getUsedVariables = (formulaStr) => {
-    const usedVars = new Set();
-    internalVariables.forEach(variable => {
-      const regex = new RegExp(`\\b${variable.value}\\b`, 'g');
+  const getUsedAliases = (formulaStr) => {
+    const usedAliases = new Set();
+    Object.keys(aliasToVariableMap).forEach(alias => {
+      const regex = new RegExp(`\\b${alias}\\b`, 'g');
       if (regex.test(formulaStr)) {
-        usedVars.add(variable.value);
+        usedAliases.add(alias);
       }
     });
-    return Array.from(usedVars);
+    return Array.from(usedAliases);
   };
 
   const isParenthesesBalanced = (formulaStr) => {
@@ -83,21 +96,22 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
       return;
     }
 
-    // شناسایی متغیرهای استفاده‌شده در فرمول
-    const usedVariables = getUsedVariables(formula);
-    if (usedVariables.length === 0) {
+    // شناسایی حروف اختصاری استفاده‌شده در فرمول
+    const usedAliases = getUsedAliases(formula);
+    if (usedAliases.length === 0) {
       alert("فرمول بدون متغیر می‌باشد و قابل ارزیابی است.");
     }
 
     const variableValues = {};
 
     // دریافت مقادیر متغیرها از کاربر
-    for (let varName of usedVariables) {
+    for (let alias of usedAliases) {
+      const varName = aliasToVariableMap[alias];
       const variable = internalVariables.find(v => v.value === varName);
       if (variable) {
         let value = '';
         while (true) {
-          value = window.prompt(`لطفاً مقدار عددی برای "${variable.label}" وارد کنید:`);
+          value = window.prompt(`لطفاً مقدار عددی برای "${variable.label}" (حرف اختصار: "${alias}") وارد کنید:`);
           if (value === null) {
             // کاربر لغو کرد
             return;
@@ -109,14 +123,14 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
             break;
           }
         }
-        variableValues[varName] = value;
+        variableValues[alias] = value;
       }
     }
 
     let evaluatableFormula = formula;
 
-    for (let [varName, varValue] of Object.entries(variableValues)) {
-      const regex = new RegExp(`\\b${varName}\\b`, 'g');
+    for (let [alias, varValue] of Object.entries(variableValues)) {
+      const regex = new RegExp(`\\b${alias}\\b`, 'g');
       evaluatableFormula = evaluatableFormula.replace(regex, `(${varValue})`);
     }
 
@@ -153,14 +167,15 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
         <h2 className="text-xl font-bold mb-4">سازنده فرمول قیمت</h2>
 
         <div className="mb-4">
-          <label className="block mb-2 font-semibold">فرمول خود را وارد کنید:</label>
-          <input
-            type="text"
+          <label htmlFor="formula-input" className="block mb-2 font-semibold">فرمول خود را وارد کنید:</label>
+          <textarea
+            id="formula-input"
             value={formula}
             onChange={(e) => handleFormulaChange(e.target.value)}
-            className="w-full p-2 border rounded"
-            placeholder="مثلاً (averageBuyPriceForeign + latestBuyPriceForeign) * 0.1"
+            className="w-full p-2 border bg-gray-200 dark:bg-zinc-500 rounded resize-vertical h-32 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="مثلاً (a + b) * 0.1"
             ref={inputRef}
+            dir="ltr"
           />
         </div>
 
@@ -171,11 +186,11 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
             {internalVariables.map((variable, idx) => (
               <button
                 key={idx}
-                onClick={() => insertVariable(variable.value)}
+                onClick={() => insertVariable(variable.alias)}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
                 type="button"
               >
-                {variable.label}
+                {`${variable.label} (${variable.alias})`}
               </button>
             ))}
           </div>
@@ -195,15 +210,6 @@ const FormulaBuilder = ({ onSave, onCancel }) => {
             </button>
             <span className="font-semibold">نتیجه: </span>
             <span className="font-mono">{evaluationResult !== null ? evaluationResult : "—"}</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block mb-2 font-semibold">نمایش فرمول:</label>
-          <div className="p-2 border rounded bg-gray-100">
-            <MathJax>
-              {`$$${formula}$$`}
-            </MathJax>
           </div>
         </div>
 
