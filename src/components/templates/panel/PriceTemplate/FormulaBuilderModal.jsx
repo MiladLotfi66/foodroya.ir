@@ -3,8 +3,9 @@
 import React from "react";
 import FormulaBuilder from "./FormulaBuilder";
 
-const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables }) => {
+const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables , formole }) => {
   if (!isOpen) return null;
+console.log("formole",formole);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -13,6 +14,7 @@ const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables }) => {
           variables={variables}
           onSave={onSave}
           onCancel={onClose}
+          formole={formole}
         />
       </div>
     </div>

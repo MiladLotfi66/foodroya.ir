@@ -3,8 +3,8 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { evaluate } from 'mathjs';
 import Select from 'react-select'; // استفاده از react-select
 
-const FormulaBuilder = ({ onSave, onCancel }) => {
-  const [formula, setFormula] = useState("");
+const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
+  const [formula, setFormula] = useState(formole);
   const [evaluationResult, setEvaluationResult] = useState(null);
   
   // تعریف متغیرها با حروف اختصاری

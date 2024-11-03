@@ -29,121 +29,105 @@ export async function GetAllPriceTemplates(shopId) {
   }
 
   export async function AddPriceTemplateAction(formData) {
+    console.log("formData", formData);
+
     await connectDB();
     const user = await authenticateUser();
     if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+        return { status: 401, message: 'کاربر وارد نشده است.'};
     }
-    const { title, shortName, exchangeRate, decimalPlaces, status, shopUniqName } = Object.fromEntries(formData.entries());
+
+    // const formData = {};
+    // for (const [key, value] of Object.entries(formDataObject)) {
+    //     formData[key] = value;
+    // }
+    
+    const { title, defaultFormula, status, shopUniqName, pricingFormulas } = formData
+
     // دریافت shopId از shopUniqueName
     const shopId = await GetShopIdByShopUniqueName(shopUniqName);
     if (!shopId || !shopId.ShopID) {
-      return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-    }
-  
-    // بررسی یکتایی shortName
-    const existingPriceTemplate = await PriceTemplate.findOne({ shortName ,shop:shopId.ShopID }).lean();
-    
-    if (existingPriceTemplate) {
-      return { status: 400, message: 'نام اختصاری قالب قیمتی باید منحصر به فرد باشد.' };
-    } 
-    const existingTitlePriceTemplate = await PriceTemplate.findOne({ title ,shop:shopId.ShopID }).lean();
-    
-    if (existingTitlePriceTemplate) {
-      return { status: 400, message: 'نام  قالب قیمتی باید منحصر به فرد باشد.' };
-    }
-    // ایجاد ارز جدید
-    const newPriceTemplate = new PriceTemplate({
-      title,
-      shortName,
-      exchangeRate: parseFloat(exchangeRate),
-      decimalPlaces: parseInt(decimalPlaces),
-      status,
-      shop: shopId.ShopID,
-      createdBy: user.id, // استفاده از _id به جای id
-      updatedBy: user.id, // استفاده از _id به جای id
-    });
-    try {
-      const savedPriceTemplate = await newPriceTemplate.save();
-      const plainPriceTemplate = JSON.parse(JSON.stringify(savedPriceTemplate));
-      return { status: 201, PriceTemplate: plainPriceTemplate };
-    } catch (error) {
-      console.error("Error adding PriceTemplate:", error);
-      return { status: 500, message: 'خطایی در ایجاد ارز رخ داد.' };
-    }
-  }
-
-  export async function EditPriceTemplateAction(formData, shopUniqName) {
-    await connectDB();
-    const user = await authenticateUser();
-  
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
-    }
-  
-    const { id, title, shortName, exchangeRate, decimalPlaces, status } = Object.fromEntries(formData.entries());
-  
-    const PriceTemplate = await PriceTemplate.findById(id).populate('shop').populate('createdBy').populate('updatedBy').lean();
-    if (!currency) {
-      return { status: 404, message: 'ارز پیدا نشد.' };
-    }
-  
-    // بررسی یکتایی shortName در صورتی که تغییر کرده باشد
-    if (shortName && shortName !== PriceTemplate.shortName) {
-      const existingPriceTemplate = await PriceTemplate.findOne({ shortName }).lean();
-      if (existingPriceTemplate) {
-        return { status: 400, message: 'نام اختصاری قالب قیمتی باید منحصر به فرد باشد.' };
-      }
-    }
-  
-    // ساخت آبجکت برای به‌روزرسانی
-    const updateData = {};
-    if (title) updateData.title = title;
-    if (shortName) updateData.shortName = shortName;
-    if (exchangeRate !== undefined) updateData.exchangeRate = parseFloat(exchangeRate);
-    if (decimalPlaces !== undefined) updateData.decimalPlaces = parseInt(decimalPlaces);
-    if (status) updateData.status = status;
-  
-    if (shopUniqName) {
-      const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-      if (!shopId || !shopId.ShopID) {
         return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-      }
-      updateData.shop = shopId.ShopID;
     }
-  
-    updateData.updatedBy = user.id; // بروزرسانی اطلاعات کاربر
-  
+
+    // بررسی یکتایی عنوان
+    const existingTitlePriceTemplate = await PriceTemplate.findOne({ title, shop: shopId.ShopID }).lean();
+    if (existingTitlePriceTemplate) {
+        return { status: 400, message: 'نام قالب قیمتی باید منحصر به فرد باشد.' };
+    }
+
+    // ایجاد قالب جدید
+    const newPriceTemplate = new PriceTemplate({
+        title,
+        status: status || 'فعال', // مقدار پیش‌فرض
+        shop: shopId.ShopID,
+        createdBy: user.id,
+        updatedBy: user.id,
+        defaultFormula,
+        pricingFormulas: formData.pricingFormulas // به صورت پیش‌فرض، فرمول‌های قیمت خالی است
+    });
+
     try {
-      const updatedCurrency = await Currency.findByIdAndUpdate(id, updateData, { new: true })
-        .populate('shop')
-        .populate('createdBy')
-        .populate('updatedBy')
-        .lean();
-      const plainCurrency = JSON.parse(JSON.stringify(updatedCurrency));
-      return { status: 200, currency: plainCurrency };
+        const savedPriceTemplate = await newPriceTemplate.save();
+        const plainPriceTemplate = JSON.parse(JSON.stringify(savedPriceTemplate));
+        return { status: 201, PriceTemplate: plainPriceTemplate };
     } catch (error) {
-      console.error("Error editing currency:", error);
-      return { status: 500, message: 'خطایی در ویرایش ارز رخ داد.' };
+        console.error("Error adding PriceTemplate:", error);
+        return { status: 500, message: 'خطایی در ایجاد قالب قیمتی رخ داد.' };
     }
+}
+
+
+export async function EditPriceTemplateAction(formData, id) {
+  await connectDB();
+  const user = await authenticateUser();
+
+  if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  const { title, defaultFormula, status, pricingFormulas } = formData
+
+  const priceTemplate = await PriceTemplate.findById(id).lean();
+  if (!priceTemplate) {
+      return { status: 404, message: 'قالب قیمتی پیدا نشد.' };
   }
 
-  export async function DeletePriceTemplates(priceTemplateId) {
-    await connectDB();
-    const user = await authenticateUser();
-  
-    if (!user) {
+  // ساخت آبجکت برای به‌روزرسانی
+  const updateData = {};
+  if (title) updateData.title = title;
+  if (status) updateData.status = status;
+  if (defaultFormula) updateData.defaultFormula = defaultFormula;
+  if (pricingFormulas) updateData.pricingFormulas = pricingFormulas;
+  updateData.updatedBy = user.id; // بروزرسانی اطلاعات کاربر
+
+  try {
+      const updatedPriceTemplate = await PriceTemplate.findByIdAndUpdate(id, updateData, { new: true })
+          .lean();
+      const plainPriceTemplate = JSON.parse(JSON.stringify(updatedPriceTemplate));
+      return { status: 200, PriceTemplate: plainPriceTemplate };
+  } catch (error) {
+      console.error("Error editing PriceTemplate:", error);
+      return { status: 500, message: 'خطایی در ویرایش قالب قیمتی رخ داد.' };
+  }
+}
+
+
+export async function DeletePriceTemplates(priceTemplateId) {
+  await connectDB();
+  const user = await authenticateUser();
+
+  if (!user) {
       return { status: 401, message: 'کاربر وارد نشده است.' };
-    }
-  
-    try {
+  }
+
+  try {
       const deletedPriceTemplate = await PriceTemplate.findByIdAndDelete(priceTemplateId).lean();
       if (!deletedPriceTemplate) {
-        return { status: 404, message: 'ارز پیدا نشد.' };
+          return { status: 404, message: 'قالب قیمتی پیدا نشد.' };
       }
-      return { status: 200, message: 'ارز با موفقیت حذف شد.' };
-    } catch (error) {
-      console.error("Error deleting priceTemplate:", error);
-      return { status: 500, message: 'خطایی در حذف ارز رخ داد.' };
-    }
+      return { status: 200, message: 'قالب قیمتی با موفقیت حذف شد.' };
+  } catch (error) {
+      console.error("Error deleting PriceTemplate:", error);
+      return { status: 500, message: 'خطایی در حذف قالب قیمتی رخ داد.' };
   }
+}

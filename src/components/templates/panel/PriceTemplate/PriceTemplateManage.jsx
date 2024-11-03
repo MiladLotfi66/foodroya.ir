@@ -35,7 +35,7 @@ function PriceTemplateManage() {
       const response = await GetAllPriceTemplates(ShopId.ShopID);
 console.log("response",response);
 
-      setPriceTemplates(response.priceTemplates);
+      setPriceTemplates(response.PriceTemplates);
     } catch (error) {
       console.error("Error fetching price templates:", error);
       toast.error("خطا در دریافت قالب‌های قیمتی.");
