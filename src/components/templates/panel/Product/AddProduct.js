@@ -1,19 +1,20 @@
 "use client";
-
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import ProductsSchema from "./ProductsSchema";
-import { useState, useEffect } from "react";
+import { useState, useEffect , useRef } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from "next/navigation";
 import { AddProductsAction, EditProductsAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid"; // برای ایجاد شناسه‌های یکتا
-
 function AddProduct({ products = {}, onClose, refreshproducts }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const { shopUniqName } = useParams();
+  const fileInputRef = useRef(null);
+
+
   const {
     register,
     handleSubmit,
@@ -224,13 +225,23 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
           {/* بخش مدیریت تصاویر */}
           <div>
             <label className="block mb-2 font-semibold">تصاویر محصول</label>
+            <button
+            type="button"
+            onClick={() => fileInputRef.current.click()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none transition"
+          >
+            انتخاب تصویر
+          </button>
+
             <input
               type="file"
               accept="image/*"
+              ref={fileInputRef}
+            
               multiple
               onChange={handleImageChange}
-              className="mb-4"
-            />
+              className="hidden"
+              />
             {/* پیش‌نمایش تصاویر موجود */}
             {images.filter((img) => img.isExisting).length > 0 && (
               <div>
