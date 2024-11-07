@@ -53,6 +53,7 @@
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "swiper": "^11.0.7",
+    "uuid": "^11.0.2",
     "yup": "^1.4.0"
   },
   "devDependencies": {
