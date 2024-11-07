@@ -13,6 +13,7 @@ function Page() {
       <Link className='p-3' href={`/${shopUniqName}/panel/account`} >حساب ها</Link>
       <Link className='p-3' href={`/${shopUniqName}/panel/contact`} >مخاطبین</Link>
       <Link className='p-3' href={`/${shopUniqName}/panel/priceTemplate`} >قالب قیمت</Link>
+      <Link className='p-3' href={`/${shopUniqName}/panel/products`} >محصولات</Link>
     </div>
   )
 }

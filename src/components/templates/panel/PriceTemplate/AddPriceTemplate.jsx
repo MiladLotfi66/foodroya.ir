@@ -372,7 +372,7 @@ function AddPriceTemplate({
       : ""
   }
 />
-      <Toaster position="top-right" />
+      <Toaster />
     </div>
      ) }
      </div>
