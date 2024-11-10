@@ -16,25 +16,24 @@ function AccountManage() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [path, setPath] = useState([{ id: null, title: "همه حساب‌ها", accountCode: "" }]); // مسیر اولیه با اطلاعات کامل
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   // بهینه‌سازی refreshAccounts با استفاده از useCallback
   const refreshAccounts = useCallback(
     async (parentId = null) => {
       try {
-        if (!shopUniqName) {
-          console.error("نام یکتای فروشگاه موجود نیست.");
+        if (!ShopId) {
+          console.error("شماره یکتای فروشگاه موجود نیست.");
           return;
         }
 
-        const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
 
-        if (!ShopId.ShopID) {
+        if (!ShopId) {
           console.error("فروشگاهی با این نام یافت نشد.");
           return;
         }
 
-        const response = await GetAllAccounts(ShopId.ShopID, parentId);
+        const response = await GetAllAccounts(ShopId, parentId);
 console.log(response);
 
         if (response.status === 200) {
@@ -47,7 +46,7 @@ console.log(response);
         toast.error("خطا در دریافت حساب‌ها.");
       }
     },
-    [shopUniqName]
+    [ShopId]
   );
 
   useEffect(() => {

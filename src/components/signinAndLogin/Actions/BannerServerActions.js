@@ -88,17 +88,12 @@ async function GetAllBanners(ShopId) {
   }
 }
 
-export async function GetAllEnableBanners(shopUniqName) {
+export async function GetAllEnableBanners(ShopId) {
   try {
     await connectDB();
 
-    // دریافت آی‌دی فروشگاه از طریق نام یکتای فروشگاه
-    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
+ 
     
-    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
-      throw new Error(shopResponse.error || "shopId is required");
-    }
-    const ShopId = shopResponse.ShopID;
     // واکشی بنرهای فعال که به فروشگاه مدنظر تعلق دارند
     const banners = await Banner.find({ BannerStatus: true, ShopId }).lean(); // فیلتر بر اساس ShopId و BannerStatus
     // اگر بنری پیدا نشد، لیست خالی بازگردانید
@@ -203,18 +198,8 @@ export async function AddBannerAction(data) {
     // تبدیل FormData به آبجکت ساده ساخته شده
     const formDataObject = formDataToObject(data);
 
-    const shopUniqName = formDataObject.shopUniqName;
-
-    if (!shopUniqName) {
-      throw new Error("shopUniqName is required");
-    }
-
-    // دریافت آی‌دی فروشگاه
-    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
-    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
-      throw new Error(shopResponse.error || "shopId is required");
-    }
-    const ShopId = shopResponse.ShopID;
+    
+    const ShopId = formDataObject.ShopId;
 
     // اعتبارسنجی داده‌های ورودی
     const validatedData = await BannerSchima.validate(formDataObject, {
@@ -258,22 +243,9 @@ export async function AddBannerAction(data) {
 }
 
 
-export async function EditBannerAction(data,shopUniqName) {
+export async function EditBannerAction(data,ShopId) {
   try {
     await connectDB();
-
-    if (!shopUniqName) {
-      throw new Error("shopUniqName is required");
-    }
-
-    // دریافت آی‌دی فروشگاه
-    const shopResponse = await GetShopIdByShopUniqueName(shopUniqName);
-
-    if (shopResponse.status !== 200 || !shopResponse.ShopID) {
-      throw new Error(shopResponse.error || "shopId is required");
-    }
-    const ShopId = shopResponse.ShopID;
-
 
     const formDataObject = formDataToObject(data);
 

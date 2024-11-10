@@ -9,7 +9,6 @@ import { createAccount, updateAccount } from "./accountActions";
 import ContactSelector from "@/module/home/ContactSelector";
 import { useParams } from "next/navigation";
 import ContactMiniInfo from "@/module/home/ContactMiniInfo";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { GetAllCurrencies } from "@/components/signinAndLogin/Actions/currenciesServerActions";
 
 function AddAccount({
@@ -18,7 +17,7 @@ function AddAccount({
   onClose,
   refreshAccounts,
 }) {
-  const { shopUniqName } = useParams();
+  const { ShopId } = useParams();
   const [currencies, setCurrencies] = useState([]);
   const [isSubmit, setIsSubmit] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // وضعیت بارگذاری جدید
@@ -57,7 +56,7 @@ function AddAccount({
     const fetchCurrenciesAndSetValues = async () => {
       setIsLoading(true); // شروع بارگذاری
       try {
-        await getCurrencies(shopUniqName);
+        await getCurrencies(ShopId);
         if (account) {
           reset({
             title: account.title || "",
@@ -84,7 +83,7 @@ posConected:account.posConected||true,
     };
     fetchCurrenciesAndSetValues();
     
-  }, [shopUniqName, account, reset]);
+  }, [ShopId, account, reset]);
 
   function convertPersianToEnglishNumbers(value) {
     return value.replace(/[۰۱۲۳۴۵۶۷۸۹]/g, function (d) {
@@ -119,7 +118,7 @@ posConected:account.posConected||true,
         }
         result = await createAccount({
           ...payload,
-          store: shopUniqName,
+          store: ShopId,
           parentAccount: parentAccount.id,
         });
       }
@@ -148,10 +147,9 @@ posConected:account.posConected||true,
     }
   };
 
-  const getCurrencies = async (shopUniqName) => {
+  const getCurrencies = async (ShopId) => {
     try {
-      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
-      const result = await GetAllCurrencies(ShopId.ShopID);
+      const result = await GetAllCurrencies(ShopId);
       if (result && result.currencies) {
         setCurrencies(result.currencies);
       }

@@ -6,7 +6,7 @@ import EditSvg from "@/module/svgs/EditSvg";
 import UserMiniInfo from "@/module/home/UserMiniInfo";
 import { DeleteContacts } from "./contactsServerActions";
 
-function ContactCard({ contact: initialContact, editFunction, onDelete }) {
+function ContactCard({ contact: initialContact, editFunction, onDelete, onError }) { // افزودن onError به props
   const [contact, setContact] = useState(initialContact);
 
   useEffect(() => {
@@ -16,17 +16,22 @@ function ContactCard({ contact: initialContact, editFunction, onDelete }) {
   const deleteFunc = async () => {
     try {
       const response = await DeleteContacts(contact._id);
+      
       if (response.status === 200) {
-        onDelete(); // حذف ارز از لیست
-        // toast.success("ارز با موفقیت حذف شد.");
+        onDelete(); // حذف مخاطب از لیست
+        // نمایش پیام موفقیت از والد
+        // Optional: می‌توانید یک onSuccess نیز اضافه کنید
       } else {
-        throw new Error(response.message || "خطا در حذف ارز.");
+        // ارسال پیام خطا به والد
+        onError(response.message || "خطا در حذف مخاطب.");
       }
     } catch (error) {
-      console.error("خطا در حذف ارز:", error);
-      toast.error("خطا در حذف ارز.");
+      console.error("خطا در حذف مخاطب:", error);
+      // ارسال پیام خطا به والد
+      onError(error.message || "خطای غیرمنتظره در حذف مخاطب.");
     }
   };
+
   return (
     <div className="relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-6 transition-transform transform hover:scale-105">
       <div className="flex justify-between items-start">
@@ -79,8 +84,6 @@ function ContactCard({ contact: initialContact, editFunction, onDelete }) {
             </button>
            
           </div>
-
-        
         </div>
       </div>
     </div>

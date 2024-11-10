@@ -14,7 +14,7 @@ import { AddCurrencyAction,EditCurrencyAction } from "@/components/signinAndLogi
 
 function AddCurrency({ currency = {}, onClose, refreshCurrencies }) {
   const [isSubmit, setIsSubmit] = useState(false);
-  const { shopUniqName } = useParams();
+  const { ShopId } = useParams();
 
   const {
     register,
@@ -30,23 +30,17 @@ function AddCurrency({ currency = {}, onClose, refreshCurrencies }) {
       exchangeRate: currency?.exchangeRate || "",
       decimalPlaces: currency?.decimalPlaces || 2,
       status: currency?.status || "فعال",
-      shopUniqName: shopUniqName || "",
+      ShopId: ShopId || "",
     },
     resolver: yupResolver(CurrencySchema),
   });
-
- 
-
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
     try {
       await CurrencySchema.validate(formData, { abortEarly: false });
 
       const formDataObj = new FormData();
-
-    
-
-      formDataObj.append("shopUniqName", formData.shopUniqName);
+      formDataObj.append("ShopId", formData.ShopId);
       formDataObj.append("title", formData.title);
       formDataObj.append("shortName", formData.shortName);
       formDataObj.append("exchangeRate", formData.exchangeRate);
@@ -60,7 +54,7 @@ function AddCurrency({ currency = {}, onClose, refreshCurrencies }) {
       let result;
       if (currency?._id) {
         // اگر ارز برای ویرایش است
-        result = await EditCurrencyAction(formDataObj, shopUniqName);
+        result = await EditCurrencyAction(formDataObj, ShopId);
       } else {
         // اگر ارز جدید باشد
         result = await AddCurrencyAction(formDataObj);

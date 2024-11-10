@@ -16,31 +16,21 @@ function ProductManage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedProductFile, setSelectedProductFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   // بهینه‌سازی refreshProducts با استفاده از useCallback
   const refreshProducts = useCallback(async () => {
     try {
-      if (!shopUniqName) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
+     
 
-      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
-
-      if (!ShopId.ShopID) {
-        console.error("فروشگاهی با این نام یافت نشد.");
-        return;
-      }
-
-      const response = await GetAllProducts(ShopId.ShopID);
+      const response = await GetAllProducts(ShopId);
 
       setProducts(response.products);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("خطا در دریافت محصولات.");
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
 
   useEffect(() => {
     refreshProducts();

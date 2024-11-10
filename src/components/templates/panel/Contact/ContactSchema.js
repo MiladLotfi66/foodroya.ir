@@ -18,7 +18,6 @@ const ContactSchema = yup.object().shape({
   nationalId: yup
     .string()
     .notRequired(),
-  shopUniqName: yup.string().required(),
 });
 
 export default ContactSchema;

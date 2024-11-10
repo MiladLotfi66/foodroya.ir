@@ -11,15 +11,14 @@ import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/R
  function ContactSelector({ isOpen, onClose, onSelect }) {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
-  let { shopUniqName } = useParams();
+  let { ShopId } = useParams();
 
   // فرض می‌کنیم که API برای دریافت مخاطبان موجود است
   const fetchContacts = async () => {
     setLoading(true);
     try {
-     const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
 
-      const response =await GetAllContacts(ShopId.ShopID); // مسیر API را بر اساس نیاز خود تنظیم کنید
+      const response =await GetAllContacts(ShopId); // مسیر API را بر اساس نیاز خود تنظیم کنید
       
       if (response.status===200) {
         const data = response.contacts;

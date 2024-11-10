@@ -13,7 +13,7 @@ import PermissionSVG from "./PermissionSVG";
 import { useState, useEffect } from "react";
 import { AddRoleServerAction, EditRole } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 
-function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
+function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
   console.log(role);
   
   const [isSubmit, setIsSubmit] = useState(false);
@@ -28,15 +28,15 @@ function AddRole({ role = {}, onClose ,shopUniqName ,refreshRols}) {
       RoleTitle: role?.RoleTitle || "",
       bannersPermissions: bannerPermissionState,
       rolesPermissions: rolePermissionState,
-      shopUniqName:shopUniqName,
+      ShopId:ShopId,
     },
   });
 
   useEffect(() => {
     setValue('bannersPermissions', bannerPermissionState);
     setValue('rolesPermissions', rolePermissionState);
-    setValue('shopUniqName', shopUniqName); // تنظیم shopUniqName به صورت مخفی
-  }, [bannerPermissionState, rolePermissionState, shopUniqName, setValue]);
+    setValue('ShopId', ShopId); // تنظیم ShopId به صورت مخفی
+  }, [bannerPermissionState, rolePermissionState, ShopId, setValue]);
 
   const handleTogglePermission = (permissionList, setPermissionList, name) => {
     if (permissionList.includes(name)) {

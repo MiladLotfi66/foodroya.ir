@@ -13,30 +13,23 @@ function BannerManage() {
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [selectedBannerFile, setSelectedBannerFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   // بهینه‌سازی refreshBanners با استفاده از useCallback
   const refreshBanners = useCallback(async () => {
     try {
-      if (!shopUniqName) {
+      if (!ShopId) {
         console.error("نام یکتای فروشگاه موجود نیست.");
         return;
       }
 
-      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
-
-      if (!ShopId) {
-        console.error("فروشگاهی با این نام یافت نشد.");
-        return;
-      }
-
-      const response = await GetAllBanners(ShopId.ShopID);
+      const response = await GetAllBanners(ShopId);
 
       setBanners(response.banners);
     } catch (error) {
       console.error("Error fetching banners:", error);
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
 
   useEffect(() => {
     refreshBanners();

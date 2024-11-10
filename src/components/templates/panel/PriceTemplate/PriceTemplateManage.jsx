@@ -15,32 +15,27 @@ function PriceTemplateManage() {
   const [selectedPriceTemplate, setSelectedPriceTemplate] = useState(null);
   const [selectedPriceTemplateFile, setSelectedPriceTemplateFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   // بهینه‌سازی refreshPriceTemplates با استفاده از useCallback
   const refreshPriceTemplates = useCallback(async () => {
     try {
-      if (!shopUniqName) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
+    
 
-      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
 
-      if (!ShopId.ShopID) {
+      if (!ShopId) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
 
-      const response = await GetAllPriceTemplates(ShopId.ShopID);
-console.log("response",response);
+      const response = await GetAllPriceTemplates(ShopId);
 
       setPriceTemplates(response.PriceTemplates);
     } catch (error) {
       console.error("Error fetching price templates:", error);
       toast.error("خطا در دریافت قالب‌های قیمتی.");
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
 
   useEffect(() => {
     refreshPriceTemplates();

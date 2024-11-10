@@ -44,20 +44,17 @@ export async function GetAllProducts(shopId) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   
-    const { title, shortName, exchangeRate, decimalPlaces, status, shopUniqName } = Object.fromEntries(formData.entries());
+    const { title, shortName, exchangeRate, decimalPlaces, status, ShopId } = Object.fromEntries(formData.entries());
     // دریافت shopId از shopUniqueName
-    const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-    if (!shopId || !shopId.ShopID) {
-      return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-    }
+   
   
     // بررسی یکتایی shortName
-    const existingProduct = await Product.findOne({ shortName ,shop:shopId.ShopID }).lean();
+    const existingProduct = await Product.findOne({ shortName ,shop:ShopId}).lean();
     
     if (existingProduct) {
       return { status: 400, message: 'نام اختصاری محصول باید منحصر به فرد باشد.' };
     } 
-    const existingTitleProduct = await Product.findOne({ title ,shop:shopId.ShopID }).lean();
+    const existingTitleProduct = await Product.findOne({ title ,shop:ShopId }).lean();
     
     if (existingTitleProduct) {
       return { status: 400, message: 'نام  محصول باید منحصر به فرد باشد.' };
@@ -69,7 +66,7 @@ export async function GetAllProducts(shopId) {
       exchangeRate: parseFloat(exchangeRate),
       decimalPlaces: parseInt(decimalPlaces),
       status,
-      shop: shopId.ShopID,
+      shop:ShopId,
       createdBy: user.id, // استفاده از _id به جای id
       updatedBy: user.id, // استفاده از _id به جای id
     });
@@ -84,7 +81,7 @@ export async function GetAllProducts(shopId) {
   }
   
 
-  export async function EditProductAction(formData, shopUniqName) {
+  export async function EditProductAction(formData, ShopId) {
     await connectDB();
     let user;
     try {
@@ -122,12 +119,8 @@ export async function GetAllProducts(shopId) {
     if (decimalPlaces !== undefined) updateData.decimalPlaces = parseInt(decimalPlaces);
     if (status) updateData.status = status;
   
-    if (shopUniqName) {
-      const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-      if (!shopId || !shopId.ShopID) {
-        return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-      }
-      updateData.shop = shopId.ShopID;
+    if (ShopId) {
+      updateData.shop = ShopId;
     }
   
     updateData.updatedBy = user.id; // بروزرسانی اطلاعات کاربر

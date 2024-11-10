@@ -17,7 +17,7 @@ function AddBanner({ banner = {}, onClose, refreshBanners }) {
   const [isMounted, setIsMounted] = useState(false);
 
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   const {
     register,
@@ -71,7 +71,7 @@ function AddBanner({ banner = {}, onClose, refreshBanners }) {
       } else if (formData.BannerImage) {
         formDataObj.append("BannerImage", formData.BannerImage);
       }
-      formDataObj.append("shopUniqName", shopUniqName);
+      formDataObj.append("ShopId", ShopId);
       formDataObj.append("BannerBigTitle", formData.BannerBigTitle);
       formDataObj.append("BannersmallDiscription", formData.BannersmallDiscription);
       formDataObj.append("BannerDiscription", formData.BannerDiscription);
@@ -86,7 +86,7 @@ function AddBanner({ banner = {}, onClose, refreshBanners }) {
       let result;
       if (banner?._id) {
         // اگر بنر برای ویرایش است
-        result = await EditBannerAction(formDataObj, shopUniqName);
+        result = await EditBannerAction(formDataObj, ShopId);
       } else {
         // اگر بنر جدید باشد
         result = await AddBannerAction(formDataObj);

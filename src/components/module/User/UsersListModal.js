@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import RoleNameAndImageCart from "./RoleNameAndImageCart";
 
 function UsersListModal({ Users, AddFunc, RemoveFunc }) {
+  console.log("Users",Users);
+  
   const [localUsers, setLocalUsers] = useState([]);
 
   useEffect(() => {
@@ -13,7 +15,7 @@ function UsersListModal({ Users, AddFunc, RemoveFunc }) {
     
     if (result?.success) {
       setLocalUsers((prevUsers) =>
-        prevUsers.map((user) =>
+        prevUsers?.map((user) =>
           user._id === userId ? { ...user, hasRole: true } : user
         )
       );
@@ -26,7 +28,7 @@ function UsersListModal({ Users, AddFunc, RemoveFunc }) {
     const result = await RemoveFunc(userId);
     if (result?.success) {
       setLocalUsers((prevUsers) =>
-        prevUsers.map((user) =>
+        prevUsers?.map((user) =>
           user._id === userId ? { ...user, hasRole: false } : user
         )
       );
@@ -37,7 +39,7 @@ function UsersListModal({ Users, AddFunc, RemoveFunc }) {
 
   return (
     <div>
-      {localUsers.map((user) => (
+      {localUsers?.map((user) => (
         <div key={user?._id} className="flex gap-3 justify-between mt-3">
           <RoleNameAndImageCart user={user} />
           {user.hasRole ? (

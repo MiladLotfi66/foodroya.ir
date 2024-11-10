@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ContactCard from "./ContactCard";
 import AddContact from "./AddContact";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from "next/navigation";
 import {
   AddContactAction,
@@ -20,31 +19,24 @@ function ContactManager() {
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedContactFile, setSelectedContactFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   // بهینه‌سازی refreshContacts با استفاده از useCallback
   const refreshContacts = useCallback(async () => {
     try {
-      if (!shopUniqName) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
-
-      if (!ShopId.ShopID) {
+      if (!ShopId) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
 
-      const response = await GetAllContacts(ShopId.ShopID);
+      const response = await GetAllContacts(ShopId);
 
       setContacts(response.contacts);
     } catch (error) {
       console.error("Error fetching contacts:", error);
-      toast.error("خطا در دریافت مخاطبها.");
+      toast.error("خطا در دریافت مخاطب‌ها.");
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
 
   useEffect(() => {
     refreshContacts();
@@ -55,6 +47,10 @@ function ContactManager() {
       prevContacts.filter((contact) => contact._id !== contactId)
     );
     toast.success("مخاطب با موفقیت حذف شد.");
+  }, []);
+
+  const handleError = useCallback((errorMessage) => { // افزودن تابع handleError
+    toast.error(errorMessage);
   }, []);
 
   const handleOverlayClick = useCallback((e) => {
@@ -106,7 +102,7 @@ function ContactManager() {
 
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">مدیریت مخاطب ها</h1>
+          <h1 className="text-3xl font-MorabbaBold">مدیریت مخاطب‌ها</h1>
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add contact"
@@ -125,6 +121,7 @@ function ContactManager() {
               contact={contact}
               editFunction={() => handleEditClick(contact)}
               onDelete={() => handleDeleteContact(contact._id)} // پاس دادن تابع حذف
+              onError={handleError} // ارسال تابع handleError به ContactCard
             />
           ))}
         </div>

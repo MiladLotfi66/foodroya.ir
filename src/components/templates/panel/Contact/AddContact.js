@@ -15,7 +15,7 @@ import UserMiniInfo from "@/module/home/UserMiniInfo";
 function AddContact({ contact = {}, onClose, refreshContacts }) {
   
   const [isSubmit, setIsSubmit] = useState(false);
-  const { shopUniqName } = useParams();
+  const { ShopId } = useParams();
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false); // کنترل باز بودن UserSelector
   const [selectedUser, setSelectedUser] = useState(
     contact?.userAccount || null
@@ -37,7 +37,7 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
       phoneNumber: contact?.phone || "",
       email: contact?.email || "",
       nationalId: contact?.nationalId || "",
-      shopUniqName: shopUniqName || "",
+      ShopId: ShopId || "",
     },
     resolver: yupResolver(ContactSchema),
   });
@@ -49,7 +49,7 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
 
       const formDataObj = new FormData();
 
-      formDataObj.append("shopUniqName", formData.shopUniqName);
+      formDataObj.append("ShopId", formData.ShopId);
       formDataObj.append("name", formData.name);
       formDataObj.append("address", formData.address);
       formDataObj.append("phoneNumber", formData.phoneNumber);
@@ -65,10 +65,10 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
       let result;
       if (contact?._id) {
         // اگر مخاطب برای ویرایش است
-        result = await EditContactAction(formDataObj, shopUniqName);
+        result = await EditContactAction(formDataObj, ShopId);
       } else {
         // اگر مخاطب جدید باشد
-        result = await AddContactAction(formDataObj, shopUniqName);
+        result = await AddContactAction(formDataObj, ShopId);
       }
 
       if (result.status === 201 || result.status === 200) {

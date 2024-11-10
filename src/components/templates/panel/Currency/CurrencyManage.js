@@ -15,31 +15,27 @@ function CurrencyManage() {
   const [selectedCurrency, setSelectedCurrency] = useState(null);
   const [selectedCurrencyFile, setSelectedCurrencyFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   // بهینه‌سازی refreshCurrencies با استفاده از useCallback
   const refreshCurrencies = useCallback(async () => {
     try {
-      if (!shopUniqName) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
 
-      const ShopId = await GetShopIdByShopUniqueName(shopUniqName);
 
-      if (!ShopId.ShopID) {
+
+      if (!ShopId) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
 
-      const response = await GetAllCurrencies(ShopId.ShopID);
+      const response = await GetAllCurrencies(ShopId);
 
       setCurrencies(response.currencies);
     } catch (error) {
       console.error("Error fetching currencies:", error);
       toast.error("خطا در دریافت ارزها.");
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
 
   useEffect(() => {
     refreshCurrencies();

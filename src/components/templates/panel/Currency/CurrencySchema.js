@@ -7,7 +7,6 @@ const CurrencySchema = yup.object().shape({
   exchangeRate: yup.number().required('نرخ برابری الزامی است.'),
   decimalPlaces: yup.number().min(0).max(6).required('تعداد اعشار الزامی است.'),
   status: yup.string().oneOf(['فعال', 'غیرفعال']).required('وضعیت ارز الزامی است.'),
-  shopUniqName: yup.string().required('نام یکتای فروشگاه الزامی است.'),
 });
 
 export default CurrencySchema;

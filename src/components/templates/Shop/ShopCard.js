@@ -231,7 +231,7 @@ function ShopCard({
             {Shop.ShopDiscription}
           </p>
           <h3 className="font-IranSans my-2 text-sm md:text-xl text-center child-hover:text-orange-300 truncate max-w-80 ltr">
-            <Link href={`/${Shop.ShopUniqueName}`}>@{Shop.ShopUniqueName}</Link>
+            <Link href={`/${Shop._id}`}>@{Shop.ShopUniqueName}</Link>
           </h3>
         </div>
       </div>

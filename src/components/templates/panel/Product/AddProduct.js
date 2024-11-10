@@ -10,10 +10,35 @@ import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from "next/navigation";
 import { AddProductsAction, EditProductsAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid"; // برای ایجاد شناسه‌های یکتا
+import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 function AddProduct({ products = {}, onClose, refreshproducts }) {
   const [isSubmit, setIsSubmit] = useState(false);
-  const { shopUniqName } = useParams();
+  const [pricingTemplates, setPricingTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const { ShopId } = useParams();
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // دریافت قالب‌های قیمتی هنگام مونت شدن کامپوننت
+    const fetchPricingTemplates = async () => {
+      try {
+        
+        const response = await GetAllPriceTemplates(ShopId)// جایگزین با نقطه پایان API شما
+        const templates = response.data.map(template => ({
+          value: template.id,
+          label: template.name,
+        }));
+        setPricingTemplates(templates);
+      } catch (error) {
+        console.error('خطا در دریافت قالب‌های قیمتی:', error);
+        setTemplateError('بارگذاری قالب‌های قیمتی با مشکل مواجه شد.');
+      } finally {
+        setLoadingTemplates(false);
+      }
+    };
+
+    fetchPricingTemplates();
+  }, []);
 
 
   const {
@@ -41,7 +66,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       isMergeable: products?.isMergeable || false,
       unit: products?.unit || "",
       description: products?.description || "",
-      shopUniqName: shopUniqName || "",
+      ShopId: ShopId || "",
     },
     resolver: yupResolver(ProductsSchema),
   });
@@ -132,7 +157,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
   
       const formDataObj = new FormData();
   
-      formDataObj.append("shopUniqName", formData.shopUniqName);
+      formDataObj.append("ShopId", formData.ShopId);
   
       // افزودن تصاویر موجود (URL ها)
       formData.existingImages.forEach((image) => {
@@ -169,7 +194,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       let result;
       if (products?._id) {
         // ویرایش محصول
-        result = await EditProductsAction(formDataObj, shopUniqName);
+        result = await EditProductsAction(formDataObj, ShopId);
       } else {
         // افزودن محصول جدید
         result = await AddProductsAction(formDataObj);

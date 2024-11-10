@@ -13,7 +13,7 @@ import {
   EnableRole,
   GetAllFollowedUsersWithRoles,
   GetShopIdByShopUniqueName,
-  GetShopRolesByShopUniqName,
+  GetShopRolesByShopId,
   RemoveUserFromRole,
   AddRoleToUser,
 } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
@@ -33,31 +33,22 @@ function RolsManage() {
   const [selectedUsers, setSelectedUsers] = useState([]); // انتخاب کاربران برای نمایش در UsersListModal
   const [userListButtenName, setUserListButtenName] = useState("");
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
   const [rols, setRols] = useState([]);
-  const [shopId, setShopId] = useState([]);
 
   // بهینه‌سازی refreshRols با استفاده از useCallback
   const refreshRols = useCallback(async () => {
     try {
-      if (!shopUniqName) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
+      
 
-      const Shop = await GetShopIdByShopUniqueName(shopUniqName);
-      if (Shop.status !== 200) {
-        console.error("فروشگاهی با این نام یافت نشد.");
-        return;
-      }
-      setShopId(Shop.ShopID);
-      const response = await GetShopRolesByShopUniqName(shopUniqName);
+    
+      const response = await GetShopRolesByShopId(ShopId);
       setRols(response.Roles);
       
     } catch (error) {
       console.error("Error fetching banners:", error);
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
 
   useEffect(() => {
     refreshRols();
@@ -65,7 +56,7 @@ function RolsManage() {
 
   const handlerAddUserToRole = useCallback(async (UserId) => {
     try {
-      let res = await AddRoleToUser(UserId, shopUniqName, selectedRole);
+      let res = await AddRoleToUser(UserId, ShopId, selectedRole);
       if (res && res.success) {
         // به‌روزرسانی لیست کاربران محلی
         return { success: true };
@@ -77,11 +68,11 @@ function RolsManage() {
       console.error("خطایی در تخصیص نقش:", error);
       return { success: false };
     }
-  }, [shopUniqName, selectedRole]);
+  }, [ShopId, selectedRole]);
 
   const handlerRemoveUserToRole = useCallback(async (UserId) => {
     try {
-      let res = await RemoveUserFromRole(UserId, shopUniqName, selectedRole);
+      let res = await RemoveUserFromRole(UserId, ShopId, selectedRole);
       if (res && res.success) {
         // در صورت موفقیت آمیز بودن عملیات، اینجا می‌توانید تغییرات لازم را اعمال کنید.
         return { success: true }; // بازگشت نتیجه صحیح
@@ -93,7 +84,7 @@ function RolsManage() {
       console.error("خطایی در حین حذف نقش:", error);
       return { success: false }; // بازگشت نتیجه در صورت خطا
     }
-  }, [shopUniqName, selectedRole]);
+  }, [ShopId, selectedRole]);
 
   const handleEnableRole = useCallback(async (RoleID) => {
     let res = await EnableRole(RoleID);
@@ -157,14 +148,15 @@ function RolsManage() {
   };
 
   const handleAllUsers = useCallback(async (roleId) => {
-    if (!shopId) return; // مطمئن شوید که ShopId مقداردهی شده است
+    if (!ShopId) return; // مطمئن شوید که ShopId مقداردهی شده است
     setIsOpenUsersList(true);
-    let res = await GetAllFollowedUsersWithRoles(shopId, roleId);
+    let res = await GetAllFollowedUsersWithRoles(ShopId, roleId);
+    console.log("res",res);
     
     setSelectedUsers(res.data);
     setUserListButtenName("افزودن");
     setSelectedRole(roleId);
-  }, [shopId]);
+  }, [ShopId]);
 
   const handleSubmit = async (formData) => {
     // ارسال داده‌های فرم به سرور
@@ -185,7 +177,7 @@ function RolsManage() {
               role={selectedRole}
               onSubmit={handleSubmit}
               onClose={handleCloseModal}
-              shopUniqName={shopUniqName}
+              ShopId={ShopId}
               refreshRols={refreshRols} // اضافه کردن این خط
             />
           </div>

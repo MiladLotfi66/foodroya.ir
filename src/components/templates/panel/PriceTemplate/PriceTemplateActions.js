@@ -2,14 +2,12 @@
 
 import connectDB from "@/utils/connectToDB";
 import PriceTemplate from "./PriceTemplate";
-// import { GetShopIdByShopUniqueName, authenticateUser } from "./RolesPermissionActions";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
 function convertToPlainObjects(docs) {
     return docs.map(doc => JSON.parse(JSON.stringify(doc)));
   }
   
-export async function GetAllPriceTemplates(shopId) {
+export async function GetAllPriceTemplates(ShopId) {
     
     await connectDB();
     let user;
@@ -25,7 +23,7 @@ export async function GetAllPriceTemplates(shopId) {
   }
   
     try {
-      const PriceTemplates = await PriceTemplate.find({ shop: shopId }).select('-__v')
+      const PriceTemplates = await PriceTemplate.find({ shop: ShopId }).select('-__v')
         .populate('shop')
         .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
       return { status: 200, PriceTemplates: convertToPlainObjects(PriceTemplates) };
@@ -56,16 +54,12 @@ export async function GetAllPriceTemplates(shopId) {
     //     formData[key] = value;
     // }
     
-    const { title, defaultFormula, status, shopUniqName, pricingFormulas } = formData
+    const { title, defaultFormula, status, pricingFormulas,ShopId } = formData
 
-    // دریافت shopId از shopUniqueName
-    const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-    if (!shopId || !shopId.ShopID) {
-        return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-    }
+  
 
     // بررسی یکتایی عنوان
-    const existingTitlePriceTemplate = await PriceTemplate.findOne({ title, shop: shopId.ShopID }).lean();
+    const existingTitlePriceTemplate = await PriceTemplate.findOne({ title, shop:ShopId }).lean();
     if (existingTitlePriceTemplate) {
         return { status: 400, message: 'نام قالب قیمتی باید منحصر به فرد باشد.' };
     }
@@ -74,7 +68,7 @@ export async function GetAllPriceTemplates(shopId) {
     const newPriceTemplate = new PriceTemplate({
         title,
         status: status || 'فعال', // مقدار پیش‌فرض
-        shop: shopId.ShopID,
+        shop: ShopId,
         createdBy: user.id,
         updatedBy: user.id,
         defaultFormula,

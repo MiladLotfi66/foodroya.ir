@@ -22,7 +22,7 @@ import SettingSvg from "../svgs/SettingSvg";
 function Banner2() {
   const router = useRouter();
   const params = useParams();
-  const { shopUniqName } = params;
+  const { ShopId } = params;
 
   const [banners, setBanners] = useState([]);
   const swiperRef = useRef(null);
@@ -30,17 +30,17 @@ function Banner2() {
   useEffect(() => {
     const fetchBanners = async () => {
       try {
-        const response = await GetAllEnableBanners(shopUniqName);
+        const response = await GetAllEnableBanners(ShopId);
         setBanners(response.banners);
       } catch (error) {
         console.error("Error fetching banners:", error);
       }
     };
 
-    if (shopUniqName) { // بررسی وجود shopUniqName قبل از فراخوانی
+    if (ShopId) { // بررسی وجود ShopId قبل از فراخوانی
       fetchBanners();
     }
-  }, [shopUniqName]); // افزودن shopUniqName به آرایه dependencies
+  }, [ShopId]); // افزودن ShopId به آرایه dependencies
 
   const handleSwiper = (swiper) => {
     swiperRef.current = swiper;

@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 import connectDB from "@/utils/connectToDB";
 import Account from "@/models/Account";
 import { revalidatePath } from "next/cache";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
 // ایجاد حساب جدید
@@ -30,11 +29,11 @@ export async function createAccount(data) {
 
     const { title, accountType, accountStatus, parentAccount, store, currency ,contact,creditLimit,posConected,bankAcountNumber ,bankCardNumber} = data;
 
-    const shopId = await GetShopIdByShopUniqueName(store);
+    // const shopId = store
 
-    if (!shopId.ShopID) {
-      return { success: false, message: "فروشگاه پیدا نشد." };
-    }
+    // if (!shopId) {
+    //   return { success: false, message: "فروشگاه پیدا نشد." };
+    // }
 
     let accountCode = "";
     let parent ="";
@@ -69,7 +68,7 @@ export async function createAccount(data) {
       accountStatus,
       parentAccount: parentAccount,
       accountNature:parent.accountNature,
-      store:shopId.ShopID,
+      store,
       createdBy: userData.id, // فرض بر این است که شناسه کاربر از درخواست دریافت شده است
       isSystem: false, // به صورت پیش‌فرض غیر فعال است
       // contact,
@@ -91,7 +90,6 @@ export async function createAccount(data) {
           newAccountData.currency = currency;
         }
         else if (accountType === "حساب بانکی") {
-          console.log("4.54545454545");
 
           newAccountData.posConected = posConected;
           newAccountData.bankAcountNumber = bankAcountNumber;
@@ -100,10 +98,8 @@ export async function createAccount(data) {
         // else{
         //         delete newAccountData.currency;
         // }
-        console.log("newAccountData",newAccountData);
 
     await newAccountData.save();
-    console.log("555555");
 
     // در صورت نیاز به به‌روزرسانی کش‌ها
     revalidatePath("/accounts"); // مسیر مربوطه
@@ -574,22 +570,27 @@ export async function deactivateAccount(id) {
 
 // دریافت تمام حساب‌ها
 export async function GetAllAccounts(storeId, parentId = null) {
+  console.log("111111");
+  
     await connectDB();
   
     if (!storeId) {
       throw new Error("فروشگاه مشخص نشده است.");
     }
-  
+    console.log("22222");
+
     const filter = { store: storeId };
     if (parentId) {
       filter.parentAccount = parentId;
     } else {
       filter.parentAccount = null; // حساب‌های ریشه
     }
-  
+    console.log("33333");
+
     const accounts = await Account.find(filter).sort({ accountCode: 1 }).populate("contact").populate('currency')
     .lean(); // افزودن .lean() اینجا
-  
+    console.log("44444");
+
     const plainAccounts = accounts?.map((account) => {
       return {
         ...account,
@@ -608,7 +609,8 @@ export async function GetAllAccounts(storeId, parentId = null) {
         createdBy: account.createdBy?.toString() || null,
       };
     });
-  
+    console.log("55555");
+
     return { Accounts: plainAccounts, status: 200 };
   }
   

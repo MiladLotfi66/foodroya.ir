@@ -2,7 +2,7 @@
 // utils/contactActions.js
 import connectDB from "@/utils/connectToDB";
 import Contact from "./Contact";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import Account from "@/models/Account";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
 import mongoose from "mongoose";
@@ -80,7 +80,7 @@ if (!user) {
     nationalId,
     economicCode,
     userAccount,
-    shopUniqName 
+    ShopId 
   } = Object.fromEntries(formData.entries());
 
   // اعتبارسنجی فیلدهای الزامی
@@ -132,21 +132,14 @@ if (!user) {
   console.log("۲۲۲۲۲");
 
 
-  // دریافت shopId از shopUniqueName
-  const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-  if (!shopId || !shopId.ShopID) {
-    return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-  }
-
   // بررسی یکتایی نام مخاطب
-  const existingContact = await Contact.findOne({ name  , shop : shopId.ShopID}).lean();
+  const existingContact = await Contact.findOne({ name  , shop : ShopId}).lean();
   if (existingContact) {
     return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
   }
-  console.log("۳۳۳۳۳۳");
 
   // اضافه کردن shopId به داده‌های مخاطب
-  contactData.shop = shopId.ShopID;
+  contactData.shop = ShopId;
 
   try {
     const newContact = new Contact(contactData);
@@ -164,7 +157,7 @@ if (!user) {
 /**
  * ویرایش مخاطب
  * @param {FormData} formData - داده‌های فرم
- * @param {string} shopUniqName - نام یکتا فروشگاه
+ * @param {string} ShopId - نام یکتا فروشگاه
  * @returns {Object} - نتیجه عملیات
  */
 export async function EditContactAction(formData) {
@@ -190,7 +183,7 @@ export async function EditContactAction(formData) {
     nationalId,
     economicCode,
     userAccount,
-    shopUniqName 
+    ShopId 
   } = Object.fromEntries(formData.entries());
 
   // اعتبارسنجی فیلدهای الزامی
@@ -216,7 +209,6 @@ export async function EditContactAction(formData) {
       return { status: 400, message: 'کد اقتصادی باید 10 رقم باشد.' };
     }
   }
-console.log(userAccount._id);
 
   // اعتبارسنجی userAccount در صورت نیاز
   if (userAccount && !mongoose.Types.ObjectId.isValid(userAccount)) {
@@ -247,12 +239,9 @@ console.log(userAccount._id);
 
   // دریافت shopId از shopUniqueName
   let shopId;
-  if (shopUniqName) {
-    const shop = await GetShopIdByShopUniqueName(shopUniqName);
-    if (!shop || !shop.ShopID) {
-      return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-    }
-    shopId = shop.ShopID;
+  if (ShopId) {
+ 
+    shopId = ShopId;
   } else {
     shopId = existingContact.shop;
   }
@@ -315,16 +304,33 @@ export async function DeleteContacts(contactId) {
 if (!user) {
   return { status: 401, message: 'کاربر وارد نشده است.' };
 }
-  try {
-    const deletedContact = await Contact.findByIdAndDelete(contactId).lean();
-    if (!deletedContact) {
-      return { status: 404, message: 'مخاطب پیدا نشد.' };
-    }
-    return { status: 200, message: 'مخاطب با موفقیت حذف شد.' };
-  } catch (error) {
-    console.error("Error deleting contact:", error);
-    return { status: 500, message: 'خطایی در حذف مخاطب رخ داد.' };
+
+/////////////////////////////
+const session = await mongoose.startSession();
+session.startTransaction();
+try {
+  // بررسی وابستگی‌ها
+  const linkedAccount = await Account.findOne({ contact: contactId }).session(session).exec();
+  if (linkedAccount) {
+    return { status: 500, message: 'این مخاطب در حساب‌ها استفاده شده است و قابل حذف نیست.' };
   }
+
+  // حذف مخاطب
+  const result = await Contact.findOneAndDelete({ _id: contactId }).session(session).exec();
+  if (!result) {
+    return { status: 404, message: 'مخاطب یافت نشد.' };
+  }
+
+  // تایید تراکنش
+  await session.commitTransaction();
+  session.endSession();
+  return { status: 200, message: 'مخاطب با موفقیت حذف شد.' };
+} catch (error) {
+  // بازگرداندن تراکنش در صورت خطا
+  await session.abortTransaction();
+  session.endSession();
+  console.error('خطا در حذف مخاطب:', error.message);
+}
 }
 
 

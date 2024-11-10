@@ -6,19 +6,17 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import PriceTemplateSchema from "./PriceTemplateSchema";
 import { useEffect, useState } from "react";
 import { MathJax, MathJaxContext } from 'better-react-mathjax'; // افزودن MathJax
-
 import { useParams } from "next/navigation";
 import {
   AddPriceTemplateAction,
   EditPriceTemplateAction,
 } from "./PriceTemplateActions";
 import Select from "react-select";
-import { GetShopRolesByShopUniqName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { GetShopRolesByShopId } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import FormulaBuilderModal from "./FormulaBuilderModal";
 import {
   XMarkIcon,
   PencilSquareIcon,
-
   TrashIcon,
 } from "@heroicons/react/24/solid";
 
@@ -28,7 +26,7 @@ function AddPriceTemplate({
   refreshPriceTemplates,
 }) {
   const [isSubmit, setIsSubmit] = useState(false);
-  const { shopUniqName } = useParams();
+  const { ShopId } = useParams();
   const [rolesOptions, setRolesOptions] = useState([]);
   const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
   const [currentFormulaIndex, setCurrentFormulaIndex] = useState(null);
@@ -48,7 +46,7 @@ function AddPriceTemplate({
     defaultValues: {
       title: priceTemplate?.title || "",
       status: priceTemplate?.status || "فعال",
-      shopUniqName: shopUniqName || "",
+      ShopId: ShopId || "",
       pricingFormulas:
         priceTemplate?.pricingFormulas?.length > 0
           ? priceTemplate.pricingFormulas.map((formula) => ({
@@ -69,7 +67,7 @@ function AddPriceTemplate({
   useEffect(() => {
     async function fetchRoles() {
       try {
-        const response = await GetShopRolesByShopUniqName(shopUniqName);
+        const response = await GetShopRolesByShopId(ShopId);
         setIsLoading(true);
 
         if (response.Roles && Array.isArray(response.Roles)) {
@@ -89,10 +87,10 @@ function AddPriceTemplate({
       }
     }
 
-    if (shopUniqName) {
+    if (ShopId) {
       fetchRoles();
     }
-  }, [shopUniqName]);
+  }, [ShopId]);
   const handleRoleChange = (selectedOptions, index) => {
     const selectedValues = selectedOptions.map((option) => option.value);
 

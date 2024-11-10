@@ -59,20 +59,15 @@ export async function AddCurrencyAction(formData) {
       if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  const { title, shortName, exchangeRate, decimalPlaces, status, shopUniqName } = Object.fromEntries(formData.entries());
-  // دریافت shopId از shopUniqueName
-  const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-  if (!shopId || !shopId.ShopID) {
-    return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-  }
+  const { title, shortName, exchangeRate, decimalPlaces, status, ShopId } = Object.fromEntries(formData.entries());
 
   // بررسی یکتایی shortName
-  const existingCurrency = await Currency.findOne({ shortName ,shop:shopId.ShopID }).lean();
+  const existingCurrency = await Currency.findOne({ shortName ,shop:ShopId }).lean();
   
   if (existingCurrency) {
     return { status: 400, message: 'نام اختصاری ارز باید منحصر به فرد باشد.' };
   } 
-  const existingTitleCurrency = await Currency.findOne({ title ,shop:shopId.ShopID }).lean();
+  const existingTitleCurrency = await Currency.findOne({ title ,shop:ShopId }).lean();
   
   if (existingTitleCurrency) {
     return { status: 400, message: 'نام  ارز باید منحصر به فرد باشد.' };
@@ -84,7 +79,7 @@ export async function AddCurrencyAction(formData) {
     exchangeRate: parseFloat(exchangeRate),
     decimalPlaces: parseInt(decimalPlaces),
     status,
-    shop: shopId.ShopID,
+    shop: ShopId,
     createdBy: user.id, // استفاده از _id به جای id
     updatedBy: user.id, // استفاده از _id به جای id
   });
@@ -101,10 +96,10 @@ export async function AddCurrencyAction(formData) {
 /**
  * ویرایش ارز
  * @param {FormData} formData - داده‌های فرم
- * @param {string} shopUniqName - نام یکتا فروشگاه
+ * @param {string} ShopId - نام یکتا فروشگاه
  * @returns {Object} - نتیجه عملیات
  */
-export async function EditCurrencyAction(formData, shopUniqName) {
+export async function EditCurrencyAction(formData, ShopId) {
   await connectDB();
   let user;
     try {
@@ -140,12 +135,9 @@ export async function EditCurrencyAction(formData, shopUniqName) {
   if (decimalPlaces !== undefined) updateData.decimalPlaces = parseInt(decimalPlaces);
   if (status) updateData.status = status;
 
-  if (shopUniqName) {
-    const shopId = await GetShopIdByShopUniqueName(shopUniqName);
-    if (!shopId || !shopId.ShopID) {
-      return { status: 404, message: 'فروشگاه انتخاب شده وجود ندارد.' };
-    }
-    updateData.shop = shopId.ShopID;
+  if (ShopId) {
+
+    updateData.shop = ShopId;
   }
 
   updateData.updatedBy = user.id; // بروزرسانی اطلاعات کاربر
