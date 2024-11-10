@@ -23,5 +23,14 @@ const ProductSchema = new Schema({
   isMergeable: { type: Boolean, default: false },
   unit: { type: String, required: true },
   description: { type: String },
+  LastEditedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User', // تغییر نام از 'Users' به 'User'
+  },
+  CreatedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User', // تغییر نام از 'Users' به 'User'
+  },
+
 });
 export default models.Product || model("Product", ProductSchema);

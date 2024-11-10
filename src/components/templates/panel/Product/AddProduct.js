@@ -1,5 +1,6 @@
 "use client";
 import { useForm, Controller, FormProvider } from "react-hook-form";
+import TagSelect from "./TagSelect";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -19,6 +20,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
     register,
     handleSubmit,
     control,
+    getValues,
     setValue,
     formState: { errors },
     reset,
@@ -31,7 +33,8 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       generalFeatures: products?.generalFeatures || "",
       pricingTemplate: products?.pricingTemplate || "",
       category: products?.category || "",
-      tags: products?.tags || "",
+      tags: products?.tags ? products.tags.map(tag => ({ label: tag, value: tag })) : [],
+
       storageLocation: products?.storageLocation || "",
       isSaleable:
         products?.isSaleable !== undefined ? products.isSaleable : true,
@@ -126,21 +129,21 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
     setIsSubmit(true);
     try {
       await ProductsSchema.validate(formData, { abortEarly: false });
-
+  
       const formDataObj = new FormData();
-
+  
       formDataObj.append("shopUniqName", formData.shopUniqName);
-
+  
       // افزودن تصاویر موجود (URL ها)
       formData.existingImages.forEach((image) => {
         formDataObj.append("existingImages", image);
       });
-
+  
       // افزودن تصاویر جدید (فایل ها)
       formData.newImages.forEach((image) => {
         formDataObj.append("images", image);
       });
-
+  
       // افزودن سایر فیلدهای فرم
       formDataObj.append("title", formData.title);
       formDataObj.append("secondaryTitle", formData.secondaryTitle);
@@ -148,17 +151,21 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       formDataObj.append("generalFeatures", formData.generalFeatures);
       formDataObj.append("pricingTemplate", formData.pricingTemplate);
       formDataObj.append("category", formData.category);
-      formDataObj.append("tags", formData.tags);
+      
+      // تبدیل آرایه اشیاء تگ‌ها به آرایه رشته‌ای
+      const tags = formData.tags.map(tag => tag.value);
+      tags.forEach(tag => formDataObj.append("tags", tag));
+  
       formDataObj.append("storageLocation", formData.storageLocation);
       formDataObj.append("isSaleable", formData.isSaleable);
       formDataObj.append("isMergeable", formData.isMergeable);
       formDataObj.append("unit", formData.unit);
       formDataObj.append("description", formData.description);
-
+  
       if (products?._id) {
         formDataObj.append("id", products._id);
       }
-
+  
       let result;
       if (products?._id) {
         // ویرایش محصول
@@ -167,7 +174,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
         // افزودن محصول جدید
         result = await AddProductsAction(formDataObj);
       }
-
+  
       if (result.status === 201 || result.status === 200) {
         await refreshproducts();
         const successMessage =
@@ -194,6 +201,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       setIsSubmit(false);
     }
   };
+  
 
   return (
     <div className="overflow-y-auto max-h-screen">
@@ -237,7 +245,6 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
               type="file"
               accept="image/*"
               ref={fileInputRef}
-            
               multiple
               onChange={handleImageChange}
               className="hidden"
@@ -325,7 +332,6 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
               <p className="text-red-500">{errors.title.message}</p>
             )}
           </div>
-
           <div>
             <label className="block mb-1">عنوان دوم محصول</label>
             <input
@@ -391,16 +397,18 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
 
           <div>
             <label className="block mb-1">تگ ها</label>
-            <input
-              {...register("tags")}
-              className="w-full border rounded px-3 py-2"
-              required
+            <TagSelect
+              control={control}
+              setValue={setValue}
+              getValues={getValues}
+              
+              errors={errors}
             />
+
             {errors.tags && (
               <p className="text-red-500">{errors.tags.message}</p>
             )}
           </div>
-
           <div>
             <label className="block mb-1">محل قرار گیری</label>
             <input

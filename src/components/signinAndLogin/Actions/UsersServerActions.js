@@ -1,7 +1,7 @@
 "use server";
 import connectDB from "@/utils/connectToDB";
 import User from "@/models/Users"; // بررسی اینکه درست ایمپورت شده باشد
-import { authenticateUser } from "./RolesPermissionActions";
+import { authenticateUser } from "./ShopServerActions";
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp'; // ایمپورت کتابخانه‌ی Sharp
@@ -167,10 +167,18 @@ export async function UpdateUserProfile(profileData) {
     await connectDB();
 
     // احراز هویت کاربر
-    const userData = await authenticateUser();
-    if (!userData || userData.error) {
-      throw new Error(userData.error || "اطلاعات کاربر یافت نشد");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     const userId = userData.id;
 
@@ -321,7 +329,6 @@ export async function RecoverPassword( providedAnswer, newPassword) {
 }
 
 export async function ChangeSecurityQuestion(newQuestion, newAnswer) {
-  console.log("dddddd", newQuestion, newAnswer);
   
   try {
     let userData;

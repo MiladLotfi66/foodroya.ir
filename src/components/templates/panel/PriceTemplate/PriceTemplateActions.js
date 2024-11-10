@@ -10,13 +10,20 @@ function convertToPlainObjects(docs) {
   }
   
 export async function GetAllPriceTemplates(shopId) {
-    console.log("-----shopId---->",shopId);
     
     await connectDB();
-    const user = await authenticateUser();
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
     try {
       const PriceTemplates = await PriceTemplate.find({ shop: shopId }).select('-__v')
         .populate('shop')
@@ -29,13 +36,20 @@ export async function GetAllPriceTemplates(shopId) {
   }
 
   export async function AddPriceTemplateAction(formData) {
-    console.log("formData", formData);
 
     await connectDB();
-    const user = await authenticateUser();
-    if (!user) {
-        return { status: 401, message: 'کاربر وارد نشده است.'};
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     // const formData = {};
     // for (const [key, value] of Object.entries(formDataObject)) {
@@ -80,11 +94,20 @@ export async function GetAllPriceTemplates(shopId) {
 
 export async function EditPriceTemplateAction(formData, id) {
   await connectDB();
-  const user = await authenticateUser();
-
-  if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
   }
+
+if (!user) {
+  return { status: 401, message: 'کاربر وارد نشده است.' };
+}
+
+
+
   const { title, defaultFormula, status, pricingFormulas } = formData
 
   const priceTemplate = await PriceTemplate.findById(id).lean();
@@ -114,11 +137,18 @@ export async function EditPriceTemplateAction(formData, id) {
 
 export async function DeletePriceTemplates(priceTemplateId) {
   await connectDB();
-  const user = await authenticateUser();
-
-  if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
   }
+
+if (!user) {
+  return { status: 401, message: 'کاربر وارد نشده است.' };
+}
+
 
   try {
       const deletedPriceTemplate = await PriceTemplate.findByIdAndDelete(priceTemplateId).lean();

@@ -2,13 +2,23 @@
 // utils/ProductActions.js
 import connectDB from "@/utils/connectToDB";
 import Product from "./Product";
-import { GetShopIdByShopUniqueName,authenticateUser } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+
 export async function GetAllProducts(shopId) {
     await connectDB();
-    const user = await authenticateUser();
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
     try {
       const products = await Product.find({ shop: shopId }).select('-__v')
         .populate('shop')
@@ -22,10 +32,18 @@ export async function GetAllProducts(shopId) {
 
   export async function AddProductAction(formData) {
     await connectDB();
-    const user = await authenticateUser();
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
     const { title, shortName, exchangeRate, decimalPlaces, status, shopUniqName } = Object.fromEntries(formData.entries());
     // دریافت shopId از shopUniqueName
     const shopId = await GetShopIdByShopUniqueName(shopUniqName);
@@ -68,11 +86,18 @@ export async function GetAllProducts(shopId) {
 
   export async function EditProductAction(formData, shopUniqName) {
     await connectDB();
-    const user = await authenticateUser();
-  
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
   
     const { id, title, shortName, exchangeRate, decimalPlaces, status } = Object.fromEntries(formData.entries());
   

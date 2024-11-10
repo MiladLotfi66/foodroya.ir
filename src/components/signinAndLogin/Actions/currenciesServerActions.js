@@ -2,7 +2,8 @@
 // utils/currencyActions.js
 import connectDB from "@/utils/connectToDB";
 import Currency from "@/models/Currency";
-import { GetShopIdByShopUniqueName, authenticateUser } from "./RolesPermissionActions";
+import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
+import { authenticateUser } from "./ShopServerActions";
 
 /**
  * تبدیل مستندات Mongoose به اشیاء ساده
@@ -20,7 +21,14 @@ function convertToPlainObjects(docs) {
  */
 export async function GetAllCurrencies(shopId) {
   await connectDB();
-  const user = await authenticateUser();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
+
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
@@ -41,8 +49,14 @@ export async function GetAllCurrencies(shopId) {
  */
 export async function AddCurrencyAction(formData) {
   await connectDB();
-  const user = await authenticateUser();
-  if (!user) {
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
+      if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   const { title, shortName, exchangeRate, decimalPlaces, status, shopUniqName } = Object.fromEntries(formData.entries());
@@ -92,8 +106,13 @@ export async function AddCurrencyAction(formData) {
  */
 export async function EditCurrencyAction(formData, shopUniqName) {
   await connectDB();
-  const user = await authenticateUser();
-
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
@@ -152,8 +171,13 @@ export async function EditCurrencyAction(formData, shopUniqName) {
  */
 export async function DeleteCurrencies(currencyId) {
   await connectDB();
-  const user = await authenticateUser();
-
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
@@ -177,7 +201,13 @@ export async function DeleteCurrencies(currencyId) {
  */
 export async function EnableCurrencyAction(currencyId) {
   await connectDB();
-  const user = await authenticateUser();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
 
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
@@ -213,12 +243,17 @@ export async function EnableCurrencyAction(currencyId) {
  */
 export async function DisableCurrencyAction(currencyId) {
   await connectDB();
-  const user = await authenticateUser();
-
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
   }
 
+if (!user) {
+  return { status: 401, message: 'کاربر وارد نشده است.' };
+}
   try {
     const updatedCurrency = await Currency.findByIdAndUpdate(
       currencyId,

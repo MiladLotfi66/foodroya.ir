@@ -15,11 +15,18 @@ export async function createAccount(data) {
   await connectDB();
 
   try {
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      return { success: false, message: "داده‌های کاربر یافت نشد." };
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     const { title, accountType, accountStatus, parentAccount, store, currency ,contact,creditLimit,posConected,bankAcountNumber ,bankCardNumber} = data;
 
@@ -289,11 +296,18 @@ export async function updateAccount(id, data) {
   await connectDB();
 
   try {
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      return { success: false, message: "داده‌های کاربر یافت نشد." };
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     const existingAccount = await Account.findById(id).lean();
     if (!existingAccount) {

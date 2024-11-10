@@ -2,7 +2,9 @@
 // utils/contactActions.js
 import connectDB from "@/utils/connectToDB";
 import Contact from "./Contact";
-import { GetShopIdByShopUniqueName, authenticateUser } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+
 import mongoose from "mongoose";
 import { p2e } from "@/utils/ReplaceNumber";
 /**
@@ -20,14 +22,20 @@ function convertToPlainObjects(docs) {
  * @returns {Object} - شامل وضعیت و آرایه‌ای از مخاطبها
  */
 export async function GetAllContacts(shopId) {
-  console.log("---------",shopId);
   
   await connectDB();
-  const user = await authenticateUser();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
 
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
+  
 
   try {
     const contacts = await Contact.find({ shop: shopId })
@@ -51,11 +59,18 @@ export async function GetAllContacts(shopId) {
  */
 export async function AddContactAction(formData) {
   await connectDB();
-  const user = await authenticateUser();
-
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
   }
+
+if (!user) {
+  return { status: 401, message: 'کاربر وارد نشده است.' };
+}
+
 
   let { 
     name,
@@ -154,11 +169,18 @@ export async function AddContactAction(formData) {
  */
 export async function EditContactAction(formData) {
   await connectDB();
-  const user = await authenticateUser();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
 
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
+  
   let { 
     id,
     name,
@@ -282,12 +304,17 @@ console.log(userAccount._id);
  */
 export async function DeleteContacts(contactId) {
   await connectDB();
-  const user = await authenticateUser();
-
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
   }
 
+if (!user) {
+  return { status: 401, message: 'کاربر وارد نشده است.' };
+}
   try {
     const deletedContact = await Contact.findByIdAndDelete(contactId).lean();
     if (!deletedContact) {

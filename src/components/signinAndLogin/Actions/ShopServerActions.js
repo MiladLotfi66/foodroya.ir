@@ -32,8 +32,6 @@ export const simplifyFollowers = (followers) => {
   }).filter(follower => follower !== null); // حذف مقادیر null در صورت وجود
 };
 
-
-
 export async function isUniqShop(uniqueIdentifier) {
   
   await connectDB();
@@ -52,12 +50,18 @@ export async function isUniqShop(uniqueIdentifier) {
 export async function GetUserShops() {
   try {
     await connectDB();
-
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     const Shops = await shops.find({ CreatedBy: userData.id , is_deleted:false}).lean();
 
@@ -89,11 +93,18 @@ export async function GetUserShopsCount() {
     await connectDB();
 
     // احراز هویت کاربر
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("اطلاعات کاربر پیدا نشد");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     // محاسبه تعداد فروشگاه‌ها با استفاده از countDocuments
     const shopCount = await shops.countDocuments({ 
@@ -114,11 +125,18 @@ export async function GetShopCommentsArray(shopId) {
     await connectDB();
 
     // احراز هویت کاربر
-    const userData = await authenticateUser();
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
     // پیدا کردن رکورد شاپ و آوردن کامنت‌ها
     const shop = await shops.findById(shopId)
       .populate({
@@ -183,7 +201,18 @@ const processAndSaveImage = async (image, oldUrl) => {
 const hasUserAccess = async (userId) => {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     // تبدیل هردو مقدار به رشته و حذف فضاهای خالی احتمالی
     const userDataId = userData.id.trim();
@@ -199,44 +228,6 @@ const hasUserAccess = async (userId) => {
     return false; // در صورت وقوع خطا، false را برگردانید
   }
 };
-
-// export async function authenticateUser() {
-//   try {
-    
-//     const cookieStore = cookies();
-//     const accessToken = cookieStore.get("next-auth.session-token")?.value;
-    
-//     if (!accessToken) {
-//       console.log("Token not found. User is not logged in.");
-//       return null; // یا یک مقدار پیش‌فرض برای کاربر مهمان
-//       }
-
-//     const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
-//       headers: {
-//         "Content-Type": "application/json",
-//         Cookie: `next-auth.session-token=${accessToken}`,
-//       },
-//       credentials: "include",
-//     });
-
-//     if (!res.ok) {
-//       throw new Error(`Failed to fetch user data. Status: ${res.status}`);
-//     }
-
-//     const session = await res.json();
-
-//     if (!session.user) {
-//       throw new Error("No user data found in session");
-//     }
-
-
-//     return session.user;
-//   } catch (error) {
-//     console.error("Error in authenticateUser:", error);
-//     return null;
-//   }
-// }
-// مثال به‌روزشده تابع authenticateUser
 
 export async function authenticateUser() {
   try {
@@ -256,13 +247,19 @@ export async function authenticateUser() {
 export async function EditShop(ShopData) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
 
-    const ShopID = ShopData.get("id");
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+
+      const ShopID = ShopData.get("id");
     if (!ShopID) {
       console.error("shop ID is missing");
       throw new Error("آی‌دی فروشگاه ارسال نشده است");
@@ -349,21 +346,24 @@ export async function EditShop(ShopData) {
 }
 
 export async function AddShopServerAction(ShopData) {
-  console.log("-----------ShopData------------",ShopData);
   
   const session = await mongoose.startSession();
-  console.log("-----------111111------------");
   session.startTransaction();
-  console.log("-----------15151515151------------");
 
   try {
     // استخراج توکن JWT و احراز هویت کاربر
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("داده‌های کاربر یافت نشد");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
-    console.log("-----------222222------------");
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     // تبدیل FormData به شیء ساده
     const shopDataObject = {};
@@ -518,8 +518,14 @@ export async function followShopServerAction(ShopID) {
     await connectDB();
 
     // اعتبارسنجی کاربر
-    const userData = await authenticateUser();
-    if (!userData) {
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }  
+      if (!userData) {
       throw new Error("User data not found");
     }
 
@@ -562,10 +568,18 @@ export async function unfollowShopServerAction(ShopID) {
     await connectDB();
 
     // اعتبارسنجی کاربر
-    const userData = await authenticateUser();
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     // پیدا کردن فروشگاه
     const Shop = await shops.findById(ShopID);
@@ -607,7 +621,18 @@ export async function unfollowShopServerAction(ShopID) {
 async function ShopServerEnableActions(ShopID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     const Shop = await shops.findById(ShopID);
 
@@ -636,7 +661,18 @@ async function ShopServerEnableActions(ShopID) {
 async function ShopServerDisableActions(ShopID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     const Shop = await shops.findById(ShopID);
 
@@ -718,7 +754,18 @@ async function GetAllEnableShops() {
 async function DeleteShops(ShopID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
     
 
     const Shop = await shops.findById(ShopID);
@@ -798,11 +845,18 @@ async function DeleteShops(ShopID) {
 export async function GetUserFollowingShops() {
   try {
     await connectDB();
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
 
     // یافتن کاربر بر اساس شناسه و پرپاپولیت کردن فیلد following
     const user = await Users.findById(userData.id).populate({

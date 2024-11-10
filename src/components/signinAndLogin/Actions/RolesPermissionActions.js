@@ -3,10 +3,10 @@ import RolePerimision from "@/models/RolePerimision";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import RoleSchema from "@/utils/yupSchemas/RoleSchema";
-import AuthenticateUser from "@/utils/authenticateUserInActions";
 import RoleInShop from "@/models/RoleInShop";
 import Shop from "@/models/shops";
 import User from "@/models/Users";
+import { authenticateUser } from "./ShopServerActions";
 
 
 export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
@@ -25,18 +25,20 @@ export async function AddRoleToUser(UserId, shopUniqName, RoleId) {
 
     const ShopId = shopResponse.ShopID;
  
- 
- 
- 
     if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
-
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
     // ایجاد رکورد جدید
     const newRoleInShop = new RoleInShop({
       UserId,
@@ -74,12 +76,17 @@ export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
       throw new Error("shopId is required in RoleData");
     }
 
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
-    // پیدا کردن و حذف رکورد
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }    // پیدا کردن و حذف رکورد
     const result = await RoleInShop.findOneAndDelete({
       UserId,
       ShopId,
@@ -97,39 +104,6 @@ export async function  RemoveUserFromRole (UserId, shopUniqName, RoleId) {
   }
 }
 
-export async function authenticateUser() {
-  try {
-    const cookieStore = cookies();
-    const accessToken = cookieStore.get("next-auth.session-token")?.value;
-
-    if (!accessToken) {
-      throw new Error("Access token not found");
-    }
-
-    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/session`, {
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `next-auth.session-token=${accessToken}`,
-      },
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch user data. Status: ${res.status}`);
-    }
-
-    const session = await res.json();
-
-    if (!session.user) {
-      throw new Error("No user data found in session");
-    }
-
-    return session.user;
-  } catch (error) {
-    console.error("Error in authenticateUser:", error);
-    return { error: error.message, status: 500 };
-  }
-}
 
 // بررسی دسترسی کاربر
 const hasUserAccess = async (userId) => {
@@ -165,12 +139,17 @@ export async function AddRoleServerAction(RoleData) {
       throw new Error("shopId is required in RoleData");
     }
 
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
     const validatedData = await RoleSchema.validate(RoleData, {
       abortEarly: false,
     });
@@ -196,12 +175,17 @@ export async function EditRole(RoleData , roleId) {
   
   try {
     await connectDB();
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
    
     if (!roleId) {
       throw new Error("آی‌دی نقش ارسال نشده است");
@@ -242,8 +226,18 @@ export async function EditRole(RoleData , roleId) {
 export async function DeleteRole(RoleID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
     const Role = await RolePerimision.findById(RoleID);
 
     if (!Role) {
@@ -267,8 +261,17 @@ export async function DeleteRole(RoleID) {
 export async function EnableRole(RoleID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
     const Role = await RolePerimision.findById(RoleID);
 
     if (!Role) {
@@ -296,8 +299,17 @@ export async function EnableRole(RoleID) {
 export async function DisableRole(RoleID) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
     const Role = await RolePerimision.findById(RoleID);
 
     if (!Role) {
@@ -379,11 +391,17 @@ export async function GetAllFollowedUsersWithRoles(ShopId, roleId) {
 export async function GetShopRolesByShopUniqName(ShopUniqName) {
   try {
     await connectDB();
-    const userData = await authenticateUser();
-
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
+
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
     const shopResponse = await GetShopIdByShopUniqueName(ShopUniqName);
     if (shopResponse.status !== 200 || !shopResponse.ShopID) {
       throw new Error(shopResponse.error || "shopId is required in RoleData");
@@ -418,11 +436,17 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
   try {
     await connectDB();
     
-    const userData = await authenticateUser();
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
  
 
     for (const roleId of roles) {
@@ -492,12 +516,17 @@ export async function GetUserRolsAtShop({ userId, shopId }) {
     await connectDB();
     
     // اعتبارسنجی کاربر
-    const userData = await authenticateUser();
-    if (!userData) {
-      throw new Error("User data not found");
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
     }
 
-    // یافتن نقش‌های کاربر در فروشگاه خاص
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }    // یافتن نقش‌های کاربر در فروشگاه خاص
     const rolesInShop = await RoleInShop.find({ UserId: userId, ShopId: shopId }).populate('RoleId');
     
     // استخراج آی‌دی‌های نقش‌ها و ایجاد یک آرایه
