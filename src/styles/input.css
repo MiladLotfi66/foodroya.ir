@@ -63,6 +63,18 @@
 }
 
 @layer components {
+
+
+
+  
+  .react-select-container {
+    @apply bg-white dark:bg-zinc-600 dark:text-gray-300 rounded-md;
+  }
+
+  .react-select__control {
+    @apply border border-wbg-white dark:border-gray-700 dark:text-gray-300;
+  }
+
   .lightlinergradient {
     background: linear-gradient(
       rgba(243, 244, 246, 0.65),
@@ -154,19 +166,4 @@
     filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
 
   }
-}
-
-
- 
-@layer components {
-  /* استایل‌های سفارشی برای react-select */
-  
-  .react-select-container {
-    @apply   border border-gray-300 dark:border-gray-700 rounded-lg p-2;
-  }
-
-  .react-select__control {
-    @apply   border border-gray-300 dark:border-gray-700;
-  }
-
 }

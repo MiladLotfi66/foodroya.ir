@@ -21,11 +21,12 @@ export async function GetAllPriceTemplates(ShopId) {
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  
+
     try {
       const PriceTemplates = await PriceTemplate.find({ shop: ShopId }).select('-__v')
-        .populate('shop')
+        // .populate('shop')
         .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+
       return { status: 200, PriceTemplates: convertToPlainObjects(PriceTemplates) };
     } catch (error) {
       console.error("Error fetching PriceTemplates:", error);

@@ -10,6 +10,7 @@ import ContactSelector from "@/module/home/ContactSelector";
 import { useParams } from "next/navigation";
 import ContactMiniInfo from "@/module/home/ContactMiniInfo";
 import { GetAllCurrencies } from "@/components/signinAndLogin/Actions/currenciesServerActions";
+import AddProduct from "../Product/AddProduct";
 
 function AddAccount({
   account = null,
@@ -21,7 +22,6 @@ function AddAccount({
   const [currencies, setCurrencies] = useState([]);
   const [isSubmit, setIsSubmit] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // وضعیت بارگذاری جدید
-
   const [isContactSelectorOpen, setIsContactSelectorOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(
     account?.contact || null
@@ -193,7 +193,7 @@ posConected:account.posConected||true,
       </div>
 
       {!account && parentAccount && (
-        <div className="mb-4 p-4 bg-gray-100 rounded">
+        <div className="mb-4 p-4 bg-white dark:bg-zinc-600 dark:text-gray-300 rounded">
           <p>
             <strong>حساب والد:</strong> {parentAccount.title}
           </p>
@@ -207,27 +207,8 @@ posConected:account.posConected||true,
         onSubmit={handleSubmit(handleFormSubmit)}
         className="flex flex-col gap-4 p-2 md:p-4"
       >
-        {/* عنوان حساب */}
-        <div>
-          <label className="block mb-1 text-gray-700">عنوان حساب</label>
-          <input
-            type="text"
-            {...register("title")}
-            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-              errors.title
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:ring-teal-500"
-            }`}
-            placeholder="عنوان حساب خود را وارد کنید"
-            disabled={isSubmit} // غیرفعال کردن در حالت ارسال
-          />
-          {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-          )}
-        </div>
-
-        {/* نوع حساب */}
-        <div>
+           {/* نوع حساب */}
+           <div>
           <label className="block mb-1 text-gray-700">نوع حساب</label>
           <select
             {...register("accountType")}
@@ -253,6 +234,27 @@ posConected:account.posConected||true,
             </p>
           )}
         </div>
+
+        {/* عنوان حساب */}
+        <div>
+          <label className="block mb-1 text-gray-700">عنوان حساب</label>
+          <input
+            type="text"
+            {...register("title")}
+            className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+              errors.title
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 focus:ring-teal-500"
+            }`}
+            placeholder="عنوان حساب خود را وارد کنید"
+            disabled={isSubmit} // غیرفعال کردن در حالت ارسال
+          />
+          {errors.title && (
+            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+          )}
+        </div>
+
+     
 
         {/* وضعیت حساب */}
         <div>
@@ -395,7 +397,6 @@ posConected:account.posConected||true,
             </div>
           </>
         )}
-{/* فیلد حساب بانکی */}
 
    {/* فیلد حساب بانکی */}
    {(accountType === "حساب بانکی" && (
@@ -459,6 +460,12 @@ posConected:account.posConected||true,
  </div>
     ))}
 
+ {/* فیلد کالا */}
+ {(accountType === "کالا" && (
+<div>
+  <AddProduct/>
+</div>
+ ))}
         {/* دکمه ارسال */}
         <button
           type="submit"

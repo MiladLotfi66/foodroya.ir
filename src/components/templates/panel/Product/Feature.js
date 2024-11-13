@@ -1,19 +1,24 @@
 import { Schema, model, models } from "mongoose";
 
 const featureSchema = new Schema({
-    name: { type: String, required: true },
+  featureKey: {
+    type: Schema.Types.ObjectId,
+    ref: 'FeatureKey',
+    required: true
+},
     value: { type: String, required: true },
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true } ,
     LastEditedBy: {
         type: Schema.Types.ObjectId,
         ref: 'User', // تغییر نام از 'Users' به 'User'
       },
-      CreatedBy: {
+    CreatedBy: {
         type: Schema.Types.ObjectId,
         ref: 'User', // تغییر نام از 'Users' به 'User'
       },
-  
 });
 
-const Feature = model('Feature', featureSchema);
+// اگر برای هر محصول، هر کلید ویژگی فقط یکبار باید وجود داشته باشد:
+featureSchema.index({ productId: 1, featureKey: 1 }, { unique: true });
+
 export default models.Feature || model("Feature", featureSchema);

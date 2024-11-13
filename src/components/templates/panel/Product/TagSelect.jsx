@@ -3,11 +3,12 @@ import Select from "react-select/creatable";
 import debounce from "lodash.debounce";
 import { GetAllTags, AddTagAction } from "./TagActions"; // مسیر صحیح اکشن‌ها را وارد کنید
 import { Controller } from "react-hook-form";
-
+import { useTheme } from "next-themes";
 const TagSelect = ({ control, errors }) => {
   const [options, setOptions] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   // تابع برای فراخوانی Server Action با Debounce
   const fetchTags = useCallback(async (search) => {
@@ -79,9 +80,12 @@ const TagSelect = ({ control, errors }) => {
         render={({ field: { onChange, value, ref } }) => (
           <Select
             inputRef={ref}
-            className="select bg-gray-300 dark:bg-zinc-600 "
-            classNamePrefix="select bg-gray-300 dark:bg-zinc-600 "
-  isMulti
+            
+              className={theme==="dark"?"select react-select-container ":""}    
+
+              classNamePrefix="select react-select-container "
+         
+            isMulti
             options={options}
             onCreateOption={(inputVal) => handleCreate(inputVal, onChange, value)}
             onChange={(selectedOptions) => {
