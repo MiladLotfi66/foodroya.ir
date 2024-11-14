@@ -370,13 +370,11 @@ export async function AddShopServerAction(ShopData) {
     ShopData.forEach((value, key) => {
       shopDataObject[key] = value;
     });
-    console.log("-----------22222------------");
 
     // اعتبارسنجی داده‌ها
     const validatedData = await ShopSchema.validate(shopDataObject, {
       abortEarly: false,
     });
-    console.log("-----------3333333------------");
 
     const {
       ShopUniqueName,
@@ -392,14 +390,12 @@ export async function AddShopServerAction(ShopData) {
       BackGroundShop,
       BackGroundpanel,
     } = validatedData;
-    console.log("-----------444444------------");
 
     // پردازش و ذخیره تصاویر
     const LogoUrl = await processAndSaveImage(Logo);
     const TextLogoUrl = await processAndSaveImage(TextLogo);
     const BackGroundShopUrl = await processAndSaveImage(BackGroundShop);
     const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel);
-    console.log("-----------555555------------");
 
     // ایجاد فروشگاه جدید با استفاده از نشست تراکنش
     const newShop = new shops({
@@ -420,11 +416,12 @@ export async function AddShopServerAction(ShopData) {
     });
     
     await newShop.save({ session });
-    console.log("-----------66666------------");
+    const darayiId = new mongoose.Types.ObjectId();
 
     // تعریف حساب‌های پیش‌فرض
     const defaultAccounts = [
       {
+        _id: darayiId, // تنظیم _id مشخص برای حساب والد
         accountCode: '1000',
         title: 'دارایی',
         store: newShop._id,
@@ -490,17 +487,26 @@ export async function AddShopServerAction(ShopData) {
         createdBy: userData.id,
         isSystem: true,
       },
+      {
+        accountCode: '1000-1',
+        title: 'انبار',
+        store: newShop._id,
+        parentAccount: darayiId,
+        accountType: 'انبار',
+        accountNature: 'بستانکار', // می‌توانید اصلاح کنید بر اساس نیاز
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
     ];
     
 
     // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش
     await Account.insertMany(defaultAccounts, { session });
-    console.log("-----------777777------------");
 
     // تکمیل تراکنش
     await session.commitTransaction();
     session.endSession();
-    console.log("-----------888888------------");
 
     return { message: "فروشگاه و حساب‌های مرتبط با موفقیت ثبت شدند", status: 201 };
   } catch (error) {

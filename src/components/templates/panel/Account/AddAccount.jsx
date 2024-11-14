@@ -227,6 +227,8 @@ posConected:account.posConected||true,
             <option value="دسته بندی کالا">دسته بندی کالا</option>
             <option value="اشخاص حقیقی">اشخاص حقیقی</option>
             <option value="اشخاص حقوقی">اشخاص حقوقی</option>
+            <option value="انبار">انبار</option>
+            <option value="حساب انتظامی">حساب انتظامی</option>
           </select>
           {errors.accountType && (
             <p className="text-red-500 text-sm mt-1">

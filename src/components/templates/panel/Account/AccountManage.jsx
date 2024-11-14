@@ -5,7 +5,6 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AccountCard from "./AccountCard";
 import AddAccount from "./AddAccount";
 import Breadcrumb from "@/utils/Breadcrumb"; // وارد کردن کامپوننت Breadcrumb
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { GetAllAccounts } from "./accountActions"; // فرض می‌کنیم تابع GetAllAccounts وجود دارد

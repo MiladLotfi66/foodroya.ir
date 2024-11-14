@@ -119,174 +119,7 @@ export async function createAccount(data) {
   }
 }
 
-// ویرایش حساب
-// export async function updateAccount(id, data) {
-//     await connectDB();
-  
-//     try {
-//       const userData = await authenticateUser();
-  
-//       if (!userData) {
-//         return { success: false, message: "داده‌های کاربر یافت نشد." };
-//       }
-  
-//       let parent = "";
-  
-//       const existingAccount = await Account.findById(id).lean();
-//       if (!existingAccount) {
-//         return { success: false, message: "حساب یافت نشد." };
-//       }
-  
-//       if (existingAccount.isSystem) {
-//         return {
-//           success: false,
-//           message: "امکان ویرایش حساب‌های سیستمی وجود ندارد.",
-//         };
-//       }
-  
-//       // اعتبارسنجی و تبدیل فیلد store در صورت وجود
-//       if (data.store) {
-//         if (new mongoose.Types.ObjectId.isValid(data.store)) {
-//           data.store = new mongoose.Types.ObjectId(data.store);
-//         } else {
-//           return { success: false, message: "شناسه فروشگاه نامعتبر است." };
-//         }
-//       }
-  
-//       // اگر parentAccount تغییر کرده باشد، باید کدینگ حساب را نیز به‌روزرسانی کنیم
-//       if (
-//         data.parentAccount &&
-//         data.parentAccount !== existingAccount.parentAccount?.toString()
-//       ) {
-//         parent = await Account.findById(data.parentAccount).lean();
-//         if (!parent) {
-//           return { success: false, message: "حساب والد جدید پیدا نشد." };
-//         }
-  
-//         // تولید کدینگ جدید بر اساس حساب والد جدید
-//         const siblingAccounts = await Account.find({
-//           parentAccount: data.parentAccount,
-//         })
-//           .sort({ accountCode: 1 })
-//           .lean();
-//         let newAccountCode = "";
-//         if (siblingAccounts.length > 0) {
-//           const lastSiblingCode =
-//             siblingAccounts[siblingAccounts.length - 1].accountCode;
-//           const lastNumber = parseInt(lastSiblingCode.split("-").pop()) || 0;
-//           newAccountCode = `${parent.accountCode}-${lastNumber + 1}`;
-//         } else {
-//           newAccountCode = `${parent.accountCode}-1`;
-//         }
-  
-//         data.accountCode = newAccountCode;
-//         //   data.parentAccount= parentAccount;
-//         data.accountNature = parent.accountNature;
-//         data.updatedBy = userData.id;
-//       }
-  
-//       const updatedAccount = await Account.findByIdAndUpdate(id, data, {
-//         new: true,
-//         runValidators: true,
-//       }).lean(); // استفاده از .lean()
-  
-//       revalidatePath("/accounts");
-//       return { success: true };
-//     } catch (error) {
-//       console.error("Error updating account:", error);
-//       if (error.code === 11000) {
-//         return {
-//           success: false,
-//           message: "کدینگ حساب در این فروشگاه قبلاً استفاده شده است.",
-//         };
-//       }
-//       return {
-//         success: false,
-//         message: error.message || "خطایی در ویرایش حساب رخ داده است.",
-//       };
-//     }
-//   }
-  
-// export async function updateAccount(id, data) {
-//   await connectDB();
 
-//   try {
-//     const userData = await authenticateUser();
-
-//     if (!userData) {
-//       return { success: false, message: "داده‌های کاربر یافت نشد." };
-//     }
-
-//     const existingAccount = await Account.findById(id).lean();
-//     if (!existingAccount) {
-//       return { success: false, message: "حساب یافت نشد." };
-//     }
-
-//     if (existingAccount.isSystem) {
-//       return {
-//         success: false,
-//         message: "امکان ویرایش حساب‌های سیستمی وجود ندارد.",
-//       };
-//     }
-
-//     if (data.store && new mongoose.Types.ObjectId.isValid(data.store)) {
-//       data.store = new mongoose.Types.ObjectId(data.store);
-//     } else {
-//       delete data.store;
-//     }
-
-//     if (data.parentAccount && data.parentAccount !== existingAccount.parentAccount?.toString()) {
-//       const parent = await Account.findById(data.parentAccount).lean();
-//       if (!parent) {
-//         return { success: false, message: "حساب والد جدید پیدا نشد." };
-//       }
-//       data.accountCode = `${parent.accountCode}-${new Date().getTime()}`;
-//       data.accountNature = parent.accountNature;
-//       data.updatedBy = userData.id;
-//     }
-
-//     if (data.accountType === "اشخاص حقیقی" || data.accountType === "اشخاص حقوقی") {
-//       if (!data.contact) {
-//         return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب مخاطب الزامیست" };
-//       }
-//       if (data.currency && new mongoose.Types.ObjectId.isValid(data.currency)) {
-//         data.currency = mongoose.Types.ObjectId(data.currency);
-//       } else {
-//         return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب ارز الزامیست" };
-//       }
-//     } else if (data.accountType === "حساب بانکی") {
-//       data.posConected = data.posConected || null;
-//       data.bankAcountNumber = data.bankAcountNumber || null;
-//       data.bankCardNumber = data.bankCardNumber || null;
-//     } else {
-//       delete data.currency;
-//       delete data.creditLimit;
-//       delete data.contact;
-//     }
-
-//     console.log("data", data);
-
-//     const updatedAccount = await Account.findByIdAndUpdate(id, data, {
-//       new: true,
-//       runValidators: true,
-//     }).lean();
-
-//     revalidatePath("/accounts");
-//     return { success: true };
-//   } catch (error) {
-//     console.error("Error updating account:", error);
-//     if (error.code === 11000) {
-//       return {
-//         success: false,
-//         message: "کدینگ حساب در این فروشگاه قبلاً استفاده شده است.",
-//       };
-//     }
-//     return {
-//       success: false,
-//       message: error.message || "خطایی در ویرایش حساب رخ داده است.",
-//     };
-//   }
-// }
 
 export async function updateAccount(id, data) {
   await connectDB();
@@ -420,10 +253,6 @@ export async function updateAccount(id, data) {
   }
 }
 
-
-
-
-
 // حذف حساب
 export async function deleteAccount(id) {
   await connectDB();
@@ -462,8 +291,6 @@ export async function deleteAccount(id) {
   }
 }
 
-// فعال‌سازی حساب
-// فعال‌سازی حساب
 export async function activateAccount(id) {
     await connectDB();
   
@@ -513,9 +340,7 @@ export async function activateAccount(id) {
       };
     }
   }
-  
 
-// غیر فعال‌سازی حساب
 
 export async function deactivateAccount(id) {
   await connectDB();
@@ -570,14 +395,12 @@ export async function deactivateAccount(id) {
 
 // دریافت تمام حساب‌ها
 export async function GetAllAccounts(storeId, parentId = null) {
-  console.log("111111");
   
     await connectDB();
   
     if (!storeId) {
       throw new Error("فروشگاه مشخص نشده است.");
     }
-    console.log("22222");
 
     const filter = { store: storeId };
     if (parentId) {
@@ -585,11 +408,9 @@ export async function GetAllAccounts(storeId, parentId = null) {
     } else {
       filter.parentAccount = null; // حساب‌های ریشه
     }
-    console.log("33333");
 
     const accounts = await Account.find(filter).sort({ accountCode: 1 }).populate("contact").populate('currency')
     .lean(); // افزودن .lean() اینجا
-    console.log("44444");
 
     const plainAccounts = accounts?.map((account) => {
       return {
@@ -609,8 +430,47 @@ export async function GetAllAccounts(storeId, parentId = null) {
         createdBy: account.createdBy?.toString() || null,
       };
     });
-    console.log("55555");
 
     return { Accounts: plainAccounts, status: 200 };
   }
+
+
+  export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {
+
+    try {
+      if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+        throw new Error('شناسه فروشگاه نامعتبر یا موجود نیست.');
+      }
+      if (!accountCode || typeof accountCode !== 'string' || accountCode.trim() === '') {
+        throw new Error('کد حساب نامعتبر یا موجود نیست.');
+      }
+      const account = await Account.findOne({
+        store: storeId,
+        accountCode: accountCode.trim(),
+        accountStatus: 'فعال', // فرض بر این است که تنها حساب‌های فعال مد نظر هستند
+      }).select('_id'); // انتخاب تنها فیلد _id برای بهینه‌سازی
   
+      if (!account) {
+        return {
+          success: false,
+          message: 'حساب با شناسه فروشگاه و کد حساب ارائه شده یافت نشد.',
+        };
+      }
+  
+      return {
+        success: true,
+        accountId: account._id,
+      };
+    } catch (error) {
+      // ثبت خطا برای مقاصد دیباگینگ
+      console.error('خطا در GetAccountIdBystoreIdAndAccountCode:', error);
+  
+      // بازگشت پیام خطای عمومی به کاربر
+      return {
+        success: false,
+        message: 'در بازیابی شناسه حساب خطایی رخ داده است. لطفاً بعداً مجدداً تلاش کنید.',
+      };
+    }
+  };
+    
+ 

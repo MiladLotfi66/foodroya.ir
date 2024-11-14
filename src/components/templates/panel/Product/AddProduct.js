@@ -15,16 +15,23 @@ import { v4 as uuidv4 } from "uuid"; // برای ایجاد شناسه‌های 
 import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
+import AccountCategories from './AccountCategories'; // فرض می‌کنیم در همان مسیر قرار دارد
+import { GetAccountIdBystoreIdAndAccountCode } from "../Account/accountActions";
 
 function AddProduct({ products = {}, onClose, refreshproducts }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
+  const [anbarAcountId, setAnbarAcountId] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [loadingAnbarAcountId, setLoadingAnbarAcountId] = useState(false);
   const [templateError, setTemplateError] = useState("");
+  const [anbarAcountIdError, setAnbarAcountIdError] = useState("");
   const { ShopId } = useParams();
   const fileInputRef = useRef(null);
   const { theme, setTheme } = useTheme();
   const [features, setFeatures] = useState([]);
+  const [isAccountCategoriesOpen, setIsAccountCategoriesOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
 
   useEffect(() => {
     // دریافت قالب‌های قیمتی هنگام مونت شدن کامپوننت
@@ -48,9 +55,24 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       } finally {
         setLoadingTemplates(false);
       }
-    };
+    };  
+     const fetchAnbarAcountId = async () => {
+      setLoadingAnbarAcountId(true); // تنظیم وضعیت بارگذاری به true
+      try {
+        const response = await GetAccountIdBystoreIdAndAccountCode(ShopId,"1000-1"); // جایگزین با نقطه پایان API شما
+        console.log("AnbarAcountId", response);
 
+
+        setAnbarAcountId(response);
+      } catch (error) {
+        console.error('خطا در دریافت حساب انبار:', error);
+        setAnbarAcountIdError('بارگذاری حساب انبار با مشکل مواجه شد.');
+      } finally {
+        setLoadingAnbarAcountId(false);
+      }
+    };
     fetchPricingTemplates();
+    fetchAnbarAcountId();
   }, [ShopId]);
 
   const {
@@ -59,6 +81,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
     control,
     getValues,
     setValue,
+    watch,
     formState: { errors },
     reset,
   } = useForm({
@@ -264,6 +287,21 @@ if (products?._id) {
     }
   };
 
+  const handleOpenAccountCategories = () => {
+    setIsAccountCategoriesOpen(true);
+  };
+
+  const handleCloseAccountCategories = () => {
+    setIsAccountCategoriesOpen(false);
+  };
+
+  const handleSelectAccount = (account) => {
+    setSelectedAccount(account);
+    setValue('parentAccount', account); // تنظیم مقدار در فرم
+    setIsAccountCategoriesOpen(false);
+  };
+
+
   return (
     <div className="overflow-y-auto max-h-screen">
       <div className="hidden">
@@ -447,9 +485,25 @@ if (products?._id) {
             )}
           </div>
 
-        
+        {/* /////////////////////////////// */}
+        <div>
+          <label>حساب والد:</label>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              type="text"
+              {...register('parentAccount')}
+              value={selectedAccount ? selectedAccount.label : ''}
+              readOnly
+              style={{ marginRight: '10px' }}
+            />
+            <button type="button" onClick={handleOpenAccountCategories}>
+              انتخاب حساب والد
+            </button>
+          </div>
+          {errors.parentAccount && <span>This field is required</span>}
+        </div>
 
-       
+       {/* //////////////////////////////////// */}
           <div>
             <label className="block mb-1">محل قرار گیری</label>
             <input
@@ -533,6 +587,15 @@ if (products?._id) {
           </button>
           <Toaster />
         </form>
+
+              {/* نمایش AccountCategories */}
+      {isAccountCategoriesOpen && (
+        <AccountCategories
+          onSelect={handleSelectAccount}
+          onClose={handleCloseAccountCategories}
+        />
+      )}
+
       </FormProvider>
     </div>
   );

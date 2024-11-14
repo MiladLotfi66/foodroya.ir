@@ -43,6 +43,7 @@ const accountSchema = new Schema(
         "دسته بندی کالا",
         "اشخاص حقیقی",
         "اشخاص حقوقی",
+        "انبار",
         "حساب انتظامی",
       ],
       required: true,
@@ -151,7 +152,7 @@ const accountSchema = new Schema(
 accountSchema.index({ accountCode: 1, store: 1 }, { unique: true });
 
 //  عنوان حساب تعریف اندیس ترکیبی برای یکتایی در هر والد
-accountSchema.index({ parentAccount: 1, title: 1 }, { unique: true });
+accountSchema.index({ parentAccount: 1, title: 1 ,store:1}, { unique: true });
 
 // Middleware برای به‌روزرسانی updatedAt قبل از ذخیره
 accountSchema.pre("save", function (next) {
