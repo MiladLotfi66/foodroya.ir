@@ -11,7 +11,7 @@ import CloseSvg from "@/module/svgs/CloseSvg";
 
 function AccountCategories({ parentAccountNumber, onSelect, ParrentId ,ShopId ,onClose }) {
   const [accounts, setAccounts] = useState([]);
-  const [path, setPath] = useState([{ id: null, title: "همه حساب‌ها" }]); // مسیر اولیه
+  const [path, setPath] = useState([{ id: ParrentId, title: "انبار" }]); // مسیر اولیه
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
@@ -19,7 +19,7 @@ function AccountCategories({ parentAccountNumber, onSelect, ParrentId ,ShopId ,o
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   // تابع برای بارگذاری حساب‌ها
-  const refreshAccounts = useCallback(async (ParrentId = null) => {
+  const refreshAccounts = useCallback(async (ParrentId ) => {
     try {
       if (!ShopId ) {
         console.error("فروشگاه ID موجود نیست.");
@@ -43,15 +43,15 @@ function AccountCategories({ parentAccountNumber, onSelect, ParrentId ,ShopId ,o
   useEffect(() => {
     const initialLoad = async () => {
       setLoading(true);
-      await refreshAccounts(null);
+      await refreshAccounts(ParrentId);
 
       if (parentAccountNumber) {
         try {
           const parentAccountResponse = await GetAllAccounts(ShopId, ParrentId);
-          if (parentAccountResponse.status === 200 && parentAccountResponse.data.Accounts.length > 0) {
+          if (parentAccountResponse.status === 200 && parentAccountResponse.Accounts.length > 0) {
             const parentAccount = parentAccountResponse.Accounts[0];
             setPath([
-              { id: null, title: "همه حساب‌ها" },
+              // { id: null, title: "همه حساب‌ها" },
               { id: parentAccount.number, title: parentAccount.name },
             ]);
           }
@@ -185,14 +185,23 @@ function AccountCategories({ parentAccountNumber, onSelect, ParrentId ,ShopId ,o
       ) : (
         <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {filteredAccounts.map(account => (
+            <div>
+
             <div 
               key={account._id} 
               className="account-item border p-4 rounded hover:bg-gray-100 cursor-pointer flex flex-col items-center"
-              onClick={() => handleAccountClick(account)}
-            >
+              onClick={() => refreshAccounts(account)}
+              >
               <FaFolder className="text-yellow-500 text-3xl mb-2" />
               <p className="text-center">{account.title}</p>
+            <button 
+            onClick={() => handleAccountClick(account)} 
+            className="flex items-center bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+          >
+            انتخاب
+          </button>
             </div>
+              </div>
           ))}
           {filteredAccounts.length === 0 && <p>حسابی یافت نشد.</p>}
         </div>

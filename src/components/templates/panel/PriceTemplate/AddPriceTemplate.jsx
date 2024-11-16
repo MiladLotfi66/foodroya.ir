@@ -266,7 +266,7 @@ function AddPriceTemplate({
           }}
           className="hover:bg-gray-200 transition-colors"
         >
-          افزودن  
+          افزودن نقش جدید  
                </div>
       </>
     );

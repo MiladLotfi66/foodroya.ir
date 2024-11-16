@@ -46,13 +46,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
           label: template.title,
         }));
 
-        // افزودن گزینه "افزودن" به لیست قالب‌ها
-        // templates.push({
-        //   value: 'add_new',
-        //   label: 'افزودن قالب جدید',
-        //   isAddOption: true, // مشخصه برای تشخیص گزینه افزودن
-        // });
-
+    
         setPricingTemplates(templates);
       } catch (error) {
         console.error('خطا در دریافت قالب‌های قیمتی:', error);
