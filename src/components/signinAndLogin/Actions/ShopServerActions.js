@@ -491,6 +491,7 @@ export async function AddShopServerAction(ShopData) {
         accountCode: '1000-1',
         title: 'انبار',
         store: newShop._id,
+        
         parentAccount: darayiId,
         accountType: 'انبار',
         accountNature: 'بستانکار', // می‌توانید اصلاح کنید بر اساس نیاز

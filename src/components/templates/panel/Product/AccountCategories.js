@@ -7,8 +7,9 @@ import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
 import { GetAllAccounts } from '../Account/accountActions'; // مسیر صحیح به accountActions.js
 import axios from 'axios';
+import CloseSvg from "@/module/svgs/CloseSvg";
 
-function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
+function AccountCategories({ parentAccountNumber, onSelect, ParrentId ,ShopId ,onClose }) {
   const [accounts, setAccounts] = useState([]);
   const [path, setPath] = useState([{ id: null, title: "همه حساب‌ها" }]); // مسیر اولیه
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,17 +19,17 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   // تابع برای بارگذاری حساب‌ها
-  const refreshAccounts = useCallback(async (parentId = null) => {
+  const refreshAccounts = useCallback(async (ParrentId = null) => {
     try {
-      if (!storeId) {
+      if (!ShopId ) {
         console.error("فروشگاه ID موجود نیست.");
         return;
       }
 
-      const response = await GetAllAccounts(storeId, parentId);
+      const response = await GetAllAccounts(ShopId, ParrentId);
 
       if (response.status === 200) {
-        setAccounts(response.data.Accounts);
+        setAccounts(response.Accounts);
       } else {
         throw new Error(response.message || "خطا در دریافت حساب‌ها.");
       }
@@ -36,7 +37,7 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
       console.error("Error fetching accounts:", error);
       toast.error("خطا در دریافت حساب‌ها.");
     }
-  }, [storeId]);
+  }, [ShopId ]);
 
   // بارگذاری اولیه حساب‌ها و مسیر
   useEffect(() => {
@@ -46,9 +47,9 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
 
       if (parentAccountNumber) {
         try {
-          const parentAccountResponse = await GetAllAccounts(storeId, parentAccountNumber);
+          const parentAccountResponse = await GetAllAccounts(ShopId, ParrentId);
           if (parentAccountResponse.status === 200 && parentAccountResponse.data.Accounts.length > 0) {
-            const parentAccount = parentAccountResponse.data.Accounts[0];
+            const parentAccount = parentAccountResponse.Accounts[0];
             setPath([
               { id: null, title: "همه حساب‌ها" },
               { id: parentAccount.number, title: parentAccount.name },
@@ -63,28 +64,29 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
       setLoading(false);
     };
     initialLoad();
-  }, [refreshAccounts, parentAccountNumber, storeId]);
+  }, [refreshAccounts, ShopId, ParrentId]);
 
   // مدیریت کلیک روی حساب‌ها
   const handleAccountClick = useCallback(async (account) => {
-    onAccountSelect(account.number);
-    const newPath = [...path, { id: account.number, title: account.name }];
+    
+    onSelect(account);
+    const newPath = [...path, { id: account._id, title: account.title }];
     setPath(newPath);
-    await refreshAccounts(account.number);
-  }, [onAccountSelect, path, refreshAccounts]);
+    await refreshAccounts(account._id);
+  }, [onSelect, path, refreshAccounts]);
 
   // مدیریت کلیک روی بخش‌های Breadcrumb
   const handleBreadcrumbClick = useCallback(async (index) => {
     const selectedCrumb = path[index];
     setPath(path.slice(0, index + 1));
     if (selectedCrumb.id) {
-      onAccountSelect(selectedCrumb.id);
+      onSelect(selectedCrumb.id);
       await refreshAccounts(selectedCrumb.id);
     } else {
-      onAccountSelect(null);
+      onSelect(null);
       await refreshAccounts(null);
     }
-  }, [path, onAccountSelect, refreshAccounts]);
+  }, [path, onSelect, refreshAccounts]);
 
   // مدیریت ایجاد حساب جدید
   const onSubmitCreateAccount = async (data) => {
@@ -119,14 +121,36 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
 
   // فیلتر کردن حساب‌ها بر اساس جستجو
   const filteredAccounts = accounts.filter(account => 
-    account.name.toLowerCase().includes(searchQuery.toLowerCase())
+    account?.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // تعیین امکان افزودن حساب
   const canAddAccount = true; // می‌توانید شرایط خود را اضافه کنید
 
   return (
-    <div className="account-categories container mx-auto p-4">
+
+<div >
+<div className="hidden">
+  <CloseSvg />
+</div>
+
+<div className="flex justify-between p-2 md:p-5 mt-4">
+  <button
+    aria-label="close"
+    className="hover:text-orange-300"
+    onClick={onClose}
+  >
+    <svg width="34" height="34">
+      <use href="#CloseSvg"></use>
+    </svg>
+  </button>
+
+  <h1 className="text-3xl font-MorabbaBold">
+   "انتخاب حساب والد"
+  </h1>
+</div>
+
+<div className="account-categories container mx-auto p-4">
       {/* نوار Breadcrumb */}
       <Breadcrumb 
         path={path} 
@@ -162,12 +186,12 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
         <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {filteredAccounts.map(account => (
             <div 
-              key={account.number} 
+              key={account._id} 
               className="account-item border p-4 rounded hover:bg-gray-100 cursor-pointer flex flex-col items-center"
               onClick={() => handleAccountClick(account)}
             >
               <FaFolder className="text-yellow-500 text-3xl mb-2" />
-              <p className="text-center">{account.name}</p>
+              <p className="text-center">{account.title}</p>
             </div>
           ))}
           {filteredAccounts.length === 0 && <p>حسابی یافت نشد.</p>}
@@ -230,6 +254,11 @@ function AccountCategories({ parentAccountNumber, onAccountSelect, storeId }) {
 
       <Toaster />
     </div>
+
+</div>
+
+
+
   );
 }
 

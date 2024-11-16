@@ -1,7 +1,7 @@
 "use client";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import TagSelect from "./TagSelect";
-import Select from "react-select"; // اضافه کردن react-select
+import Select, { components } from "react-select"; // اضافه کردن react-select و components
 import { useTheme } from "next-themes";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
@@ -9,7 +9,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import ProductsSchema from "./ProductsSchema";
 import { useState, useEffect, useRef } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation"; // اضافه کردن useRouter
 import { AddProductsAction, EditProductsAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid"; // برای ایجاد شناسه‌های یکتا
 import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
@@ -32,6 +32,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
   const [features, setFeatures] = useState([]);
   const [isAccountCategoriesOpen, setIsAccountCategoriesOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const router = useRouter(); // استفاده از useRouter برای هدایت
 
   useEffect(() => {
     // دریافت قالب‌های قیمتی هنگام مونت شدن کامپوننت
@@ -39,14 +40,18 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       setLoadingTemplates(true); // تنظیم وضعیت بارگذاری به true
       try {
         const response = await GetAllPriceTemplates(ShopId); // جایگزین با نقطه پایان API شما
-        console.log("response", response);
 
         const templates = response.PriceTemplates?.map((template) => ({
           value: template._id,
           label: template.title,
         }));
 
-        console.log("templates", templates);
+        // افزودن گزینه "افزودن" به لیست قالب‌ها
+        // templates.push({
+        //   value: 'add_new',
+        //   label: 'افزودن قالب جدید',
+        //   isAddOption: true, // مشخصه برای تشخیص گزینه افزودن
+        // });
 
         setPricingTemplates(templates);
       } catch (error) {
@@ -56,12 +61,11 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
         setLoadingTemplates(false);
       }
     };  
-     const fetchAnbarAcountId = async () => {
+
+    const fetchAnbarAcountId = async () => {
       setLoadingAnbarAcountId(true); // تنظیم وضعیت بارگذاری به true
       try {
         const response = await GetAccountIdBystoreIdAndAccountCode(ShopId,"1000-1"); // جایگزین با نقطه پایان API شما
-        console.log("AnbarAcountId", response);
-
 
         setAnbarAcountId(response);
       } catch (error) {
@@ -71,6 +75,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
         setLoadingAnbarAcountId(false);
       }
     };
+
     fetchPricingTemplates();
     fetchAnbarAcountId();
   }, [ShopId]);
@@ -87,7 +92,6 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
   } = useForm({
     mode: "all",
     defaultValues: {
-      
       title: products?.title || "",
       secondaryTitle: products?.secondaryTitle || "",
       items: products?.items || "",
@@ -97,7 +101,6 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       tags: products?.tags
         ? products.tags?.map((tag) => ({ label: tag, value: tag }))
         : [],
-
       storageLocation: products?.storageLocation || "",
       isSaleable:
         products?.isSaleable !== undefined ? products.isSaleable : true,
@@ -108,30 +111,29 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
     },
     resolver: yupResolver(ProductsSchema),
   });
-/////////////////////////////
-useEffect(() => {
-  const fetchingFeature = async () => {
-    try {
-      const response = await GetAllProductFeature(products?._id); 
-      console.log("response", response);
 
-      const features = response.features?.map((feature) => ({
-        value: feature._id,
-        label: feature.title,
-      }));
+  /////////////////////////////
+  useEffect(() => {
+    const fetchingFeature = async () => {
+      try {
+        const response = await GetAllProductFeature(products?._id); 
 
-      console.log("features", features);
+        const features = response.features?.map((feature) => ({
+          value: feature._id,
+          label: feature.title,
+        }));
 
-      setPricingTemplates(features);
-    } catch (error) {
-      console.error('خطا در دریافت قالب‌های قیمتی:', error);
-      setTemplateError('بارگذاری قالب‌های قیمتی با مشکل مواجه شد.');
-    } 
-  };
-if (products?._id) {
-  fetchingFeature();
-}
-}, []);
+        setPricingTemplates(features);
+      } catch (error) {
+        console.error('خطا در دریافت قالب‌های قیمتی:', error);
+        setTemplateError('بارگذاری قالب‌های قیمتی با مشکل مواجه شد.');
+      } 
+    };
+    if (products?._id) {
+      fetchingFeature();
+    }
+  }, []);
+  
   // مدیریت state برای تصاویر به صورت یک آرایه از اشیاء
   const [images, setImages] = useState(() => {
     // تصاویر موجود را با ساختار یکتا تبدیل می‌کنیم
@@ -145,8 +147,7 @@ if (products?._id) {
     }
     return [];
   });
-/////////////////////////////
-
+  /////////////////////////////
 
   // تابع انتخاب تصاویر جدید
   const handleImageChange = (e) => {
@@ -295,12 +296,38 @@ if (products?._id) {
     setIsAccountCategoriesOpen(false);
   };
 
-  const handleSelectAccount = (account) => {
+  const handleSelectAccount = (account) => {   
     setSelectedAccount(account);
     setValue('parentAccount', account); // تنظیم مقدار در فرم
     setIsAccountCategoriesOpen(false);
   };
 
+  // تعریف کامپوننت سفارشی برای MenuList
+  const CustomMenuList = (props) => {
+    return (
+      <>
+        <components.MenuList {...props}>
+          {props.children}
+        </components.MenuList>
+        {/* دکمه افزودن در انتهای لیست */}
+        <div
+          style={{
+            padding: '8px 12px',
+            cursor: 'pointer',
+            borderTop: '1px solid #ddd',
+            textAlign: 'center',
+            backgroundColor: '#f9f9f9'
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault(); // جلوگیری از فوکوس گرفتن روی Select
+            router.push(`/${ShopId}/panel/priceTemplate`); // مسیر صفحه افزودن قالب قیمتی
+          }}
+        >
+          افزودن قالب قیمتی جدید
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="overflow-y-auto max-h-screen">
@@ -324,14 +351,13 @@ if (products?._id) {
         </h1>
       </div>
 
-      <FormProvider {...{ register, handleSubmit, control, setValue,formState: { errors }}}>
+      <FormProvider {...{ register, handleSubmit, control, setValue, formState: { errors }}}>
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
           className="flex flex-col gap-4 p-2 md:p-4"
         >
           {/* بخش مدیریت تصاویر */}
           <div>
-            <label className="block mb-2 font-semibold">تصاویر محصول</label>
             <button
               type="button"
               onClick={() => fileInputRef.current.click()}
@@ -465,17 +491,20 @@ if (products?._id) {
                     options={pricingTemplates}
                     placeholder="انتخاب قالب قیمتی"
                     isClearable
-                          styles={ theme === "dark"?customSelectStyles :""}
+                    styles={ theme === "dark" ? customSelectStyles : undefined}
+                    components={{ MenuList: CustomMenuList }} // استفاده از MenuList سفارشی
                     value={
                       pricingTemplates?.find(
                         (option) => option.value === field.value
                       ) || null
                     }
                     onChange={(selectedOption) => {
+                      if (selectedOption && selectedOption.value === 'add_new') {
+                        // عدم انتخاب گزینه افزودن در فرم
+                        return;
+                      }
                       field.onChange(selectedOption ? selectedOption.value : "");
                     }}
-                  // className=" react-select-container"
-                  // classNamePrefix="select "
                   />
                 )}
               />
@@ -492,15 +521,15 @@ if (products?._id) {
             <input
               type="text"
               {...register('parentAccount')}
-              value={selectedAccount ? selectedAccount.label : ''}
+              value={selectedAccount ? selectedAccount.title : ''}
               readOnly
               style={{ marginRight: '10px' }}
             />
-            <button type="button" onClick={handleOpenAccountCategories}>
+            <button type="button" onClick={handleOpenAccountCategories} >
               انتخاب حساب والد
             </button>
           </div>
-          {errors.parentAccount && <span>This field is required</span>}
+          {errors.parentAccount && <span className="text-red-500">این فیلد اجباری است</span>}
         </div>
 
        {/* //////////////////////////////////// */}
@@ -516,7 +545,6 @@ if (products?._id) {
             )}
           </div>
 <div className="flex items-center justify-around">
-
           <div className="flex items-center gap-2 h-10">
             <label >قابل فروش</label>
             <input
@@ -558,7 +586,6 @@ if (products?._id) {
         {/* کامپوننت FeatureSelect */}
         <FeatureSelect />
 
-
           <div>
             <label className="block mb-1">توضیحات</label>
             <textarea
@@ -589,11 +616,23 @@ if (products?._id) {
         </form>
 
               {/* نمایش AccountCategories */}
-      {isAccountCategoriesOpen && (
-        <AccountCategories
+              {isAccountCategoriesOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={handleCloseAccountCategories}
+        >
+          <div
+            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+           <AccountCategories
           onSelect={handleSelectAccount}
           onClose={handleCloseAccountCategories}
+          ParrentId={anbarAcountId.accountId}
+          ShopId={ShopId}
         />
+          </div>
+        </div>
       )}
 
       </FormProvider>
