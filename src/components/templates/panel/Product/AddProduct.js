@@ -10,7 +10,7 @@ import ProductsSchema from "./ProductsSchema";
 import { useState, useEffect, useRef } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams, useRouter } from "next/navigation"; // اضافه کردن useRouter
-import { AddProductsAction, EditProductsAction } from "./ProductActions";
+import { AddProductAction, AddProductsAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid"; // برای ایجاد شناسه‌های یکتا
 import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
@@ -18,7 +18,7 @@ import { customSelectStyles } from "./selectStyles";
 import AccountCategories from './AccountCategories'; // فرض می‌کنیم در همان مسیر قرار دارد
 import { GetAccountIdBystoreIdAndAccountCode } from "../Account/accountActions";
 
-function AddProduct({ products = {}, onClose, refreshproducts }) {
+function AddProduct({ products = {}, onClose, refreshProducts }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [anbarAcountId, setAnbarAcountId] = useState([]);
@@ -89,7 +89,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
       title: products?.title || "",
       secondaryTitle: products?.secondaryTitle || "",
       items: products?.items || "",
-      generalFeatures: products?.generalFeatures || "",
+      generalFeatures: products?.generalFeatures || [],
       pricingTemplate: products?.pricingTemplate || "",
       category: products?.category || "",
       tags: products?.tags
@@ -252,11 +252,11 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
         result = await EditProductsAction(formDataObj, ShopId);
       } else {
         // افزودن محصول جدید
-        result = await AddProductsAction(formDataObj);
+        result = await AddProductAction(formDataObj);
       }
 
       if (result.status === 201 || result.status === 200) {
-        await refreshproducts();
+        await refreshProducts();
         const successMessage =
           products && products.id
             ? "محصول با موفقیت ویرایش شد!"
@@ -431,11 +431,9 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
             )}
 
             {/* نمایش خطاها */}
-            {errors.existingImages && (
-              <p className="text-red-500">{errors.existingImages.message}</p>
-            )}
-            {errors.newImages && (
-              <p className="text-red-500">{errors.newImages.message}</p>
+       
+            {errors.images && (
+              <p className="text-red-500">{errors.images.message}</p>
             )}
           </div>
 
@@ -446,7 +444,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
               type="text"
               {...register("title")}
               className="react-select-container w-full border rounded px-3 py-2"
-              required
+              
             />
             {errors.title && (
               <p className="text-red-500">{errors.title.message}</p>
@@ -517,13 +515,14 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
               {...register('parentAccount')}
               value={selectedAccount ? selectedAccount.title : ''}
               readOnly
+              
               style={{ marginRight: '10px' }}
             />
             <button type="button" onClick={handleOpenAccountCategories} >
               انتخاب حساب والد
             </button>
           </div>
-          {errors.parentAccount && <span className="text-red-500">این فیلد اجباری است</span>}
+          {errors.parentAccount && <span className="text-red-500">{errors.parentAccount.message }</span>}
         </div>
 
        {/* //////////////////////////////////// */}
@@ -532,7 +531,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
             <input
               {...register("storageLocation")}
               className="react-select-container w-full border rounded px-3 py-2"
-              required
+              
             />
             {errors.storageLocation && (
               <p className="text-red-500">{errors.storageLocation.message}</p>
@@ -547,9 +546,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
               className=" border rounded h-10"
               />
          
-            {errors.isSaleable && (
-              <p className="text-red-500">{errors.isSaleable.message}</p>
-            )}
+           
           </div>
 
           <div className="flex items-center gap-2 h-10">
@@ -559,9 +556,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
               {...register("isMergeable")}
               className="border rounded h-10"
               />
-            {errors.isMergeable && (
-              <p className="text-red-500">{errors.isMergeable.message}</p>
-            )}
+        
           </div>
             </div>
 
@@ -570,7 +565,7 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
             <input
               {...register("unit")}
               className="react-select-container w-full border rounded px-3 py-2"
-              required
+              
             />
             {errors.unit && (
               <p className="text-red-500">{errors.unit.message}</p>
@@ -585,7 +580,6 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
             <textarea
               {...register("description")}
               className="react-select-container w-full border rounded px-3 py-2"
-              required
             ></textarea>
             {errors.description && (
               <p className="text-red-500">{errors.description.message}</p>
@@ -605,6 +599,11 @@ function AddProduct({ products = {}, onClose, refreshproducts }) {
             ) : (
               "افزودن محصول"
             )}
+          </button>
+          <button 
+          onClick={()=>console.log("errors",errors )}>
+              "ویرایش محصول"
+            
           </button>
           <Toaster />
         </form>

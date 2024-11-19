@@ -31,6 +31,8 @@ export async function GetAllProducts(shopId) {
   }
 
   export async function AddProductAction(formData) {
+    console.log("formData",formData);
+    
     await connectDB();
     let user;
     try {
@@ -44,7 +46,7 @@ export async function GetAllProducts(shopId) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   
-    const { title, shortName, exchangeRate, decimalPlaces, status, ShopId } = Object.fromEntries(formData.entries());
+    const { title, shortName, exchangeRate, decimalPlaces, status, ShopId ,unit} = Object.fromEntries(formData.entries());
     // دریافت shopId از shopUniqueName
    
   
@@ -66,6 +68,7 @@ export async function GetAllProducts(shopId) {
       exchangeRate: parseFloat(exchangeRate),
       decimalPlaces: parseInt(decimalPlaces),
       status,
+      unit, // افزودن فیلد unit
       shop:ShopId,
       createdBy: user.id, // استفاده از _id به جای id
       updatedBy: user.id, // استفاده از _id به جای id

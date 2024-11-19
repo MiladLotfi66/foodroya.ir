@@ -5,8 +5,7 @@ import { FaFolder, FaSearch, FaPlus } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
-import { GetAllAccounts } from '../Account/accountActions'; // مسیر صحیح به accountActions.js
-import axios from 'axios';
+import { createAccount, GetAllAccounts } from '../Account/accountActions'; // مسیر صحیح به accountActions.js
 import CloseSvg from "@/module/svgs/CloseSvg";
 
 function AccountCategories({ parentAccountNumber, onSelect, ParrentId, ShopId, onClose }) {
@@ -93,12 +92,15 @@ function AccountCategories({ parentAccountNumber, onSelect, ParrentId, ShopId, o
 
     try {
       const payload = {
-        name,
-        type,
-        parentAccountNumber: parentNumber,
+        title: name,
+        accountType:"دسته بندی کالا",
+        parentAccount: parentNumber,
+        store:ShopId,
       };
-      const response = await axios.post('/api/accounts', payload);
-      if (response.status === 201) {
+      console.log("payload",payload);
+      
+      const response = await createAccount(payload);
+      if (response.success) {
         toast.success('حساب جدید ایجاد شد');
         await refreshAccounts(parentNumber);
         reset();
@@ -216,30 +218,18 @@ function AccountCategories({ parentAccountNumber, onSelect, ParrentId, ShopId, o
               className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl mb-4">ایجاد حساب جدید</h2>
+              <h2 className="text-xl mb-4">ایجاد دسته بندی کالا</h2>
               <form onSubmit={handleSubmit(onSubmitCreateAccount)} className="flex flex-col space-y-4">
                 <div>
-                  <label className="block mb-1">نام حساب</label>
+                  <label className="block mb-1">نام دسته بندی</label>
                   <input 
                     type="text"
                     {...register('name', { required: true })}
                     className="w-full border rounded px-3 py-2"
                   />
-                  {errors.name && <p className="text-red-500">نام حساب الزامی است.</p>}
+                  {errors.name && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
                 </div>
-                <div>
-                  <label className="block mb-1">نوع حساب</label>
-                  <select 
-                    {...register('type', { required: true })}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="">انتخاب کنید</option>
-                    <option value="storehouse">انبار</option>
-                    <option value="category">دسته‌بندی کالا</option>
-                    {/* گزینه‌های بیشتر در صورت نیاز */}
-                  </select>
-                  {errors.type && <p className="text-red-500">نوع حساب الزامی است.</p>}
-                </div>
+            
                 <div className="flex justify-end space-x-2">
                   <button 
                     type="button" 

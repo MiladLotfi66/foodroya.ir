@@ -21,10 +21,7 @@ function ProductManage() {
   // بهینه‌سازی refreshProducts با استفاده از useCallback
   const refreshProducts = useCallback(async () => {
     try {
-     
-
       const response = await GetAllProducts(ShopId);
-
       setProducts(response.products);
     } catch (error) {
       console.error("Error fetching products:", error);
