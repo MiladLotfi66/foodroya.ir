@@ -1,7 +1,7 @@
 // src/components/FeatureSelect.js
 "use client"; // ذخیره این فایل به عنوان یک کامپوننت کلاینت
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import AsyncCreatableSelect from "react-select/async-creatable";
 import debounce from "lodash.debounce";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
@@ -20,12 +20,17 @@ const FeatureSelect = () => {
     name: "features",
   });
 
-  // افزودن یک ویژگی خالی در بارگذاری اولیه
+  const didMountRef = useRef(false);
+
   useEffect(() => {
-    if (fields.length === 0) {
-      append({ featureKey: null, value: "" });
+    if (!didMountRef.current) {
+      if (fields.length === 0) {
+        append({ featureKey: null, value: "" });
+      }
+      didMountRef.current = true;
     }
   }, [append, fields.length]);
+
 
   const handleAddFeature = () => {
     append({ featureKey: null, value: "" });

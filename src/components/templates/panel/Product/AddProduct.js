@@ -10,28 +10,20 @@ import ProductsSchema from "./ProductsSchema";
 import { useState, useEffect, useRef } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams, useRouter } from "next/navigation"; // اضافه کردن useRouter
-import { AddProductAction, AddProductsAction } from "./ProductActions";
+import { AddProductAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid"; // برای ایجاد شناسه‌های یکتا
 import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
-import AccountCategories from './AccountCategories'; // فرض می‌کنیم در همان مسیر قرار دارد
-import { GetAccountIdBystoreIdAndAccountCode } from "../Account/accountActions";
 
-function AddProduct({ products = {}, onClose, refreshProducts }) {
+function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
-  const [anbarAcountId, setAnbarAcountId] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
-  const [loadingAnbarAcountId, setLoadingAnbarAcountId] = useState(false);
   const [templateError, setTemplateError] = useState("");
-  const [anbarAcountIdError, setAnbarAcountIdError] = useState("");
   const { ShopId } = useParams();
   const fileInputRef = useRef(null);
   const { theme, setTheme } = useTheme();
-  const [features, setFeatures] = useState([]);
-  const [isAccountCategoriesOpen, setIsAccountCategoriesOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState(null);
   const router = useRouter(); // استفاده از useRouter برای هدایت
 
   useEffect(() => {
@@ -40,13 +32,10 @@ function AddProduct({ products = {}, onClose, refreshProducts }) {
       setLoadingTemplates(true); // تنظیم وضعیت بارگذاری به true
       try {
         const response = await GetAllPriceTemplates(ShopId); // جایگزین با نقطه پایان API شما
-
         const templates = response.PriceTemplates?.map((template) => ({
           value: template._id,
           label: template.title,
         }));
-
-    
         setPricingTemplates(templates);
       } catch (error) {
         console.error('خطا در دریافت قالب‌های قیمتی:', error);
@@ -55,20 +44,7 @@ function AddProduct({ products = {}, onClose, refreshProducts }) {
         setLoadingTemplates(false);
       }
     };  
-
-    const fetchAnbarAcountId = async () => {
-      setLoadingAnbarAcountId(true); // تنظیم وضعیت بارگذاری به true
-      try {
-        const response = await GetAccountIdBystoreIdAndAccountCode(ShopId,"1000-1"); // جایگزین با نقطه پایان API شما
-
-        setAnbarAcountId(response);
-      } catch (error) {
-        console.error('خطا در دریافت حساب انبار:', error);
-        setAnbarAcountIdError('بارگذاری حساب انبار با مشکل مواجه شد.');
-      } finally {
-        setLoadingAnbarAcountId(false);
-      }
-    };
+   
 
     fetchPricingTemplates();
     fetchAnbarAcountId();
@@ -235,13 +211,12 @@ function AddProduct({ products = {}, onClose, refreshProducts }) {
       // تبدیل آرایه اشیاء تگ‌ها به آرایه رشته‌ای
       const tags = formData.tags?.map((tag) => tag.value);
       tags.forEach((tag) => formDataObj.append("tags", tag));
-
       formDataObj.append("storageLocation", formData.storageLocation);
       formDataObj.append("isSaleable", formData.isSaleable);
       formDataObj.append("isMergeable", formData.isMergeable);
       formDataObj.append("unit", formData.unit);
       formDataObj.append("description", formData.description);
-
+      formDataObj.append("parentAccount", parentAccount);
       if (products?._id) {
         formDataObj.append("id", products._id);
       }
@@ -282,18 +257,10 @@ function AddProduct({ products = {}, onClose, refreshProducts }) {
     }
   };
 
-  const handleOpenAccountCategories = () => {
-    setIsAccountCategoriesOpen(true);
-  };
-
-  const handleCloseAccountCategories = () => {
-    setIsAccountCategoriesOpen(false);
-  };
 
   const handleSelectAccount = (account) => {   
     setSelectedAccount(account);
     setValue('parentAccount', account); // تنظیم مقدار در فرم
-    setIsAccountCategoriesOpen(false);
   };
 
   // تعریف کامپوننت سفارشی برای MenuList
@@ -506,24 +473,7 @@ function AddProduct({ products = {}, onClose, refreshProducts }) {
             )}
           </div>
 
-        {/* /////////////////////////////// */}
-        <div>
-          <label>حساب والد:</label>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <input
-              type="text"
-              {...register('parentAccount')}
-              value={selectedAccount ? selectedAccount.title : ''}
-              readOnly
-              
-              style={{ marginRight: '10px' }}
-            />
-            <button type="button" onClick={handleOpenAccountCategories} >
-              انتخاب حساب والد
-            </button>
-          </div>
-          {errors.parentAccount && <span className="text-red-500">{errors.parentAccount.message }</span>}
-        </div>
+   
 
        {/* //////////////////////////////////// */}
           <div>
@@ -600,33 +550,12 @@ function AddProduct({ products = {}, onClose, refreshProducts }) {
               "افزودن محصول"
             )}
           </button>
-          <button 
-          onClick={()=>console.log("errors",errors )}>
-              "ویرایش محصول"
-            
-          </button>
+       
           <Toaster />
         </form>
 
-              {/* نمایش AccountCategories */}
-              {isAccountCategoriesOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-          onClick={handleCloseAccountCategories}
-        >
-          <div
-            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-           <AccountCategories
-          onSelect={handleSelectAccount}
-          onClose={handleCloseAccountCategories}
-          ParrentId={anbarAcountId.accountId}
-          ShopId={ShopId}
-        />
-          </div>
-        </div>
-      )}
+
+      
 
       </FormProvider>
     </div>

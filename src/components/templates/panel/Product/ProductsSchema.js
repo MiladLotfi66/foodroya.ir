@@ -60,11 +60,6 @@ const ProductsSchema = yup.object().shape({
   pricingTemplate:yup.string()
         .required(' قالب قیمتی الزامی است')    ,
   /////////////////////////
-  parentAccount: yup.object().shape({
-  }).required('انتخاب حساب والد الزامی است'),
-
-
-  //////////////////////
   images: yup.array()
     .of(
       yup.object().shape({

@@ -461,6 +461,7 @@ export async function GetAllAccounts(storeId, parentId = null) {
       return {
         success: true,
         accountId: account._id,
+
       };
     } catch (error) {
       // ثبت خطا برای مقاصد دیباگینگ
