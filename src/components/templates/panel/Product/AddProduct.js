@@ -47,7 +47,6 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
    
 
     fetchPricingTemplates();
-    fetchAnbarAcountId();
   }, [ShopId]);
 
   const {
@@ -202,8 +201,8 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
 
       // افزودن سایر فیلدهای فرم
       formDataObj.append("title", formData.title);
-      formDataObj.append("secondaryTitle", formData.secondaryTitle);
       formDataObj.append("items", formData.items);
+    
       formDataObj.append("generalFeatures", formData.generalFeatures);
       formDataObj.append("pricingTemplate", formData.pricingTemplate);
       formDataObj.append("category", formData.category);
@@ -220,12 +219,12 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
       if (products?._id) {
         formDataObj.append("id", products._id);
       }
-
       let result;
       if (products?._id) {
         // ویرایش محصول
         result = await EditProductsAction(formDataObj, ShopId);
       } else {
+        console.log("formDataObj",formDataObj)
         // افزودن محصول جدید
         result = await AddProductAction(formDataObj);
       }
@@ -255,12 +254,6 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
     } finally {
       setIsSubmit(false);
     }
-  };
-
-
-  const handleSelectAccount = (account) => {   
-    setSelectedAccount(account);
-    setValue('parentAccount', account); // تنظیم مقدار در فرم
   };
 
   // تعریف کامپوننت سفارشی برای MenuList
@@ -306,7 +299,6 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
             <use href="#CloseSvg"></use>
           </svg>
         </button>
-
         <h1 className="text-3xl font-MorabbaBold">
           {products?._id ? "ویرایش محصول" : "افزودن محصول"}
         </h1>

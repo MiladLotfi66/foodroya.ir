@@ -46,30 +46,23 @@ export async function GetAllProducts(shopId) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   
-    const { title, shortName, exchangeRate, decimalPlaces, status, ShopId ,unit} = Object.fromEntries(formData.entries());
-    // دریافت shopId از shopUniqueName
-   
-  
-    // بررسی یکتایی shortName
-    const existingProduct = await Product.findOne({ shortName ,shop:ShopId}).lean();
-    
-    if (existingProduct) {
-      return { status: 400, message: 'نام اختصاری محصول باید منحصر به فرد باشد.' };
-    } 
-    const existingTitleProduct = await Product.findOne({ title ,shop:ShopId }).lean();
-    
-    if (existingTitleProduct) {
-      return { status: 400, message: 'نام  محصول باید منحصر به فرد باشد.' };
-    }
+    const { images,title, ShopId ,unit,items,generalFeatures,pricingTemplate,category,tags,storageLocation,isSaleable,isMergeable,description,parentAccount} = Object.fromEntries(formData.entries());
     // ایجاد محصول جدید
     const newProduct = new Product({
+      images,
       title,
-      shortName,
-      exchangeRate: parseFloat(exchangeRate),
-      decimalPlaces: parseInt(decimalPlaces),
-      status,
+      generalFeatures,
+      items,
+      pricingTemplate,
       unit, // افزودن فیلد unit
-      shop:ShopId,
+      ShopId:ShopId,
+      category,
+      tags,
+      storageLocation,
+      isSaleable,
+      isMergeable,
+      description,
+      parentAccount,
       createdBy: user.id, // استفاده از _id به جای id
       updatedBy: user.id, // استفاده از _id به جای id
     });

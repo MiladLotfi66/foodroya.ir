@@ -116,6 +116,7 @@ function ProductManage() {
         <AccountCategories
   onSelect={handleSelectParentAccount}
   ShopId={ShopId}
+  setSelectedParentAccount={setSelectedParentAccount}
   onClose={() => {}}
 />
 {selectedParentAccount && (

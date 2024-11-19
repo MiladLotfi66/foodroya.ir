@@ -5,7 +5,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 function Breadcrumb({ path, onBreadcrumbClick }) {
-  console.log("path",path);
   
   return (
     <nav className="bg-gray-100 dark:bg-zinc-800 p-3 rounded-md mb-4">

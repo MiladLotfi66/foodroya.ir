@@ -456,7 +456,7 @@ export async function GetAllAccounts(storeId, parentId = null) {
           message: 'حساب با شناسه فروشگاه و کد حساب ارائه شده یافت نشد.',
         };
       }
-  console.log("        accountId", account._id);
+  console.log("accountId", account._id);
   
       return {
         success: true,

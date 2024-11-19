@@ -7,7 +7,7 @@ import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount, GetAllAccounts, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 
-function AccountCategories({ onSelect, ShopId }) {
+function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
   const [accounts, setAccounts] = useState([]);
   const [path, setPath] = useState([]); // مسیر برای Breadcrumb
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,6 +44,7 @@ function AccountCategories({ onSelect, ShopId }) {
 
     try {
       setLoading(true);
+      setSelectedParentAccount(parentId)
       const response = await GetAllAccounts(ShopId, parentId);
       if (response.status === 200) {
         setAccounts(response.Accounts);
