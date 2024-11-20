@@ -16,7 +16,12 @@ import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 
-function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) {
+function AddProduct({
+  products = {},
+  onClose,
+  refreshProducts,
+  parentAccount,
+}) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -25,6 +30,8 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
   const fileInputRef = useRef(null);
   const { theme, setTheme } = useTheme();
   const router = useRouter(); // استفاده از useRouter برای هدایت
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
 
   useEffect(() => {
     // دریافت قالب‌های قیمتی هنگام مونت شدن کامپوننت
@@ -38,13 +45,12 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
         }));
         setPricingTemplates(templates);
       } catch (error) {
-        console.error('خطا در دریافت قالب‌های قیمتی:', error);
-        setTemplateError('بارگذاری قالب‌های قیمتی با مشکل مواجه شد.');
+        console.error("خطا در دریافت قالب‌های قیمتی:", error);
+        setTemplateError("بارگذاری قالب‌های قیمتی با مشکل مواجه شد.");
       } finally {
         setLoadingTemplates(false);
       }
-    };  
-   
+    };
 
     fetchPricingTemplates();
   }, [ShopId]);
@@ -63,10 +69,8 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
     defaultValues: {
       title: products?.title || "",
       secondaryTitle: products?.secondaryTitle || "",
-      items: products?.items || "",
-      generalFeatures: products?.generalFeatures || [],
       pricingTemplate: products?.pricingTemplate || "",
-      category: products?.category || "",
+      parentAccount: parentAccount,
       tags: products?.tags
         ? products.tags?.map((tag) => ({ label: tag, value: tag }))
         : [],
@@ -85,7 +89,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
   useEffect(() => {
     const fetchingFeature = async () => {
       try {
-        const response = await GetAllProductFeature(products?._id); 
+        const response = await GetAllProductFeature(products?._id);
 
         const features = response.features?.map((feature) => ({
           value: feature._id,
@@ -94,15 +98,15 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
 
         setPricingTemplates(features);
       } catch (error) {
-        console.error('خطا در دریافت قالب‌های قیمتی:', error);
-        setTemplateError('بارگذاری قالب‌های قیمتی با مشکل مواجه شد.');
-      } 
+        console.error("خطا در دریافت قالب‌های قیمتی:", error);
+        setTemplateError("بارگذاری قالب‌های قیمتی با مشکل مواجه شد.");
+      }
     };
     if (products?._id) {
       fetchingFeature();
     }
   }, []);
-  
+
   // مدیریت state برای تصاویر به صورت یک آرایه از اشیاء
   const [images, setImages] = useState(() => {
     // تصاویر موجود را با ساختار یکتا تبدیل می‌کنیم
@@ -120,35 +124,38 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
 
   // تابع انتخاب تصاویر جدید
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    const totalImages = images.length + files.length;
-    if (totalImages > 10) {
-      toast.error("شما تنها می‌توانید حداکثر ۱۰ تصویر آپلود کنید.");
-      return;
+    const files = e.target.files;
+    const fileReaders = [];
+    const images = [];
+  
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileReader = new FileReader();
+      fileReaders.push(fileReader);
+      fileReader.onload = () => {
+        images.push({
+          name: file.name,
+          content: fileReader.result.split(',')[1], // حذف پیشوند Base64
+        });
+        if (images.length === files.length) {
+          setValue("newImages", images);
+        }
+      };
+      fileReader.readAsDataURL(file);
     }
-
-    const validFiles = files.filter((file) => file.type.startsWith("image/"));
-    if (validFiles.length !== files.length) {
-      toast.error("لطفاً فقط فایل‌های تصویری انتخاب کنید.");
-    }
-
-    const selectedFiles = validFiles.slice(0, 10 - images.length);
-    const newImages = selectedFiles?.map((file) => ({
-      id: uuidv4(),
-      src: URL.createObjectURL(file),
-      file,
-      isExisting: false,
-    }));
-
-    setImages((prev) => [...prev, ...newImages]);
   };
+  
+  
 
   // تابع حذف تصویر
   const handleDeleteImage = (id) => {
     setImages((prev) => {
       const imageToDelete = prev.find((img) => img.id === id);
       if (imageToDelete) {
-        if (!imageToDelete.isExisting && imageToDelete.src.startsWith("blob:")) {
+        if (
+          !imageToDelete.isExisting &&
+          imageToDelete.src.startsWith("blob:")
+        ) {
           URL.revokeObjectURL(imageToDelete.src);
         }
       }
@@ -179,98 +186,79 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
     };
   }, [images]);
 
-  // ارسال فرم
-  const handleFormSubmit = async (formData) => {
-    setIsSubmit(true);
-    try {
-      await ProductsSchema.validate(formData, { abortEarly: false });
+// در تابع handleFormSubmit در AddProduct تغییر دهید:
+const handleFormSubmit = async (formData) => {
+  setIsSubmit(true);
+  try {
+    await ProductsSchema.validate(formData, { abortEarly: false });
 
-      const formDataObj = new FormData();
+    let newImagePaths = [];
 
-      formDataObj.append("ShopId", formData.ShopId);
-
-      // افزودن تصاویر موجود (URL ها)
-      formData.existingImages.forEach((image) => {
-        formDataObj.append("existingImages", image);
-      });
-
-      // افزودن تصاویر جدید (فایل ها)
-      formData.newImages.forEach((image) => {
-        formDataObj.append("images", image);
-      });
-
-      // افزودن سایر فیلدهای فرم
-      formDataObj.append("title", formData.title);
-      formDataObj.append("items", formData.items);
-    
-      formDataObj.append("generalFeatures", formData.generalFeatures);
-      formDataObj.append("pricingTemplate", formData.pricingTemplate);
-      formDataObj.append("category", formData.category);
-
-      // تبدیل آرایه اشیاء تگ‌ها به آرایه رشته‌ای
-      const tags = formData.tags?.map((tag) => tag.value);
-      tags.forEach((tag) => formDataObj.append("tags", tag));
-      formDataObj.append("storageLocation", formData.storageLocation);
-      formDataObj.append("isSaleable", formData.isSaleable);
-      formDataObj.append("isMergeable", formData.isMergeable);
-      formDataObj.append("unit", formData.unit);
-      formDataObj.append("description", formData.description);
-      formDataObj.append("parentAccount", parentAccount);
-      if (products?._id) {
-        formDataObj.append("id", products._id);
+    // اگر تصاویر جدید موجود هستند، آن‌ها را ذخیره کنید
+    if (formData.newImages && formData.newImages.length > 0) {
+      for (const img of formData.newImages) {
+        const imagePath = await saveBase64Image(img.content, img.name);
+        newImagePaths.push(imagePath);
       }
-      let result;
-      if (products?._id) {
-        // ویرایش محصول
-        result = await EditProductsAction(formDataObj, ShopId);
-      } else {
-        console.log("formDataObj",formDataObj)
-        // افزودن محصول جدید
-        result = await AddProductAction(formDataObj);
-      }
-
-      if (result.status === 201 || result.status === 200) {
-        await refreshProducts();
-        const successMessage =
-          products && products.id
-            ? "محصول با موفقیت ویرایش شد!"
-            : "محصول با موفقیت ایجاد شد!";
-        toast.success(successMessage);
-        reset();
-        // آزادسازی Blob URLها پس از ارسال موفق
-        images.forEach((img) => {
-          if (!img.isExisting && img.src.startsWith("blob:")) {
-            URL.revokeObjectURL(img.src);
-          }
-        });
-        setImages([]);
-        onClose();
-      } else {
-        toast.error(result.message || "خطایی در ارسال فرم رخ داده است.");
-      }
-    } catch (error) {
-      console.error("Error handling products:", error);
-      toast.error("مشکلی در پردازش محصول وجود دارد.");
-    } finally {
-      setIsSubmit(false);
     }
-  };
+
+    // ترکیب تصاویر موجود و تصاویر جدید
+    const allImages = [
+      ...(formData.existingImages || []),
+      ...newImagePaths,
+    ];
+
+    const payload = {
+      ...formData,
+      tags: formData.tags ? formData.tags.map((tag) => tag.value) : [],
+      images: allImages, // استفاده از همه تصاویر
+      // حذف سایر فیلدهای اضافی در صورت نیاز
+    };
+
+    // ارسال Payload به سرور
+    let result;
+    if (products?._id) {
+      // ویرایش محصول
+      result = await EditProductsAction(JSON.parse(JSON.stringify(payload)), products._id);
+    } else {
+      // افزودن محصول جدید
+      result = await AddProductAction(JSON.parse(JSON.stringify(payload)));
+    }
+
+    if (result.status === 201 || result.status === 200) {
+      await refreshProducts();
+      const successMessage = products && products._id
+        ? "محصول با موفقیت ویرایش شد!"
+        : "محصول با موفقیت ایجاد شد!";
+      toast.success(successMessage);
+      reset();
+      setImages([]);
+      onClose();
+    } else {
+      toast.error(result.message || "خطایی در ارسال فرم رخ داده است.");
+    }
+  } catch (error) {
+    console.error("Error handling products:", error);
+    toast.error("مشکلی در پردازش محصول وجود دارد.");
+  } finally {
+    setIsSubmit(false);
+  }
+};
+
 
   // تعریف کامپوننت سفارشی برای MenuList
   const CustomMenuList = (props) => {
     return (
       <>
-        <components.MenuList {...props}>
-          {props.children}
-        </components.MenuList>
+        <components.MenuList {...props}>{props.children}</components.MenuList>
         {/* دکمه افزودن در انتهای لیست */}
         <div
           style={{
-            padding: '8px 12px',
-            cursor: 'pointer',
-            borderTop: '1px solid #ddd',
-            textAlign: 'center',
-            backgroundColor: '#f9f9f9'
+            padding: "8px 12px",
+            cursor: "pointer",
+            borderTop: "1px solid #ddd",
+            textAlign: "center",
+            backgroundColor: "#f9f9f9",
           }}
           onMouseDown={(e) => {
             e.preventDefault(); // جلوگیری از فوکوس گرفتن روی Select
@@ -304,7 +292,15 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
         </h1>
       </div>
 
-      <FormProvider {...{ register, handleSubmit, control, setValue, formState: { errors }}}>
+      <FormProvider
+        {...{
+          register,
+          handleSubmit,
+          control,
+          setValue,
+          formState: { errors },
+        }}
+      >
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
           className="flex flex-col gap-4 p-2 md:p-4"
@@ -390,7 +386,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
             )}
 
             {/* نمایش خطاها */}
-       
+
             {errors.images && (
               <p className="text-red-500">{errors.images.message}</p>
             )}
@@ -403,13 +399,12 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
               type="text"
               {...register("title")}
               className="react-select-container w-full border rounded px-3 py-2"
-              
             />
             {errors.title && (
               <p className="text-red-500">{errors.title.message}</p>
             )}
           </div>
-        
+
           <div>
             <label className="block mb-1">دسته بندی کالا و تگ ها </label>
             <TagSelect
@@ -419,12 +414,9 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
               errors={errors}
             />
 
-            {errors.items && (
-              <p className="text-red-500">{errors.items.message}</p>
-            )}
+       
           </div>
 
-     
           {/* بخش انتخاب قالب قیمتی با استفاده از react-select */}
           <div>
             <label className="block mb-1">قالب قیمتی</label>
@@ -442,7 +434,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
                     options={pricingTemplates}
                     placeholder="انتخاب قالب قیمتی"
                     isClearable
-                    styles={ theme === "dark" ? customSelectStyles : undefined}
+                    styles={theme === "dark" ? customSelectStyles : undefined}
                     components={{ MenuList: CustomMenuList }} // استفاده از MenuList سفارشی
                     value={
                       pricingTemplates?.find(
@@ -450,11 +442,16 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
                       ) || null
                     }
                     onChange={(selectedOption) => {
-                      if (selectedOption && selectedOption.value === 'add_new') {
+                      if (
+                        selectedOption &&
+                        selectedOption.value === "add_new"
+                      ) {
                         // عدم انتخاب گزینه افزودن در فرم
                         return;
                       }
-                      field.onChange(selectedOption ? selectedOption.value : "");
+                      field.onChange(
+                        selectedOption ? selectedOption.value : ""
+                      );
                     }}
                   />
                 )}
@@ -465,57 +462,50 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
             )}
           </div>
 
-   
-
-       {/* //////////////////////////////////// */}
+          {/* //////////////////////////////////// */}
           <div>
             <label className="block mb-1">محل قرار گیری</label>
             <input
               {...register("storageLocation")}
               className="react-select-container w-full border rounded px-3 py-2"
-              
             />
             {errors.storageLocation && (
               <p className="text-red-500">{errors.storageLocation.message}</p>
             )}
           </div>
-<div className="flex items-center justify-around">
-          <div className="flex items-center gap-2 h-10">
-            <label >قابل فروش</label>
-            <input
-              type="checkbox"
-              {...register("isSaleable")}
-              className=" border rounded h-10"
+          <div className="flex items-center justify-around">
+            <div className="flex items-center gap-2 h-10">
+              <label>قابل فروش</label>
+              <input
+                type="checkbox"
+                {...register("isSaleable")}
+                className=" border rounded h-10"
               />
-         
-           
-          </div>
-
-          <div className="flex items-center gap-2 h-10">
-            <label >قابل ادغام و تقسیم</label>
-            <input
-              type="checkbox"
-              {...register("isMergeable")}
-              className="border rounded h-10"
-              />
-        
-          </div>
             </div>
+
+            <div className="flex items-center gap-2 h-10">
+              <label>قابل ادغام و تقسیم</label>
+              <input
+                type="checkbox"
+                {...register("isMergeable")}
+                className="border rounded h-10"
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block mb-1">نام واحد</label>
             <input
               {...register("unit")}
               className="react-select-container w-full border rounded px-3 py-2"
-              
             />
             {errors.unit && (
               <p className="text-red-500">{errors.unit.message}</p>
             )}
           </div>
 
-        {/* کامپوننت FeatureSelect */}
-        <FeatureSelect />
+          {/* کامپوننت FeatureSelect */}
+          <FeatureSelect />
 
           <div>
             <label className="block mb-1">توضیحات</label>
@@ -542,13 +532,9 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
               "افزودن محصول"
             )}
           </button>
-       
+
           <Toaster />
         </form>
-
-
-      
-
       </FormProvider>
     </div>
   );

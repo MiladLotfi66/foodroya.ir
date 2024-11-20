@@ -119,11 +119,7 @@ function ProductManage() {
   setSelectedParentAccount={setSelectedParentAccount}
   onClose={() => {}}
 />
-{selectedParentAccount && (
-  <div className="mt-2 p-2 bg-gray-100 rounded">
-    <p>حساب والد انتخاب‌شده: <strong>{selectedParentAccount.title}</strong></p>
-  </div>
-)}
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
           {products?.map((product) => (

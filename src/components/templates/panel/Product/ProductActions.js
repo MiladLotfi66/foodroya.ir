@@ -2,79 +2,102 @@
 // utils/ProductActions.js
 import connectDB from "@/utils/connectToDB";
 import Product from "./Product";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { saveBase64Image } from "@/components/signinAndLogin/Actions/UsersServerActions";
+// export async function GetAllProducts(shopId) {
+//     await connectDB();
+//     let user;
+//     try {
+//       user = await authenticateUser();
+//     } catch (authError) {
+//       user = null;
+//       console.log("Authentication failed:", authError);
+//     }
 
-export async function GetAllProducts(shopId) {
-    await connectDB();
-    let user;
-    try {
+//   if (!user) {
+//     return { status: 401, message: 'کاربر وارد نشده است.' };
+//   }
+  
+//     try {
+//       const products = await Product.find({ shop: shopId }).select('-__v')
+//         .populate('shop')
+//         .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+//       return { status: 200, products: convertToPlainObjects(products) };
+//     } catch (error) {
+//       console.error("Error fetching products:", error);
+//       return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
+//     }
+//   }
+
+export async function AddProductAction(formData) {
+  console.log("formData", formData);
+  
+  await connectDB();
+  let user;
+  try {
       user = await authenticateUser();
-    } catch (authError) {
+  } catch (authError) {
       user = null;
       console.log("Authentication failed:", authError);
-    }
+  }
 
   if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-  
-    try {
-      const products = await Product.find({ shop: shopId }).select('-__v')
-        .populate('shop')
-        .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
-      return { status: 200, products: convertToPlainObjects(products) };
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
-    }
+      return { status: 401, message: 'کاربر وارد نشده است.' };
   }
 
-  export async function AddProductAction(formData) {
-    console.log("formData",formData);
-    
-    await connectDB();
-    let user;
-    try {
-      user = await authenticateUser();
-    } catch (authError) {
-      user = null;
-      console.log("Authentication failed:", authError);
-    }
-
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-  
-    const { images,title, ShopId ,unit,items,generalFeatures,pricingTemplate,category,tags,storageLocation,isSaleable,isMergeable,description,parentAccount} = Object.fromEntries(formData.entries());
-    // ایجاد محصول جدید
-    const newProduct = new Product({
-      images,
+  const {
+      images: existingImages = [],
       title,
-      generalFeatures,
-      items,
+      ShopId,
+      unit,
       pricingTemplate,
-      unit, // افزودن فیلد unit
-      ShopId:ShopId,
-      category,
       tags,
       storageLocation,
       isSaleable,
       isMergeable,
       description,
       parentAccount,
-      createdBy: user.id, // استفاده از _id به جای id
-      updatedBy: user.id, // استفاده از _id به جای id
-    });
-    try {
+      newImages = [], // تصاویر جدید به صورت Base64
+  } = formData;
+
+  // ایجاد محصول اولیه بدون تصاویر جدید برای دریافت شناسه محصول
+  const newProduct = new Product({
+      images: existingImages,
+      title,
+      pricingTemplate,
+      unit,
+      ShopId: ShopId,
+      tags,
+      storageLocation,
+      isSaleable,
+      isMergeable,
+      description,
+      parentAccount,
+      createdBy: user.id,
+      updatedBy: user.id,
+  });
+
+  try {
       const savedProduct = await newProduct.save();
+
+      // پردازش تصاویر جدید
+      if (newImages.length > 0) {
+          for (const img of newImages) {
+              const imagePath = await saveBase64Image(img.content, img.name, savedProduct._id);
+              savedProduct.images.push(imagePath);
+          }
+          await savedProduct.save();
+      }
+
       const plainProduct = JSON.parse(JSON.stringify(savedProduct));
       return { status: 201, product: plainProduct };
-    } catch (error) {
+  } catch (error) {
       console.error("Error adding product:", error);
       return { status: 500, message: 'خطایی در ایجاد محصول رخ داد.' };
-    }
   }
+}
+
+
   
 
   export async function EditProductAction(formData, ShopId) {

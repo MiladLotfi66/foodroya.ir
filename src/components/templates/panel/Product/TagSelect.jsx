@@ -18,7 +18,7 @@ const TagSelect = ({ control, errors }) => {
       if (response.status === 200) {
         const tagOptions = response.tags.map((tag) => ({
           label: tag.name,
-          value: tag.name,
+          value: tag._id,
         }));
         setOptions(tagOptions);
       } else {
