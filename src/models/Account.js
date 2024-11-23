@@ -140,6 +140,15 @@ const accountSchema = new Schema(
       type: String,
       maxlength: 55,
       },
+       // محصول مرتبط (فقط در صورت نوع حساب "کالا")
+  productId: {
+    type: Schema.Types.ObjectId,
+    ref: "Product",
+    required: function () {
+      return this.accountType === "کالا";
+    },
+    default: null,
+  },
     },
 
   {

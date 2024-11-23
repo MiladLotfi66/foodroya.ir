@@ -1,9 +1,10 @@
 import React from 'react'
 
-function ProductCard() {
+function ProductCard(product) {
+  console.log(product);
+  
   return (
-    <div>
-      
+    <div>{product.storageLocation}
     </div>
   )
 }

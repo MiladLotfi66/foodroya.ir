@@ -1,72 +1,118 @@
 "use server";
 // utils/ProductActions.js
+import mongoose from 'mongoose';
 import connectDB from "@/utils/connectToDB";
 import Product from "./Product";
+import path from 'path';
+import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid'; // برای تولید نام‌های یکتا
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
-import { saveBase64Image } from "@/components/signinAndLogin/Actions/UsersServerActions";
-// export async function GetAllProducts(shopId) {
-//     await connectDB();
-//     let user;
-//     try {
-//       user = await authenticateUser();
-//     } catch (authError) {
-//       user = null;
-//       console.log("Authentication failed:", authError);
-//     }
-
-//   if (!user) {
-//     return { status: 401, message: 'کاربر وارد نشده است.' };
-//   }
-  
-//     try {
-//       const products = await Product.find({ shop: shopId }).select('-__v')
-//         .populate('shop')
-//         .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
-//       return { status: 200, products: convertToPlainObjects(products) };
-//     } catch (error) {
-//       console.error("Error fetching products:", error);
-//       return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
-//     }
-//   }
-
-export async function AddProductAction(formData) {
-  console.log("formData", formData);
-  
-  await connectDB();
-  let user;
-  try {
+import { createImageUploader } from "@/utils/ImageUploader";
+import { createAccount } from '../Account/accountActions';
+export async function GetAllProducts(shopId) {
+    await connectDB();
+    let user;
+    try {
       user = await authenticateUser();
-  } catch (authError) {
+    } catch (authError) {
       user = null;
       console.log("Authentication failed:", authError);
+    }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
+    try {
+      const products = await Product.find({ shop: shopId }).select('-__v')
+        .populate('shop')
+        .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+      return { status: 200, products: convertToPlainObjects(products) };
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
+    }
+  }
+/**
+ * Server Action برای افزودن محصول با استفاده از createImageUploader
+ * @param {FormData} formData - داده‌های فرم شامل اطلاعات محصول و تصاویر
+ * @returns {Promise<{ status: number, product?: object, message?: string }>}
+ */
+export async function AddProductAction(formData) {
+  await connectDB();
+  
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.error("Authentication failed:", authError);
   }
 
   if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+    return { status: 401, message: 'کاربر وارد نشده است.' };
   }
 
-  const {
-      images: existingImages = [],
-      title,
-      ShopId,
-      unit,
-      pricingTemplate,
-      tags,
-      storageLocation,
-      isSaleable,
-      isMergeable,
-      description,
-      parentAccount,
-      newImages = [], // تصاویر جدید به صورت Base64
-  } = formData;
+  const session = await mongoose.startSession();
 
-  // ایجاد محصول اولیه بدون تصاویر جدید برای دریافت شناسه محصول
-  const newProduct = new Product({
-      images: existingImages,
+  try {
+    session.startTransaction();
+    
+    const title = formData.get('title');
+    const unit = formData.get('unit');
+    const ShopId = formData.get('ShopId');
+    const pricingTemplate = formData.get('pricingTemplate');
+    const parentAccount = formData.get('parentAccount');
+    const tags = formData.get('tags')?.split(',').map(tag => tag.trim());
+    const storageLocation = formData.get('storageLocation');
+    const isSaleable = formData.get('isSaleable') === 'true';
+    const isMergeable = formData.get('isMergeable') === 'true';
+    const description = formData.get('description');
+
+    if (!title || !unit || !ShopId) {
+      return { status: 400, message: 'فیلدهای عنوان، واحد و شناسه فروشگاه الزامی هستند.' };
+    }
+
+    const newImages = formData.getAll('newImages');
+    if (newImages.length === 0) {
+      return { status: 400, message: 'حداقل یک تصویر برای محصول الزامی است.' };
+    }
+
+    const MAX_FILES = 10;
+    if (newImages.length > MAX_FILES) {
+      return { status: 400, message: `حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.` };
+    }
+
+    const uploadDir = path.join('Uploads', 'Shop', 'images', ShopId, 'Products');
+    const uploadPromises = newImages.map(async (file) => {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const mimeType = file.type;
+      const size = file.size;
+
+      const imagePath = await createImageUploader({
+          buffer,
+          uploadDir,
+          mimeType,
+          size
+      });
+
+      return imagePath;
+    });
+
+    const imagePaths = await Promise.all(uploadPromises);
+
+    const productId = new mongoose.Types.ObjectId(); // تولید شناسه برای محصول
+    const accountId = new mongoose.Types.ObjectId(); // تولید شناسه برای حساب
+
+    const newProduct = new Product({
+      _id: productId, // تنظیم شناسه محصول از پیش تعیین شده
+      accountId: accountId, // ذخیره شناسه حساب در محصول
+      images: imagePaths,
       title,
       pricingTemplate,
       unit,
-      ShopId: ShopId,
+      ShopId,
       tags,
       storageLocation,
       isSaleable,
@@ -75,30 +121,40 @@ export async function AddProductAction(formData) {
       parentAccount,
       createdBy: user.id,
       updatedBy: user.id,
-  });
+    });
 
-  try {
-      const savedProduct = await newProduct.save();
+    await newProduct.save({ session });
 
-      // پردازش تصاویر جدید
-      if (newImages.length > 0) {
-          for (const img of newImages) {
-              const imagePath = await saveBase64Image(img.content, img.name, savedProduct._id);
-              savedProduct.images.push(imagePath);
-          }
-          await savedProduct.save();
-      }
+    const accountData = {
+      _id: accountId, // تنظیم شناسه حساب از پیش تعیین شده
+      title: newProduct.title,
+      accountType: "کالا",
+      accountStatus: "فعال",
+      parentAccount: parentAccount,
+      store: ShopId,
+      productId: productId, // ذخیره شناسه محصول در حساب
+    };
+    
 
-      const plainProduct = JSON.parse(JSON.stringify(savedProduct));
-      return { status: 201, product: plainProduct };
+    const accountResult = await createAccount(accountData, session);
+
+    if (!accountResult.success) {
+      throw new Error(accountResult.message);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    const plainProduct = newProduct.toObject();
+    return { status: 201, product: plainProduct };
   } catch (error) {
-      console.error("Error adding product:", error);
-      return { status: 500, message: 'خطایی در ایجاد محصول رخ داد.' };
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error adding product or creating account:", error);
+    return { status: 500, message: 'خطایی در ایجاد محصول یا حساب رخ داد.' };
   }
 }
 
-
-  
 
   export async function EditProductAction(formData, ShopId) {
     await connectDB();
@@ -158,7 +214,6 @@ export async function AddProductAction(formData) {
     }
   }
   
- 
   export async function DeleteProducts(productId) {
     await connectDB();
     const user = await authenticateUser();

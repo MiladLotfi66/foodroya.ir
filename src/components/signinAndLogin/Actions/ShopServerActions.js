@@ -494,7 +494,7 @@ export async function AddShopServerAction(ShopData) {
         
         parentAccount: darayiId,
         accountType: 'انبار',
-        accountNature: 'بستانکار', // می‌توانید اصلاح کنید بر اساس نیاز
+        accountNature: 'بدهی', // می‌توانید اصلاح کنید بر اساس نیاز
         accountStatus: 'فعال',
         createdBy: userData.id,
         isSystem: true,

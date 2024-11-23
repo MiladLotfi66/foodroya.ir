@@ -8,9 +8,10 @@ import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
 
 // ایجاد حساب جدید
-export async function createAccount(data) {
-  console.log("data",data);
-  
+
+export async function createAccount(data, session = null) {
+  console.log("data", data);
+
   await connectDB();
 
   try {
@@ -22,21 +23,14 @@ export async function createAccount(data) {
       console.log("Authentication failed:", authError);
     }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-  
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
 
-    const { title, accountType, accountStatus, parentAccount, store, currency ,contact,creditLimit,posConected,bankAcountNumber ,bankCardNumber} = data;
-
-    // const shopId = store
-
-    // if (!shopId) {
-    //   return { success: false, message: "فروشگاه پیدا نشد." };
-    // }
+    const { _id, title, accountType, accountStatus, parentAccount, store, currency, contact, creditLimit, posConected, bankAcountNumber, bankCardNumber, productId} = data;
 
     let accountCode = "";
-    let parent ="";
+    let parent = "";
 
     if (parentAccount) {
       parent = await Account.findById(parentAccount).lean();
@@ -45,12 +39,12 @@ export async function createAccount(data) {
         return { success: false, message: "حساب والد پیدا نشد." };
       }
 
-      // پیدا کردن آخرین حساب برادر برای تولید کدینگ جدید
       const siblingAccounts = await Account.find({
         parentAccount: parentAccount,
       })
         .sort({ accountCode: 1 })
         .lean();
+
       if (siblingAccounts.length > 0) {
         const lastSiblingCode =
           siblingAccounts[siblingAccounts.length - 1].accountCode;
@@ -60,50 +54,51 @@ export async function createAccount(data) {
         accountCode = `${parent.accountCode}-1`;
       }
     }
-   
+
     const newAccountData = new Account({
+      _id: _id || new mongoose.Types.ObjectId(),
       accountType,
       title,
       accountCode,
       accountStatus,
       parentAccount: parentAccount,
-      accountNature:parent.accountNature,
+      accountNature: parent?.accountNature,
       store,
-      createdBy: userData.id, // فرض بر این است که شناسه کاربر از درخواست دریافت شده است
-      isSystem: false, // به صورت پیش‌فرض غیر فعال است
-      // contact,
-      // currency,
-      // creditLimit,
+      createdBy: userData.id,
+      updatedBy: userData.id,
+      isSystem: false,
     });
-        // شرط برای ذخیره فیلدهای اضافی بر اساس نوع حساب
-        if (accountType === "اشخاص حقیقی" || accountType === "اشخاص حقوقی") {
-          if (!contact) {
-            return { success: false, message: "برای حساب اشخاص حقیقی و حقیقی انتخاب مخاطب الزامیست" };
-          }
-          if (!currency) {
-            return { success: false, message: "برای حساب اشخاص حقیقی و حقیقی انتخاب ارز الزامیست" };
-          }
 
-       // تنظیم مقدار creditLimit
-          newAccountData.creditLimit = creditLimit || 0;
-          newAccountData.contact = contact;
-          newAccountData.currency = currency;
-        }
-        else if (accountType === "حساب بانکی") {
+    if (accountType === "اشخاص حقیقی" || accountType === "اشخاص حقوقی") {
+      if (!contact) {
+        return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب مخاطب الزامیست" };
+      }
+      if (!currency) {
+        return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب ارز الزامیست" };
+      }
+      newAccountData.creditLimit = creditLimit || 0;
+      newAccountData.contact = contact;
+      newAccountData.currency = currency;
+    }
+    else if (accountType === "حساب بانکی") {
+      newAccountData.posConected = posConected;
+      newAccountData.bankAcountNumber = bankAcountNumber;
+      newAccountData.bankCardNumber = bankCardNumber;
+    }
+ else if (accountType === "کالا") {
+      newAccountData.productId = productId;
+     
+    }
 
-          newAccountData.posConected = posConected;
-          newAccountData.bankAcountNumber = bankAcountNumber;
-          newAccountData.bankCardNumber = bankCardNumber;
-        }
-        // else{
-        //         delete newAccountData.currency;
-        // }
+    if (session) {
+      await newAccountData.save({ session });
+    } else {
+      await newAccountData.save();
+    }
 
-    await newAccountData.save();
+    revalidatePath("/accounts");
 
-    // در صورت نیاز به به‌روزرسانی کش‌ها
-    revalidatePath("/accounts"); // مسیر مربوطه
-    return { success: true }; // تبدیل به شیء ساده
+    return { success: true };
   } catch (error) {
     console.error("Error creating account:", error);
     if (error.code === 11000) {
@@ -392,7 +387,6 @@ export async function deactivateAccount(id) {
     };
   }
 }
-
 // دریافت تمام حساب‌ها
 export async function GetAllAccounts(storeId, parentId = null) {
   
@@ -433,7 +427,91 @@ export async function GetAllAccounts(storeId, parentId = null) {
 
     return { Accounts: plainAccounts, status: 200 };
   }
-
+export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
+    await connectDB();
+  
+    if (!storeId) {
+      throw new Error("فروشگاه مشخص نشده است.");
+    }
+  
+    const {
+      fields = null,
+      populateFields = [],
+      limit = 0,
+      skip = 0,
+      sort = { accountCode: 1 },
+      additionalFilters = {}
+    } = options;
+  
+    // ساختار فیلتر اولیه با storeId
+    const filter = { store: storeId };
+  
+    // اعمال پدر حساب (parentAccount) به صورت جداگانه
+    if (parentId !== null) {
+      filter.parentAccount = parentId;
+    } else {
+      filter.parentAccount = null; // حساب‌های ریشه
+    }
+  
+    // اعمال فیلترهای اضافی
+    if (additionalFilters && typeof additionalFilters === 'object') {
+      Object.assign(filter, additionalFilters);
+    }
+  
+    // شروع ساخت کوئری
+    let query = Account.find(filter);
+  
+    // انتخاب فیلدها اگر مشخص شده باشد
+    if (fields && Array.isArray(fields) && fields.length > 0) {
+      query = query.select(fields.join(' '));
+    }
+  
+    // پاپیولیت کردن فیلدها اگر مشخص شده باشد
+    if (populateFields && Array.isArray(populateFields) && populateFields.length > 0) {
+      populateFields.forEach(field => {
+        query = query.populate(field);
+      });
+    }
+  
+    // اعمال مرتب‌سازی
+    if (sort && typeof sort === 'object') {
+      query = query.sort(sort);
+    }
+  
+    // اعمال صفحه‌بندی
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+  
+    if (skip > 0) {
+      query = query.skip(skip);
+    }
+  
+    // اجرای کوئری با lean برای بهینه‌سازی
+    const accounts = await query.lean();
+  
+    // تبدیل ObjectId و سایر فیلدهای مربوطه به رشته
+    const plainAccounts = accounts?.map((account) => {
+      return {
+        ...account,
+        _id: account._id?.toString() || null,
+        accountCode: account.accountCode?.toString() || null,
+        title: account.title?.toString() || null,
+        store: account.store?.toString() || null,
+        parentAccount: account.parentAccount?.toString() || null,
+        accountType: account.accountType?.toString() || null,
+        accountNature: account.accountNature?.toString() || null,
+        accountStatus: account.accountStatus?.toString() || null,
+        isSystem: account.isSystem, // حفظ نوع بولین
+        createdAt: account.createdAt?.toISOString() || null,
+        updatedBy: account.updatedBy?.toString() || null,
+        updatedAt: account.updatedAt?.toISOString() || null,
+        createdBy: account.createdBy?.toString() || null,
+      };
+    });
+  
+    return { Accounts: plainAccounts, status: 200 };
+  }
 
   export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {
 

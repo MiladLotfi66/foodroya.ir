@@ -3,9 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaFolder, FaSearch, FaPlus } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
+import EditSvg from "@/module/svgs/EditSvg";
+import DeleteSvg from "@/module/svgs/DeleteSvg";
+import EyeSvg from "@/module/svgs/EyeSvg";
+import EyeslashSvg from "@/module/svgs/EyeslashSvg";
+import ProductCard from './ProductCard';
 import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
-import { createAccount, GetAllAccounts, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
+import { createAccount,GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 
 function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
   const [accounts, setAccounts] = useState([]);
@@ -45,7 +50,15 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
     try {
       setLoading(true);
       setSelectedParentAccount(parentId)
-      const response = await GetAllAccounts(ShopId, parentId);
+      const options = {
+        fields: ['_id','title','accountType','accountStatus','productId'], // در صورت نیاز به انتخاب فیلدهای خاص
+        populateFields: ['productId'], // پاپیولیت کردن محصولات
+        limit: 15, // حداکثر ۱۵ حساب در هر صفحه
+        skip: (1 - 1) * 15, // محاسبه تعداد رکوردهای نادیده گرفته شده
+        sort: { accountCode: 1 }, // ترتیب‌بندی بر اساس کد حساب به صورت صعودی
+        additionalFilters: ""
+      };
+      const response = await GetAllAccountsByOptions(ShopId, parentId , options);
       if (response.status === 200) {
         setAccounts(response.Accounts);
       } else {
@@ -165,13 +178,30 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
           <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {filteredAccounts.map(account => (
               <div key={account._id}>
-                <div
+                {account.accountType==="کالا"&& <div
+                  className="account-item border p-4 rounded hover:bg-gray-100 cursor-pointer flex flex-col items-center"
+                  // onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
+                >
+                  <ProductCard
+                product={account.productId}
+                  />
+                   <div className="flex items-center justify-between w-full">
+                   <div className="flex gap-2">
+                  <FaFolder className="text-red-500 text-3xl mb-2" />
+                  <p className="text-center">{account.title}</p>
+                </div>
+                </div>
+                </div>
+                  
+                }
+                  {account.accountType==="دسته بندی کالا"&&<div
                   className="account-item border p-4 rounded hover:bg-gray-100 cursor-pointer flex flex-col items-center"
                   onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
                 >
                   <FaFolder className="text-yellow-500 text-3xl mb-2" />
                   <p className="text-center">{account.title}</p>
                 </div>
+                 }
               </div>
             ))}
             {filteredAccounts.length === 0 && <p>حسابی یافت نشد.</p>}

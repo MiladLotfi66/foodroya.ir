@@ -46,7 +46,6 @@ function RoleCard({
 
   // استخراج URLهای آواتارها از کاربران
   const avatarUrls = users.map(user => user.userImage ).filter(Boolean);
-console.log("avatarUrls",avatarUrls);
 
   return (
     <div
