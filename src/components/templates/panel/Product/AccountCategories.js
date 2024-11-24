@@ -51,13 +51,22 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
       setLoading(true);
       setSelectedParentAccount(parentId)
       const options = {
-        fields: ['_id','title','accountType','accountStatus','productId'], // در صورت نیاز به انتخاب فیلدهای خاص
-        populateFields: ['productId'], // پاپیولیت کردن محصولات
+        fields: ['_id','title','accountType','accountStatus','productId'], // انتخاب فیلدهای مورد نیاز
+        populateFields: [
+          {
+            path: 'productId',
+            populate: [
+              { path: 'pricingTemplate' },
+              { path: 'tags' }
+            ]
+          }
+        ],
         limit: 15, // حداکثر ۱۵ حساب در هر صفحه
         skip: (1 - 1) * 15, // محاسبه تعداد رکوردهای نادیده گرفته شده
         sort: { accountCode: 1 }, // ترتیب‌بندی بر اساس کد حساب به صورت صعودی
-        additionalFilters: ""
+        additionalFilters: "" // در صورت نیاز
       };
+      
       const response = await GetAllAccountsByOptions(ShopId, parentId , options);
       if (response.status === 200) {
         setAccounts(response.Accounts);
@@ -185,12 +194,7 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
                   <ProductCard
                 product={account.productId}
                   />
-                   <div className="flex items-center justify-between w-full">
-                   <div className="flex gap-2">
-                  <FaFolder className="text-red-500 text-3xl mb-2" />
-                  <p className="text-center">{account.title}</p>
-                </div>
-                </div>
+                
                 </div>
                   
                 }
