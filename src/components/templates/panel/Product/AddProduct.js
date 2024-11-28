@@ -18,7 +18,7 @@ import { customSelectStyles } from "./selectStyles";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
   console.log("product",product);
-  
+
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);

@@ -20,22 +20,25 @@ import Breifcase from "@/module/svgs/Breifcase";
 import PhoneArrow from "@/module/svgs/PhoneArrow";
 import ChevronDown from "@/module/svgs/ChevronDown";
 import { useState } from "react";
+import { signOut, useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+
 // import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";
 
-function MobileMenu({isLogin}) {
+function MobileMenu({ isLogin }) {
   const { theme, setTheme } = useTheme();
   const isOpenMobileMenu = useSelector(selectMobileMenu);
   const dispatch = useDispatch();
   const [shopSubMenu, setShopSubmenu] = useState(false);
-  // const sessionData = useSession();
-  // const { data: session } = useSession()
+
+  const { data: session, status } = useSession();
+  const { ShopId } = useParams();
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
+    await signOut({ callbackUrl: "/" });
   };
-
 
   return (
     <>
@@ -59,7 +62,7 @@ function MobileMenu({isLogin}) {
               <Breifcase />
               <PhoneArrow />
               <ChevronDown />
-              <Exitsvg/>
+              <Exitsvg />
             </div>
             {/* ************************ header ************************ */}
             <div className="flex justify-between  items-center mx-4 mt-3 mb-6 border-b border-b-gray-300 dark:border-b-white/10 pb-5">
@@ -92,10 +95,7 @@ function MobileMenu({isLogin}) {
             {/* ************************ nav menu ************************ */}
             <ul className="text-orange-300 mr-2.5 px-4 flex flex-col gap-y-4 child:child:flex child:child:gap-x-2 ">
               <li>
-                <Link href="/"  onClick={() => 
-                 dispatch(reversemobileMenu())
-              }>
-               
+                <Link href="/" onClick={() => dispatch(reversemobileMenu())}>
                   <svg className="w-5 h-5">
                     <use href="#HomeSvg"></use>
                   </svg>
@@ -104,12 +104,12 @@ function MobileMenu({isLogin}) {
               </li>
 
               <li onClick={() => setShopSubmenu(!shopSubMenu)}>
-                <a href="/"  className="justify-between">
+                <div className="justify-between">
                   <div className="flex gap-x-2">
                     <svg className="w-5 h-5">
                       <use href="#ShoppingBag"></use>
                     </svg>
-                    <span>فروشگاه</span>
+                    <span>فروشگاه ها</span>
                   </div>
                   <span>
                     <svg
@@ -118,22 +118,31 @@ function MobileMenu({isLogin}) {
                       <use href="#ChevronDown"></use>
                     </svg>
                   </span>
-                </a>
+                </div>
                 {shopSubMenu ? (
                   <ul className="mt-3">
                     <li className="submenu flex flex-col gap-y-3 pr-7  text-zinc-600 dark:text-white ">
-                      <a href="/"  className="inline" >
-                        انواع سوسیس و کالباس
-                      </a>
-                      <a className="inline" href="#">
-                        غذاهای نیمه آماده
-                      </a>
-                      <a className="inline" href="#">
-                        انواع سبزیجات فریزری
-                      </a>
-                      <a className="inline" href="#">
-                        فست فود ها
-                      </a>
+                      <Link
+                        href="/Shop/userShop"
+                        className="inline"
+                        onClick={() => dispatch(reversemobileMenu())}
+                      >
+                        فروشگاههای من
+                      </Link>
+                      <Link
+                        href="/Shop/allShop"
+                        className="inline"
+                        onClick={() => dispatch(reversemobileMenu())}
+                      >
+                        همه فروشگاه ها
+                      </Link>
+                      <Link
+                        href="/Shop/allShop"
+                        className="inline"
+                        onClick={() => dispatch(reversemobileMenu())}
+                      >
+                        فروشگاه های دنبال شده
+                      </Link>
                     </li>
                   </ul>
                 ) : (
@@ -141,45 +150,58 @@ function MobileMenu({isLogin}) {
                 )}
               </li>
               <li>
-                <a href="/abute">
+                <Link
+                  href="/abute"
+                  onClick={() => dispatch(reversemobileMenu())}
+                >
                   <svg className="w-5 h-5">
                     <use href="#Breifcase"></use>
                   </svg>
                   <span>درباره ما</span>
-                </a>
+                </Link>
               </li>
-              <li>
-                <a>
-                  <svg className="w-5 h-5">
-                    <use href="#PhoneArrow"></use>
-                  </svg>
-                  <span>تماس باما</span>
-                </a>
-              </li>
-              
+              <li></li>
             </ul>
 
             {/* ************************ footer ************************ */}
 
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
-             
-            {isLogin ? (
-              <Link href="/" className=" inline-flex items-center gap-x-2"   onClick={handleSignOut} >
-                <svg className="w-5 h-5">
-                  <use href="#Exitsvg"></use>
-                </svg>
-                خروج
-              </Link>)
-              :(
-                <Link href="/signin" onClick={() => 
-                  dispatch(reversemobileMenu())
-               } className=" inline-flex items-center gap-x-2    ">
+              {session ? (
+                <>
+                  {ShopId && (
+                    <li className="flex items-center">
+                      <Link
+                        href={`${ShopId}/panel`}
+                        onClick={() => dispatch(reversemobileMenu())}
+                      >
+                        پنل مدیریتی
+                      </Link>
+                    </li>
+                  )}
+
+                  <Link
+                    href="/"
+                    className=" inline-flex items-center gap-x-2"
+                    onClick={handleSignOut}
+                  >
+                    <svg className="w-5 h-5">
+                      <use href="#Exitsvg"></use>
+                    </svg>
+                    خروج
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/signin"
+                  onClick={() => dispatch(reversemobileMenu())}
+                  className=" inline-flex items-center gap-x-2    "
+                >
                   <svg className="w-5 h-5 rotate-180">
                     <use href="#login"></use>
                   </svg>
                   ورود | ثبت نام
-                </Link>)}
-                
+                </Link>
+              )}
 
               <div className="flex gap-x-2">
                 {theme === "dark" ? (
@@ -207,10 +229,14 @@ function MobileMenu({isLogin}) {
                   <span onClick={() => setTheme("dark")}>تم تیره</span>
                 )}
               </div>
-              <Link href="#" onClick={()=> {
-                dispatch(reversemobileMenu())
-                dispatch(toggleBasketCart())
-              }} className="inline-flex items-center gap-x-2   ">
+              <Link
+                href="#"
+                onClick={() => {
+                  dispatch(reversemobileMenu());
+                  dispatch(toggleBasketCart());
+                }}
+                className="inline-flex items-center gap-x-2   "
+              >
                 <svg className="  w-5 h-5">
                   <use href="#Basketsvg"></use>
                 </svg>
@@ -218,7 +244,10 @@ function MobileMenu({isLogin}) {
               </Link>
             </div>
           </div>
-          <div onClick={() => dispatch(reversemobileMenu())} className="overlay md:hidden fixed inset-0 w-full h-full bg-black/40 z-10"></div>
+          <div
+            onClick={() => dispatch(reversemobileMenu())}
+            className="overlay md:hidden fixed inset-0 w-full h-full bg-black/40 z-10"
+          ></div>
         </div>
       ) : (
         ""
