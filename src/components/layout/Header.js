@@ -13,6 +13,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+
 
 
 function Header() {
@@ -20,7 +22,8 @@ function Header() {
   const [mounted, setMounted] = useState(false);
 
   const { data: session, status } = useSession();
-  
+  const { ShopId } = useParams();
+
 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
@@ -81,11 +84,10 @@ function Header() {
               </a>
             </li>
             <li className="relative group flex items-center">
-              <a href="#">فروشگاه</a>
-              {/* sub menu ساب منو فروشگاه */}
-              <div className="absolute opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full w-52 h-24 space-y-4 text-zinc-700    bg-white  text-base  border-t-[3px] border-t-orange-300 rounded-2xl  tracking-normal  shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 child:inline-block p-6 pt-[21px] child:transition-colors child-hover:text-orange-300 ">
-                <a href="#">دسته بندی کالا</a>
-                <a href="#">بررسی اصالت کالا</a>
+              <a >فروشگاه ها</a>
+              <div className="absolute opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full w-52  space-y-4 text-zinc-700    bg-white  text-base  border-t-[3px] border-t-orange-300 rounded-2xl  tracking-normal  shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 child:inline-block p-6 pt-[21px] child:transition-colors child-hover:text-orange-300 ">
+                <a href={'/Shop/allShop'}>فروشگاههای من</a>
+                <a href={'/Shop/userShop'}>فروشگاههای دنبال شده</a>
               </div>
             </li>
             <li className="flex items-center">
@@ -97,10 +99,12 @@ function Header() {
             </li>
         
             {session ? (
-              <>
+              <>{ShopId &&
+
                 <li className="flex items-center">
-                  <a href="/panel">پنل مدیریتی</a>
+                  <a href={`${ShopId}/panel`}>پنل مدیریتی</a>
                 </li>
+                }
                 <li className="flex items-center">
                   <button
                     
