@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
-import ProductCard from "./ProductCard";
+// import ProductCard from "./ProductCard";
 import AddProduct from "./AddProduct";
 import { useParams } from 'next/navigation';
 // import { AddProductAction, DeleteProducts, EditProductAction ,GetAllProducts} from "@/components/signinAndLogin/Actions/ProductsServerActions";
@@ -103,7 +103,7 @@ function ProductManage() {
       )}
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">مدیریت محصولات</h1>
+          <h1 className="text-3xl font-MorabbaBold">مدیریت محصولت</h1>
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add product"
@@ -122,15 +122,15 @@ function ProductManage() {
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {products?.map((product) => (
-            <ProductCard
-              className="p-2 md:p-4"
-              key={product._id}
-              product={product}
-              editFunction={() => handleEditClick(product)}
-              onDelete={() => handleDeleteProduct(product._id)} // پاس دادن تابع حذف
-            />
-          ))}
+          {/* {products?.map((product) => (
+            // <ProductCard
+            //   className="p-2 md:p-4"
+            //   key={product._id}
+            //   product={product}
+            //   editFunction={() => handleEditClick(product)}
+            //   onDelete={() => handleDeleteProduct(product._id)} // پاس دادن تابع حذف
+            // />
+          ))} */}
         </div>
       </div>
       <Toaster />

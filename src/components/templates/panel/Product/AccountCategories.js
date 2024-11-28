@@ -1,18 +1,16 @@
 // src/components/accounts/AccountCategories.js
 
 import React, { useState, useEffect, useCallback } from 'react';
+import DeleteSvg from "@/module/svgs/DeleteSvg";
+import EditSvg from "@/module/svgs/EditSvg";
+import ShareSvg from "@/module/svgs/ShareSvg";
 import { FaFolder, FaSearch, FaPlus } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
-import EditSvg from "@/module/svgs/EditSvg";
-import DeleteSvg from "@/module/svgs/DeleteSvg";
-import EyeSvg from "@/module/svgs/EyeSvg";
-import EyeslashSvg from "@/module/svgs/EyeslashSvg";
-import ProductCard from './ProductCard';
 import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount,GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 
-function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
+function AccountCategories({ onSelect, ShopId,setSelectedParentAccount , handleDeleteRole , handleEditClick}) {
   const [accounts, setAccounts] = useState([]);
   const [path, setPath] = useState([]); // مسیر برای Breadcrumb
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,11 +61,12 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
         ],
         limit: 15, // حداکثر ۱۵ حساب در هر صفحه
         skip: (1 - 1) * 15, // محاسبه تعداد رکوردهای نادیده گرفته شده
-        sort: { accountCode: 1 }, // ترتیب‌بندی بر اساس کد حساب به صورت صعودی
+        sort: { accountType: 1 }, // ترتیب‌بندی بر اساس کد حساب به صورت صعودی
         additionalFilters: "" // در صورت نیاز
       };
       
       const response = await GetAllAccountsByOptions(ShopId, parentId , options);
+      
       if (response.status === 200) {
         setAccounts(response.Accounts);
       } else {
@@ -101,9 +100,9 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
   }, []);
 
   // تابع برای انتخاب حساب
-  const handleSelectAccount = useCallback((account) => {
-    onSelect(account);
-  }, [onSelect]);
+  // const handleSelectAccount = useCallback((account) => {
+  //   onSelect(account);
+  // }, [onSelect]);
 
   // مدیریت کلیک روی بخش‌های Breadcrumb
   const handleBreadcrumbClick = useCallback(async (index) => {
@@ -150,6 +149,7 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
   const filteredAccounts = accounts.filter(account =>
     account?.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+console.log(filteredAccounts);
 
   return (
     <div>
@@ -176,7 +176,7 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
             onClick={() => setShowCreateAccountModal(true)}
             className="flex items-center bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
           >
-            <FaPlus className="mr-1" /> ایجاد حساب
+            <FaPlus className="mr-1" /> ایجاد حساب 
           </button>
         </div>
 
@@ -184,28 +184,76 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount }) {
         {loading ? (
           <p>در حال بارگذاری...</p>
         ) : (
-          <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredAccounts.map(account => (
-              <div key={account._id}>
-                {account.accountType==="کالا"&& <div
-                  className="account-item border p-4 rounded hover:bg-gray-100 cursor-pointer flex flex-col items-center"
-                  // onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
-                >
-                  <ProductCard
-                product={account.productId}
-                  />
-                
-                </div>
-                  
+              <div key={account._id}
+>
+                {account.accountType==="کالا"&& 
+                  <div 
+                  className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105"
+                  >
+                    {/* <div className="flex justify-between items-start"> */}
+                    <div className="hidden">
+                      <DeleteSvg />
+                      <EditSvg />
+                      <ShareSvg />
+                    </div>
+              
+                    {/* بخش تصاویر */}
+                    <div className="relative items-center w-24 h-24  sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
+                      <img
+                        src={account?.productId?.images?.[0] || "https://via.placeholder.com/150"}
+                        alt={account?.productId?.title}
+                        className="w-full h-full object-cover rounded-md mt-1"
+                        loading="lazy"
+                      />
+                      {account.productId?.images?.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text:xs sm:text-sm px-2 py-1 rounded">
+                          +{account.productId.images.length - 1}
+                        </div>
+                      )}
+                    </div>
+              
+                    {/* بخش اطلاعات محصول */}
+                    <div className="flex flex-col flex-1 m-2 h-15">
+                      {/* عنوان محصول */}
+                      <h2 className="flex text-center text-md  text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
+                        {account?.productId?.title}
+                      </h2>
+                 {/* دکمه‌های عملیات */}
+                 <div className="flex gap-2 mt-4 items-center text-center justify-center">
+                           
+                            {/* دکمه ویرایش */}
+                                <button
+                                  aria-label="ویرایش"
+                                  className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                  onClick={handleEditClick}
+                                >
+                                  <EditSvg />
+                                </button>
+                            {/* دکمه حذف */}
+                            <button
+                                  aria-label="حذف"
+                                  className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                  onClick={handleDeleteRole}
+                                >
+                                  <DeleteSvg />
+                                </button>
+                        </div>
+                      
+                    </div>
+                  </div>
                 }
                   {account.accountType==="دسته بندی کالا"&&<div
-                  className="account-item border p-4 rounded hover:bg-gray-100 cursor-pointer flex flex-col items-center"
+                  className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105 m-2"
+
                   onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
                 >
-                  <FaFolder className="text-yellow-500 text-3xl mb-2" />
-                  <p className="text-center">{account.title}</p>
+                  <FaFolder className="text-yellow-500 text-md mb-2 items-center w-24 h-24  sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
+                  <p className="flex text-center h-15 line-clamp-3 items-center">{account.title}</p>
                 </div>
                  }
+
               </div>
             ))}
             {filteredAccounts.length === 0 && <p>حسابی یافت نشد.</p>}

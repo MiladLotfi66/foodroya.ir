@@ -516,10 +516,12 @@ export async function GetAllAccounts(storeId, parentId = null) {
 
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
   await connectDB();
+console.log("options",options);
 
   if (!storeId) {
     throw new Error("فروشگاه مشخص نشده است.");
   }
+console.log("11111111");
 
   const {
     fields = null,
@@ -529,6 +531,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
     sort = { accountCode: 1 },
     additionalFilters = {}
   } = options;
+  console.log("222222");
 
   // ساختار فیلتر اولیه با storeId
   const filter = { store: storeId };
@@ -539,6 +542,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
   } else {
     filter.parentAccount = null; // حساب‌های ریشه
   }
+  console.log("3333333");
 
   // اعمال فیلترهای اضافی
   if (additionalFilters && typeof additionalFilters === 'object') {
@@ -552,6 +556,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
   if (fields && Array.isArray(fields) && fields.length > 0) {
     query = query.select(fields.join(' '));
   }
+  console.log("444444");
 
   // پاپیولیت کردن فیلدها اگر مشخص شده باشد
   if (populateFields && Array.isArray(populateFields) && populateFields.length > 0) {
@@ -559,6 +564,8 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
       query = query.populate(field);
     });
   }
+  console.log("555555");
+  console.log("populateFields",populateFields);
 
   // اعمال مرتب‌سازی
   if (sort && typeof sort === 'object') {
@@ -576,6 +583,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
 
   // اجرای کوئری با lean برای بهینه‌سازی
   const accounts = await query.lean();
+  console.log("accounts",accounts);
 
   // تبدیل ObjectId و سایر فیلدهای مربوطه به رشته
   const plainAccounts = accounts?.map((account) => {
