@@ -9,8 +9,9 @@ import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount,GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
+import { DeleteProducts } from './ProductActions';
 
-function AccountCategories({ onSelect, ShopId,setSelectedParentAccount , handleDeleteRole , handleEditClick}) {
+function AccountCategories({ onSelect, ShopId,setSelectedParentAccount , onError ,  handleDelete , handleEditClick}) {
   const [accounts, setAccounts] = useState([]);
   const [path, setPath] = useState([]); // مسیر برای Breadcrumb
   const [searchQuery, setSearchQuery] = useState('');
@@ -149,8 +150,24 @@ function AccountCategories({ onSelect, ShopId,setSelectedParentAccount , handleD
   const filteredAccounts = accounts.filter(account =>
     account?.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
-console.log(filteredAccounts);
-
+  const deleteFunc = async () => {
+    try {
+      const response = await DeleteProducts(contact._id);
+      
+      if (response.status === 200) {
+        handleDelete(); // حذف مخاطب از لیست
+        // نمایش پیام موفقیت از والد
+        // Optional: می‌توانید یک onSuccess نیز اضافه کنید
+      } else {
+        // ارسال پیام خطا به والد
+        onError(response.message || "خطا در حذف مخاطب.");
+      }
+    } catch (error) {
+      console.error("خطا در حذف مخاطب:", error);
+      // ارسال پیام خطا به والد
+      onError(error.message || "خطای غیرمنتظره در حذف مخاطب.");
+    }
+  };
   return (
     <div>
       <div className="account-categories container mx-auto p-4">
@@ -227,7 +244,7 @@ console.log(filteredAccounts);
                                 <button
                                   aria-label="ویرایش"
                                   className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                  onClick={handleEditClick}
+                                  onClick={() =>{handleEditClick(account?.productId)}}
                                 >
                                   <EditSvg />
                                 </button>
@@ -235,7 +252,7 @@ console.log(filteredAccounts);
                             <button
                                   aria-label="حذف"
                                   className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                  onClick={handleDeleteRole}
+                                  onClick={deleteFunc}
                                 >
                                   <DeleteSvg />
                                 </button>

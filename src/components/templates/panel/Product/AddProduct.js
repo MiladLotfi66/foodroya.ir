@@ -16,7 +16,9 @@ import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 
-function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) {
+function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
+  console.log("product",product);
+  
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -26,8 +28,8 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
   const { theme } = useTheme();
   const router = useRouter();
   const [images, setImages] = useState(() => {
-    if (products?.images) {
-      return products.images.map((src) => ({
+    if (product?.images) {
+      return product.images.map((src) => ({
         id: uuidv4(),
         src,
         file: null,
@@ -61,17 +63,19 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
   const { register, handleSubmit, control, setValue, formState: { errors }, reset } = useForm({
     mode: "all",
     defaultValues: {
-      title: products?.title || "",
-      secondaryTitle: products?.secondaryTitle || "",
-      pricingTemplate: products?.pricingTemplate || "",
+      title: product?.title || "",
+      secondaryTitle: product?.secondaryTitle || "",
+      pricingTemplate: product?.pricingTemplate?._id || "",
       parentAccount: parentAccount,
-      tags: products?.tags ? products.tags.map(tag => ({ label: tag, value: tag })) : [],
-      storageLocation: products?.storageLocation || "",
-      isSaleable: products?.isSaleable !== undefined ? products.isSaleable : true,
-      isMergeable: products?.isMergeable || false,
-      unit: products?.unit || "",
-      description: products?.description || "",
+      tags: product?.tags ? product.tags.map(tag => ({ label: tag.name, value: tag._id })) : [],
+      storageLocation: product?.storageLocation || "",
+      isSaleable: product?.isSaleable !== undefined ? product.isSaleable : true,
+      isMergeable: product?.isMergeable || false,
+      unit: product?.unit || "",
+      description: product?.description || "",
       ShopId: ShopId || "",
+      features: [{ featureKey: '', value: '' }], // با یک ویژگی اولیه شروع کنید
+
     },
     resolver: yupResolver(ProductsSchema),
   });
@@ -149,8 +153,8 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
       formDataObj.append("description", formData.description);
 
       let result;
-      if (products?._id) {
-        formDataObj.append("id", products._id);
+      if (product?._id) {
+        formDataObj.append("id", product._id);
         result = await EditProductsAction(formDataObj, ShopId);
       } else {
         result = await AddProductAction(formDataObj);
@@ -158,7 +162,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
 
       if (result.status === 201 || result.status === 200) {
         await refreshProducts();
-        const successMessage = products && products._id
+        const successMessage = product && product._id
           ? "محصول با موفقیت ویرایش شد!"
           : "محصول با موفقیت ایجاد شد!";
         toast.success(successMessage);
@@ -169,7 +173,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
         toast.error(result.message || "خطایی در ارسال فرم رخ داده است.");
       }
     } catch (error) {
-      console.error("Error handling products:", error);
+      console.error("Error handling product:", error);
       toast.error("مشکلی در پردازش محصول وجود دارد.");
     } finally {
       setIsSubmit(false);
@@ -214,7 +218,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
           </svg>
         </button>
         <h1 className="text-3xl font-MorabbaBold">
-          {products?._id ? "ویرایش محصول" : "افزودن محصول"}
+          {product?._id ? "ویرایش محصول" : "افزودن محصول"}
         </h1>
       </div>
 
@@ -397,7 +401,7 @@ function AddProduct({ products = {}, onClose, refreshProducts, parentAccount }) 
           >
             {isSubmit ? (
               <HashLoader size={20} color="#fff" />
-            ) : products?._id ? (
+            ) : product?._id ? (
               "ویرایش محصول"
             ) : (
               "افزودن محصول"

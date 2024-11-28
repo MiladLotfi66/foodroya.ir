@@ -37,6 +37,9 @@ function ProductManage() {
   }, [refreshProducts]);
 
 
+  const handleError = useCallback((errorMessage) => { // افزودن تابع handleError
+    toast.error(errorMessage);
+  }, []);
 
   const handleDeleteProduct = useCallback((productId) => {
     setProducts((prevProducts) => prevProducts.filter(product => product._id !== productId));
@@ -59,6 +62,8 @@ function ProductManage() {
   
 
   const handleEditClick = useCallback((product) => {
+    console.log("product22222",product);
+    
     setSelectedProduct(product);
     setSelectedProductFile(null); // ریست کردن فایل محصول در حالت ویرایش
     setIsOpenAddProduct(true);
@@ -117,7 +122,10 @@ function ProductManage() {
   onSelect={handleSelectParentAccount}
   ShopId={ShopId}
   setSelectedParentAccount={setSelectedParentAccount}
-  onClose={() => {}}
+  handleDelete={handleDeleteProduct}
+handleEditClick={handleEditClick}
+onError={handleError} // ارسال تابع handleError به ContactCard
+
 />
 
 

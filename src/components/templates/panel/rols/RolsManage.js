@@ -12,7 +12,6 @@ import {
   DisableRole,
   EnableRole,
   GetAllFollowedUsersWithRoles,
-  GetShopIdByShopUniqueName,
   GetShopRolesByShopId,
   RemoveUserFromRole,
   AddRoleToUser,
