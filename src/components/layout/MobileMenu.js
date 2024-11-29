@@ -168,6 +168,15 @@ function MobileMenu({ isLogin }) {
             <div className="flex flex-col gap-6 pt-8 px-2.5 mx-4 mt-8  text-orange-300 border-t border-t-gray-300 dark:border-t-white/10 ">
               {session ? (
                 <>
+                  <li className="flex items-center">
+                    <Link
+                      href="/profile"
+                      onClick={() => dispatch(reversemobileMenu())}
+                    >
+                      پروفایل
+                    </Link>
+                  </li>
+
                   {ShopId && (
                     <li className="flex items-center">
                       <Link

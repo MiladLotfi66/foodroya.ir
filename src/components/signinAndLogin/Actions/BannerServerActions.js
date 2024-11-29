@@ -191,6 +191,7 @@ const processAndSaveImage = async (image, shopId,directory) => {
 };
 
 export async function AddBannerAction(data) {
+console.log("addbanner");
 
   try {
     await connectDB();
@@ -232,6 +233,7 @@ export async function AddBannerAction(data) {
       BannerLink,
       ShopId, // اضافه کردن آی‌دی فروشگاه
     });
+console.log("save",newBanner);
 
     await newBanner.save();
 

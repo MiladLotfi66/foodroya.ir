@@ -94,12 +94,14 @@ function Header() {
               <a href="#"
               >بلاگ</a>
             </li>
-            <li className="flex items-center">
-              <a href="/abute">درباره ما</a>
-            </li>
+          
         
             {session ? (
-              <>{ShopId &&
+              <>
+                <li className="flex items-center">
+              <Link href="/profile">پروفایل</Link>
+            </li>
+              {ShopId &&
 
                 <li className="flex items-center">
                   <a href={`${ShopId}/panel`}>پنل مدیریتی</a>
