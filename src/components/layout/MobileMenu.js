@@ -7,7 +7,6 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import Image from "next/image";
 import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
-import textlogo from "@/public/Images/PNG/foodroyaTextlogo.webp";
 import Xmark from "@/module/svgs/X-mark";
 import { useTheme } from "next-themes";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
@@ -19,13 +18,15 @@ import ShoppingBag from "@/module/svgs/ShoppingBag";
 import Breifcase from "@/module/svgs/Breifcase";
 import PhoneArrow from "@/module/svgs/PhoneArrow";
 import ChevronDown from "@/module/svgs/ChevronDown";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 
 // import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";
+import { GetShopLogos } from "../signinAndLogin/Actions/ShopServerActions";
+import UserMicroCard from "@/module/home/UserMicroCard";
 
 function MobileMenu({ isLogin }) {
   const { theme, setTheme } = useTheme();
@@ -35,6 +36,30 @@ function MobileMenu({ isLogin }) {
 
   const { data: session, status } = useSession();
   const { ShopId } = useParams();
+  const [ShopLogo, setShopLogo] = useState("");
+  const [ShopTextLogo, setShopTextLogo] = useState("");
+
+  const GetLoGoAndTextLogo = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        return;
+      }
+      
+      const response = await GetShopLogos(ShopId);
+
+      console.log("Logo URL:", response); // اضافه کردن این خط
+      console.log("Logo URL:", response.logoUrl); // اضافه کردن این خط
+      setShopLogo(response.logos.logoUrl);
+      setShopTextLogo(response.logos.textLogoUrl);
+    } catch (error) {
+      console.error("Error fetching logos:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    GetLoGoAndTextLogo();
+  }, [GetLoGoAndTextLogo]);
+
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
@@ -67,22 +92,32 @@ function MobileMenu({ isLogin }) {
             {/* ************************ header ************************ */}
             <div className="flex justify-between  items-center mx-4 mt-3 mb-6 border-b border-b-gray-300 dark:border-b-white/10 pb-5">
               <div className="flex justify-between items-center gap gap-x-5">
-                <Image
+              {session ? (
+            <Link href="/profile">
+              <UserMicroCard user={session.user} />
+            </Link>
+          ) : ""}
+                {/* <Image
                   className="w-auto h-auto"
                   src={me}
                   width={40}
                   height={40}
                   priority={true}
-                  alt="FoodRoya logo"
-                />
-                <Image
-                  className="w-auto h-auto"
-                  src={textlogo}
-                  width={100}
-                  height={40}
-                  priority={true}
-                  alt="FoodRoyatextlogo"
-                />
+                  alt="logo"
+                /> */}
+                 {ShopId && ShopLogo && (
+               <div className="w-25 h-10 overflow-hidden">
+               <Image
+                 className="object-contain"
+                 src={ShopTextLogo}
+                 width={100}
+                 height={40}
+                 priority={true}
+                 alt="textlogo"
+               />
+             </div>
+             
+                 )}
               </div>
 
               <svg

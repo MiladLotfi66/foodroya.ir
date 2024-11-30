@@ -4,20 +4,14 @@ import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/autoplay";
 import { useEffect, useState, useRef } from "react";
-import EditSvg from "../svgs/EditSvg";
-import DeleteSvg from "../svgs/DeleteSvg";
 import { useRouter, useParams } from "next/navigation";
 
 import Link from "next/link";
 import { 
   GetAllEnableBanners,  
-  BannerServerEnableActions,
-  BannerServerDisableActions,
-  DeleteBanners 
+
 } from "@/components/signinAndLogin/Actions/BannerServerActions";
-import EyeSvg from "../svgs/EyeSvg";
-import EyeslashSvg from "../svgs/EyeslashSvg";
-import SettingSvg from "../svgs/SettingSvg";
+
 
 function Banner2() {
   const router = useRouter();
@@ -48,13 +42,7 @@ function Banner2() {
 
   return (
     <div className="relative">
-      <div className="hidden">
-        <DeleteSvg />
-        <EditSvg />
-        <EyeSvg />
-        <EyeslashSvg />
-        <SettingSvg />
-      </div>
+  
       <Swiper
         ref={swiperRef}
         onSwiper={handleSwiper}
@@ -69,70 +57,7 @@ function Banner2() {
               className="h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-center"
               style={{ backgroundImage: `url("${banner.imageUrl}")` }}
             >
-              {/* /////////////////////دکمه ها/////////////// */}
-              <div className="flex items-center gap-2 child-hover:text-orange-300">
-                <svg
-                  width="34"
-                  height="34"
-                  className=" cursor-pointer "
-                  aria-label="setting"
-                  onClick={async () => router.push("/panel/banners/bannerManage")}
-                >
-                  <use href="#SettingSvg"></use>
-                </svg>
-                <svg
-                  width="34"
-                  height="34"
-                  className=" cursor-pointer "
-                  aria-label="delete"
-                  onClick={async () => {
-                    try {
-                      await DeleteBanners(banner._id);
-                      window.location.reload();
-                    } catch (error) {
-                      console.error("خطا در حذف بنر:", error);
-                    }
-                  }}
-                >
-                  <use href="#DeleteSvg"></use>
-                </svg>
-
-                {!banner.BannerStatus ? (
-                  <svg
-                    width="34"
-                    height="34"
-                    className=" cursor-pointer"
-                    aria-label="enable"
-                    onClick={async () => {
-                      try {
-                        await BannerServerEnableActions(banner._id);
-                        window.location.reload();
-                      } catch (error) {
-                        console.error("خطا در فعال‌سازی بنر:", error);
-                      }
-                    }}
-                  >
-                    <use href="#EyeSvg"></use>
-                  </svg>
-                ) : (
-                  <svg
-                    width="34"
-                    height="34"
-                    className=" cursor-pointer"
-                    aria-label="disable"
-                    onClick={async () => {
-                      try {
-                        await BannerServerDisableActions(banner._id);
-                        window.location.reload();
-                      } catch (error) {
-                        console.error("خطا در غیرفعال‌سازی بنر:", error);
-                      }
-                    }}
-                  >
-                    <use href="#EyeslashSvg"></use>
-                  </svg>
-                )}
-              </div>
+              
               {/* ///////////////////////////////// */}
 
               <Link

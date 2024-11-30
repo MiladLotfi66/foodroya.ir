@@ -890,6 +890,39 @@ export async function GetUserFollowingShops() {
     return { error: error.message, status: 500 };
   }
 }
+export async function GetShopLogos(shopId) {
+
+  // اتصال به پایگاه داده
+  await connectDB();
+  
+  
+  try {
+    // یافتن فروشگاه بر اساس shopId
+    const shop = await shops.findById(shopId).lean();
+  
+    if (!shop) {
+      return NextResponse.json({ message: 'Shop not found' }, { status: 404 });
+    }
+
+  
+    // بازگرداندن URLهای لوگو
+    const logos = {
+      logoUrl: shop.LogoUrl,
+      textLogoUrl: shop.TextLogoUrl,
+      backgroundShopUrl: shop.BackGroundShopUrl,
+      backgroundPanelUrl: shop.BackGroundpanelUrl,
+    };
+  
+    return { logos , status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت تصاویر فروشگاه:", error);
+    return { error: error.message, status: 500 };
+  }
+
+
+}
+
+
 
 
 

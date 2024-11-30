@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
+import { useCallback, useState } from "react";
+// import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
 import Image from "next/image";
 import Moonsvg from "@/module/svgs/Moonsvg.js";
 import Basketsvg from "@/module/svgs/Basketsvg";
@@ -14,8 +14,7 @@ import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-
-
+import { GetShopLogos } from "../signinAndLogin/Actions/ShopServerActions";
 
 function Header() {
   const { theme, setTheme } = useTheme();
@@ -23,9 +22,30 @@ function Header() {
 
   const { data: session, status } = useSession();
   const { ShopId } = useParams();
+  const [ShopLogo, setShopLogo] = useState("");
+  const [ShopTextLogo, setShopTextLogo] = useState("");
 
+  
+  const GetLoGoAndTextLogo = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        return;
+      }
+      
+      const response = await GetShopLogos(ShopId);
 
-  // useEffect only runs on the client, so now we can safely show the UI
+      console.log("Logo URL:", response); // اضافه کردن این خط
+      console.log("Logo URL:", response.logoUrl); // اضافه کردن این خط
+      setShopLogo(response.logos.logoUrl);
+      setShopTextLogo(response.logos.TextLogoUrl);
+    } catch (error) {
+      console.error("Error fetching logos:", error);
+    }
+  }, [ShopId]);
+  useEffect(() => {
+    GetLoGoAndTextLogo();
+  }, [GetLoGoAndTextLogo]);
+    // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -34,12 +54,8 @@ function Header() {
     return null;
   }
 
-
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
-  }; 
-  const handleAddNewBanner = async () => {
-    await AddNewBanner()
+    await signOut({ callbackUrl: "/" });
   };
 
 
@@ -68,15 +84,17 @@ function Header() {
         </div>
         {/* logo & menu */}
         <nav className="flex items-center gap-x-4 xl:gap-x-9 h-14">
-          <Image
-            className="flex items-center shrink-0 w-auto h-auto"
-            src={me}
-            width={59}
-            height={59}
-            quality={20}
-            alt="FoodRoya logo"
-            priority={true}
-          />
+        {ShopId && ShopLogo && (
+  <Image
+    className="flex items-center shrink-0 w-auto h-auto rounded-full"
+    src={ShopLogo}
+    width={59}
+    height={59}
+    quality={20}
+    alt="FoodRoya logo"
+    priority={true}
+  />
+)}
           <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">
             <li className="flex items-center">
               <a className="font-DanaMedium text-orange-200 my-auto" href="/">
@@ -84,32 +102,28 @@ function Header() {
               </a>
             </li>
             <li className="relative group flex items-center">
-              <a >فروشگاه ها</a>
+              <a>فروشگاه ها</a>
               <div className="absolute opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full w-52  space-y-4 text-zinc-700    bg-white  text-base  border-t-[3px] border-t-orange-300 rounded-2xl  tracking-normal  shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 child:inline-block p-6 pt-[21px] child:transition-colors child-hover:text-orange-300 ">
-                <a href={'/Shop/allShop'}>فروشگاههای من</a>
-                <a href={'/Shop/userShop'}>فروشگاههای دنبال شده</a>
+                <a href={"/Shop/allShop"}>فروشگاههای من</a>
+                <a href={"/Shop/userShop"}>فروشگاههای دنبال شده</a>
               </div>
             </li>
             <li className="flex items-center">
-              <a href="#"
-              >بلاگ</a>
+              <a href="#">بلاگ</a>
             </li>
-          
-        
+
             {session ? (
               <>
                 <li className="flex items-center">
-              <Link href="/profile">پروفایل</Link>
-            </li>
-              {ShopId &&
-
-                <li className="flex items-center">
-                  <a href={`${ShopId}/panel`}>پنل مدیریتی</a>
+                  <Link href="/profile">پروفایل</Link>
                 </li>
-                }
+                {ShopId && (
+                  <li className="flex items-center">
+                    <a href={`${ShopId}/panel`}>پنل مدیریتی</a>
+                  </li>
+                )}
                 <li className="flex items-center">
                   <button
-                    
                     onClick={handleSignOut}
                     // onClick={() => {
                     //   // const res = await logOutServerAction();
@@ -180,8 +194,6 @@ function Header() {
           {session ? (
             <Link href="/profile">
               <UserMicroCard user={session.user} />
-             
-
             </Link>
           ) : (
             <Link
