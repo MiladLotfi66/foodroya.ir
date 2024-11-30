@@ -25,13 +25,12 @@ function Header() {
   const [ShopLogo, setShopLogo] = useState("");
   const [ShopTextLogo, setShopTextLogo] = useState("");
 
-  
   const GetLoGoAndTextLogo = useCallback(async () => {
     try {
       if (!ShopId) {
         return;
       }
-      
+
       const response = await GetShopLogos(ShopId);
 
       console.log("Logo URL:", response); // اضافه کردن این خط
@@ -45,7 +44,7 @@ function Header() {
   useEffect(() => {
     GetLoGoAndTextLogo();
   }, [GetLoGoAndTextLogo]);
-    // useEffect only runs on the client, so now we can safely show the UI
+  // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -57,7 +56,6 @@ function Header() {
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
   };
-
 
   return (
     <header
@@ -84,17 +82,17 @@ function Header() {
         </div>
         {/* logo & menu */}
         <nav className="flex items-center gap-x-4 xl:gap-x-9 h-14">
-        {ShopId && ShopLogo && (
-  <Image
-    className="flex items-center shrink-0 w-auto h-auto rounded-full"
-    src={ShopLogo}
-    width={59}
-    height={59}
-    quality={20}
-    alt="FoodRoya logo"
-    priority={true}
-  />
-)}
+          {ShopId && ShopLogo && (
+            <Image
+              className="flex items-center shrink-0 w-auto h-auto rounded-full"
+              src={ShopLogo}
+              width={59}
+              height={59}
+              quality={20}
+              alt="FoodRoya logo"
+              priority={true}
+            />
+          )}
           <ul className="flex h-full text-xl text-gray-300 gap-x-4 md:gap-x-7 xl:gap-x-9 tracking-tightest child:text-xs sm:child:text-xl child:leading-[56px] child-hover:text-orange-300 ">
             <li className="flex items-center">
               <a className="font-DanaMedium text-orange-200 my-auto" href="/">
@@ -104,8 +102,8 @@ function Header() {
             <li className="relative group flex items-center">
               <a>فروشگاه ها</a>
               <div className="absolute opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full w-52  space-y-4 text-zinc-700    bg-white  text-base  border-t-[3px] border-t-orange-300 rounded-2xl  tracking-normal  shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 child:inline-block p-6 pt-[21px] child:transition-colors child-hover:text-orange-300 ">
-                <a href={"/Shop/allShop"}>فروشگاههای من</a>
-                <a href={"/Shop/userShop"}>فروشگاههای دنبال شده</a>
+              {session ? (<a href={"/Shop/userShop"}>فروشگاههای من</a>):""}
+                <a href={"/Shop/allShop"}>فروشگاههای دنبال شده</a>
               </div>
             </li>
             <li className="flex items-center">
