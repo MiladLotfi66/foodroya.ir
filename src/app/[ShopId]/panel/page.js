@@ -1,4 +1,5 @@
 "use client";
+import FormTemplate from '@/templates/generalcomponnents/formTemplate';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 function Page() {
@@ -6,7 +7,15 @@ function Page() {
   const { ShopId} = params;
  
   return (
-    <div>
+    <FormTemplate>
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
+        <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
+          <h1 className="text-3xl font-MorabbaBold">مدیریت فروشگاه</h1>
+       
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
+         
       <Link className='p-3' href={`/${ShopId}/panel/banners`} >بنر ها</Link>
       <Link className='p-3' href={`/${ShopId}/panel/roles`} >نقش ها</Link>
       <Link className='p-3' href={`/${ShopId}/panel/currency`} >ارز ها</Link>
@@ -14,7 +23,12 @@ function Page() {
       <Link className='p-3' href={`/${ShopId}/panel/contact`} >مخاطبین</Link>
       <Link className='p-3' href={`/${ShopId}/panel/priceTemplate`} >قالب قیمت</Link>
       <Link className='p-3' href={`/${ShopId}/panel/products`} >محصولات</Link>
-    </div>
+        </div>
+      </div>
+
+
+
+    </FormTemplate>
   )
 }
 
