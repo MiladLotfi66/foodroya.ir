@@ -20,16 +20,11 @@ function CurrencyManage() {
   // بهینه‌سازی refreshCurrencies با استفاده از useCallback
   const refreshCurrencies = useCallback(async () => {
     try {
-
-
-
       if (!ShopId) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
-
       const response = await GetAllCurrencies(ShopId);
-
       setCurrencies(response.currencies);
     } catch (error) {
       console.error("Error fetching currencies:", error);

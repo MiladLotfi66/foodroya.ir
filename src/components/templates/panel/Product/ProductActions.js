@@ -40,7 +40,7 @@ export async function GetAllProducts(shopId) {
  */
 export async function AddProductAction(formData) {
   await connectDB();
-  
+
   let user;
   try {
     user = await authenticateUser();
@@ -57,7 +57,6 @@ export async function AddProductAction(formData) {
 
   try {
     session.startTransaction();
-    
     const title = formData.get('title');
     const unit = formData.get('unit');
     const ShopId = formData.get('ShopId');
@@ -69,39 +68,45 @@ export async function AddProductAction(formData) {
     const isMergeable = formData.get('isMergeable') === 'true';
     const description = formData.get('description');
 
+    // اعتبارسنجی فیلدهای الزامی
     if (!title || !unit || !ShopId) {
-      return { status: 400, message: 'فیلدهای عنوان، واحد و شناسه فروشگاه الزامی هستند.' };
+      throw new Error('فیلدهای عنوان، واحد و شناسه فروشگاه الزامی هستند.');
     }
 
     const newImages = formData.getAll('newImages');
-    if (newImages.length === 0) {
-      return { status: 400, message: 'حداقل یک تصویر برای محصول الزامی است.' };
-    }
 
+    // اعتبارسنجی حداقل و حداکثر تعداد تصاویر
+    if (newImages.length === 0) {
+      throw new Error('حداقل یک تصویر برای محصول الزامی است.');
+    }
     const MAX_FILES = 10;
     if (newImages.length > MAX_FILES) {
-      return { status: 400, message: `حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.` };
+      throw new Error(`حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.`);
     }
 
     const uploadDir = path.join('Uploads', 'Shop', 'images', ShopId, 'Products');
-    const uploadPromises = newImages.map(async (file) => {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const mimeType = file.type;
-      const size = file.size;
 
-      const imagePath = await createImageUploader({
+    // آپلود تصاویر
+    const uploadPromises = newImages.map(async (file) => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const mimeType = file.type;
+        const size = file.size;
+        const imagePath = await createImageUploader({
           buffer,
           uploadDir,
           mimeType,
           size
-      });
-if (imagePath.Error) {
-  throw new Error(imagePath.Error);
-}
-      return imagePath;
+        });
+        return imagePath;
+      } catch (uploadError) {
+        // می‌توانید اطلاعات بیشتری در مورد خطاها جمع‌آوری کنید
+        throw new Error(`خطا در آپلود تصویر: ${file.name}. ${uploadError.message}`);
+      }
     });
 
+    // استفاده از Promise.all برای منتظر ماندن تا تمام تصاویر آپلود شوند
     const imagePaths = await Promise.all(uploadPromises);
 
     const productId = new mongoose.Types.ObjectId(); // تولید شناسه برای محصول
@@ -136,9 +141,8 @@ if (imagePath.Error) {
       store: ShopId,
       productId: productId, // ذخیره شناسه محصول در حساب
     };
-    
-    const accountResult = await createAccount(accountData, session);
 
+    const accountResult = await createAccount(accountData, session);
     if (!accountResult.success) {
       throw new Error(accountResult.message);
     }
@@ -152,10 +156,18 @@ if (imagePath.Error) {
     await session.abortTransaction();
     session.endSession();
     console.error("Error adding product or creating account:", error);
-    return { status: 500, message:error||'خطایی در ایجاد محصول یا حساب رخ داد.' };
+
+    // بررسی نوع خطا و تعیین وضعیت HTTP مناسب
+    if (error.message.includes('آپلود تصویر')) {
+      return { status: 400, message: error.message };
+    } else if (error.message.includes('فیلدهای عنوان، واحد') || error.message.includes('حداقل یک تصویر')) {
+      return { status: 400, message: error.message };
+    } else if (error.code === 11000) { // خطای تکرار کلید اصلی
+      return { status: 409, message: "کدینگ حساب در این فروشگاه قبلاً استفاده شده است." };
+    }
+    return { status: 500, message: error.message || 'خطایی در ایجاد محصول یا حساب رخ داد.' };
   }
 }
-
 
   export async function EditProductAction(formData, ShopId) {
     await connectDB();
@@ -214,7 +226,6 @@ if (imagePath.Error) {
       return { status: 500, message:error|| 'خطایی در ویرایش محصول رخ داد.' };
     }
   }
-  
   export async function DeleteProducts(productId) {
     await connectDB();
     const user = await authenticateUser();
@@ -234,7 +245,6 @@ if (imagePath.Error) {
       return { status: 500, message: 'خطایی در حذف محصول رخ داد.' };
     }
   }
-  
   /**
    * فعال‌سازی محصول
    * @param {string} productId - شناسه محصول
@@ -243,11 +253,9 @@ if (imagePath.Error) {
   export async function EnableProductAction(productId) {
     await connectDB();
     const user = await authenticateUser();
-  
     if (!user) {
       return { status: 401, message: 'کاربر وارد نشده است.' };
     }
-  
     try {
       const updatedProduct = await Product.findByIdAndUpdate(
         productId,
@@ -258,11 +266,9 @@ if (imagePath.Error) {
         .populate('createdBy')
         .populate('updatedBy')
         .lean();
-  
       if (!updatedProduct) {
         return { status: 404, message: 'محصول پیدا نشد.' };
       }
-  
       const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
       return { status: 200, message: 'محصول فعال شد.', product: plainProduct };
     } catch (error) {
@@ -270,8 +276,6 @@ if (imagePath.Error) {
       return { status: 500, message: 'خطایی در فعال‌سازی محصول رخ داد.' };
     }
   }
-  
-
   export async function DisableProductAction(productId) {
     await connectDB();
     const user = await authenticateUser();
@@ -279,7 +283,6 @@ if (imagePath.Error) {
     if (!user) {
       return { status: 401, message: 'کاربر وارد نشده است.' };
     }
-  
     try {
       const updatedProduct = await Product.findByIdAndUpdate(
         productId,

@@ -57,8 +57,8 @@ export async function createImageUploader({ buffer, uploadDir = 'uploads', mimeT
     return accessiblePath;
   } catch (error) {
     console.error('Error in createImageUploader:', error);
-    // throw new Error(error.message || 'مشکلی در پردازش و ذخیره تصویر پیش آمده است.');
-    return {Error :'مشکلی در پردازش و ذخیره تصویر پیش آمده است.'};
+    throw new Error(error.message || 'مشکلی در پردازش و ذخیره تصویر پیش آمده است.');
+    // return {Error :'مشکلی در پردازش و ذخیره تصویر پیش آمده است.'};
 
   }
 }

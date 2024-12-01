@@ -12,7 +12,6 @@ import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServer
 // ایجاد حساب جدید
 
 export async function createAccount(data, session = null) {
-  console.log("data", data);
 
   await connectDB();
 
@@ -41,20 +40,40 @@ export async function createAccount(data, session = null) {
         return { success: false, message: "حساب والد پیدا نشد." };
       }
 
+      // const siblingAccounts = await Account.find({
+      //   parentAccount: parentAccount,
+      // })
+      //   .sort({ accountCode: 1 })
+      //   .lean();
+
+      // if (siblingAccounts.length > 0) {
+      //   const lastSiblingCode =
+      //     siblingAccounts[siblingAccounts.length - 1].accountCode;
+      //   const lastNumber = parseInt(lastSiblingCode.split("-").pop()) || 0;
+      //   console.log("lastNumber",lastNumber);
+      //   accountCode = `${parent.accountCode}-${lastNumber + 1}`;
+      // } else {
+      //   accountCode = `${parent.accountCode}-1`;
+      // }
+
       const siblingAccounts = await Account.find({
         parentAccount: parentAccount,
-      })
-        .sort({ accountCode: 1 })
-        .lean();
-
+      }).lean();
+      console.log("siblingAccounts", siblingAccounts);
+      
       if (siblingAccounts.length > 0) {
-        const lastSiblingCode =
-          siblingAccounts[siblingAccounts.length - 1].accountCode;
-        const lastNumber = parseInt(lastSiblingCode.split("-").pop()) || 0;
+        const lastNumber = siblingAccounts.reduce((max, account) => {
+          const codeParts = account.accountCode.split("-");
+          const num = parseInt(codeParts[codeParts.length - 1], 10);
+          return num > max ? num : max;
+        }, 0);
         accountCode = `${parent.accountCode}-${lastNumber + 1}`;
       } else {
         accountCode = `${parent.accountCode}-1`;
       }
+
+
+
     }
 
     const newAccountData = new Account({

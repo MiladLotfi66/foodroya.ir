@@ -20,16 +20,11 @@ function PriceTemplateManage() {
   // بهینه‌سازی refreshPriceTemplates با استفاده از useCallback
   const refreshPriceTemplates = useCallback(async () => {
     try {
-    
-
-
       if (!ShopId) {
         console.error("فروشگاهی با این نام یافت نشد.");
         return;
       }
-
       const response = await GetAllPriceTemplates(ShopId);
-
       setPriceTemplates(response.PriceTemplates);
     } catch (error) {
       console.error("Error fetching price templates:", error);
