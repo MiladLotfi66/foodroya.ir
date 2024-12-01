@@ -42,7 +42,6 @@ const ProductsSchema = yup.object().shape({
   // )
   // .min(1, 'باید حداقل یک ویژگی وارد کنید')
   // .max(10, 'حداکثر ۱۰ ویژگی قابل قبول است'),
-  
   features: yup.array()
   .of(
     yup.object().shape({
@@ -58,7 +57,7 @@ const ProductsSchema = yup.object().shape({
   .required('فیلد ویژگی‌ها الزامی است'),
 //////////////////////////
   pricingTemplate:yup.string()
-        .required(' قالب قیمتی الزامی است')    ,
+        .required(' قالب قیمتی الزامی است'),
   /////////////////////////
   images: yup.array()
     .of(

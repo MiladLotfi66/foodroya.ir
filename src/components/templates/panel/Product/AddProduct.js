@@ -17,7 +17,6 @@ import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
-  console.log("product",product);
 
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
@@ -159,6 +158,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       } else {
         result = await AddProductAction(formDataObj);
       }
+console.log(result);
 
       if (result.status === 201 || result.status === 200) {
         await refreshProducts();

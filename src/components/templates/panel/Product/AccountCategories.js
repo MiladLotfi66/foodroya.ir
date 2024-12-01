@@ -46,6 +46,8 @@ function AccountCategories({ onSelect, ShopId, setSelectedParentAccount, onError
 
   // از useCallback برای بهینه‌سازی عملکرد استفاده می‌کنیم
   const refreshAccounts = useCallback(async () => {
+    console.log("reffresh");
+    
     if (!parentAccountId) {
       console.error("شناسه والد موجود نیست.");
       return;

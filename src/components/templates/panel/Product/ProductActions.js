@@ -27,7 +27,7 @@ export async function GetAllProducts(shopId) {
       const products = await Product.find({ shop: shopId }).select('-__v')
         .populate('shop')
         .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
-      return { status: 200, products: convertToPlainObjects(products) };
+      return { status: 200, products};
     } catch (error) {
       console.error("Error fetching products:", error);
       return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
@@ -96,7 +96,9 @@ export async function AddProductAction(formData) {
           mimeType,
           size
       });
-
+if (imagePath.Error) {
+  throw new Error(imagePath.Error);
+}
       return imagePath;
     });
 
@@ -135,7 +137,6 @@ export async function AddProductAction(formData) {
       productId: productId, // ذخیره شناسه محصول در حساب
     };
     
-
     const accountResult = await createAccount(accountData, session);
 
     if (!accountResult.success) {
@@ -151,7 +152,7 @@ export async function AddProductAction(formData) {
     await session.abortTransaction();
     session.endSession();
     console.error("Error adding product or creating account:", error);
-    return { status: 500, message: 'خطایی در ایجاد محصول یا حساب رخ داد.' };
+    return { status: 500, message:error||'خطایی در ایجاد محصول یا حساب رخ داد.' };
   }
 }
 
@@ -210,7 +211,7 @@ export async function AddProductAction(formData) {
       return { status: 200, product: plainProduct };
     } catch (error) {
       console.error("Error editing product:", error);
-      return { status: 500, message: 'خطایی در ویرایش محصول رخ داد.' };
+      return { status: 500, message:error|| 'خطایی در ویرایش محصول رخ داد.' };
     }
   }
   

@@ -431,7 +431,6 @@ export async function GetAllAccounts(storeId, parentId = null) {
   }
 
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
-  console.log("options----->",options);
   
   await connectDB();
 

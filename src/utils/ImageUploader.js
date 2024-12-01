@@ -7,7 +7,7 @@ import sharp from 'sharp';
 /**
  * تنظیمات مربوط به آپلود تصاویر
  */
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp','image/jpg'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const MIN_SIZE = 10 * 1024; // 10KB
 
@@ -24,7 +24,7 @@ export async function createImageUploader({ buffer, uploadDir = 'uploads', mimeT
   try {
     // اعتبارسنجی نوع فایل
     if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
-      throw new Error('نوع فایل نا معتبر است. تنها تصاویر با فرمت JPEG, PNG, GIF و WebP مجاز هستند.');
+      throw new Error('نوع فایل نا معتبر است. تنها تصاویر با فرمت JPEG, PNG , jpg , GIF و WebP مجاز هستند.');
     }
 
     // اعتبارسنجی حجم فایل
@@ -32,9 +32,9 @@ export async function createImageUploader({ buffer, uploadDir = 'uploads', mimeT
       throw new Error('حجم فایل بیش از حد مجاز (۵ مگابایت) است.');
     }
 
-    if (size < MIN_SIZE) {
-      throw new Error('حجم فایل کمتر از حد مجاز (۱۰ کیلوبایت) است.');
-    }
+    // if (size < MIN_SIZE) {
+    //   throw new Error('حجم فایل کمتر از حد مجاز (۱۰ کیلوبایت) است.');
+    // }
 
     // تعیین مسیر کامل پوشه آپلود
     const absoluteUploadDir = path.join(process.cwd(), 'public', uploadDir);
@@ -57,6 +57,8 @@ export async function createImageUploader({ buffer, uploadDir = 'uploads', mimeT
     return accessiblePath;
   } catch (error) {
     console.error('Error in createImageUploader:', error);
-    throw new Error(error.message || 'مشکلی در پردازش و ذخیره تصویر پیش آمده است.');
+    // throw new Error(error.message || 'مشکلی در پردازش و ذخیره تصویر پیش آمده است.');
+    return {Error :'مشکلی در پردازش و ذخیره تصویر پیش آمده است.'};
+
   }
 }
