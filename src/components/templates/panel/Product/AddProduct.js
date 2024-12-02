@@ -73,7 +73,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       unit: product?.unit || "",
       description: product?.description || "",
       ShopId: ShopId || "",
-      features: [{ featureKey: '', value: '' }], // با یک ویژگی اولیه شروع کنید
+      features: [{ featureKey: null, value: '' }],
 
     },
     resolver: yupResolver(ProductsSchema),
@@ -139,7 +139,14 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       formData.newImages.forEach((image) => {
         formDataObj.append("newImages", image);
       });
-  
+      
+      formData.features.forEach((feature, index) => {
+        if (feature.featureKey) {
+          formDataObj.append(`features[${index}][featureKey]`, feature.featureKey.value);
+          formDataObj.append(`features[${index}][value]`, feature.value);
+        }
+      });
+      
       formDataObj.append("title", formData.title);
       formDataObj.append("pricingTemplate", formData.pricingTemplate);
       formDataObj.append("parentAccount", parentAccount);
@@ -158,7 +165,6 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       } else {
         result = await AddProductAction(formDataObj);
       }
-console.log(result);
 
       if (result.status === 201 || result.status === 200) {
         await refreshProducts();

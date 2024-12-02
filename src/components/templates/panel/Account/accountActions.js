@@ -1,20 +1,16 @@
 // app/actions/accountActions.js
-
 "use server";
 import mongoose from "mongoose";
 import connectDB from "@/utils/connectToDB";
 import Account from "@/models/Account";
 import Tag from "../Product/Tag";
 import PriceTemplate from "../PriceTemplate/PriceTemplate";
+import Product from "../Product/Product";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
-
 // ایجاد حساب جدید
-
 export async function createAccount(data, session = null) {
-
   await connectDB();
-
   try {
     let userData;
     try {
@@ -23,16 +19,12 @@ export async function createAccount(data, session = null) {
       userData = null;
       console.log("Authentication failed:", authError);
     }
-
     if (!userData) {
       return { status: 401, message: 'کاربر وارد نشده است.' };
     }
-
     const { _id, title, accountType, accountStatus, parentAccount, store, currency, contact, creditLimit, posConected, bankAcountNumber, bankCardNumber, productId} = data;
-
     let accountCode = "";
     let parent = "";
-
     if (parentAccount) {
       parent = await Account.findById(parentAccount).lean();
 
@@ -59,7 +51,6 @@ export async function createAccount(data, session = null) {
       const siblingAccounts = await Account.find({
         parentAccount: parentAccount,
       }).lean();
-      console.log("siblingAccounts", siblingAccounts);
       
       if (siblingAccounts.length > 0) {
         const lastNumber = siblingAccounts.reduce((max, account) => {
@@ -244,7 +235,6 @@ export async function updateAccount(id, data) {
       updateQuery.$unset = unsetFields;
     }
 
-    console.log("Update Query:", updateQuery);
 
     // انجام آپدیت
     const updatedAccount = await Account.findByIdAndUpdate(id, updateQuery, {
@@ -574,7 +564,6 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
           message: 'حساب با شناسه فروشگاه و کد حساب ارائه شده یافت نشد.',
         };
       }
-  console.log("accountId", account._id);
   
       return {
         success: true,

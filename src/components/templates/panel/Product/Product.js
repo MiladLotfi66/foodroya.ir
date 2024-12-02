@@ -20,7 +20,8 @@ const ProductSchema = new Schema({
   minStock: { type: Number, default: 0 },
   parentAccount: { type: Schema.Types.ObjectId, ref: "Account" },
   tags: [{type: Schema.Types.ObjectId, ref: "Tag" }] , // Array of tags
-  
+  Features: [{type: Schema.Types.ObjectId, ref: "Feature" }] , // Array of tags
+
   storageLocation: { type: String },
   isSaleable: { type: Boolean, default: true },
   isMergeable: { type: Boolean, default: false },

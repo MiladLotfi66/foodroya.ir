@@ -39,6 +39,8 @@ export async function GetAllProducts(shopId) {
  * @returns {Promise<{ status: number, product?: object, message?: string }>}
  */
 export async function AddProductAction(formData) {
+  console.log("formData---------->",formData);
+  
   await connectDB();
 
   let user;
