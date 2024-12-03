@@ -6,6 +6,8 @@ import Account from "@/models/Account";
 import Tag from "../Product/Tag";
 import PriceTemplate from "../PriceTemplate/PriceTemplate";
 import Product from "../Product/Product";
+import Feature from "../Product/Feature";
+import FeatureKey from "../Product/FeatureKey";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
 // ایجاد حساب جدید
@@ -31,22 +33,6 @@ export async function createAccount(data, session = null) {
       if (!parent) {
         return { success: false, message: "حساب والد پیدا نشد." };
       }
-
-      // const siblingAccounts = await Account.find({
-      //   parentAccount: parentAccount,
-      // })
-      //   .sort({ accountCode: 1 })
-      //   .lean();
-
-      // if (siblingAccounts.length > 0) {
-      //   const lastSiblingCode =
-      //     siblingAccounts[siblingAccounts.length - 1].accountCode;
-      //   const lastNumber = parseInt(lastSiblingCode.split("-").pop()) || 0;
-      //   console.log("lastNumber",lastNumber);
-      //   accountCode = `${parent.accountCode}-${lastNumber + 1}`;
-      // } else {
-      //   accountCode = `${parent.accountCode}-1`;
-      // }
 
       const siblingAccounts = await Account.find({
         parentAccount: parentAccount,
@@ -125,9 +111,6 @@ export async function createAccount(data, session = null) {
     };
   }
 }
-
-
-
 export async function updateAccount(id, data) {
   await connectDB();
 
@@ -258,7 +241,6 @@ export async function updateAccount(id, data) {
     };
   }
 }
-
 // حذف حساب
 export async function deleteAccount(id) {
   await connectDB();
@@ -296,7 +278,6 @@ export async function deleteAccount(id) {
     };
   }
 }
-
 export async function activateAccount(id) {
     await connectDB();
   
@@ -346,8 +327,6 @@ export async function activateAccount(id) {
       };
     }
   }
-
-
 export async function deactivateAccount(id) {
   await connectDB();
 
@@ -438,9 +417,8 @@ export async function GetAllAccounts(storeId, parentId = null) {
 
     return { Accounts: plainAccounts, status: 200 };
   }
-
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
-  
+
   await connectDB();
 
   if (!storeId) {

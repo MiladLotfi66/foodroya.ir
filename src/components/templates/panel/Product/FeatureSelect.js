@@ -1,24 +1,23 @@
 // src/components/FeatureSelect.js
-"use client"; // ذخیره این فایل به عنوان یک کامپوننت کلاینت
+"use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import AsyncCreatableSelect from "react-select/async-creatable";
 import debounce from "lodash.debounce";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
-import { GetAllFeatureKeys, AddFeatureKeyAction } from "./FeatureActions"; // اطمینان حاصل کنید که این توابع درست کار می‌کنند
+import { GetAllFeatureKeys, AddFeatureKeyAction } from "./FeatureActions";
 import toast from "react-hot-toast";
 import { useTheme } from "next-themes";
 import { customSelectStyles } from "./selectStyles";
 
-
 const FeatureSelect = () => {
   const { control, register, formState: { errors } } = useFormContext();
   const { theme } = useTheme();
-  
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "features",
+    name: "Features",
   });
+console.log("fields",fields);
 
   const didMountRef = useRef(false);
 
@@ -30,7 +29,6 @@ const FeatureSelect = () => {
       didMountRef.current = true;
     }
   }, [append, fields.length]);
-
 
   const handleAddFeature = () => {
     append({ featureKey: null, value: "" });
@@ -83,8 +81,8 @@ const FeatureSelect = () => {
   };
 
   return (
-    <div className="w-full ">
-      <label className="block text-sm font-medium  mb-2 ">ویژگی‌ها</label>
+    <div className="w-full">
+      <label className="block text-sm font-medium mb-2">ویژگی‌ها</label>
       {fields.map((field, index) => (
         <div 
           key={field.id} 
@@ -93,17 +91,15 @@ const FeatureSelect = () => {
           <div className="flex-1 w-full">
             <Controller
               control={control}
-              name={`features[${index}].featureKey`}
+              name={`Features[${index}].featureKey`}
               render={({ field: { onChange, value, ref } }) => (
                 <AsyncCreatableSelect
                   inputRef={ref}
-              
                   styles={
                     theme === "dark"
                       ? customSelectStyles
                       : ""
                   }
-                //   classNamePrefix="select"
                   isClearable
                   loadOptions={loadOptions}
                   onCreateOption={(inputValue) => handleCreate(inputValue, onChange)}
@@ -114,9 +110,9 @@ const FeatureSelect = () => {
                 />
               )}
             />
-            {errors.features && errors.features[index]?.featureKey && (
+            {errors.Features && errors.Features[index]?.featureKey && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.features[index].featureKey.message}
+                {errors.Features[index].featureKey.message}
               </p>
             )}
           </div>
@@ -124,14 +120,14 @@ const FeatureSelect = () => {
             <input
               type="text"
               placeholder="مقدار ویژگی"
-              {...register(`features[${index}].value`, { required: "مقدار ویژگی الزامی است" })}
-              className={`mt-1 p-2 block w-full h-full rounded-md bg-white dark:bg-zinc-600 dark:text-gray-300  border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                errors.features && errors.features[index]?.value ? "border-red-500" : ""
+              {...register(`Features[${index}].value`, { required: "مقدار ویژگی الزامی است" })}
+              className={`mt-1 p-2 block w-full h-full rounded-md bg-white dark:bg-zinc-600 dark:text-gray-300 border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors.Features && errors.Features[index]?.value ? "border-red-500" : ""
               }`}
             />
-            {errors.features && errors.features[index]?.value && (
+            {errors.Features && errors.Features[index]?.value && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.features[index].value.message}
+                {errors.Features[index].value.message}
               </p>
             )}
           </div>
@@ -146,8 +142,8 @@ const FeatureSelect = () => {
           </div>
         </div>
       ))}
-      {errors.features && typeof errors.features.message === "string" && (
-        <p className="text-red-500 text-sm mb-2">{errors.features.message}</p>
+      {errors.Features && typeof errors.Features.message === "string" && (
+        <p className="text-red-500 text-sm mb-2">{errors.Features.message}</p>
       )}
       <button
         type="button"

@@ -24,7 +24,6 @@ const accountSchema = new Schema(
       ref: "Store",
       required: true,
     },
-
     // حساب والد: ارجاع به مدل Account (خود مدل)
     parentAccount: {
       type: Schema.Types.ObjectId,

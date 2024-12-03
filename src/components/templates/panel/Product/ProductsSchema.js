@@ -42,7 +42,7 @@ const ProductsSchema = yup.object().shape({
   // )
   // .min(1, 'باید حداقل یک ویژگی وارد کنید')
   // .max(10, 'حداکثر ۱۰ ویژگی قابل قبول است'),
-  features: yup.array()
+  Features: yup.array()
   .of(
     yup.object().shape({
       featureKey: yup.object()

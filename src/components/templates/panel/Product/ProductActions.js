@@ -9,6 +9,8 @@ import { v4 as uuidv4 } from 'uuid'; // برای تولید نام‌های یک
 import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
 import { createImageUploader } from "@/utils/ImageUploader";
 import { createAccount } from '../Account/accountActions';
+import Feature from './Feature';
+
 export async function GetAllProducts(shopId) {
     await connectDB();
     let user;
@@ -18,11 +20,9 @@ export async function GetAllProducts(shopId) {
       user = null;
       console.log("Authentication failed:", authError);
     }
-
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  
     try {
       const products = await Product.find({ shop: shopId }).select('-__v')
         .populate('shop')
@@ -38,8 +38,9 @@ export async function GetAllProducts(shopId) {
  * @param {FormData} formData - داده‌های فرم شامل اطلاعات محصول و تصاویر
  * @returns {Promise<{ status: number, product?: object, message?: string }>}
  */
+
 export async function AddProductAction(formData) {
-  console.log("formData---------->",formData);
+  console.log("formData---------->", formData);
   
   await connectDB();
 
@@ -59,6 +60,8 @@ export async function AddProductAction(formData) {
 
   try {
     session.startTransaction();
+
+    // استخراج داده‌ها از فرم دیتا
     const title = formData.get('title');
     const unit = formData.get('unit');
     const ShopId = formData.get('ShopId');
@@ -107,13 +110,12 @@ export async function AddProductAction(formData) {
         throw new Error(`خطا در آپلود تصویر: ${file.name}. ${uploadError.message}`);
       }
     });
-
     // استفاده از Promise.all برای منتظر ماندن تا تمام تصاویر آپلود شوند
     const imagePaths = await Promise.all(uploadPromises);
-
+    // تولید شناسه برای محصول و حساب
     const productId = new mongoose.Types.ObjectId(); // تولید شناسه برای محصول
     const accountId = new mongoose.Types.ObjectId(); // تولید شناسه برای حساب
-
+    // ایجاد محصول جدید
     const newProduct = new Product({
       _id: productId, // تنظیم شناسه محصول از پیش تعیین شده
       accountId: accountId, // ذخیره شناسه حساب در محصول
@@ -131,9 +133,44 @@ export async function AddProductAction(formData) {
       createdBy: user.id,
       updatedBy: user.id,
     });
+    // تجمیع ویژگی‌ها از فرم دیتا
+    const Features = [];
+    formData.forEach((value, key) => {
+      const featureMatch = key.match(/Features\[(\d+)\]\[(featureKey|value)\]/);
+      if (featureMatch) {
+        const index = parseInt(featureMatch[1], 10);
+        const field = featureMatch[2];
+        if (!Features[index]) {
+          Features[index] = {};
+        }
+        Features[index][field] = value;
+      }
+    });
+    // اعتبارسنجی و ایجاد اسناد ویژگی
+    const featureDocs = [];
+    for (const feature of Features) {
+      if (!feature.featureKey || !feature.value) {
+        throw new Error('تمام ویژگی‌ها باید شامل featureKey و value باشند.');
+      }
+      const featureDoc = new Feature({
+        featureKey: feature.featureKey,
+        value: feature.value,
+        productId: productId,
+        CreatedBy: user.id,
+        LastEditedBy: user.id,
+      });
+      featureDocs.push(featureDoc);
+    }
+    // ذخیره‌ی تمامی ویژگی‌ها در پایگاه داده
+    const savedFeatures = await Feature.insertMany(featureDocs, { session });
 
+    // افزودن شناسه‌های ویژگی به محصول
+    newProduct.Features = savedFeatures.map(feature => feature._id);
+
+    // ذخیره محصول با شناسه‌های ویژگی
     await newProduct.save({ session });
 
+    // ایجاد حساب مرتبط
     const accountData = {
       _id: accountId, // تنظیم شناسه حساب از پیش تعیین شده
       title: newProduct.title,
@@ -149,6 +186,7 @@ export async function AddProductAction(formData) {
       throw new Error(accountResult.message);
     }
 
+    // تایید تراکنش و پایان نشست
     await session.commitTransaction();
     session.endSession();
 
@@ -162,7 +200,12 @@ export async function AddProductAction(formData) {
     // بررسی نوع خطا و تعیین وضعیت HTTP مناسب
     if (error.message.includes('آپلود تصویر')) {
       return { status: 400, message: error.message };
-    } else if (error.message.includes('فیلدهای عنوان، واحد') || error.message.includes('حداقل یک تصویر')) {
+    } else if (
+      error.message.includes('فیلدهای عنوان، واحد') ||
+      error.message.includes('حداقل یک تصویر') ||
+      error.message.includes('featureKey') ||
+      error.message.includes('value')
+    ) {
       return { status: 400, message: error.message };
     } else if (error.code === 11000) { // خطای تکرار کلید اصلی
       return { status: 409, message: "کدینگ حساب در این فروشگاه قبلاً استفاده شده است." };
@@ -170,6 +213,7 @@ export async function AddProductAction(formData) {
     return { status: 500, message: error.message || 'خطایی در ایجاد محصول یا حساب رخ داد.' };
   }
 }
+
 
   export async function EditProductAction(formData, ShopId) {
     await connectDB();

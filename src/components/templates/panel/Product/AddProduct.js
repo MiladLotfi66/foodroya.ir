@@ -17,6 +17,7 @@ import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
+  console.log("product", product);
 
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
@@ -55,29 +56,77 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
         setLoadingTemplates(false);
       }
     };
-
     fetchPricingTemplates();
   }, [ShopId]);
 
-  const { register, handleSubmit, control, setValue, formState: { errors }, reset } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm({
     mode: "all",
     defaultValues: {
       title: product?.title || "",
       secondaryTitle: product?.secondaryTitle || "",
       pricingTemplate: product?.pricingTemplate?._id || "",
       parentAccount: parentAccount,
-      tags: product?.tags ? product.tags.map(tag => ({ label: tag.name, value: tag._id })) : [],
+      tags: product?.tags
+        ? product.tags.map((tag) => ({ label: tag.name, value: tag._id }))
+        : [],
       storageLocation: product?.storageLocation || "",
       isSaleable: product?.isSaleable !== undefined ? product.isSaleable : true,
       isMergeable: product?.isMergeable || false,
       unit: product?.unit || "",
       description: product?.description || "",
       ShopId: ShopId || "",
-      features: [{ featureKey: null, value: '' }],
 
+      Features: product?.Features?.map((feature) => ({
+        featureKey: {
+          value: feature.featureKey._id,
+          label: feature.featureKey.name,
+        },
+        value: feature.value,
+        id: feature.id, // ضروری برای useFieldArray
+      })),
     },
     resolver: yupResolver(ProductsSchema),
   });
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // اگر داده محصول به‌صورت ناهمزمان بارگذاری می‌شود، از useEffect برای بازنشانی فرم استفاده کنید
+  useEffect(() => {
+    if (product) {
+      reset({
+        name: product.name,
+        description: product.description,
+        title: product.title,
+        secondaryTitle: product.secondaryTitle,
+        pricingTemplate: product.pricingTemplate?._id || "",
+        parentAccount: product.parentAccount,
+        tags: product.tags
+        ? product.tags.map((tag) => ({ label: tag.name, value: tag._id }))
+        : [],
+        storageLocation: product.storageLocation,
+        isSaleable: product.isSaleable,
+        isMergeable: product.isMergeable,
+        unit: product.unit,
+        description: product.description,
+        ShopId: product.ShopId,
+        // ... سایر فیلدها
+        Features: product.Features.map((feature) => ({
+          featureKey: {
+            value: feature.featureKey._id,
+            label: feature.featureKey.name,
+          },
+          value: feature.value,
+          id: feature.id,
+        })),
+        });
+    }
+  }, [product, reset]);
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -108,15 +157,19 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
   };
 
   useEffect(() => {
-    const existingImageSrcs = images.filter(img => img.isExisting).map(img => img.src);
-    const newImageFiles = images.filter(img => !img.isExisting).map(img => img.file);
+    const existingImageSrcs = images
+      .filter((img) => img.isExisting)
+      .map((img) => img.src);
+    const newImageFiles = images
+      .filter((img) => !img.isExisting)
+      .map((img) => img.file);
     setValue("existingImages", existingImageSrcs);
     setValue("newImages", newImageFiles);
   }, [images, setValue]);
 
   useEffect(() => {
     return () => {
-      images.forEach(img => {
+      images.forEach((img) => {
         if (!img.isExisting && img.src.startsWith("blob:")) {
           URL.revokeObjectURL(img.src);
         }
@@ -139,18 +192,21 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       formData.newImages.forEach((image) => {
         formDataObj.append("newImages", image);
       });
-      
-      formData.features.forEach((feature, index) => {
+
+      formData.Features.forEach((feature, index) => {
         if (feature.featureKey) {
-          formDataObj.append(`features[${index}][featureKey]`, feature.featureKey.value);
-          formDataObj.append(`features[${index}][value]`, feature.value);
+          formDataObj.append(
+            `Features[${index}][featureKey]`,
+            feature.featureKey.value
+          );
+          formDataObj.append(`Features[${index}][value]`, feature.value);
         }
       });
-      
+
       formDataObj.append("title", formData.title);
       formDataObj.append("pricingTemplate", formData.pricingTemplate);
       formDataObj.append("parentAccount", parentAccount);
-      const tags = formData.tags?.map(tag => tag.value).join(",");
+      const tags = formData.tags?.map((tag) => tag.value).join(",");
       formDataObj.append("tags", tags);
       formDataObj.append("storageLocation", formData.storageLocation);
       formDataObj.append("isSaleable", formData.isSaleable);
@@ -168,9 +224,10 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
 
       if (result.status === 201 || result.status === 200) {
         await refreshProducts();
-        const successMessage = product && product._id
-          ? "محصول با موفقیت ویرایش شد!"
-          : "محصول با موفقیت ایجاد شد!";
+        const successMessage =
+          product && product._id
+            ? "محصول با موفقیت ویرایش شد!"
+            : "محصول با موفقیت ایجاد شد!";
         toast.success(successMessage);
         reset();
         setImages([]);
@@ -228,8 +285,19 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
         </h1>
       </div>
 
-      <FormProvider {...{ register, handleSubmit, control, setValue, formState: { errors } }}>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4 p-2 md:p-4">
+      <FormProvider
+        {...{
+          register,
+          handleSubmit,
+          control,
+          setValue,
+          formState: { errors },
+        }}
+      >
+        <form
+          onSubmit={handleSubmit(handleFormSubmit)}
+          className="flex flex-col gap-4 p-2 md:p-4"
+        >
           <div>
             <button
               type="button"
@@ -252,21 +320,27 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               <div>
                 <h2 className="text-lg font-semibold">تصاویر موجود:</h2>
                 <div className="grid grid-cols-3 gap-4">
-                  {images.filter((img) => img.isExisting).map((img) => (
-                    <div key={img.id} className="relative">
-                      <img src={img.src} alt="Existing Preview" className="w-full h-32 object-cover rounded" />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteImage(img.id)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                        aria-label="حذف تصویر"
-                      >
-                        <svg width="16" height="16">
-                          <use href="#CloseSvg"></use>
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                  {images
+                    .filter((img) => img.isExisting)
+                    .map((img) => (
+                      <div key={img.id} className="relative">
+                        <img
+                          src={img.src}
+                          alt="Existing Preview"
+                          className="w-full h-32 object-cover rounded"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(img.id)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                          aria-label="حذف تصویر"
+                        >
+                          <svg width="16" height="16">
+                            <use href="#CloseSvg"></use>
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -275,26 +349,34 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               <div className="mt-4">
                 <h2 className="text-lg font-semibold">تصاویر جدید:</h2>
                 <div className="grid grid-cols-3 gap-4">
-                  {images.filter((img) => !img.isExisting).map((img) => (
-                    <div key={img.id} className="relative">
-                      <img src={img.src} alt="New Preview" className="w-full h-32 object-cover rounded" />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteImage(img.id)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                        aria-label="حذف تصویر"
-                      >
-                        <svg width="16" height="16">
-                          <use href="#CloseSvg"></use>
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                  {images
+                    .filter((img) => !img.isExisting)
+                    .map((img) => (
+                      <div key={img.id} className="relative">
+                        <img
+                          src={img.src}
+                          alt="New Preview"
+                          className="w-full h-32 object-cover rounded"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(img.id)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                          aria-label="حذف تصویر"
+                        >
+                          <svg width="16" height="16">
+                            <use href="#CloseSvg"></use>
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
 
-            {errors.images && <p className="text-red-500">{errors.images.message}</p>}
+            {errors.images && (
+              <p className="text-red-500">{errors.images.message}</p>
+            )}
           </div>
 
           <div>
@@ -304,7 +386,9 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               {...register("title")}
               className="react-select-container w-full border rounded px-3 py-2"
             />
-            {errors.title && <p className="text-red-500">{errors.title.message}</p>}
+            {errors.title && (
+              <p className="text-red-500">{errors.title.message}</p>
+            )}
           </div>
 
           <div>
@@ -342,13 +426,17 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
                       ) {
                         return;
                       }
-                      field.onChange(selectedOption ? selectedOption.value : "");
+                      field.onChange(
+                        selectedOption ? selectedOption.value : ""
+                      );
                     }}
                   />
                 )}
               />
             )}
-            {errors.pricingTemplate && <p className="text-red-500">{errors.pricingTemplate.message}</p>}
+            {errors.pricingTemplate && (
+              <p className="text-red-500">{errors.pricingTemplate.message}</p>
+            )}
           </div>
 
           <div>
@@ -357,7 +445,9 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               {...register("storageLocation")}
               className="react-select-container w-full border rounded px-3 py-2"
             />
-            {errors.storageLocation && <p className="text-red-500">{errors.storageLocation.message}</p>}
+            {errors.storageLocation && (
+              <p className="text-red-500">{errors.storageLocation.message}</p>
+            )}
           </div>
 
           <div className="flex items-center justify-around">
@@ -386,7 +476,9 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               {...register("unit")}
               className="react-select-container w-full border rounded px-3 py-2"
             />
-            {errors.unit && <p className="text-red-500">{errors.unit.message}</p>}
+            {errors.unit && (
+              <p className="text-red-500">{errors.unit.message}</p>
+            )}
           </div>
 
           <FeatureSelect />
@@ -397,7 +489,9 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               {...register("description")}
               className="react-select-container w-full border rounded px-3 py-2"
             ></textarea>
-            {errors.description && <p className="text-red-500">{errors.description.message}</p>}
+            {errors.description && (
+              <p className="text-red-500">{errors.description.message}</p>
+            )}
           </div>
 
           <button

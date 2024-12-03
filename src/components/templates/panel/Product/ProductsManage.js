@@ -34,7 +34,6 @@ function ProductManage() {
   const [currentPage, setCurrentPage] = useState(1); // وضعیت صفحه فعلی
   const [totalPages, setTotalPages] = useState(0); // وضعیت کل صفحات
   const limit = 15; // تعداد آیتم‌ها در هر صفحه
-
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const fetchAnbarAccountId = async () => {
@@ -65,15 +64,21 @@ function ProductManage() {
         setLoading(true);
         setSelectedParentAccount(parentAccountId);
         const options = {
-          fields: ['_id', 'title', 'accountType', 'accountStatus', 'productId'], // انتخاب فیلدهای مورد نیاز
+          fields: ['_id', 'title', 'accountType', 'accountStatus', 'productId','Features'], // انتخاب فیلدهای مورد نیاز
           populateFields: [
             {
               path: 'productId',
               populate: [
                 { path: 'pricingTemplate' },
-                { path: 'tags' }
+                { path: 'tags' },
+                { path: 'Features' ,
+                  populate: [
+                    { path: 'featureKey' },
+                  ]
+                }
               ]
-            }
+            },
+           
           ],
           limit,
           page: currentPage, // شماره صفحه فعلی
@@ -82,8 +87,8 @@ function ProductManage() {
             ? { title: { $regex: searchQuery, $options: 'i' } } // فیلتر جستجو
             : {}
         };
-        
         const response = await GetAllAccountsByOptions(ShopId, parentAccountId, options);
+        console.log("response----->",response);
         
         if (response.status === 200) {
           setAccounts(response.Accounts);
@@ -134,7 +139,6 @@ function ProductManage() {
   const onSubmitCreateAccount = async (data) => {
     const { name } = data;
     const parentId = parentAccountId;
-
     try {
       const payload = {
         title: name,
