@@ -15,13 +15,18 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   return (
     <div className="flex justify-center my-4">
       <nav className="inline-flex -space-x-px">
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+
+      <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
         >
-          بعدی
+          قبلی
         </button>
+
+
+
+     
         {pages.map((page) => (
           <button
             key={page}
@@ -35,14 +40,15 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             {page}
           </button>
         ))}
-
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
+   <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50"
         >
-          قبلی
+          بعدی
         </button>
+    
+    
       </nav>
     </div>
   );

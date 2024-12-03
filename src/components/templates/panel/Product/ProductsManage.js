@@ -33,7 +33,7 @@ function ProductManage() {
   const [parentAccountId, setParentAccountId] = useState(null); // شناسه حساب والد
   const [currentPage, setCurrentPage] = useState(1); // وضعیت صفحه فعلی
   const [totalPages, setTotalPages] = useState(0); // وضعیت کل صفحات
-  const limit = 15; // تعداد آیتم‌ها در هر صفحه
+  const limit = 12; // تعداد آیتم‌ها در هر صفحه
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const fetchAnbarAccountId = async () => {

@@ -6,7 +6,13 @@ const featureSchema = new Schema({
     ref: 'FeatureKey',
     required: true
 },
-    value: { type: String, required: true },
+value: { 
+  type: String, 
+  required: [true, 'Value is required'],
+  trim: true,
+  minlength: [2, 'Value must be at least 2 characters'],
+  maxlength: [100, 'Value cannot exceed 100 characters'],
+},
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true } ,
     LastEditedBy: {
         type: Schema.Types.ObjectId,
