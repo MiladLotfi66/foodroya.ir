@@ -10,14 +10,13 @@ import ProductsSchema from "./ProductsSchema";
 import { useState, useEffect, useRef } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams, useRouter } from "next/navigation";
-import { AddProductAction, EditProductsAction } from "./ProductActions";
+import { AddProductAction, EditProductAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid";
 import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
-  console.log("product", product);
 
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
@@ -217,7 +216,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       let result;
       if (product?._id) {
         formDataObj.append("id", product._id);
-        result = await EditProductsAction(formDataObj, ShopId);
+        result = await EditProductAction(formDataObj, ShopId);
       } else {
         result = await AddProductAction(formDataObj);
       }

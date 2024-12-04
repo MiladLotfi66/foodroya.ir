@@ -10,6 +10,7 @@ import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServer
 import { createImageUploader } from "@/utils/ImageUploader";
 import { createAccount } from '../Account/accountActions';
 import Feature from './Feature';
+import { updateAccountBySession } from '../Account/accountActions';
 
 export async function GetAllProducts(shopId) {
     await connectDB();
@@ -40,7 +41,6 @@ export async function GetAllProducts(shopId) {
  */
 
 export async function AddProductAction(formData) {
-  console.log("formData---------->", formData);
   
   await connectDB();
 
@@ -215,63 +215,226 @@ export async function AddProductAction(formData) {
 }
 
 
-  export async function EditProductAction(formData, ShopId) {
-    await connectDB();
-    let user;
-    try {
-      user = await authenticateUser();
-    } catch (authError) {
-      user = null;
-      console.log("Authentication failed:", authError);
-    }
+export async function EditProductAction(formData, ShopId) {
+  console.log("EditProductAction - formData:", formData);
+
+  await connectDB();
+
+  let user;
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.error("Authentication failed:", authError);
+  }
 
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  
-  
-    const { id, title, shortName, exchangeRate, decimalPlaces, status } = Object.fromEntries(formData.entries());
-  
-    const product = await Product.findById(id).populate('shop').populate('createdBy').populate('updatedBy').lean();
-    if (!product) {
-      return { status: 404, message: 'محصول پیدا نشد.' };
-    }
-  
-    // بررسی یکتایی shortName در صورتی که تغییر کرده باشد
-    if (shortName && shortName !== product.shortName) {
-      const existingProduct = await Product.findOne({ shortName }).lean();
-      if (existingProduct) {
-        return { status: 400, message: 'نام اختصاری محصول باید منحصر به فرد باشد.' };
-      }
-    }
-  
-    // ساخت آبجکت برای به‌روزرسانی
-    const updateData = {};
-    if (title) updateData.title = title;
-    if (shortName) updateData.shortName = shortName;
-    if (exchangeRate !== undefined) updateData.exchangeRate = parseFloat(exchangeRate);
-    if (decimalPlaces !== undefined) updateData.decimalPlaces = parseInt(decimalPlaces);
-    if (status) updateData.status = status;
-  
-    if (ShopId) {
-      updateData.shop = ShopId;
-    }
-  
-    updateData.updatedBy = user.id; // بروزرسانی اطلاعات کاربر
-  
-    try {
-      const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true })
-        .populate('shop')
-        .populate('createdBy')
-        .populate('updatedBy')
-        .lean();
-      const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
-      return { status: 200, product: plainProduct };
-    } catch (error) {
-      console.error("Error editing product:", error);
-      return { status: 500, message:error|| 'خطایی در ویرایش محصول رخ داد.' };
-    }
+
+  // استخراج شناسه محصول از فرم دیتا
+  const productId = formData.get('id');
+  if (!productId) {
+    return { status: 400, message: 'شناسه محصول الزامی است.' };
   }
+
+  try {
+    // بررسی وجود محصول
+    const existingProduct = await Product.findById(productId).populate('Features');
+    if (!existingProduct) {
+      return { status: 404, message: 'محصول یافت نشد.' };
+    }
+
+    // شروع نشست تراکنش
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // استخراج و به‌روزرسانی فیلدهای محصول
+      const title = formData.get('title');
+      const unit = formData.get('unit');
+      const pricingTemplate = formData.get('pricingTemplate');
+      const parentAccount = formData.get('parentAccount');
+      const tags = formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()) : [];
+      const storageLocation = formData.get('storageLocation');
+      const isSaleable = formData.get('isSaleable') === 'true';
+      const isMergeable = formData.get('isMergeable') === 'true';
+      const description = formData.get('description');
+
+      // اعتبارسنجی فیلدهای الزامی
+      if (!title || !unit) {
+        throw new Error('فیلدهای عنوان و واحد الزامی هستند.');
+      }
+
+      // مدیریت تصاویر
+      const existingImages = existingProduct.images || [];
+      const newImages = formData.getAll('newImages'); // تصاویر جدید برای آپلود
+      const imagesToRemove = formData.get('imagesToRemove') ? formData.get('imagesToRemove').split(',') : []; // شناسه‌های تصاویر برای حذف
+
+      // اعتبارسنجی تعداد تصاویر
+      const MAX_FILES = 10;
+      const remainingImagesCount = existingImages.length - imagesToRemove.length + newImages.length;
+      if (remainingImagesCount === 0) {
+        throw new Error('حداقل یک تصویر برای محصول الزامی است.');
+      }
+      if (remainingImagesCount > MAX_FILES) {
+        throw new Error(`حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.`);
+      }
+
+      // آپلود تصاویر جدید
+      const uploadDir = path.join('Uploads', 'Shop', 'images', ShopId, 'Products');
+
+      const uploadPromises = newImages.map(async (file) => {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const mimeType = file.type;
+          const size = file.size;
+          const imagePath = await createImageUploader({
+            buffer,
+            uploadDir,
+            mimeType,
+            size
+          });
+          return imagePath;
+        } catch (uploadError) {
+          throw new Error(`خطا در آپلود تصویر: ${file.name}. ${uploadError.message}`);
+        }
+      });
+
+      const newImagePaths = await Promise.all(uploadPromises);
+
+      // حذف تصاویر انتخاب شده
+      const remainingImages = existingImages.filter(img => !imagesToRemove.includes(img));
+      for (const imagePath of imagesToRemove) {
+        await deleteImage(imagePath);
+      }
+
+      // به‌روزرسانی مسیرهای تصاویر
+      const updatedImagePaths = [...remainingImages, ...newImagePaths];
+
+      // استخراج ویژگی‌ها از فرم دیتا به صورت آرایه
+      const FeaturesInput = [];
+      formData.forEach((value, key) => {
+        const featureMatch = key.match(/Features\[(\d+)\]\[(\w+)\]/);
+        if (featureMatch) {
+          const index = parseInt(featureMatch[1], 10);
+          const field = featureMatch[2];
+          if (!FeaturesInput[index]) {
+            FeaturesInput[index] = {};
+          }
+          FeaturesInput[index][field] = value;
+        }
+      });
+
+      // فیلتر و حذف ویژگی‌های خالی
+      const filteredFeaturesInput = FeaturesInput.filter(feature => feature && feature.featureKey && feature.value);
+      
+      // اعتبارسنجی یکتایی featureKey‌ها در داده‌های ورودی
+      const featureKeysSet = new Set();
+      for (const feature of filteredFeaturesInput) {
+        if (featureKeysSet.has(feature.featureKey)) {
+          throw new Error(`ویژگی با کلید "${feature.featureKey}" در داده‌های ورودی تکراری است.`);
+        }
+        featureKeysSet.add(feature.featureKey);
+      }
+
+      // حذف تمامی ویژگی‌های موجود برای محصول
+      await Feature.deleteMany({ productId: productId }, { session });
+
+      // افزودن ویژگی‌های جدید
+      const newFeatures = filteredFeaturesInput.map(feature => ({
+        featureKey: feature.featureKey,
+        value: feature.value,
+        productId: productId,
+        CreatedBy: user.id,
+        LastEditedBy: user.id,
+      }));
+
+      // اعتبارسنجی قبل از افزودن به همان سطح
+      // می‌توانید این مرحله را حذف کنید چون ایندکس یکتا در پایگاه‌داده این کار را تضمین می‌کند
+      /*
+      const uniqueKeys = new Set();
+      for (const feature of newFeatures) {
+        if (uniqueKeys.has(feature.featureKey)) {
+          throw new Error(`ویژگی با کلید "${feature.featureKey}" تکراری است.`);
+        }
+        uniqueKeys.add(feature.featureKey);
+      }
+      */
+
+      // افزودن ویژگی‌ها به پایگاه‌داده
+      const insertedFeatures = await Feature.insertMany(newFeatures, { session });
+
+      const insertedFeatureIds = insertedFeatures.map(feat => feat._id);
+
+      // به‌روزرسانی محصول
+      existingProduct.title = title;
+      existingProduct.unit = unit;
+      existingProduct.pricingTemplate = pricingTemplate;
+      existingProduct.parentAccount = parentAccount;
+      existingProduct.tags = tags;
+      existingProduct.storageLocation = storageLocation;
+      existingProduct.isSaleable = isSaleable;
+      existingProduct.isMergeable = isMergeable;
+      existingProduct.description = description;
+      existingProduct.images = updatedImagePaths;
+      existingProduct.Features = insertedFeatureIds;
+      existingProduct.updatedBy = user.id;
+
+      await existingProduct.save({ session });
+
+      // به‌روزرسانی حساب مرتبط
+      const accountId = existingProduct.accountId;
+      if (accountId) {
+        const accountData = {
+          title: existingProduct.title,
+          // به‌روزرسانی سایر فیلدهای حساب در صورت نیاز
+        };
+        const accountResult = await updateAccountBySession(accountId, accountData, session);
+        if (!accountResult.success) {
+          throw new Error(accountResult.message);
+        }
+      }
+
+      // تایید تراکنش و پایان نشست
+      await session.commitTransaction();
+      session.endSession();
+
+      const plainProduct = await Product.findById(productId).populate('Features').lean();
+      return { status: 200, product: plainProduct, message: 'محصول با موفقیت ویرایش شد.' };
+    } catch (error) {
+      // در صورت بروز خطا، تراکنش را لغو می‌کنیم
+      await session.abortTransaction();
+      session.endSession();
+      console.error("Error editing product or updating account:", error);
+
+      // بررسی نوع خطا و تعیین وضعیت HTTP مناسب
+      if (error.message.includes('آپلود تصویر')) {
+        return { status: 400, message: error.message };
+      } else if (
+        error.message.includes('فیلدهای عنوان') ||
+        error.message.includes('featureKey') ||
+        error.message.includes('value') ||
+        error.message.includes('محصول یافت نشد.') ||
+        error.message.includes('تکراری')
+      ) {
+        return { status: 400, message: error.message };
+      } else if (error.code === 11000) { // خطای تکرار کلید اصلی
+        return { status: 409, message: "ویژگی با این کلید برای محصول وجود دارد." };
+      }
+      return { status: 500, message: error.message || 'خطایی در ویرایش محصول رخ داد.' };
+    }
+
+  } catch (error) {
+    console.error("Error in EditProductAction:", error);
+    return { status: 500, message: 'خطایی در پردازش درخواست رخ داد.' };
+  }
+}
+
+
+
+
   export async function DeleteProducts(productId) {
     await connectDB();
     const user = await authenticateUser();

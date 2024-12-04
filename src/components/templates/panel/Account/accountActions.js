@@ -241,6 +241,35 @@ export async function updateAccount(id, data) {
     };
   }
 }
+
+
+/**
+ * به‌روزرسانی اطلاعات حساب مربوط به محصول.
+ *
+ * @param {String} accountId - شناسه حسابی که باید به‌روزرسانی شود.
+ * @param {Object} accountData - داده‌های جدید برای به‌روزرسانی حساب.
+ * @param {Object} session - نشست تراکنشی Mongoose.
+ * @returns {Promise<Object>} - نتیجه عملیات به‌روزرسانی.
+ */
+export async function updateAccountBySession(accountId, accountData, session) {
+  try {
+    const updatedAccount = await Account.findByIdAndUpdate(
+      accountId,
+      { $set: accountData },
+      { new: true, session }
+    );
+
+    if (!updatedAccount) {
+      return { success: false, message: 'حساب یافت نشد.' };
+    }
+
+    return { success: true, account: updatedAccount };
+  } catch (error) {
+    console.error("Error updating account:", error);
+    return { success: false, message: error.message };
+  }
+}
+
 // حذف حساب
 export async function deleteAccount(id) {
   await connectDB();
