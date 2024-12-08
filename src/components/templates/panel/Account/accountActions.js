@@ -469,7 +469,7 @@ export async function GetAccountsByStartingCharacter(storeId, startingChar = "",
     }
 
     // تعریف نوع‌های حساب مجاز (به عنوان مثال)
-    const validAccountTypes = ["صندوق","حساب عادی","حساب بانکی","اشخاص حقیقی","اشخاص حقوقی","حساب انتظامی"];
+    const validAccountTypes = ["صندوق","حساب عادی","گروه حساب","حساب بانکی","اشخاص حقیقی","اشخاص حقوقی","حساب انتظامی"];
 
     // اعتبارسنجی نوع حساب
     if (Array.isArray(sanitizedAccountType)) {

@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import FinancialDocumentCard from "./FinancialDocumentCard";
 import AddFinancialDocument from "./AddFinancialDocument";
-import { GetShopIdByShopUniqueName } from "../rols/RolesPermissionActions";
 import { useParams } from 'next/navigation';
 import { AddFinancialDocumentAction, DeleteFinancialDocuments, EditFinancialDocumentAction ,GetAllFinancialDocuments} from  "./FinancialDocumentsServerActions";
 import { Toaster, toast } from "react-hot-toast";

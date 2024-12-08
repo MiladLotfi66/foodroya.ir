@@ -222,6 +222,7 @@ posConected:account.posConected||true,
           >
             <option value="صندوق">صندوق</option>
             <option value="حساب عادی">حساب عادی</option>
+            <option value="گروه حساب">گروه حساب</option>
             <option value="حساب بانکی">حساب بانکی</option>
             <option value="کالا">کالا</option>
             <option value="دسته بندی کالا">دسته بندی کالا</option>
