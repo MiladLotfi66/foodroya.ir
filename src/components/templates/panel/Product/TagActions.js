@@ -2,7 +2,7 @@
 // utils/TagActions.js
 import connectDB from "@/utils/connectToDB";
 import Tag from "./Tag";
-import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 // تابعی برای تبدیل داده‌ها به شیء ساده
 
 

@@ -14,7 +14,7 @@ import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
-import { GetShopLogos } from "../signinAndLogin/Actions/ShopServerActions";
+import { GetShopLogos } from "../templates/Shop/ShopServerActions";
 
 function Header() {
   const { theme, setTheme } = useTheme();

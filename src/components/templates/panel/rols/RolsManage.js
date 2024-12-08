@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
-import RoleName from "@/templates/panel/rols/RoleName";
 import AddRole from "./AddRole";
 import UsersListModal from "@/module/User/UsersListModal"; // اضافه کردن ایمپورت UsersListModal
 import { useParams } from "next/navigation";
@@ -15,7 +14,7 @@ import {
   GetShopRolesByShopId,
   RemoveUserFromRole,
   AddRoleToUser,
-} from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+} from "./RolesPermissionActions";
 ////////////////////////svg////////////////
 import EditSvg from "@/module/svgs/EditSvg";
 import DeleteSvg from "@/module/svgs/DeleteSvg";

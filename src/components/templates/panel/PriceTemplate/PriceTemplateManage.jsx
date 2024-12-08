@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import PriceTemplateCard from "./PriceTemplateCard";
 import AddPriceTemplate from "./AddPriceTemplate";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from 'next/navigation';
 import { AddPriceTemplateAction, DeletePriceTemplates, EditPriceTemplateAction, GetAllPriceTemplates } from "./PriceTemplateActions";
 import { Toaster, toast } from "react-hot-toast";

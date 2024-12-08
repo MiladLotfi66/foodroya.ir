@@ -1,16 +1,13 @@
 "use server";
 
-import Banner from "@/models/Banner";
+import Banner from "@/templates/panel/Banner/Banner";
 import connectDB from "@/utils/connectToDB";
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { promisify } from 'util';
-import multer from 'multer';
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import { writeFile, unlink } from "fs/promises";
-import { headers } from "next/headers";
-import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
 import BannerSchema from "@/utils/yupSchemas/BannerSchima";
 
 async function BannerServerEnableActions(BannerID) {

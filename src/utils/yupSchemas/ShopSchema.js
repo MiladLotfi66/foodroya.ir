@@ -1,5 +1,5 @@
 import * as yup from "yup";
-import { isUniqShop } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { isUniqShop } from "@/templates/Shop/ShopServerActions";
 
 // تعریف یک قانون مشترک برای فیلدهای تصویر
 const imageValidationSchema = yup

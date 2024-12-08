@@ -8,7 +8,7 @@ import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 // import { DevTool } from "@hookform/devtools";
-import { AddShopServerAction,EditShop } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { AddShopServerAction,EditShop } from "@/templates/Shop/ShopServerActions";
 
 function AddShop({ Shop = {}, onClose ,refreshShops}) {
   const [isSubmit, setIsSubmit] = useState(false);

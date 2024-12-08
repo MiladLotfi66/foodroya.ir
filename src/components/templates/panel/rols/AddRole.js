@@ -11,7 +11,7 @@ import CreateSvg from "@/module/svgs/CreateSvg";
 import ViewDocumentSvg from "@/module/svgs/ViewDocumentSvg"; 
 import PermissionSVG from "./PermissionSVG";
 import { useState, useEffect } from "react";
-import { AddRoleServerAction, EditRole } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { AddRoleServerAction, EditRole } from "./RolesPermissionActions";
 
 function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
   console.log(role);

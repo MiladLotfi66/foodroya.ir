@@ -4,9 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import CurrencyCard from "./CurrencyCard";
 import AddCurrency from "./AddCurrency";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from 'next/navigation';
-import { AddCurrencyAction, DeleteCurrencies, EditCurrencyAction ,GetAllCurrencies} from "@/components/signinAndLogin/Actions/currenciesServerActions";
+import { AddCurrencyAction, DeleteCurrencies, EditCurrencyAction ,GetAllCurrencies} from "./currenciesServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function CurrencyManage() {
@@ -16,7 +15,6 @@ function CurrencyManage() {
   const [selectedCurrencyFile, setSelectedCurrencyFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
   const { ShopId } = params;
-
   // بهینه‌سازی refreshCurrencies با استفاده از useCallback
   const refreshCurrencies = useCallback(async () => {
     try {

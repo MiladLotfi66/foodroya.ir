@@ -9,7 +9,7 @@ import {
   BannerServerEnableActions,
   BannerServerDisableActions,
   DeleteBanners,
-} from "@/components/signinAndLogin/Actions/BannerServerActions";
+} from "./BannerServerActions";
 
 function BannerCard({ banner: initialBanner, editfunction ,onDelete}) {
   const [banner, setBanner] = useState(initialBanner); // مدیریت وضعیت بنر

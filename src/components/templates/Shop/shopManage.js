@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ShopCard from "./ShopCard";
-import { DeleteShops, GetUserShops, ShopServerDisableActions, ShopServerEnableActions  } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { DeleteShops, GetUserShops, ShopServerDisableActions, ShopServerEnableActions  } from "@/templates/Shop/ShopServerActions";
 import AddShop from "./AddShop";
 import { Toaster, toast } from "react-hot-toast";
 

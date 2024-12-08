@@ -2,7 +2,7 @@
 
 import connectDB from "@/utils/connectToDB";
 import PriceTemplate from "./PriceTemplate";
-import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 function convertToPlainObjects(docs) {
     return docs.map(doc => JSON.parse(JSON.stringify(doc)));
   }

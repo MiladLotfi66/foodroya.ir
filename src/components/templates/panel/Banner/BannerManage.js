@@ -2,9 +2,8 @@
 import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
-import { GetAllBanners } from "@/components/signinAndLogin/Actions/BannerServerActions";
+import { GetAllBanners } from "./BannerServerActions";
 import AddBanner from "./AddBanner";
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 import { useParams } from 'next/navigation';
 
 function BannerManage() {

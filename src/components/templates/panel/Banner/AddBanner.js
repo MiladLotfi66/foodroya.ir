@@ -9,8 +9,7 @@ import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { useParams } from 'next/navigation';
-import { AddBannerAction, EditBannerAction } from "@/components/signinAndLogin/Actions/BannerServerActions";
-
+import { AddBannerAction, EditBannerAction } from  "./BannerServerActions";
 function AddBanner({ banner = {}, onClose, refreshBanners }) {
   // وضعیت‌ها و متغیرهای ضروری
   const [isSubmit, setIsSubmit] = useState(false);

@@ -25,7 +25,7 @@ import { useParams, useRouter } from "next/navigation";
 // import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";
-import { GetShopLogos } from "../signinAndLogin/Actions/ShopServerActions";
+import { GetShopLogos } from "../templates/Shop/ShopServerActions";
 import UserMicroCard from "@/module/home/UserMicroCard";
 
 function MobileMenu({ isLogin }) {

@@ -12,7 +12,7 @@ import {
   EditPriceTemplateAction,
 } from "./PriceTemplateActions";
 import Select, { components } from "react-select";
-import { GetShopRolesByShopId } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { GetShopRolesByShopId } from "../rols/RolesPermissionActions";
 import FormulaBuilderModal from "./FormulaBuilderModal";
 import {
   XMarkIcon,
@@ -187,7 +187,6 @@ function AddPriceTemplate({
   };
 
   const handleFormSubmit = async (formData) => {
-    console.log("formData", formData);
     
     setIsSubmit(true);
     try {

@@ -1,4 +1,4 @@
-// app/currencies/CurrencyCard.jsx
+// app/financialDocuments/FinancialDocumentCard.jsx
 "use client";
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
@@ -7,62 +7,62 @@ import ShareSvg from "@/module/svgs/ShareSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import {
-  EnableCurrencyAction,
-  DisableCurrencyAction,
-  DeleteCurrencies,
-} from "./currenciesServerActions";
+  EnableFinancialDocumentAction,
+  DisableFinancialDocumentAction,
+  DeleteFinancialDocuments,
+} from  "./FinancialDocumentsServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
-function CurrencyCard({ currency: initialCurrency, editFunction, onDelete }) {
-  const [currency, setCurrency] = useState(initialCurrency); // مدیریت وضعیت ارز
+function FinancialDocumentCard({ financialDocument: initialFinancialDocument, editFunction, onDelete }) {
+  const [financialDocument, setFinancialDocument] = useState(initialFinancialDocument); // مدیریت وضعیت سند مالی
 
   useEffect(() => {
-    // هر بار که props ارز تغییر می‌کند، state محلی به‌روزرسانی می‌شود
-    setCurrency(initialCurrency);
-  }, [initialCurrency]);
+    // هر بار که props سند مالی تغییر می‌کند، state محلی به‌روزرسانی می‌شود
+    setFinancialDocument(initialFinancialDocument);
+  }, [initialFinancialDocument]);
 
   const enableFunc = async () => {
     try {
-      const response = await EnableCurrencyAction(currency._id);
+      const response = await EnableFinancialDocumentAction(financialDocument._id);
       if (response.status === 200) {
-        setCurrency({ ...currency, status: "فعال" }); // بروزرسانی وضعیت ارز بدون رفرش
-        toast.success("ارز فعال شد.");
+        setFinancialDocument({ ...financialDocument, status: "فعال" }); // بروزرسانی وضعیت سند مالی بدون رفرش
+        toast.success("سند مالی فعال شد.");
       } else {
-        throw new Error(response.message || "خطا در فعال‌سازی ارز.");
+        throw new Error(response.message || "خطا در فعال‌سازی سند مالی.");
       }
     } catch (error) {
-      console.error("خطا در فعال‌سازی ارز:", error);
-      toast.error("خطا در فعال‌سازی ارز.");
+      console.error("خطا در فعال‌سازی سند مالی:", error);
+      toast.error("خطا در فعال‌سازی سند مالی.");
     }
   };
 
   const disableFunc = async () => {
     try {
-      const response = await DisableCurrencyAction(currency._id);
+      const response = await DisableFinancialDocumentAction(financialDocument._id);
       if (response.status === 200) {
-        setCurrency({ ...currency, status: "غیرفعال" }); // بروزرسانی وضعیت ارز بدون رفرش
-        toast.success("ارز غیرفعال شد.");
+        setFinancialDocument({ ...financialDocument, status: "غیرفعال" }); // بروزرسانی وضعیت سند مالی بدون رفرش
+        toast.success("سند مالی غیرفعال شد.");
       } else {
-        throw new Error(response.message || "خطا در غیرفعال‌سازی ارز.");
+        throw new Error(response.message || "خطا در غیرفعال‌سازی سند مالی.");
       }
     } catch (error) {
-      console.error("خطا در غیرفعال‌سازی ارز:", error);
-      toast.error("خطا در غیرفعال‌سازی ارز.");
+      console.error("خطا در غیرفعال‌سازی سند مالی:", error);
+      toast.error("خطا در غیرفعال‌سازی سند مالی.");
     }
   };
 
   const deleteFunc = async () => {
     try {
-      const response = await DeleteCurrencies(currency._id);
+      const response = await DeleteFinancialDocuments(financialDocument._id);
       if (response.status === 200) {
-        onDelete(); // حذف ارز از لیست
-        // toast.success("ارز با موفقیت حذف شد.");
+        onDelete(); // حذف سند مالی از لیست
+        // toast.success("سند مالی با موفقیت حذف شد.");
       } else {
-        throw new Error(response.message || "خطا در حذف ارز.");
+        throw new Error(response.message || "خطا در حذف سند مالی.");
       }
     } catch (error) {
-      console.error("خطا در حذف ارز:", error);
-      toast.error("خطا در حذف ارز.");
+      console.error("خطا در حذف سند مالی:", error);
+      toast.error("خطا در حذف سند مالی.");
     }
   };
 
@@ -79,16 +79,16 @@ function CurrencyCard({ currency: initialCurrency, editFunction, onDelete }) {
 
         <div>
           <h2 className="text-xl font-bold">
-            {currency.title} ({currency.shortName})
+            {financialDocument.title} ({financialDocument.shortName})
           </h2>
-          <p className="text-sm">نرخ برابری: {currency.exchangeRate}</p>
-          <p className="text-sm">تعداد اعشار: {currency.decimalPlaces}</p>
+          <p className="text-sm">نرخ برابری: {financialDocument.exchangeRate}</p>
+          <p className="text-sm">تعداد اعشار: {financialDocument.decimalPlaces}</p>
           <p
             className={`text-sm ${
-              currency.status === "فعال" ? "text-green-500" : "text-red-500"
+              financialDocument.status === "فعال" ? "text-green-500" : "text-red-500"
             }`}
           >
-            وضعیت: {currency.status}
+            وضعیت: {financialDocument.status}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ function CurrencyCard({ currency: initialCurrency, editFunction, onDelete }) {
             <use href="#ShareSvg"></use>
           </svg>
           {/* Enable/Disable Icon */}
-          {currency.status === "فعال" ? (
+          {financialDocument.status === "فعال" ? (
             <svg
               width="24"
               height="24"
@@ -150,4 +150,4 @@ function CurrencyCard({ currency: initialCurrency, editFunction, onDelete }) {
   );
 }
 
-export default CurrencyCard;
+export default FinancialDocumentCard;

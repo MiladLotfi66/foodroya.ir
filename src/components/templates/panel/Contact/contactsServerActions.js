@@ -2,8 +2,8 @@
 // utils/contactActions.js
 import connectDB from "@/utils/connectToDB";
 import Contact from "./Contact";
-import Account from "@/models/Account";
-import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import Account from "@/templates/panel/Account/Account";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 
 import mongoose from "mongoose";
 import { p2e } from "@/utils/ReplaceNumber";

@@ -15,7 +15,7 @@ import UserMicroCard from "@/module/home/UserMicroCard";
 // import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { GetShopLogos } from "../signinAndLogin/Actions/ShopServerActions";
+import { GetShopLogos } from "../templates/Shop/ShopServerActions";
 import { useParams } from "next/navigation";
 
 function MobileHeader({isLogin}) {

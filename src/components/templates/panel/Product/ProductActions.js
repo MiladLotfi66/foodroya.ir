@@ -6,7 +6,7 @@ import Product from "./Product";
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid'; // برای تولید نام‌های یکتا
-import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import { createImageUploader } from "@/utils/ImageUploader";
 import { createAccount } from '../Account/accountActions';
 import Feature from './Feature';

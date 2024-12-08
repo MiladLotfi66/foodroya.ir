@@ -1,12 +1,12 @@
 "use server";
-import RolePerimision from "@/models/RolePerimision";
+import RolePerimision from "@/templates/panel/rols/RolePerimision";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import RoleSchema from "@/utils/yupSchemas/RoleSchema";
-import RoleInShop from "@/models/RoleInShop";
-import Shop from "@/models/shops";
+import RoleInShop from "@/templates/panel/rols/RoleInShop";
+import Shop from "@/templates/Shop/shops";
 import User from "@/models/Users";
-import { authenticateUser } from "./ShopServerActions";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 
 
 export async function AddRoleToUser(UserId, ShopId, RoleId) {

@@ -7,11 +7,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 import Link from "next/link";
-import { 
-  GetAllEnableBanners,  
 
-} from "@/components/signinAndLogin/Actions/BannerServerActions";
-
+import { GetAllEnableBanners } from "@/templates/panel/Banner/BannerServerActions";
 
 function Banner2() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 "use server";
 import connectDB from "@/utils/connectToDB";
 import User from "@/models/Users"; // بررسی اینکه درست ایمپورت شده باشد
-import { authenticateUser } from "./ShopServerActions";
+import { authenticateUser } from "../../templates/Shop/ShopServerActions";
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp'; // ایمپورت کتابخانه‌ی Sharp

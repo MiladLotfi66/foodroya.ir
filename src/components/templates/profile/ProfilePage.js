@@ -30,8 +30,8 @@ import TextPage from "@/module/svgs/TextPageSvg";
 import PhoneSvg from "@/module/svgs/phoneSvg1";
 import "react-image-crop/dist/ReactCrop.css";
 import Link from "next/link";
-import { GetUserShopsCount } from "@/components/signinAndLogin/Actions/ShopServerActions";
-import { GetUserFollowingShops,GetUserShops } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { GetUserShopsCount } from "@/templates/Shop/ShopServerActions";
+import { GetUserFollowingShops,GetUserShops } from "@/templates/Shop/ShopServerActions";
 import AvatarGroupTailwind from "@/module/User/AvatarGroupTailwind.js";
 
 function ProfilePage() {

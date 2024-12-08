@@ -3,7 +3,7 @@
 import connectDB from "@/utils/connectToDB";
 import FeatureKey from "./FeatureKey";
 import Feature from "./Feature";
-import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 // تابعی برای تبدیل داده‌ها به شیء ساده
 
 

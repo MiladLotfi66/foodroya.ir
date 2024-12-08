@@ -2,14 +2,14 @@
 "use server";
 import mongoose from "mongoose";
 import connectDB from "@/utils/connectToDB";
-import Account from "@/models/Account";
+import Account from "@/templates/panel/Account/Account";
 import Tag from "../Product/Tag";
 import PriceTemplate from "../PriceTemplate/PriceTemplate";
 import Product from "../Product/Product";
 import Feature from "../Product/Feature";
 import FeatureKey from "../Product/FeatureKey";
 import { revalidatePath } from "next/cache";
-import { authenticateUser } from "@/components/signinAndLogin/Actions/ShopServerActions";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 // ایجاد حساب جدید
 export async function createAccount(data, session = null) {
   await connectDB();
@@ -445,7 +445,116 @@ export async function GetAllAccounts(storeId, parentId = null) {
     });
 
     return { Accounts: plainAccounts, status: 200 };
+}
+// دریافت حساب‌ها بر اساس شروع یک کاراکتر خاص
+export async function GetAccountsByStartingCharacter(storeId, startingChar = "", field = 'title', accountType = "") {
+  console.log("startingChar", startingChar);
+  console.log("accountType", accountType);
+
+  await connectDB();
+
+  try {
+    // اعتبارسنجی storeId
+    if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+      throw new Error('شناسه فروشگاه نامعتبر یا موجود نیست.');
+    }
+
+    const sanitizedChar = typeof startingChar === 'string' ? startingChar.trim() : "";
+    let sanitizedAccountType = accountType;
+
+    // تعیین فیلدی که باید فیلتر شود
+    const validFields = ['title', 'accountCode'];
+    if (!validFields.includes(field)) {
+      throw new Error(`فیلد نامعتبر است. باید یکی از موارد زیر باشد: ${validFields.join(', ')}`);
+    }
+
+    // تعریف نوع‌های حساب مجاز (به عنوان مثال)
+    const validAccountTypes = ["صندوق","حساب عادی","حساب بانکی","اشخاص حقیقی","اشخاص حقوقی","حساب انتظامی"];
+
+    // اعتبارسنجی نوع حساب
+    if (Array.isArray(sanitizedAccountType)) {
+      // اگر accountType یک آرایه است، بررسی کنید که همه عناصر آرایه معتبر باشند
+      const invalidTypes = sanitizedAccountType.filter(type => !validAccountTypes.includes(type));
+      if (invalidTypes.length > 0) {
+        throw new Error(`نوع حساب نامعتبر است: ${invalidTypes.join(', ')}. باید یکی از موارد زیر باشد: ${validAccountTypes.join(', ')}`);
+      }
+    } else if (typeof sanitizedAccountType === 'string') {
+      sanitizedAccountType = sanitizedAccountType.trim();
+      if (sanitizedAccountType !== "" && !validAccountTypes.includes(sanitizedAccountType)) {
+        throw new Error(`نوع حساب نامعتبر است. باید یکی از موارد زیر باشد: ${validAccountTypes.join(', ')}`);
+      }
+    } else {
+      throw new Error('نوع حساب باید رشته یا آرایه‌ای از رشته‌ها باشد.');
+    }
+
+    // ساخت فیلتر اولیه با storeId و وضعیت حساب
+    const filter = {
+      store: storeId,
+      accountStatus: 'فعال',
+    };
+
+    // اضافه کردن فیلتر بر اساس startingChar در صورت ارائه شدن
+    if (sanitizedChar !== "") {
+      filter[field] = { $regex: `^${sanitizedChar}`, $options: 'i' }; // 'i' برای حساسیت به حروف کوچک و بزرگ
+    }
+
+    // اضافه کردن فیلتر بر اساس accountType در صورت ارائه شدن
+    if (sanitizedAccountType !== "") {
+      if (Array.isArray(sanitizedAccountType)) {
+        filter.accountType = { $in: sanitizedAccountType };
+      } else {
+        filter.accountType = sanitizedAccountType;
+      }
+    }
+
+    const accounts = await Account.find(filter)
+      .sort({ accountCode: 1 })
+      .populate('contact')
+      .populate('currency')
+      .lean();
+
+    if (!accounts || accounts.length === 0) {
+      return {
+        success: true,
+        message: 'هیچ حسابی مطابق با معیارهای جستجو پیدا نشد.',
+        Accounts: []
+      };
+    }
+
+    const plainAccounts = accounts.map(account => ({
+      ...account,
+      _id: account._id.toString(),
+      accountCode: account.accountCode.toString(),
+      title: account.title.toString(),
+      store: account.store.toString(),
+      parentAccount: account.parentAccount ? account.parentAccount.toString() : null,
+      accountType: account.accountType.toString(),
+      accountNature: account.accountNature ? account.accountNature.toString() : null,
+      accountStatus: account.accountStatus.toString(),
+      isSystem: account.isSystem,
+      createdAt: account.createdAt.toISOString(),
+      updatedBy: account.updatedBy ? account.updatedBy.toString() : null,
+      updatedAt: account.updatedAt ? account.updatedAt.toISOString() : null,
+      createdBy: account.createdBy.toString(),
+    }));
+
+    return { 
+      success: true, 
+      Accounts: plainAccounts, 
+      status: 200 
+    };
+  } catch (error) {
+    console.error('خطا در GetAccountsByStartingCharacter:', error);
+    return {
+      success: false,
+      message: error.message || 'خطایی در استخراج حساب‌ها رخ داده است.',
+      status: 500
+    };
   }
+}
+
+
+
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
 
   await connectDB();

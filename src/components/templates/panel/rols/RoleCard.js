@@ -9,7 +9,7 @@ import UserPlus from "@/module/svgs/UserPlus";
 import RoleName from "@/templates/panel/rols/RoleName";
 import ActionButton from "./ActionButton";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { getUsersByRoleId } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
+import { getUsersByRoleId } from "./RolesPermissionActions";
 import AvatarGroupTailwind from "@/module/User/AvatarGroupTailwind.js";
 
 function RoleCard({

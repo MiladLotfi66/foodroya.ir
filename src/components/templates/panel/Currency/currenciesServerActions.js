@@ -1,10 +1,8 @@
 "use server";
 // utils/currencyActions.js
 import connectDB from "@/utils/connectToDB";
-import Currency from "@/models/Currency";
-import { GetShopIdByShopUniqueName } from "./RolesPermissionActions";
-import { authenticateUser } from "./ShopServerActions";
-
+import Currency from "@/templates/panel/Currency/Currency";
+import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 /**
  * تبدیل مستندات Mongoose به اشیاء ساده
  * @param {Array} docs - آرایه‌ای از مستندات

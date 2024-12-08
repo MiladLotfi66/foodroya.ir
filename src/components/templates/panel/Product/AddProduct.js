@@ -17,7 +17,6 @@ import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
-
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);

@@ -1,8 +1,8 @@
 "use server";
 import mongoose from 'mongoose';
-import shops from "@/models/shops";
+import shops from "@/templates/Shop/shops";
 import Comment from "@/models/Comment";
-import Account from "@/models/Account";
+import Account from "@/templates/panel/Account/Account";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import fs from "fs";

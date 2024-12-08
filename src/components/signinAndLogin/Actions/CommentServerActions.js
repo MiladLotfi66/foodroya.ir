@@ -3,8 +3,8 @@ import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import Users from "@/models/Users";
 import Comment from "@/models/Comment";
-import shops from "@/models/shops";
-import { authenticateUser } from "./ShopServerActions";
+import shops from "@/templates/Shop/shops";
+import { authenticateUser } from "../../templates/Shop/ShopServerActions";
 
 export async function GetCommentFromArray(commentIds) {
     try {

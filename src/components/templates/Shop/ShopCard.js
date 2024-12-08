@@ -13,7 +13,7 @@ import {
   followShopServerAction,
   unfollowShopServerAction,
   
-} from "@/components/signinAndLogin/Actions/ShopServerActions";
+} from "@/templates/Shop/ShopServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import Link from "next/link";
 import CommentComponent from "../comment/CommentComponent";

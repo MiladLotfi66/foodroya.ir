@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { GetAllContacts } from "@/templates/panel/Contact/contactsServerActions";
 import { useParams } from 'next/navigation';
-import { GetShopIdByShopUniqueName } from "@/components/signinAndLogin/Actions/RolesPermissionActions";
 
 
  function ContactSelector({ isOpen, onClose, onSelect }) {

@@ -9,7 +9,7 @@ import { createAccount, updateAccount } from "./accountActions";
 import ContactSelector from "@/module/home/ContactSelector";
 import { useParams } from "next/navigation";
 import ContactMiniInfo from "@/module/home/ContactMiniInfo";
-import { GetAllCurrencies } from "@/components/signinAndLogin/Actions/currenciesServerActions";
+import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import AddProduct from "../Product/AddProduct";
 
 function AddAccount({
