@@ -3,6 +3,10 @@
 import connectDB from "@/utils/connectToDB";
 import FinancialDocument from "./Ledger";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
+import Ledger from "./Ledger";
+import GeneralLedger from "./GeneralLedger";
+import { ledgerValidationSchema } from "./FinancialDocumentSchema";
+// import { getSession } from 'next-auth/react'; // فرض بر این که از next-auth استفاده می‌کنید
 
 /**
  * تبدیل مستندات Mongoose به اشیاء ساده
@@ -47,6 +51,13 @@ export async function GetAllFinancialDocuments(shopId) {
  * @returns {Object} - نتیجه عملیات
  */
 export async function AddFinancialDocumentAction(formData) {
+ 
+}
+
+
+
+export async function addLedger(data) {
+  // اتصال به پایگاه داده
   await connectDB();
   let user;
     try {
@@ -55,40 +66,59 @@ export async function AddFinancialDocumentAction(formData) {
       user = null;
       console.log("Authentication failed:", authError);
     }
-      if (!user) {
+
+  if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  const { title, shortName, exchangeRate, decimalPlaces, status, ShopId } = Object.fromEntries(formData.entries());
-  // بررسی یکتایی shortName
-  const existingFinancialDocument = await FinancialDocument.findOne({ shortName ,shop:ShopId }).lean();
-  if (existingFinancialDocument) {
-    return { status: 400, message: 'نام اختصاری سند مالی باید منحصر به فرد باشد.' };
-  } 
-  const existingTitleFinancialDocument = await FinancialDocument.findOne({ title ,shop:ShopId }).lean();
-  
-  if (existingTitleFinancialDocument) {
-    return { status: 400, message: 'نام  سند مالی باید منحصر به فرد باشد.' };
-  }
-  // ایجاد سند مالی جدید
-  const newFinancialDocument = new FinancialDocument({
-    title,
-    shortName,
-    exchangeRate: parseFloat(exchangeRate),
-    decimalPlaces: parseInt(decimalPlaces),
-    status,
-    shop: ShopId,
-    createdBy: user.id, // استفاده از _id به جای id
-    updatedBy: user.id, // استفاده از _id به جای id
-  });
+  // اعتبارسنجی داده‌ها
   try {
-    const savedFinancialDocument = await newFinancialDocument.save();
-    const plainFinancialDocument = JSON.parse(JSON.stringify(savedFinancialDocument));
-    return { status: 201, financialDocument: plainFinancialDocument };
+    const validData = await ledgerValidationSchema.validate(data, { abortEarly: false });
+    
+
+
+    const userId = user.user.id;
+
+    // ایجاد دفتر کل جدید
+    const ledger = new Ledger({
+      description: validData.description,
+      transactions: [], // ابتدا خالی
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await ledger.save();
+
+    // ایجاد تراکنش‌های GeneralLedger
+    const generalLedgerEntries = validData.transactions.map(tx => ({
+      ledger: ledger._id,
+      account: tx.account,
+      debit: tx.debit,
+      credit: tx.credit,
+      currency: tx.currency,
+      description: tx.description,
+      type: tx.type,
+      shop: tx.shop,
+      createdBy: userId,
+      updatedBy: userId,
+    }));
+
+    const createdTransactions = await GeneralLedger.insertMany(generalLedgerEntries);
+
+    // افزودن تراکنش‌ها به دفتر کل
+    ledger.transactions = createdTransactions.map(tx => tx._id);
+    await ledger.save();
+
+    return { message: 'دفتر کل با موفقیت ایجاد شد', data: ledger };
   } catch (error) {
-    console.error("Error adding financialDocument:", error);
-    return { status: 500, message: 'خطایی در ایجاد سند مالی رخ داد.' };
+    if (error.name === 'ValidationError') {
+      // جمع‌آوری تمام خطاهای اعتبارسنجی
+      const errors = error.errors;
+      throw new Error(errors.join('; '));
+    }
+    throw new Error(error.message || 'خطا در ایجاد دفتر کل');
   }
 }
+
 /**
  * ویرایش سند مالی
  * @param {FormData} formData - داده‌های فرم
@@ -96,53 +126,7 @@ export async function AddFinancialDocumentAction(formData) {
  * @returns {Object} - نتیجه عملیات
  */
 export async function EditFinancialDocumentAction(formData, ShopId) {
-  await connectDB();
-  let user;
-    try {
-      user = await authenticateUser();
-    } catch (authError) {
-      user = null;
-      console.log("Authentication failed:", authError);
-    }
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-  const { id, title, shortName, exchangeRate, decimalPlaces, status } = Object.fromEntries(formData.entries());
-  const financialDocument = await FinancialDocument.findById(id).populate('shop').populate('createdBy').populate('updatedBy').lean();
-  if (!financialDocument) {
-    return { status: 404, message: 'سند مالی پیدا نشد.' };
-  }
-  // بررسی یکتایی shortName در صورتی که تغییر کرده باشد
-  if (shortName && shortName !== financialDocument.shortName) {
-    const existingFinancialDocument = await FinancialDocument.findOne({ shortName }).lean();
-    if (existingFinancialDocument) {
-      return { status: 400, message: 'نام اختصاری سند مالی باید منحصر به فرد باشد.' };
-    }
-  }
-  // ساخت آبجکت برای به‌روزرسانی
-  const updateData = {};
-  if (title) updateData.title = title;
-  if (shortName) updateData.shortName = shortName;
-  if (exchangeRate !== undefined) updateData.exchangeRate = parseFloat(exchangeRate);
-  if (decimalPlaces !== undefined) updateData.decimalPlaces = parseInt(decimalPlaces);
-  if (status) updateData.status = status;
-  if (ShopId) {
-    updateData.shop = ShopId;
-  }
-  updateData.updatedBy = user.id; // بروزرسانی اطلاعات کاربر
-
-  try {
-    const updatedFinancialDocument = await FinancialDocument.findByIdAndUpdate(id, updateData, { new: true })
-      .populate('shop')
-      .populate('createdBy')
-      .populate('updatedBy')
-      .lean();
-    const plainFinancialDocument = JSON.parse(JSON.stringify(updatedFinancialDocument));
-    return { status: 200, financialDocument: plainFinancialDocument };
-  } catch (error) {
-    console.error("Error editing financialDocument:", error);
-    return { status: 500, message: 'خطایی در ویرایش سند مالی رخ داد.' };
-  }
+ 
 }
 
 /**

@@ -4,10 +4,12 @@ import mongoose from "mongoose";
 import connectDB from "@/utils/connectToDB";
 import Account from "@/templates/panel/Account/Account";
 import Tag from "../Product/Tag";
+import Contact from "../Contact/Contact";
 import PriceTemplate from "../PriceTemplate/PriceTemplate";
 import Product from "../Product/Product";
 import Feature from "../Product/Feature";
 import FeatureKey from "../Product/FeatureKey";
+import Currency from "../Currency/Currency";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 // ایجاد حساب جدید

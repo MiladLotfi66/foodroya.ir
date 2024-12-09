@@ -1,9 +1,9 @@
 "use client";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
-import FinancialDocumentSchema from "./FinancialDocumentSchema";
+import { ledgerValidationSchema } from "./FinancialDocumentSchema";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Select, { components } from "react-select";
@@ -16,6 +16,9 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
   const router = useRouter();
   const [accountsOptions, setAccountsOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalDebtors, setTotalDebtors] = useState(0);
+  const [totalCreditors, setTotalCreditors] = useState(0);
+  const [isBalanced, setIsBalanced] = useState(false);
 
   const {
     register,
@@ -23,7 +26,6 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
     handleSubmit,
     setValue,
     reset,
-    watch,
     formState: { errors },
   } = useForm({
     mode: "all",
@@ -34,7 +36,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
         { account: null, amount: "" },
       ],
     },
-    resolver: yupResolver(FinancialDocumentSchema),
+    resolver: yupResolver(ledgerValidationSchema),
   });
 
   const {
@@ -54,6 +56,33 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
     control,
     name: "creditors",
   });
+
+  // استفاده از useWatch برای مشاهده تغییرات بدهکارها و بستانکارها
+  const watchDebtors = useWatch({
+    control,
+    name: "debtors",
+  });
+
+  const watchCreditors = useWatch({
+    control,
+    name: "creditors",
+  });
+
+  useEffect(() => {
+    const calculateTotal = (items) => {
+      return items.reduce((acc, item) => {
+        const amount = parseFloat(item.amount);
+        return acc + (isNaN(amount) ? 0 : amount);
+      }, 0);
+    };
+
+    const debtorsTotal = calculateTotal(watchDebtors);
+    const creditorsTotal = calculateTotal(watchCreditors);
+
+    setTotalDebtors(debtorsTotal);
+    setTotalCreditors(creditorsTotal);
+    setIsBalanced(debtorsTotal === creditorsTotal && debtorsTotal > 0);
+  }, [watchDebtors, watchCreditors]);
 
   // واکشی حساب‌ها
   const fetchAccounts = useCallback(async () => {
@@ -169,6 +198,14 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
             onSubmit={handleSubmit(formSubmitting)}
             className="max-w-lg mx-auto rounded"
           >
+            <select {...register("currency", { required: "انتخاب ارز الزامی است" })}>
+  <option value="">انتخاب ارز</option>
+  <option value="USD">دلار آمریکا (USD)</option>
+  <option value="EUR">یورو (EUR)</option>
+  <option value="IRR">ریال ایران (IRR)</option>
+</select>
+{errors.currency && <span className="error">{errors.currency.message}</span>}
+
             {/* بخش بدهکار */}
             <div className="border-l-4 border-red-500 p-1 md:p-4 bg-red-50 text-xs md:text-base mb-1">
               <label className="block mb-1 md:mb-4 ">طرف حساب‌های بدهکار</label>
@@ -194,18 +231,15 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
                               ) || null
                             }
                             onChange={(selectedOption) => {
-                              if (
-                                selectedOption &&
-                                selectedOption.value === "add_new"
-                              ) {
+                              if (selectedOption && selectedOption.value === "add_new") {
                                 handleAddNewAccount();
-                                controllerField.onChange(null);
+                                // به جای null، می‌توانید یک مقدار پیش‌فرض یا خالی مناسب را تنظیم کنید
+                                controllerField.onChange(""); // یا controllerField.onChange(undefined);
                               } else {
-                                controllerField.onChange(
-                                  selectedOption ? selectedOption.value : null
-                                );
+                                controllerField.onChange(selectedOption ? selectedOption.value : "");
                               }
                             }}
+                            
                             components={{ MenuList: CustomMenuList }}
                             className="select bg-gray-300 dark:bg-zinc-600"
                             classNamePrefix="select"
@@ -220,11 +254,12 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
                       )}
                     </div>
                     <div className="mb-1 md:mb-4 ">
-                      {/* <label className="block mb-2">مبلغ بدهکار</label> */}
                       <input
                         type="number"
-                        step="0.01"
-                        {...register(`debtors.${index}.amount`)}
+                        step="any"
+                        {...register(`debtors.${index}.amount`, {
+                          valueAsNumber: true, // تغییر داده شده
+                        })}
                         className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
                           errors.debtors?.[index]?.amount
                             ? "border-red-400"
@@ -288,18 +323,15 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
                               ) || null
                             }
                             onChange={(selectedOption) => {
-                              if (
-                                selectedOption &&
-                                selectedOption.value === "add_new"
-                              ) {
+                              if (selectedOption && selectedOption.value === "add_new") {
                                 handleAddNewAccount();
-                                controllerField.onChange(null);
+                                // به جای null، می‌توانید یک مقدار پیش‌فرض یا خالی مناسب را تنظیم کنید
+                                controllerField.onChange(""); // یا controllerField.onChange(undefined);
                               } else {
-                                controllerField.onChange(
-                                  selectedOption ? selectedOption.value : null
-                                );
+                                controllerField.onChange(selectedOption ? selectedOption.value : "");
                               }
                             }}
+                            
                             components={{ MenuList: CustomMenuList }}
                             className="select bg-gray-300 dark:bg-zinc-600"
                             classNamePrefix="select"
@@ -316,8 +348,10 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
                     <div className="mb-1 md:mb-4 ">
                       <input
                         type="number"
-                        step="0.01"
-                        {...register(`creditors.${index}.amount`)}
+                        step="any"
+                        {...register(`creditors.${index}.amount`, {
+                          valueAsNumber: true, // تغییر داده شده
+                        })}
                         className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
                           errors.creditors?.[index]?.amount
                             ? "border-red-400"
@@ -326,6 +360,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
                         placeholder="مبلغ"
                         required
                       />
+
                       {errors.creditors?.[index]?.amount && (
                         <p className="text-red-400 text-sm mt-1">
                           {errors.creditors[index].amount.message}
@@ -360,12 +395,33 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
               } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               placeholder="توضیحات"
             />
+            <div className="mt-4 space-y-2">
+              <p className="text-gray-700 flex justify-between">
+                <span>جمع بدهکارها:</span>
+                <span className="font-bold">
+                  {Number(totalDebtors).toLocaleString("fa-IR")} ریال
+                </span>
+              </p>
+              <p className="text-gray-700 flex justify-between">
+                <span>جمع بستانکارها:</span>
+                <span className="font-bold">
+                  {Number(totalCreditors).toLocaleString("fa-IR")} ریال
+                </span>
+              </p>
+              {!isBalanced && totalDebtors > 0 && totalCreditors > 0 && (
+                <p className="text-red-500 font-medium text-center">
+                  جمع بدهکارها و بستانکارها باید برابر باشند
+                </p>
+              )}
+            </div>
 
             <button
               type="submit"
-              disabled={isSubmit}
-              className={` my-2 bg-teal-500 text-white py-2 p-4 rounded ${
-                isSubmit ? "opacity-50 cursor-not-allowed" : ""
+              disabled={!isBalanced || isSubmit}
+              className={`w-full my-2 py-2 px-4 rounded transition-all duration-200 ${
+                isBalanced && !isSubmit
+                  ? "bg-teal-500 hover:bg-teal-600 text-white cursor-pointer"
+                  : "bg-gray-400 text-gray-100 cursor-not-allowed"
               }`}
             >
               {isSubmit ? <HashLoader color="white" size={20} /> : "ذخیره"}

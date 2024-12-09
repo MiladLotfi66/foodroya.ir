@@ -1,47 +1,52 @@
-// app/financialDocuments/FinancialDocumentSchema.js
-import * as yup from "yup";
+// validation/ledgerValidation.js
+import * as yup from 'yup';
 
-const FinancialDocumentSchema = yup.object().shape({
-  title: yup.string().required("عنوان سند مالی الزامی است"),
-  shortName: yup.string().required("نام اختصاری سند مالی الزامی است"),
-  exchangeRate: yup
-    .number()
-    .required("نرخ برابری الزامی است")
-    .positive("نرخ برابری باید مثبت باشد"),
-  decimalPlaces: yup
-    .number()
-    .required("تعداد اعشار الزامی است")
-    .min(0, "تعداد اعشار نمی‌تواند منفی باشد")
-    .max(6, "تعداد اعشار نباید بیشتر از ۶ باشد"),
-  status: yup
-    .string()
-    .oneOf(["فعال", "غیرفعال"])
-    .required("وضعیت الزامی است"),
-  ShopId: yup.string().required("ShopId الزامی است"),
-  type: yup
-    .string()
-    .oneOf(["financialDocument", "invoice"])
-    .required("نوع سند الزامی است"),
-  entries: yup
-    .array()
-    .of(
-      yup.object().shape({
-        account: yup.string().required("حساب الزامی است"),
-        debit: yup
-          .number()
-          .min(0, "بدهکار نمی‌تواند منفی باشد")
-          .required("بدهکار الزامی است"),
-        credit: yup
-          .number()
-          .min(0, "بستانکار نمی‌تواند منفی باشد")
-          .required("بستانکار الزامی است"),
-        currency: yup.string().required("ارز الزامی است"),
-        description: yup
-          .string()
-          .max(255, "توضیحات نباید بیشتر از ۲۵۵ کاراکتر باشد"),
-      })
-    )
-    .min(1, "حداقل یک تراکنش باید وجود داشته باشد"),
+export const ledgerValidationSchema = yup.object().shape({
+  ShopId: yup.string()
+    .required('شناسه فروشگاه الزامی است')
+    .matches(/^[0-9a-fA-F]{24}$/, 'شناسه فروشگاه نامعتبر است'),
+  
+  currency: yup.string()
+    .required('انتخاب ارز الزامی است')
+    .oneOf(['USD', 'EUR', 'IRR'], 'ارز نامعتبر انتخاب شده است'),
+  
+  description: yup.string()
+    .required('توضیحات الزامی است')
+    .max(255, 'حداکثر طول توضیحات 255 کاراکتر است'),
+
+  debtors: yup.array().of(
+    yup.object().shape({
+      account: yup.string()
+        .nullable()
+        .required('انتخاب حساب الزامی است')
+        .matches(/^[0-9a-fA-F]{24}$/, 'شناسه حساب نامعتبر است'),
+      amount: yup.number()
+        .typeError('مبلغ باید یک عدد باشد')
+        .required('مبلغ بدهکار الزامی است')
+        .min(0, 'مبلغ بدهکار باید غیر منفی باشد'),
+    })
+  )
+  .min(1, 'باید حداقل یک حساب بدهکار انتخاب کنید')
+  .required('بدهکارها الزامی هستند'),
+
+  creditors: yup.array().of(
+    yup.object().shape({
+      account: yup.string()
+        .nullable()
+        .required('انتخاب حساب الزامی است')
+        .matches(/^[0-9a-fA-F]{24}$/, 'شناسه حساب نامعتبر است'),
+      amount: yup.number()
+        .typeError('مبلغ باید یک عدد باشد')
+        .required('مبلغ بستانکار الزامی است')
+        .min(0, 'مبلغ بستانکار باید غیر منفی باشد'),
+    })
+  )
+  .min(1, 'باید حداقل یک حساب بستانکار انتخاب کنید')
+  .required('بستانکارها الزامی هستند'),
+})
+.test('balance', 'مجموع بدهکارها باید برابر با مجموع بستانکارها باشد', function (value) {
+  const { debtors, creditors } = value;
+  const totalDebtors = debtors?.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 0;
+  const totalCreditors = creditors?.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 0;
+  return totalDebtors === totalCreditors;
 });
-
-export default FinancialDocumentSchema;

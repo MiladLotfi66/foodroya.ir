@@ -100,7 +100,7 @@ function FinancialDocumentManage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {financialDocuments.map((financialDocument) => (
+          {financialDocuments?.map((financialDocument) => (
             <FinancialDocumentCard
               className="p-2 md:p-4"
               key={financialDocument._id}
