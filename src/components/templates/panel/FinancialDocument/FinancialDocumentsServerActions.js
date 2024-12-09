@@ -50,13 +50,10 @@ export async function GetAllFinancialDocuments(shopId) {
  * @param {FormData} formData - داده‌های فرم
  * @returns {Object} - نتیجه عملیات
  */
-export async function AddFinancialDocumentAction(formData) {
- 
-}
 
 
 
-export async function addLedger(data) {
+export async function AddFinancialDocumentAction(data) {
   // اتصال به پایگاه داده
   await connectDB();
   let user;
@@ -76,7 +73,7 @@ export async function addLedger(data) {
     
 
 
-    const userId = user.user.id;
+    const userId = user.id;
 
     // ایجاد دفتر کل جدید
     const ledger = new Ledger({
@@ -108,7 +105,7 @@ export async function addLedger(data) {
     ledger.transactions = createdTransactions.map(tx => tx._id);
     await ledger.save();
 
-    return { message: 'دفتر کل با موفقیت ایجاد شد', data: ledger };
+    return {status:200, message: 'دفتر کل با موفقیت ایجاد شد', data: ledger };
   } catch (error) {
     if (error.name === 'ValidationError') {
       // جمع‌آوری تمام خطاهای اعتبارسنجی

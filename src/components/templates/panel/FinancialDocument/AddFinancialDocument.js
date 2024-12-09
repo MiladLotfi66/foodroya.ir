@@ -9,6 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import Select, { components } from "react-select";
 import { GetAccountsByStartingCharacter } from "../Account/accountActions";
 import { XMarkIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { AddFinancialDocumentAction } from "./FinancialDocumentsServerActions";
 
 function AddFinancialDocument({ financialDocument = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
@@ -160,11 +161,14 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
     console.log(formData);
     setIsSubmit(true);
     try {
-      // منطق ارسال فرم به سرور
-      // به عنوان مثال:
-      // await SubmitFinancialDocument(formData);
+     const response= await AddFinancialDocumentAction(formData);
+     console.log("response",response);
+     
+     if (response.status===200) {
       toast.success("سند مالی با موفقیت ثبت شد.");
       onClose();
+
+     }
     } catch (error) {
       console.error("خطا در ثبت سند مالی:", error);
       toast.error("مشکلی در ثبت سند مالی وجود دارد.");
