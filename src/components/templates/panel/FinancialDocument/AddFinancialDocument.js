@@ -10,6 +10,7 @@ import Select, { components } from "react-select";
 import { GetAccountsByStartingCharacter } from "../Account/accountActions";
 import { XMarkIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { AddFinancialDocumentAction } from "./FinancialDocumentsServerActions";
+import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 
 function AddFinancialDocument({ financialDocument = {}, onClose }) {
   const [isSubmit, setIsSubmit] = useState(false);
@@ -20,6 +21,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
   const [totalDebtors, setTotalDebtors] = useState(0);
   const [totalCreditors, setTotalCreditors] = useState(0);
   const [isBalanced, setIsBalanced] = useState(false);
+  const [currencies, setCurrencies] = useState([]);
 
   const {
     register,
@@ -31,6 +33,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
   } = useForm({
     mode: "all",
     defaultValues: {
+      type: "financialDocument", // اضافه کردن مقدار پیش‌فرض type
       ShopId: ShopId || "",
       debtors: financialDocument?.debtors || [{ account: null, amount: "" }],
       creditors: financialDocument?.creditors || [
@@ -84,7 +87,36 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
     setTotalCreditors(creditorsTotal);
     setIsBalanced(debtorsTotal === creditorsTotal && debtorsTotal > 0);
   }, [watchDebtors, watchCreditors]);
+///////////////////////////////////
 
+useEffect(() => {
+  const fetchCurrencies = async () => {
+    setIsLoading(true); // شروع بارگذاری
+    try {
+      await getCurrencies(ShopId);
+   
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
+    } finally {
+      setIsLoading(false); // پایان بارگذاری
+    }
+  };
+  fetchCurrencies();
+  
+}, [ShopId]);
+////////////////////////////////////////
+const getCurrencies = async (ShopId) => {
+  try {
+    const result = await GetAllCurrencies(ShopId);
+    if (result && result.currencies) {
+      setCurrencies(result.currencies);
+    }
+  } catch (error) {
+    console.error("Error fetching currencies:", error);
+    toast.error("مشکلی در دریافت ارزها وجود دارد.");
+  }
+};
   // واکشی حساب‌ها
   const fetchAccounts = useCallback(async () => {
     try {
@@ -203,10 +235,15 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
             className="max-w-lg mx-auto rounded"
           >
             <select {...register("currency", { required: "انتخاب ارز الزامی است" })}>
-  <option value="">انتخاب ارز</option>
-  <option value="USD">دلار آمریکا (USD)</option>
-  <option value="EUR">یورو (EUR)</option>
-  <option value="IRR">ریال ایران (IRR)</option>
+   {/* گزینه‌ی پیش‌فرض */}
+   <option value="" >انتخاب ارز</option>
+
+{/* گزینه‌های دینامیک */}
+{currencies.map((currency) => (
+  <option key={currency._id} value={currency._id}>
+    {currency.title} ({currency.shortName})
+  </option>
+))}
 </select>
 {errors.currency && <span className="error">{errors.currency.message}</span>}
 

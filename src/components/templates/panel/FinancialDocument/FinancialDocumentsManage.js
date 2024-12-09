@@ -24,7 +24,9 @@ function FinancialDocumentManage() {
         return;
       }
       const response = await GetAllFinancialDocuments(ShopId);
-      setFinancialDocuments(response.financialDocuments);
+      console.log("response",response);
+      
+      setFinancialDocuments(response.Ledgers);
     } catch (error) {
       console.error("Error fetching financialDocuments:", error);
       toast.error("خطا در دریافت اسناد مالی.");

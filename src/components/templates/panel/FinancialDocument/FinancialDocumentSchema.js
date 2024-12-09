@@ -7,9 +7,8 @@ export const ledgerValidationSchema = yup.object().shape({
     .matches(/^[0-9a-fA-F]{24}$/, 'شناسه فروشگاه نامعتبر است'),
   
   currency: yup.string()
-    .required('انتخاب ارز الزامی است')
-    .oneOf(['USD', 'EUR', 'IRR'], 'ارز نامعتبر انتخاب شده است'),
-  
+    .required('انتخاب ارز الزامی است'),
+      
   description: yup.string()
     .required('توضیحات الزامی است')
     .max(255, 'حداکثر طول توضیحات 255 کاراکتر است'),
