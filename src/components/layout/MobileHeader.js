@@ -34,8 +34,6 @@ function MobileHeader({isLogin}) {
       
       const response = await GetShopLogos(ShopId);
 
-      console.log("Logo URL:", response); // اضافه کردن این خط
-      console.log("Logo URL:", response.logoUrl); // اضافه کردن این خط
       setShopLogo(response.logos.logoUrl);
       setShopTextLogo(response.logos.TextLogoUrl);
     } catch (error) {

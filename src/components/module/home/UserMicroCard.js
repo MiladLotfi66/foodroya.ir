@@ -7,8 +7,7 @@ function UserMicroCard({ user }) {
     <span className="flex items-center gap-2">
       <Image
         className="rounded-full"
-        src={user.userImage}
-        // src={user.image || "/default-user.png"}
+        src={user?.userImage|| usericone}
         alt="تصویر کاربر"
         width={30}
         height={30}

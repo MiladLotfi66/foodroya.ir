@@ -5,14 +5,17 @@ import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { ledgerValidationSchema } from "./FinancialDocumentSchema";
 import { useEffect, useState, useCallback } from "react";
+import { useTheme } from "next-themes";
+
 import { useParams, useRouter } from "next/navigation";
 import Select, { components } from "react-select";
 import { GetAccountsByStartingCharacter } from "../Account/accountActions";
 import { XMarkIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { AddFinancialDocumentAction } from "./FinancialDocumentsServerActions";
 import { GetAllCurrencies } from "../Currency/currenciesServerActions";
+import { customSelectStyles } from "../Product/selectStyles";
 
-function AddFinancialDocument({ financialDocument = {}, onClose }) {
+function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancialDocuments }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const { ShopId } = useParams();
   const router = useRouter();
@@ -22,6 +25,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
   const [totalCreditors, setTotalCreditors] = useState(0);
   const [isBalanced, setIsBalanced] = useState(false);
   const [currencies, setCurrencies] = useState([]);
+  const { theme } = useTheme();
 
   const {
     register,
@@ -87,36 +91,69 @@ function AddFinancialDocument({ financialDocument = {}, onClose }) {
     setTotalCreditors(creditorsTotal);
     setIsBalanced(debtorsTotal === creditorsTotal && debtorsTotal > 0);
   }, [watchDebtors, watchCreditors]);
-///////////////////////////////////
+  ///////////////////////////////////
+  useEffect(() => {
+    if (financialDocument) {
+      const { description, transactions } = financialDocument;
 
-useEffect(() => {
-  const fetchCurrencies = async () => {
-    setIsLoading(true); // شروع بارگذاری
+      // تقسیم تراکنش‌ها به بدهکارها و بستانکارها
+      const debtorsTransactions = transactions
+        .filter((tx) => tx.debit > 0)
+        .map((tx) => ({
+          account: tx.account._id, // تغییر accountId به account
+
+          amount: tx.debit,
+        }));
+
+      const creditorsTransactions = transactions
+        .filter((tx) => tx.credit > 0)
+        .map((tx) => ({
+          account: tx.account._id, // تغییر accountId به account
+          amount: tx.credit,
+        }));
+
+      reset({
+        description: description || "",
+        currency: transactions[0]?.currency?._id || "", // فرض می‌کنیم همه تراکنش‌ها از یک ارز هستند
+        debtors:
+          debtorsTransactions.length > 0
+            ? debtorsTransactions
+            : [{ account: "", amount: 0 }], // استفاده از account
+        creditors:
+          creditorsTransactions.length > 0
+            ? creditorsTransactions
+            : [{ account: "", amount: 0 }], // استفاده از account
+      });
+    }
+  }, [financialDocument, reset]);
+
+  ///////////////////////////
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      setIsLoading(true); // شروع بارگذاری
+      try {
+        await getCurrencies(ShopId);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
+      } finally {
+        setIsLoading(false); // پایان بارگذاری
+      }
+    };
+    fetchCurrencies();
+  }, [ShopId]);
+  ////////////////////////////////////////
+  const getCurrencies = async (ShopId) => {
     try {
-      await getCurrencies(ShopId);
-   
+      const result = await GetAllCurrencies(ShopId);
+      if (result && result.currencies) {
+        setCurrencies(result.currencies);
+      }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
-    } finally {
-      setIsLoading(false); // پایان بارگذاری
+      console.error("Error fetching currencies:", error);
+      toast.error("مشکلی در دریافت ارزها وجود دارد.");
     }
   };
-  fetchCurrencies();
-  
-}, [ShopId]);
-////////////////////////////////////////
-const getCurrencies = async (ShopId) => {
-  try {
-    const result = await GetAllCurrencies(ShopId);
-    if (result && result.currencies) {
-      setCurrencies(result.currencies);
-    }
-  } catch (error) {
-    console.error("Error fetching currencies:", error);
-    toast.error("مشکلی در دریافت ارزها وجود دارد.");
-  }
-};
   // واکشی حساب‌ها
   const fetchAccounts = useCallback(async () => {
     try {
@@ -134,7 +171,6 @@ const getCurrencies = async (ShopId) => {
           "حساب انتظامی",
         ]
       );
-      console.log(response);
 
       if (response.Accounts && Array.isArray(response.Accounts)) {
         const options = response.Accounts.map((Account) => ({
@@ -190,17 +226,15 @@ const getCurrencies = async (ShopId) => {
   };
 
   const formSubmitting = async (formData) => {
-    console.log(formData);
     setIsSubmit(true);
     try {
-     const response= await AddFinancialDocumentAction(formData);
-     console.log("response",response);
-     
-     if (response.status===200) {
-      toast.success("سند مالی با موفقیت ثبت شد.");
-      onClose();
+      const response = await AddFinancialDocumentAction(formData);
 
-     }
+      if (response.status === 200) {
+        toast.success("سند مالی با موفقیت ثبت شد.");
+        refreshFinancialDocuments();
+        onClose();
+      }
     } catch (error) {
       console.error("خطا در ثبت سند مالی:", error);
       toast.error("مشکلی در ثبت سند مالی وجود دارد.");
@@ -234,21 +268,31 @@ const getCurrencies = async (ShopId) => {
             onSubmit={handleSubmit(formSubmitting)}
             className="max-w-lg mx-auto rounded"
           >
-            <select {...register("currency", { required: "انتخاب ارز الزامی است" })}>
-   {/* گزینه‌ی پیش‌فرض */}
-   <option value="" >انتخاب ارز</option>
+            <select
+              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
+                errors.description ? "border-red-400" : "border-gray-300"
+              } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              {...register("currency", { required: "انتخاب ارز الزامی است" })}
+            >
+              {/* گزینه‌ی پیش‌فرض */}
+              <option value="">انتخاب ارز</option>
 
-{/* گزینه‌های دینامیک */}
-{currencies.map((currency) => (
-  <option key={currency._id} value={currency._id}>
-    {currency.title} ({currency.shortName})
-  </option>
-))}
-</select>
-{errors.currency && <span className="error">{errors.currency.message}</span>}
+              {/* گزینه‌های دینامیک */}
+              {currencies.map((currency) => (
+                <option key={currency._id} value={currency._id}>
+                  {currency.title} ({currency.shortName})
+                </option>
+              ))}
+            </select>
+            {errors.currency && (
+              <span className="error">{errors.currency.message}</span>
+            )}
 
             {/* بخش بدهکار */}
-            <div className="border-l-4 border-red-500 p-1 md:p-4 bg-red-50 text-xs md:text-base mb-1">
+            <div
+              className="border-l-4 border-red-500 p-1 md:p-4  text-xs md:text-base mb-1
+                dark:border-red-400  dark:text-gray-200"
+            >
               <label className="block mb-1 md:mb-4 ">طرف حساب‌های بدهکار</label>
               {debtorFields.map((field, index) => (
                 <div
@@ -272,18 +316,23 @@ const getCurrencies = async (ShopId) => {
                               ) || null
                             }
                             onChange={(selectedOption) => {
-                              if (selectedOption && selectedOption.value === "add_new") {
+                              if (
+                                selectedOption &&
+                                selectedOption.value === "add_new"
+                              ) {
                                 handleAddNewAccount();
                                 // به جای null، می‌توانید یک مقدار پیش‌فرض یا خالی مناسب را تنظیم کنید
                                 controllerField.onChange(""); // یا controllerField.onChange(undefined);
                               } else {
-                                controllerField.onChange(selectedOption ? selectedOption.value : "");
+                                controllerField.onChange(
+                                  selectedOption ? selectedOption.value : ""
+                                );
                               }
                             }}
-                            
                             components={{ MenuList: CustomMenuList }}
-                            className="select bg-gray-300 dark:bg-zinc-600"
-                            classNamePrefix="select"
+                            styles={
+                              theme === "dark" ? customSelectStyles : undefined
+                            }
                             placeholder="حساب بدهکار"
                           />
                         )}
@@ -338,7 +387,10 @@ const getCurrencies = async (ShopId) => {
             </div>
 
             {/* بخش بستانکار */}
-            <div className="border-l-4 border-green-500 p-1 md:p-4 bg-green-50 text-xs md:text-base mb-1">
+            <div
+              className="border-l-4 border-green-500 p-1 md:p-4  text-xs md:text-base mb-1
+                dark:border-green-400 dark:text-gray-200"
+            >
               <label className="block mb-1 md:mb-4 ">
                 طرف حساب‌های بستانکار
               </label>
@@ -364,19 +416,24 @@ const getCurrencies = async (ShopId) => {
                               ) || null
                             }
                             onChange={(selectedOption) => {
-                              if (selectedOption && selectedOption.value === "add_new") {
+                              if (
+                                selectedOption &&
+                                selectedOption.value === "add_new"
+                              ) {
                                 handleAddNewAccount();
                                 // به جای null، می‌توانید یک مقدار پیش‌فرض یا خالی مناسب را تنظیم کنید
                                 controllerField.onChange(""); // یا controllerField.onChange(undefined);
                               } else {
-                                controllerField.onChange(selectedOption ? selectedOption.value : "");
+                                controllerField.onChange(
+                                  selectedOption ? selectedOption.value : ""
+                                );
                               }
                             }}
-                            
                             components={{ MenuList: CustomMenuList }}
-                            className="select bg-gray-300 dark:bg-zinc-600"
-                            classNamePrefix="select"
-                            placeholder="حساب بستانکار را انتخاب کنید"
+                            styles={
+                              theme === "dark" ? customSelectStyles : undefined
+                            }
+                            placeholder="حساب بستانکار"
                           />
                         )}
                       />

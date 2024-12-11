@@ -4,8 +4,11 @@ import connectDB from "@/utils/connectToDB";
 import FinancialDocument from "./Ledger";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import Ledger from "./Ledger";
+import Currency from "../Currency/Currency";
 import GeneralLedger from "./GeneralLedger";
 import { ledgerValidationSchema } from "./FinancialDocumentSchema";
+import mongoose from 'mongoose'; // اطمینان حاصل کنید که mongoose ایمپورت شده باشد
+
 // import { getSession } from 'next-auth/react'; // فرض بر این که از next-auth استفاده می‌کنید
 
 /**
@@ -37,8 +40,31 @@ export async function GetAllFinancialDocuments(shopId) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   try {
-    const Ledgers = await Ledger.find({ shop: shopId }).select('-__v')
-      .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+    const Ledgers = await Ledger.find({ shop: shopId }).select('-__v').populate(
+[      {
+      path: 'transactions',
+      populate: [
+        {
+          path: 'account',
+          select: 'title accountType' // فیلدهای مورد نیاز از مدل Account
+        },
+        {
+          path: 'currency',
+          select: 'title' // فیلدهای مورد نیاز از مدل Currency
+        },
+       
+      ]
+
+    }, {
+      path: 'createdBy',
+      select: 'name userImage email userUniqName phone' 
+    }, {
+      path: 'updatedBy',
+      select: 'name userImage email userUniqName phone' 
+    }
+  ])
+    .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+
       
     return { status: 200, Ledgers: convertToPlainObjects(Ledgers) };
   } catch (error) {
@@ -54,10 +80,11 @@ export async function GetAllFinancialDocuments(shopId) {
 
 
 
+
 export async function AddFinancialDocumentAction(data) {
   await connectDB();
   let user;
-  
+
   try {
     user = await authenticateUser();
   } catch (authError) {
@@ -73,6 +100,9 @@ export async function AddFinancialDocumentAction(data) {
       message: 'کاربر وارد نشده است'
     };
   }
+
+  // ایجا‌ه جلسه
+  const session = await mongoose.startSession();
 
   try {
     // بررسی داده‌های ورودی
@@ -97,17 +127,19 @@ export async function AddFinancialDocumentAction(data) {
 
     const userId = user.id;
 
-    // ایجاد دفتر کل
+    // شروع تراکنش
+    session.startTransaction();
+
+    // ایجاد دفتر کل درون تراکنش
     const ledger = new Ledger({
       description: data.description,
       transactions: [], // ابتدا خالی
       createdBy: userId,
       updatedBy: userId,
       shop: data.ShopId,
-
     });
 
-    await ledger.save();
+    await ledger.save({ session });
 
     // تبدیل بدهکاران و بستانکاران به تراکنش‌ها
     const transactions = [
@@ -139,43 +171,41 @@ export async function AddFinancialDocumentAction(data) {
       }))
     ];
 
-    try {
-      // ذخیره تراکنش‌ها
-      const createdTransactions = await GeneralLedger.insertMany(transactions);
+    // ذخیره تراکنش‌ها درون تراکنش
+    const createdTransactions = await GeneralLedger.insertMany(transactions, { session });
 
-      // به‌روزرسانی دفتر کل با تراکنش‌ها
-      ledger.transactions = createdTransactions.map(tx => tx._id);
+    // به‌روزرسانی دفتر کل با تراکنش‌ها درون تراکنش
+    ledger.transactions = createdTransactions.map(tx => tx._id);
+    await ledger.save({ session });
 
-      await ledger.save();
+    // تعهد تراکنش
+    await session.commitTransaction();
+    session.endSession();
 
-      return {
-        status: 200,
-        message: 'سند حسابداری با موفقیت ثبت شد',
-        data: {
-          ledger: ledger._id,
-          transactionCount: createdTransactions.length,
-          totalAmount: totalDebit,
-          currency: data.currency,
-          shop: data.ShopId
-        }
-      };
-
-    } catch (dbError) {
-      // در صورت خطا در ایجاد تراکنش‌ها، دفتر کل را هم حذف می‌کنیم
-      await Ledger.deleteOne({ _id: ledger._id });
-      return {
-        status: 500,
-        message: 'خطا در ثبت تراکنش‌ها: ' + dbError.message
-      };
-    }
+    return {
+      status: 200,
+      message: 'سند حسابداری با موفقیت ثبت شد',
+      data: {
+        ledger: ledger._id,
+        transactionCount: createdTransactions.length,
+        totalAmount: totalDebit,
+        currency: data.currency,
+        shop: data.ShopId
+      }
+    };
 
   } catch (error) {
+    // ابطال تراکنش در صورت بروز خطا
+    await session.abortTransaction();
+    session.endSession();
+
     return {
       status: 500,
       message: error.message || 'خطا در ایجاد سند حسابداری'
     };
   }
 }
+
 
 
 

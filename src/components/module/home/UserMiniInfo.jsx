@@ -4,6 +4,8 @@ import Image from "next/image";
 import PropTypes from "prop-types";
 
 const UserMiniInfo = ({ userImage, name, username }) => {
+  console.log(userImage, name, username);
+  
   return (
     <div className="flex items-center mt-2">
       <Image

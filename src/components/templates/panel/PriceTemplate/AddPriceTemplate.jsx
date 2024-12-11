@@ -369,7 +369,7 @@ function AddPriceTemplate({
                   </div>
 
                   <div className="mt-2">
-                    <label className="block mb-1 font-semibold">فرمول تعریف‌شده:</label>
+                    <label className="block mb-1 ">فرمول تعریف‌شده:</label>
                     {field.formula ? (
                       <MathJaxContext>
                         <MathJax dynamic>

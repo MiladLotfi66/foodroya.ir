@@ -24,7 +24,6 @@ function FinancialDocumentManage() {
         return;
       }
       const response = await GetAllFinancialDocuments(ShopId);
-      console.log("response",response);
       
       setFinancialDocuments(response.Ledgers);
     } catch (error) {
