@@ -33,7 +33,6 @@ function AccountManage() {
         }
 
         const response = await GetAllAccounts(ShopId, parentId);
-console.log(response);
 
         if (response.status === 200) {
           setAccounts(response.Accounts);

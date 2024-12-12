@@ -210,7 +210,6 @@ export async function AddFinancialDocumentAction(data) {
  * @returns {Object} - نتیجه عملیات
  */
 export async function EditFinancialDocumentAction(data, shopId) {
-  console.log("data, shopId",data, shopId);
   
   await connectDB();
   let user;

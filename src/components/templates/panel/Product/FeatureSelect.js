@@ -17,7 +17,6 @@ const FeatureSelect = () => {
     control,
     name: "Features",
   });
-console.log("fields",fields);
 
   const didMountRef = useRef(false);
 
