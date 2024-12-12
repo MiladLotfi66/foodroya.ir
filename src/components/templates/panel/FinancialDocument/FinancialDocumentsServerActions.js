@@ -1,7 +1,6 @@
 "use server";
 // utils/financialDocumentActions.js
 import connectDB from "@/utils/connectToDB";
-import FinancialDocument from "./Ledger";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import Ledger from "./Ledger";
 import Currency from "../Currency/Currency";
@@ -77,10 +76,6 @@ export async function GetAllFinancialDocuments(shopId) {
  * @param {FormData} formData - داده‌های فرم
  * @returns {Object} - نتیجه عملیات
  */
-
-
-
-
 export async function AddFinancialDocumentAction(data) {
   await connectDB();
   let user;
@@ -93,7 +88,6 @@ export async function AddFinancialDocumentAction(data) {
       message: 'خطا در احراز هویت کاربر'
     };
   }
-
   if (!user) {
     return {
       status: 401,
@@ -215,8 +209,144 @@ export async function AddFinancialDocumentAction(data) {
  * @param {string} ShopId - نام یکتا فروشگاه
  * @returns {Object} - نتیجه عملیات
  */
-export async function EditFinancialDocumentAction(formData, ShopId) {
- 
+export async function EditFinancialDocumentAction(data, shopId) {
+  console.log("data, shopId",data, shopId);
+  
+  await connectDB();
+  let user;
+
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    return {
+      status: 401,
+      message: 'خطا در احراز هویت کاربر'
+    };
+  }
+
+  if (!user) {
+    return {
+      status: 401,
+      message: 'کاربر وارد نشده است'
+    };
+  }
+
+  // ایجا‌ه جلسه
+  const session = await mongoose.startSession();
+
+  try {
+    // بررسی داده‌های ورودی
+    if (!data || !data.id || !data.debtors || !data.creditors) {
+      return {
+        status: 400,
+        message: 'شناسه سند مالی و اطلاعات بدهکار و بستانکار الزامی است'
+      };
+    }
+
+    // اعتبارسنجی داده‌ها با استفاده از اسکیما (در صورت نیاز)
+    // await ledgerValidationSchema.validate(data);
+
+    // محاسبه جمع بدهکار و بستانکار
+    const totalDebit = data.debtors.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const totalCredit = data.creditors.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+    // بررسی تراز بودن سند
+    if (totalDebit !== totalCredit) {
+      return {
+        status: 400,
+        message: 'مجموع بدهکار و بستانکار برابر نیست'
+      };
+    }
+
+    const userId = user.id;
+
+    // شروع تراکنش
+    session.startTransaction();
+
+    // پیدا کردن دفتر کل مورد نظر
+    const ledger = await Ledger.findOne({ _id: data.id, shop: shopId }).session(session);
+    if (!ledger) {
+      await session.abortTransaction();
+      session.endSession();
+      return {
+        status: 404,
+        message: 'سند مالی مورد نظر پیدا نشد'
+      };
+    }
+
+    // حذف تراکنش‌های قدیمی مرتبط با این دفتر کل
+    await GeneralLedger.deleteMany({ ledger: ledger._id }).session(session);
+
+    // ایجاد تراکنش‌های جدید
+    const transactions = [
+      // تراکنش‌های بدهکار
+      ...data.debtors.map(debtor => ({
+        ledger: ledger._id,
+        account: debtor.account,
+        debit: debtor.amount,
+        credit: 0,
+        currency: data.currency,
+        description: data.description,
+        type: data.type,
+        shop: shopId,
+        createdBy: userId,
+        updatedBy: userId,
+      })),
+      // تراکنش‌های بستانکار
+      ...data.creditors.map(creditor => ({
+        ledger: ledger._id,
+        account: creditor.account,
+        debit: 0,
+        credit: creditor.amount,
+        currency: data.currency,
+        description: data.description,
+        type: data.type,
+        shop: shopId,
+        createdBy: userId,
+        updatedBy: userId,
+      }))
+    ];
+
+    // ذخیره تراکنش‌های جدید
+    const createdTransactions = await GeneralLedger.insertMany(transactions, { session });
+
+    // به‌روزرسانی دفتر کل
+    ledger.description = data.description;
+    ledger.currency = data.currency;
+    ledger.type = data.type;
+    ledger.updatedBy = userId;
+    ledger.transactions = createdTransactions.map(tx => tx._id);
+
+    await ledger.save({ session });
+
+    // تعهد تراکنش
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      status: 200,
+      message: 'سند مالی با موفقیت ویرایش شد',
+      data: {
+        ledger: ledger._id,
+        transactionCount: createdTransactions.length,
+        totalAmount: totalDebit,
+        currency: data.currency,
+        shop: shopId
+      }
+    };
+
+  } catch (error) {
+    // ابطال تراکنش در صورت بروز خطا
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("Error editing financial document:", error);
+
+    return {
+      status: 500,
+      message: error.message || 'خطا در ویرایش سند مالی'
+    };
+  }
 }
 
 /**
@@ -227,27 +357,46 @@ export async function EditFinancialDocumentAction(formData, ShopId) {
 export async function DeleteFinancialDocuments(financialDocumentId) {
   await connectDB();
   let user;
-    try {
-      user = await authenticateUser();
-    } catch (authError) {
-      user = null;
-      console.log("Authentication failed:", authError);
-    }
+  
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
+  }
+
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const deletedFinancialDocument = await FinancialDocument.findByIdAndDelete(financialDocumentId).lean();
-    if (!deletedFinancialDocument) {
+    // حذف سند مالی (Ledger)
+    const deletedLedger = await Ledger.findByIdAndDelete(financialDocumentId, { session });
+    
+    if (!deletedLedger) {
+      await session.abortTransaction();
+      session.endSession();
       return { status: 404, message: 'سند مالی پیدا نشد.' };
     }
+
+    // حذف تراکنش‌های مرتبط (GeneralLedger)
+    await GeneralLedger.deleteMany({ ledger: financialDocumentId }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
     return { status: 200, message: 'سند مالی با موفقیت حذف شد.' };
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error deleting financialDocument:", error);
     return { status: 500, message: 'خطایی در حذف سند مالی رخ داد.' };
   }
 }
+
 
 /**
  * فعال‌سازی سند مالی

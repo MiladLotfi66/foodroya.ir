@@ -2,9 +2,9 @@
 import * as yup from 'yup';
 
 export const ledgerValidationSchema = yup.object().shape({
-  ShopId: yup.string()
-    .required('شناسه فروشگاه الزامی است')
-    .matches(/^[0-9a-fA-F]{24}$/, 'شناسه فروشگاه نامعتبر است'),
+  // ShopId: yup.string()
+  //   .required('شناسه فروشگاه الزامی است')
+  //   .matches(/^[0-9a-fA-F]{24}$/, 'شناسه فروشگاه نامعتبر است'),
   
   currency: yup.string()
     .required('انتخاب ارز الزامی است'),

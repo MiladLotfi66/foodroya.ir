@@ -11,7 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import Select, { components } from "react-select";
 import { GetAccountsByStartingCharacter } from "../Account/accountActions";
 import { XMarkIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { AddFinancialDocumentAction } from "./FinancialDocumentsServerActions";
+import { AddFinancialDocumentAction , EditFinancialDocumentAction} from "./FinancialDocumentsServerActions";
 import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import { customSelectStyles } from "../Product/selectStyles";
 
@@ -225,24 +225,48 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
     );
   };
 
-  const formSubmitting = async (formData) => {
+  const handleFormSubmit = async (formData) => {
+    
     setIsSubmit(true);
     try {
-      const response = await AddFinancialDocumentAction(formData);
+      const formDataObj = {
+        ...formData,
+        
+        
+      };
+      console.log("formData",formDataObj);
 
-      if (response.status === 200) {
-        toast.success("سند مالی با موفقیت ثبت شد.");
-        refreshFinancialDocuments();
+      let result;
+      if (financialDocument?._id) {
+        formDataObj.id = financialDocument._id;
+        result = await EditFinancialDocumentAction(formDataObj, ShopId);
+      } else {
+        result = await AddFinancialDocumentAction(formDataObj, ShopId);
+      }
+
+      if (result.status === 201 || result.status === 200) {
+        await refreshFinancialDocuments();
+        const successMessage = financialDocument && financialDocument._id ? "سند مالی با موفقیت ویرایش شد!" : "سند مالی با موفقیت ایجاد شد!";
+        toast.success(successMessage);
+
+        reset();
         onClose();
+      } else {
+        toast.error(result.message || "خطایی در پردازش سند مالی رخ داد.");
       }
     } catch (error) {
-      console.error("خطا در ثبت سند مالی:", error);
-      toast.error("مشکلی در ثبت سند مالی وجود دارد.");
+      console.error("Error handling financial document:", error);
+      toast.error("مشکلی در پردازش سند مالی وجود دارد.");
     } finally {
       setIsSubmit(false);
     }
   };
 
+  const formSubmitting = async (formData) => {
+    await handleFormSubmit(formData);
+  };
+
+  
   return (
     <div className="overflow-y-auto max-h-screen md:p-4">
       {isLoading ? (
