@@ -2,54 +2,22 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
-import EditSvg from "@/module/svgs/EditSvg";
-import ShareSvg from "@/module/svgs/ShareSvg";
-import EyeSvg from "@/module/svgs/EyeSvg";
-import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import {
-  EnableInvoiceItemAction,
-  DisableInvoiceItemAction,
   DeleteInvoiceItems,
 } from "./invoiceItemsServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function InvoiceItemCard({ invoiceItem: initialInvoiceItem, editFunction, onDelete }) {
   const [invoiceItem, setInvoiceItem] = useState(initialInvoiceItem); // مدیریت وضعیت کالا
+console.log("invoiceItem",invoiceItem);
 
   useEffect(() => {
     // هر بار که props کالا تغییر می‌کند، state محلی به‌روزرسانی می‌شود
     setInvoiceItem(initialInvoiceItem);
   }, [initialInvoiceItem]);
 
-  const enableFunc = async () => {
-    try {
-      const response = await EnableInvoiceItemAction(invoiceItem._id);
-      if (response.status === 200) {
-        setInvoiceItem({ ...invoiceItem, status: "فعال" }); // بروزرسانی وضعیت کالا بدون رفرش
-        toast.success("کالا فعال شد.");
-      } else {
-        throw new Error(response.message || "خطا در فعال‌سازی کالا.");
-      }
-    } catch (error) {
-      console.error("خطا در فعال‌سازی کالا:", error);
-      toast.error("خطا در فعال‌سازی کالا.");
-    }
-  };
+ 
 
-  const disableFunc = async () => {
-    try {
-      const response = await DisableInvoiceItemAction(invoiceItem._id);
-      if (response.status === 200) {
-        setInvoiceItem({ ...invoiceItem, status: "غیرفعال" }); // بروزرسانی وضعیت کالا بدون رفرش
-        toast.success("کالا غیرفعال شد.");
-      } else {
-        throw new Error(response.message || "خطا در غیرفعال‌سازی کالا.");
-      }
-    } catch (error) {
-      console.error("خطا در غیرفعال‌سازی کالا:", error);
-      toast.error("خطا در غیرفعال‌سازی کالا.");
-    }
-  };
 
   const deleteFunc = async () => {
     try {
@@ -71,25 +39,25 @@ function InvoiceItemCard({ invoiceItem: initialInvoiceItem, editFunction, onDele
       <div className="flex justify-between items-center">
         <div className="hidden">
           <DeleteSvg />
-          <EditSvg />
-          <ShareSvg />
-          <EyeSvg />
-          <EyeslashSvg />
         </div>
 
         <div>
+           {/* بخش تصویر */}
+           <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
+                          <img
+                            src={invoiceItem.image || "https://via.placeholder.com/150"}
+                            alt={invoiceItem.title}
+                            className="w-full h-full object-cover rounded-md mt-1"
+                            loading="lazy"
+                          />
+                     
+                        </div>
           <h2 className="text-xl font-bold">
-            {invoiceItem.title} ({invoiceItem.shortName})
+            {invoiceItem.title} 
           </h2>
-          <p className="text-sm">نرخ برابری: {invoiceItem.exchangeRate}</p>
-          <p className="text-sm">تعداد اعشار: {invoiceItem.decimalPlaces}</p>
-          <p
-            className={`text-sm ${
-              invoiceItem.status === "فعال" ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            وضعیت: {invoiceItem.status}
-          </p>
+          <p className="text-sm">تعداد: {invoiceItem.quantity}</p>
+          <p className="text-sm">قیمت واحد: {invoiceItem.unitPrice}</p>
+          <p className="text-sm">جمع کل: {invoiceItem.totalPrice}</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Delete Icon */}
@@ -102,47 +70,7 @@ function InvoiceItemCard({ invoiceItem: initialInvoiceItem, editFunction, onDele
           >
             <use href="#DeleteSvg"></use>
           </svg>
-          {/* Edit Icon */}
-          <svg
-            width="24"
-            height="24"
-            className="cursor-pointer"
-            aria-label="edit"
-            onClick={editFunction}
-          >
-            <use href="#EditSvg"></use>
-          </svg>
-          {/* Share Icon */}
-          <svg
-            width="24"
-            height="24"
-            className="cursor-pointer"
-            aria-label="share"
-          >
-            <use href="#ShareSvg"></use>
-          </svg>
-          {/* Enable/Disable Icon */}
-          {invoiceItem.status === "فعال" ? (
-            <svg
-              width="24"
-              height="24"
-              className="cursor-pointer"
-              aria-label="disable"
-              onClick={disableFunc}
-            >
-              <use href="#EyeslashSvg"></use>
-            </svg>
-          ) : (
-            <svg
-              width="24"
-              height="24"
-              className="cursor-pointer"
-              aria-label="enable"
-              onClick={enableFunc}
-            >
-              <use href="#EyeSvg"></use>
-            </svg>
-          )}
+       
         </div>
       </div>
       <Toaster />

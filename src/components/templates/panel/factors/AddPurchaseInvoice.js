@@ -7,6 +7,10 @@ import AddInvoiceItem from "./AddInvoiceItem";
 import { useParams } from 'next/navigation';
 import { DeleteInvoiceItems, GetAllInvoiceItems } from "./invoiceItemsServerActions"; // حذف سایر اکشن‌ها که دیگر نیاز نیستند
 import { Toaster, toast } from "react-hot-toast";
+import Select, { components } from "react-select";
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
+import { GetAllContacts } from "../Contact/contactsServerActions";
+import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 
 function AddPurchaseInvoice() {
   const [invoiceItems, setInvoiceItems] = useState([]);
@@ -15,7 +19,43 @@ function AddPurchaseInvoice() {
   const [selectedInvoiceItemFile, setSelectedInvoiceItemFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
   const { ShopId } = params;
+  const [contactsOptions, setContactsOptions] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState('');
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
+
+  useEffect(() => {
+    // واکشی حساب‌ها
+    const fetchContacts = async () => {
+      try {
+        const response = await GetAllContacts(ShopId)
+        console.log("response",response);
+        
+        setContactsOptions(response.contacts);
+      } catch (error) {
+        console.error('خطا در واکشی حساب‌ها:', error);
+      }
+    };
+
+    // واکشی ارزها
+    const fetchCurrencies = async () => {
+      try {
+        const response = await GetAllCurrencies(ShopId)
+        console.log("response",response);
+        
+        setCurrencies(response.currencies);
+      } catch (error) {
+        console.error('خطا در واکشی ارزها:', error);
+      }
+    };
+
+    fetchContacts();
+    fetchCurrencies();
+  }, []);
+
+  
   // بهینه‌سازی refreshInvoiceItems با استفاده از useCallback
   const refreshInvoiceItems = useCallback(async () => {
     try {
@@ -35,6 +75,14 @@ function AddPurchaseInvoice() {
     refreshInvoiceItems();
   }, [refreshInvoiceItems]);
 
+  const handleCustomerChange = (event) => {
+    setSelectedCustomer(event.target.value);
+  };
+  
+  const handleCurrencyChange = (event) => {
+    setSelectedCurrency(event.target.value);
+  };
+  
   const handleDeleteInvoiceItem = useCallback(async (invoiceItemId) => {
     try {
       const response = await DeleteInvoiceItems(invoiceItemId);
@@ -121,7 +169,57 @@ function AddPurchaseInvoice() {
             افزودن کالا
           </button>
         </div>
+  {/* /////////////////////////////////////////// */}
+           {/* انتخاب مشتری */}
+           <div className="flex items-center gap-4 px-2">
 
+           <div className="flex items-center">
+          <label htmlFor="customer">مشتری:</label>
+          <select
+           className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
+            errors.description ? "border-red-400" : "border-gray-300"
+          } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+            id="customer"
+            {...register('customer', { required: 'مشتری الزامی است' })}
+            value={selectedCustomer}
+            onChange={(e) => setSelectedCustomer(e.target.value)}
+          >
+            <option value="">انتخاب مشتری</option>
+            {contactsOptions.map((contact) => (
+              <option key={contact._id} value={contact._id}>
+                {contact.name}
+              </option>
+            ))}
+          </select>
+          {errors.customer && <span>{errors.customer.message}</span>}
+        </div>
+
+        {/* انتخاب ارز */}
+        <div className="flex items-center">
+          <label htmlFor="currency">ارز:</label>
+          <select
+                        className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
+                          errors.description ? "border-red-400" : "border-gray-300"
+                        } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+          
+            id="currency"
+            {...register('currency', { required: 'ارز الزامی است' })}
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+          >
+            <option value="">انتخاب ارز</option>
+            {currencies.map((currency) => (
+              <option key={currency._id} value={currency._id}>
+                {currency.title}
+              </option>
+            ))}
+          </select>
+          {errors.currency && <span>{errors.currency.message}</span>}
+        </div>
+           </div>
+
+            {/* //////////////////////////////// */}
+     
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
           {invoiceItems.map((invoiceItem) => (
             <InvoiceItemCard

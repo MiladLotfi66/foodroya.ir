@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaFolder, FaSearch } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
-import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 import Pagination from "../Product/Pagination";
@@ -41,7 +40,6 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       }
     } catch (error) {
       console.error('خطا در دریافت حساب انبار:', error);
-      toast.error("خطا در دریافت حساب انبار.");
     }
   };
 
@@ -89,7 +87,7 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       }
     } catch (error) {
       console.error("خطا در دریافت حساب‌ها:", error);
-      toast.error("خطا در دریافت حساب‌ها.");
+      // toast.error("خطا در دریافت حساب‌ها.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +133,6 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
     try {
       const response = await createAccount(ShopId, data);
       if (response.success) {
-        toast.success("حساب با موفقیت ایجاد شد.");
         refreshAccounts();
         setShowCreateAccountModal(false);
         reset();
@@ -144,7 +141,6 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       }
     } catch (error) {
       console.error("خطا در ایجاد حساب:", error);
-      toast.error("خطا در ایجاد حساب.");
     }
   }
   const handleSelectProduct = (product) => {
@@ -159,7 +155,6 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       image: product.images?.[0] || "https://via.placeholder.com/150", // مثال
     };
     onAddNewInvoiceItem(invoiceItemData); // انتقال داده به والد
-    toast.success("کالا با موفقیت به فاکتور اضافه شد.");
     onClose(); // بستن مدال
   };
 
@@ -192,16 +187,9 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
                 className="w-full border rounded px-2 py-1"
               />
             </div>
-            {/* دکمه افزودن حساب جدید */}
-            <button
-              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-              onClick={() => setShowCreateAccountModal(true)}
-            >
-              افزودن حساب جدید
-            </button>
-          </div>
+                  </div>
 
-          {/* لیست حساب‌ها */}
+          {/* لیست محصولات */}
           {loading ? (
             <p>در حال بارگذاری...</p>
           ) : (
@@ -255,7 +243,7 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
                     )}
                   </div>
                 ))}
-                {accounts.length === 0 && <p>حسابی یافت نشد.</p>}
+                {accounts.length === 0 && <p>محصولی یافت نشد.</p>}
               </div>
 
               {/* کامپوننت Pagination */}
@@ -267,7 +255,7 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
             </>
           )}
 
-          {/* مدال ایجاد حساب جدید */}
+          {/* مدال ایجاد محصول جدید */}
           {showCreateAccountModal && (
             <div
               className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
@@ -309,11 +297,11 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
             </div>
           )}
 
-          <Toaster />
+          {/* <Toaster /> */}
         </div>
       </div>
       
-      <Toaster />
+      {/* <Toaster /> */}
     </div>
   );
 }
