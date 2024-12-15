@@ -282,11 +282,19 @@ function AddPurchaseInvoice() {
           ))}
         </div>
         {/* فوتر */}
-        <div className="footer">
-          <div>تعداد کل اقلام: {totalItems}</div>
-          <div>جمع کل فاکتور: {totalPrice.toLocaleString()} تومان</div>
-          <div>تعداد ردیف‌ها: {totalRows}</div>
-        </div>
+        <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-4 mt-6">
+  <div className="flex flex-col md:flex-row justify-between items-center">
+    <div className="text-gray-800 dark:text-gray-200">
+      <div>تعداد کل اقلام: <span className="font-bold">{totalItems}</span></div>
+      <div>جمع کل فاکتور: <span className="font-bold">{totalPrice.toLocaleString()} تومان</span></div>
+      <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
+    </div>
+    <button className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200">
+      ثبت فاکتور
+    </button>
+  </div>
+</div>
+
       </div>
       <Toaster />
     </FormTemplate>
