@@ -4,8 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import InvoiceItemCard from "./InvoiceItemCard";
 import AddInvoiceItem from "./AddInvoiceItem";
-import { useParams } from 'next/navigation';
-import { DeleteInvoiceItems, GetAllInvoiceItems } from "./invoiceItemsServerActions"; // حذف سایر اکشن‌ها که دیگر نیاز نیستند
+import { useParams } from "next/navigation";
+import {
+  DeleteInvoiceItems,
+  GetAllInvoiceItems,
+} from "./invoiceItemsServerActions"; // حذف سایر اکشن‌ها که دیگر نیاز نیستند
 import { Toaster, toast } from "react-hot-toast";
 import Select, { components } from "react-select";
 import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
@@ -21,36 +24,43 @@ function AddPurchaseInvoice() {
   const { ShopId } = params;
   const [contactsOptions, setContactsOptions] = useState([]);
   const [currencies, setCurrencies] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState('');
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const [totalItems, setTotalItems] = useState(0); // اضافه کردن state برای تعداد کل اقلام
 
-  const totalItems = invoiceItems.length;
-  const totalPrice = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+  const totalPrice = invoiceItems.reduce(
+    (acc, item) => acc + item.totalPrice,
+    0
+  );
   const totalRows = invoiceItems.length;
 
   useEffect(() => {
     // واکشی حساب‌ها
     const fetchContacts = async () => {
       try {
-        const response = await GetAllContacts(ShopId)
-        console.log("response",response);
-        
+        const response = await GetAllContacts(ShopId);
+        console.log("response", response);
+
         setContactsOptions(response.contacts);
       } catch (error) {
-        console.error('خطا در واکشی حساب‌ها:', error);
+        console.error("خطا در واکشی حساب‌ها:", error);
       }
     };
 
     // واکشی ارزها
     const fetchCurrencies = async () => {
       try {
-        const response = await GetAllCurrencies(ShopId)
-        console.log("response",response);
-        
+        const response = await GetAllCurrencies(ShopId);
+        console.log("response", response);
+
         setCurrencies(response.currencies);
       } catch (error) {
-        console.error('خطا در واکشی ارزها:', error);
+        console.error("خطا در واکشی ارزها:", error);
       }
     };
 
@@ -58,39 +68,75 @@ function AddPurchaseInvoice() {
     fetchCurrencies();
   }, []);
 
-  
-  // بهینه‌سازی refreshInvoiceItems با استفاده از useCallback
-  const refreshInvoiceItems = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("فروشگاهی با این نام یافت نشد.");
-        return;
-      }
-      const response = await GetAllInvoiceItems(ShopId);
-      setInvoiceItems(response.invoiceItems);
-    } catch (error) {
-      console.error("Error fetching invoiceItems:", error);
-      toast.error("خطا در دریافت اقلام.");
-    }
-  }, [ShopId]);
+  const handleUpdateInvoiceItem = useCallback(
+    (updatedItem) => {
+      setInvoiceItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === updatedItem._id
+            ? {
+                ...item,
+                ...updatedItem,
+                totalPrice: updatedItem.quantity * updatedItem.unitPrice,
+              }
+            : item
+        )
+      );
 
+      // محاسبه تعداد کل اقلام
+      const newTotalItems = invoiceItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
+      setTotalItems(newTotalItems); // به‌روزرسانی تعداد کل اقلام
+    },
+    [invoiceItems]
+  );
+
+  // استفاده از useEffect برای محاسبه تعداد کل اقلام هنگام بارگذاری
   useEffect(() => {
-    refreshInvoiceItems();
-  }, [refreshInvoiceItems]);
+    const newTotalItems = invoiceItems.reduce(
+      (acc, item) => acc + item.quantity,
+      0
+    );
+    setTotalItems(newTotalItems);
+  }, [invoiceItems]);
+
+  // بهینه‌سازی refreshInvoiceItems با استفاده از useCallback
+  // const refreshInvoiceItems = useCallback(async () => {
+  //   try {
+  //     if (!ShopId) {
+  //       console.error("فروشگاهی با این نام یافت نشد.");
+  //       return;
+  //     }
+  //     const response = await GetAllInvoiceItems(ShopId);
+  //     setInvoiceItems(response.invoiceItems);
+  //   } catch (error) {
+  //     console.error("Error fetching invoiceItems:", error);
+  //     toast.error("خطا در دریافت اقلام.");
+  //   }
+  // }, [ShopId]);
+
+  // useEffect(() => {
+  //   refreshInvoiceItems();
+  // }, [refreshInvoiceItems]);
 
   const handleCustomerChange = (event) => {
     setSelectedCustomer(event.target.value);
   };
-  
+
   const handleCurrencyChange = (event) => {
     setSelectedCurrency(event.target.value);
   };
-  
+
   const handleDeleteInvoiceItem = useCallback(async (invoiceItemId) => {
     try {
       const response = await DeleteInvoiceItems(invoiceItemId);
       if (response.success) {
-        setInvoiceItems((prevInvoiceItems) => prevInvoiceItems.filter(invoiceItem => invoiceItem._id !== invoiceItemId));
+        setInvoiceItems((prevInvoiceItems) =>
+          prevInvoiceItems.filter(
+            (invoiceItem) => invoiceItem._id !== invoiceItemId
+          )
+        );
         toast.success("کالا با موفقیت از لیست حذف شد.");
       } else {
         throw new Error(response.message || "خطا در حذف کالا.");
@@ -133,7 +179,10 @@ function AddPurchaseInvoice() {
 
   // تابع برای افزودن قلم جدید به لیست (به‌روز شده)
   const handleAddNewInvoiceItem = useCallback((newInvoiceItem) => {
-    setInvoiceItems((prevInvoiceItems) => [...prevInvoiceItems, newInvoiceItem]);
+    setInvoiceItems((prevInvoiceItems) => [
+      ...prevInvoiceItems,
+      newInvoiceItem,
+    ]);
     toast.success("کالا با موفقیت افزوده شد.");
     setIsOpenAddInvoiceItem(false);
   }, []);
@@ -153,7 +202,7 @@ function AddPurchaseInvoice() {
               invoiceItem={selectedInvoiceItem}
               invoiceItemFile={selectedInvoiceItemFile}
               onClose={handleCloseModal}
-              refreshInvoiceItems={refreshInvoiceItems}
+              // refreshInvoiceItems={refreshInvoiceItems}
               onAddNewInvoiceItem={handleAddNewInvoiceItem} // انتقال تابع افزودن جدید
               onAddItem={handleAddItem}
             />
@@ -172,74 +221,72 @@ function AddPurchaseInvoice() {
             افزودن کالا
           </button>
         </div>
-  {/* /////////////////////////////////////////// */}
-           {/* انتخاب مشتری */}
-           <div className="flex items-center gap-4 px-2">
+        {/* /////////////////////////////////////////// */}
+        {/* انتخاب مشتری */}
+        <div className="flex items-center gap-4 px-2">
+          <div className="flex items-center">
+            <label htmlFor="customer">مشتری:</label>
+            <select
+              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
+                errors.description ? "border-red-400" : "border-gray-300"
+              } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              id="customer"
+              {...register("customer", { required: "مشتری الزامی است" })}
+              value={selectedCustomer}
+              onChange={(e) => setSelectedCustomer(e.target.value)}
+            >
+              <option value="">انتخاب مشتری</option>
+              {contactsOptions.map((contact) => (
+                <option key={contact._id} value={contact._id}>
+                  {contact.name}
+                </option>
+              ))}
+            </select>
+            {errors.customer && <span>{errors.customer.message}</span>}
+          </div>
 
-           <div className="flex items-center">
-          <label htmlFor="customer">مشتری:</label>
-          <select
-           className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
-            errors.description ? "border-red-400" : "border-gray-300"
-          } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-            id="customer"
-            {...register('customer', { required: 'مشتری الزامی است' })}
-            value={selectedCustomer}
-            onChange={(e) => setSelectedCustomer(e.target.value)}
-          >
-            <option value="">انتخاب مشتری</option>
-            {contactsOptions.map((contact) => (
-              <option key={contact._id} value={contact._id}>
-                {contact.name}
-              </option>
-            ))}
-          </select>
-          {errors.customer && <span>{errors.customer.message}</span>}
+          {/* انتخاب ارز */}
+          <div className="flex items-center">
+            <label htmlFor="currency">ارز:</label>
+            <select
+              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
+                errors.description ? "border-red-400" : "border-gray-300"
+              } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              id="currency"
+              {...register("currency", { required: "ارز الزامی است" })}
+              value={selectedCurrency}
+              onChange={(e) => setSelectedCurrency(e.target.value)}
+            >
+              <option value="">انتخاب ارز</option>
+              {currencies.map((currency) => (
+                <option key={currency._id} value={currency._id}>
+                  {currency.title}
+                </option>
+              ))}
+            </select>
+            {errors.currency && <span>{errors.currency.message}</span>}
+          </div>
         </div>
 
-        {/* انتخاب ارز */}
-        <div className="flex items-center">
-          <label htmlFor="currency">ارز:</label>
-          <select
-                        className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
-                          errors.description ? "border-red-400" : "border-gray-300"
-                        } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-          
-            id="currency"
-            {...register('currency', { required: 'ارز الزامی است' })}
-            value={selectedCurrency}
-            onChange={(e) => setSelectedCurrency(e.target.value)}
-          >
-            <option value="">انتخاب ارز</option>
-            {currencies.map((currency) => (
-              <option key={currency._id} value={currency._id}>
-                {currency.title}
-              </option>
-            ))}
-          </select>
-          {errors.currency && <span>{errors.currency.message}</span>}
-        </div>
-           </div>
+        {/* //////////////////////////////// */}
 
-            {/* //////////////////////////////// */}
-     
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
           {invoiceItems.map((invoiceItem) => (
             <InvoiceItemCard
-              className="p-2 md:p-4"
               key={invoiceItem._id}
               invoiceItem={invoiceItem}
               editFunction={() => handleEditClick(invoiceItem)}
-              onDelete={() => handleDeleteInvoiceItem(invoiceItem._id)} // پاس دادن تابع حذف
+              onDelete={() => handleDeleteInvoiceItem(invoiceItem._id)}
+              onUpdate={handleUpdateInvoiceItem} // پاس دادن تابع به‌روزرسانی
             />
           ))}
         </div>
-         {/* فوتر */}
-         <div className="footer">
-                    <div>تعداد کل اقلام: {totalItems}</div>
-                    <div>جمع کل فاکتور: {totalPrice.toLocaleString()} تومان</div>
-                    <div>تعداد ردیف‌ها: {totalRows}</div>
-                </div>
+        {/* فوتر */}
+        <div className="footer">
+          <div>تعداد کل اقلام: {totalItems}</div>
+          <div>جمع کل فاکتور: {totalPrice.toLocaleString()} تومان</div>
+          <div>تعداد ردیف‌ها: {totalRows}</div>
+        </div>
       </div>
       <Toaster />
     </FormTemplate>
