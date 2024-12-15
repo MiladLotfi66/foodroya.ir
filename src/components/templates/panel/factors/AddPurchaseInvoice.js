@@ -25,6 +25,9 @@ function AddPurchaseInvoice() {
   const [selectedCurrency, setSelectedCurrency] = useState('');
   const { register, handleSubmit, formState: { errors } } = useForm();
 
+  const totalItems = invoiceItems.length;
+  const totalPrice = invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+  const totalRows = invoiceItems.length;
 
   useEffect(() => {
     // واکشی حساب‌ها
@@ -231,6 +234,12 @@ function AddPurchaseInvoice() {
             />
           ))}
         </div>
+         {/* فوتر */}
+         <div className="footer">
+                    <div>تعداد کل اقلام: {totalItems}</div>
+                    <div>جمع کل فاکتور: {totalPrice.toLocaleString()} تومان</div>
+                    <div>تعداد ردیف‌ها: {totalRows}</div>
+                </div>
       </div>
       <Toaster />
     </FormTemplate>

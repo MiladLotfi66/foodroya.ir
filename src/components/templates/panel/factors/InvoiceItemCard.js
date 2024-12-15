@@ -8,6 +8,7 @@ function InvoiceItemCard({ invoiceItem: initialInvoiceItem, editFunction, onDele
   const [invoiceItem, setInvoiceItem] = useState(initialInvoiceItem); // مدیریت وضعیت کالا
   const [errors, setErrors] = useState({}); // مدیریت خطاهای ورودی
 
+  
   useEffect(() => {
     // هر بار که props کالا تغییر می‌کند، state محلی به‌روزرسانی می‌شود
     setInvoiceItem(initialInvoiceItem);
