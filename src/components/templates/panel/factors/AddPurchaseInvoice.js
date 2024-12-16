@@ -1,63 +1,45 @@
-// app/AddPurchaseInvoice.jsx
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import InvoiceItemCard from "./InvoiceItemCard";
 import AddInvoiceItem from "./AddInvoiceItem";
 import { useParams } from "next/navigation";
-import {
-  DeleteInvoiceItems,
-  GetAllInvoiceItems,
-} from "./invoiceItemsServerActions"; // حذف سایر اکشن‌ها که دیگر نیاز نیستند
+import { DeleteInvoiceItems, GetAllInvoiceItems } from "./invoiceItemsServerActions";
 import { Toaster, toast } from "react-hot-toast";
-import Select, { components } from "react-select";
-import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { GetAllContacts } from "../Contact/contactsServerActions";
 import { GetAllCurrencies } from "../Currency/currenciesServerActions";
+import { v4 as uuidv4 } from 'uuid';
 
 function AddPurchaseInvoice() {
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [isOpenAddInvoiceItem, setIsOpenAddInvoiceItem] = useState(false);
   const [selectedInvoiceItem, setSelectedInvoiceItem] = useState(null);
-  const [selectedInvoiceItemFile, setSelectedInvoiceItemFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
   const { ShopId } = params;
   const [contactsOptions, setContactsOptions] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState("");
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-  const [totalItems, setTotalItems] = useState(0); // اضافه کردن state برای تعداد کل اقلام
+  const { register, formState: { errors } } = useForm();
 
-  const totalPrice = invoiceItems.reduce(
-    (acc, item) => acc + item.totalPrice,
-    0
-  );
+  const totalItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
+  const totalPrice = invoiceItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
   const totalRows = invoiceItems.length;
 
   useEffect(() => {
-    // واکشی حساب‌ها
     const fetchContacts = async () => {
       try {
         const response = await GetAllContacts(ShopId);
-        console.log("response", response);
-
         setContactsOptions(response.contacts);
       } catch (error) {
         console.error("خطا در واکشی حساب‌ها:", error);
       }
     };
 
-    // واکشی ارزها
     const fetchCurrencies = async () => {
       try {
         const response = await GetAllCurrencies(ShopId);
-        console.log("response", response);
-
         setCurrencies(response.currencies);
       } catch (error) {
         console.error("خطا در واکشی ارزها:", error);
@@ -66,76 +48,36 @@ function AddPurchaseInvoice() {
 
     fetchContacts();
     fetchCurrencies();
+  }, [ShopId]);
+
+  const handleAddNewInvoiceItem = useCallback((newInvoiceItem) => {
+    const itemWithUniqueKey = {
+      ...newInvoiceItem,
+      uniqueKey: uuidv4(),
+      totalPrice: (parseInt(newInvoiceItem.quantity, 10) || 0) * (parseFloat(newInvoiceItem.unitPrice) || 0), // اطمینان از تبدیل به عدد
+    };
+    setInvoiceItems((prevInvoiceItems) => [...prevInvoiceItems, itemWithUniqueKey]);
+    toast.success("کالا با موفقیت افزوده شد.");
+    setIsOpenAddInvoiceItem(false);
   }, []);
 
-  const handleUpdateInvoiceItem = useCallback(
-    (updatedItem) => {
-      setInvoiceItems((prevItems) =>
-        prevItems.map((item) =>
-          item._id === updatedItem._id
-            ? {
-                ...item,
-                ...updatedItem,
-                totalPrice: updatedItem.quantity * updatedItem.unitPrice,
-              }
-            : item
-        )
-      );
-
-      // محاسبه تعداد کل اقلام
-      const newTotalItems = invoiceItems.reduce(
-        (acc, item) => acc + item.quantity,
-        0
-      );
-      setTotalItems(newTotalItems); // به‌روزرسانی تعداد کل اقلام
-    },
-    [invoiceItems]
-  );
-
-  // استفاده از useEffect برای محاسبه تعداد کل اقلام هنگام بارگذاری
-  useEffect(() => {
-    const newTotalItems = invoiceItems.reduce(
-      (acc, item) => acc + item.quantity,
-      0
+  const handleUpdateInvoiceItem = useCallback((updatedItem) => {
+    const updatedItemWithTotalPrice = {
+      ...updatedItem,
+      totalPrice: (parseInt(updatedItem.quantity, 10) || 0) * (parseFloat(updatedItem.unitPrice) || 0), // اطمینان از محاسبه مجدد
+    };
+    setInvoiceItems((prevInvoiceItems) =>
+      prevInvoiceItems.map(item => item.uniqueKey === updatedItemWithTotalPrice.uniqueKey ? updatedItemWithTotalPrice : item)
     );
-    setTotalItems(newTotalItems);
-  }, [invoiceItems]);
-
-  // بهینه‌سازی refreshInvoiceItems با استفاده از useCallback
-  // const refreshInvoiceItems = useCallback(async () => {
-  //   try {
-  //     if (!ShopId) {
-  //       console.error("فروشگاهی با این نام یافت نشد.");
-  //       return;
-  //     }
-  //     const response = await GetAllInvoiceItems(ShopId);
-  //     setInvoiceItems(response.invoiceItems);
-  //   } catch (error) {
-  //     console.error("Error fetching invoiceItems:", error);
-  //     toast.error("خطا در دریافت اقلام.");
-  //   }
-  // }, [ShopId]);
-
-  // useEffect(() => {
-  //   refreshInvoiceItems();
-  // }, [refreshInvoiceItems]);
-
-  const handleCustomerChange = (event) => {
-    setSelectedCustomer(event.target.value);
-  };
-
-  const handleCurrencyChange = (event) => {
-    setSelectedCurrency(event.target.value);
-  };
+    toast.success("کالا با موفقیت به‌روزرسانی شد.");
+  }, []);
 
   const handleDeleteInvoiceItem = useCallback(async (invoiceItemId) => {
     try {
       const response = await DeleteInvoiceItems(invoiceItemId);
       if (response.success) {
         setInvoiceItems((prevInvoiceItems) =>
-          prevInvoiceItems.filter(
-            (invoiceItem) => invoiceItem._id !== invoiceItemId
-          )
+          prevInvoiceItems.filter((item) => item._id !== invoiceItemId)
         );
         toast.success("کالا با موفقیت از لیست حذف شد.");
       } else {
@@ -147,44 +89,19 @@ function AddPurchaseInvoice() {
     }
   }, []);
 
-  const handleOverlayClick = useCallback((e) => {
-    if (e.target === e.currentTarget) {
-      setIsOpenAddInvoiceItem(false);
-      setSelectedInvoiceItem(null);
-      setSelectedInvoiceItemFile(null);
-    }
-  }, []);
-
   const handleEditClick = useCallback((invoiceItem) => {
     setSelectedInvoiceItem(invoiceItem);
-    setSelectedInvoiceItemFile(null);
     setIsOpenAddInvoiceItem(true);
   }, []);
 
   const handleAddInvoiceItemClick = useCallback(() => {
     setIsOpenAddInvoiceItem(true);
     setSelectedInvoiceItem(null);
-    setSelectedInvoiceItemFile(null);
   }, []);
-
-  const handleAddItem = (item) => {
-    setInvoiceItems((prevItems) => [...prevItems, item]);
-  };
 
   const handleCloseModal = useCallback(() => {
     setIsOpenAddInvoiceItem(false);
     setSelectedInvoiceItem(null);
-    setSelectedInvoiceItemFile(null);
-  }, []);
-
-  // تابع برای افزودن قلم جدید به لیست (به‌روز شده)
-  const handleAddNewInvoiceItem = useCallback((newInvoiceItem) => {
-    setInvoiceItems((prevInvoiceItems) => [
-      ...prevInvoiceItems,
-      newInvoiceItem,
-    ]);
-    toast.success("کالا با موفقیت افزوده شد.");
-    setIsOpenAddInvoiceItem(false);
   }, []);
 
   return (
@@ -192,7 +109,7 @@ function AddPurchaseInvoice() {
       {isOpenAddInvoiceItem && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-          onClick={handleOverlayClick}
+          onClick={handleCloseModal}
         >
           <div
             className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
@@ -200,11 +117,9 @@ function AddPurchaseInvoice() {
           >
             <AddInvoiceItem
               invoiceItem={selectedInvoiceItem}
-              invoiceItemFile={selectedInvoiceItemFile}
               onClose={handleCloseModal}
-              // refreshInvoiceItems={refreshInvoiceItems}
-              onAddNewInvoiceItem={handleAddNewInvoiceItem} // انتقال تابع افزودن جدید
-              onAddItem={handleAddItem}
+              onAddNewInvoiceItem={handleAddNewInvoiceItem}
+              onUpdateInvoiceItem={handleUpdateInvoiceItem}
             />
           </div>
         </div>
@@ -221,15 +136,12 @@ function AddPurchaseInvoice() {
             افزودن کالا
           </button>
         </div>
-        {/* /////////////////////////////////////////// */}
-        {/* انتخاب مشتری */}
+
         <div className="flex items-center gap-4 px-2">
           <div className="flex items-center">
             <label htmlFor="customer">مشتری:</label>
             <select
-              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
-                errors.description ? "border-red-400" : "border-gray-300"
-              } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${errors.customer ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               id="customer"
               {...register("customer", { required: "مشتری الزامی است" })}
               value={selectedCustomer}
@@ -245,13 +157,10 @@ function AddPurchaseInvoice() {
             {errors.customer && <span>{errors.customer.message}</span>}
           </div>
 
-          {/* انتخاب ارز */}
           <div className="flex items-center">
             <label htmlFor="currency">ارز:</label>
             <select
-              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
-                errors.description ? "border-red-400" : "border-gray-300"
-              } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${errors.currency ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               id="currency"
               {...register("currency", { required: "ارز الزامی است" })}
               value={selectedCurrency}
@@ -268,33 +177,30 @@ function AddPurchaseInvoice() {
           </div>
         </div>
 
-        {/* //////////////////////////////// */}
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
           {invoiceItems.map((invoiceItem) => (
             <InvoiceItemCard
-              key={invoiceItem._id}
+              key={invoiceItem.uniqueKey}
               invoiceItem={invoiceItem}
               editFunction={() => handleEditClick(invoiceItem)}
               onDelete={() => handleDeleteInvoiceItem(invoiceItem._id)}
-              onUpdate={handleUpdateInvoiceItem} // پاس دادن تابع به‌روزرسانی
+              onUpdate={handleUpdateInvoiceItem}
             />
           ))}
         </div>
-        {/* فوتر */}
-        <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-4 mt-6">
-  <div className="flex flex-col md:flex-row justify-between items-center">
-    <div className="text-gray-800 dark:text-gray-200">
-      <div>تعداد کل اقلام: <span className="font-bold">{totalItems}</span></div>
-      <div>جمع کل فاکتور: <span className="font-bold">{totalPrice.toLocaleString()} تومان</span></div>
-      <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
-    </div>
-    <button className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200">
-      ثبت فاکتور
-    </button>
-  </div>
-</div>
 
+        <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-4 mt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="text-gray-800 dark:text-gray-200">
+              <div>تعداد کل اقلام: <span className="font-bold">{totalItems}</span></div>
+              <div>جمع کل فاکتور: <span className="font-bold">{totalPrice.toLocaleString()} تومان</span></div>
+              <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
+            </div>
+            <button className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200">
+              ثبت فاکتور
+            </button>
+          </div>
+        </div>
       </div>
       <Toaster />
     </FormTemplate>

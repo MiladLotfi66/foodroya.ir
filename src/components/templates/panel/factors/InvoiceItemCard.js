@@ -6,12 +6,10 @@ import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 
 function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
-  const { _id, title, image, quantity, unitPrice } = invoiceItem;
+  const { _id, title, image, quantity = 1, unitPrice = 0 } = invoiceItem; // مقدار پیش‌فرض برای quantity و unitPrice
 
   // محاسبه totalPrice در فرزند (در صورتی که والد آن را ارسال نکرده باشد)
-  const totalPrice = invoiceItem.totalPrice !== undefined 
-    ? invoiceItem.totalPrice 
-    : (quantity * unitPrice);
+  const totalPrice = (quantity || 0) * (unitPrice || 0); // اطمینان از اینکه مقدار 0 باشد
 
   // تابع برای مدیریت تغییرات ورودی‌ها
   const handleChange = (e, field) => {
@@ -37,7 +35,8 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
 
     const updatedItem = {
       ...invoiceItem,
-      [field]: updatedValue,
+      quantity: newQuantity,
+      unitPrice: newUnitPrice,
       totalPrice: newQuantity * newUnitPrice,
     };
 
