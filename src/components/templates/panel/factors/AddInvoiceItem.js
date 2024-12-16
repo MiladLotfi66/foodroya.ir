@@ -158,9 +158,6 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
     onClose(); // بستن مدال
   };
 
- 
-
-
 
   return (
     <div>

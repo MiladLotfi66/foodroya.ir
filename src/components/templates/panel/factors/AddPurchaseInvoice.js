@@ -4,12 +4,13 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import InvoiceItemCard from "./InvoiceItemCard";
 import AddInvoiceItem from "./AddInvoiceItem";
 import { useParams } from "next/navigation";
-import { DeleteInvoiceItems, GetAllInvoiceItems } from "./invoiceItemsServerActions";
+import { DeleteInvoiceItems } from "./invoiceItemsServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { GetAllContacts } from "../Contact/contactsServerActions";
 import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import { v4 as uuidv4 } from 'uuid';
+import SubmitInvoiceModal from "./SubmitInvoiceModal";
 
 function AddPurchaseInvoice() {
   const [invoiceItems, setInvoiceItems] = useState([]);
@@ -21,6 +22,8 @@ function AddPurchaseInvoice() {
   const [currencies, setCurrencies] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
+
   const { register, formState: { errors } } = useForm();
 
   const totalItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
@@ -69,8 +72,37 @@ function AddPurchaseInvoice() {
     setInvoiceItems((prevInvoiceItems) =>
       prevInvoiceItems.map(item => item.uniqueKey === updatedItemWithTotalPrice.uniqueKey ? updatedItemWithTotalPrice : item)
     );
-    toast.success("کالا با موفقیت به‌روزرسانی شد.");
   }, []);
+
+  const handleOpenSubmitModal = () => {
+    // بررسی صحت داده‌ها قبل از باز کردن مودال (اختیاری)
+    if (!selectedCustomer) {
+      toast.error("لطفاً مشتری را انتخاب کنید.");
+      return;
+    }
+    if (!selectedCurrency) {
+      toast.error("لطفاً ارز را انتخاب کنید.");
+      return;
+    }
+    if (invoiceItems.length === 0) {
+      toast.error("لطفاً حداقل یک آیتم به فاکتور اضافه کنید.");
+      return;
+    }
+    setIsOpenSubmitModal(true);
+  };
+  // تابع بستن مودال ثبت فاکتور
+  const handleCloseSubmitModal = () => {
+    setIsOpenSubmitModal(false);
+  };
+  const invoiceData = {
+    customer: contactsOptions.find(c => c._id === selectedCustomer) || "",
+    currency: currencies.find(c => c._id === selectedCurrency)?.title || "",
+    totalItems,
+    totalPrice,
+    totalRows,
+    ShopId
+  };
+
 
   const handleDeleteInvoiceItem = useCallback(async (invoiceItemId) => {
     try {
@@ -124,6 +156,13 @@ function AddPurchaseInvoice() {
           </div>
         </div>
       )}
+      {/* مودال ثبت فاکتور */}
+      <SubmitInvoiceModal
+        isOpen={isOpenSubmitModal}
+        onClose={handleCloseSubmitModal}
+        invoiceData={invoiceData}
+        invoiceItems={invoiceItems}
+      />
 
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
@@ -196,7 +235,10 @@ function AddPurchaseInvoice() {
               <div>جمع کل فاکتور: <span className="font-bold">{totalPrice.toLocaleString()} تومان</span></div>
               <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
             </div>
-            <button className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200">
+            <button
+            className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200"
+            onClick={handleOpenSubmitModal} // افزودن تابع باز کردن مودال
+>
               ثبت فاکتور
             </button>
           </div>

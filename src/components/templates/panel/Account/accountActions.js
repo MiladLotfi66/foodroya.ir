@@ -558,6 +558,7 @@ export async function GetAccountsByStartingCharacter(storeId, startingChar = "",
 
 
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
+console.log("storeId, parentId = null, options = {}",storeId, parentId , options );
 
   await connectDB();
 
