@@ -1,12 +1,10 @@
-// app/InvoiceItemCard.jsx
-
 "use client";
 import React from "react";
 import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 
 function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
-  const { _id, title, image, quantity = 1, unitPrice = 0 } = invoiceItem; // مقدار پیش‌فرض برای quantity و unitPrice
+  const { _id, title, image, quantity = 1, unitPrice = 0, description = "" } = invoiceItem; // افزودن مقدار پیش‌فرض برای description
 
   // محاسبه totalPrice در فرزند (در صورتی که والد آن را ارسال نکرده باشد)
   const totalPrice = (quantity || 0) * (unitPrice || 0); // اطمینان از اینکه مقدار 0 باشد
@@ -28,15 +26,19 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
         toast.error("قیمت واحد باید غیرمنفی باشد.");
         return;
       }
+    } else if (field === "description") {
+      updatedValue = value; // برای توضیحات، نیازی به تبدیل نیست
     }
 
     const newQuantity = field === "quantity" ? updatedValue : quantity;
     const newUnitPrice = field === "unitPrice" ? updatedValue : unitPrice;
+    const newDescription = field === "description" ? updatedValue : description;
 
     const updatedItem = {
       ...invoiceItem,
       quantity: newQuantity,
       unitPrice: newUnitPrice,
+      description: newDescription,
       totalPrice: newQuantity * newUnitPrice,
     };
 
@@ -63,18 +65,11 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
       <div className="hidden">
         <DeleteSvg />
       </div>
-      <div className="flex gap-2 justify-between items-start">
+      <div>
+      <div className="flex gap-2 justify-between items-center">
         {/* بخش تصویر و دکمه حذف */}
         <div className="flex-shrink-0">
-          <svg
-            width="24"
-            height="24"
-            className="cursor-pointer text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition duration-300 ease-in-out"
-            aria-label="delete"
-            onClick={deleteFunc}
-          >
-            <use href="#DeleteSvg"></use>
-          </svg>
+        
           <img
             src={image || "https://via.placeholder.com/150"}
             alt={title}
@@ -125,14 +120,42 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
             />
           </div>
 
+        </div>
+        
+      </div>
+  {/* فیلد توضیحات */}
+  <div className="mt-2">
+            <label htmlFor="description" className="block text-sm text-gray-700 dark:text-gray-300">
+              توضیحات:
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={description}
+              onChange={(e) => handleChange(e, "description")}
+              className="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white"
+              placeholder="توضیحات کالا را وارد کنید"
+              rows="3"
+            />
+          </div>
+
           {/* نمایش جمع کل */}
-          <div className="mt-3">
+          <div className="mt-3 flex justify-between">
             <p className="text-sm sm:text-base">
               جمع کل: {totalPrice.toLocaleString()} تومان
             </p>
+            <svg
+            width="24"
+            height="24"
+            className="cursor-pointer text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition duration-300 ease-in-out"
+            aria-label="delete"
+            onClick={deleteFunc}
+          >
+            <use href="#DeleteSvg"></use>
+          </svg>
           </div>
-        </div>
       </div>
+
       <Toaster />
     </div>
   );

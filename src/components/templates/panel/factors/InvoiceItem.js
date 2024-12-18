@@ -26,6 +26,11 @@ const InvoiceItemSchema = new Schema(
       get: (v) => parseFloat(v.toString()),
       set: (v) => mongoose.Types.Decimal128.fromString(v.toString()),
     },
+    currency: {
+      type: Schema.Types.ObjectId,
+      ref: "Currency",
+      required: true,
+    },
     invoice: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Invoice',
@@ -35,7 +40,6 @@ const InvoiceItemSchema = new Schema(
 
     description: {
         type: String,
-        required: true,
         trim: true,
         minlength: 0,
         maxlength: 255,

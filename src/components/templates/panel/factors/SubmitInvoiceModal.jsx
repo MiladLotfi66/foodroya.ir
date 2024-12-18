@@ -99,8 +99,6 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
     // محاسبه مجموع مبالغ تخصیص‌یافته و مقایسه با مبلغ کل فاکتور
     const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount), 0);
     const invoiceTotal = invoiceData.totalPrice || 0;
-console.log(totalAllocated);
-console.log(invoiceTotal);
 
     if (totalAllocated !== invoiceTotal) {
       alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated}) با مبلغ کل فاکتور (${invoiceTotal}) مطابقت ندارد.`);
@@ -110,7 +108,11 @@ console.log(invoiceTotal);
     const invoiceDataToSubmit = {
       accountAllocations: allocatedAccounts, // تغییر ساختار داده برای ارسال چند حساب
       storeId: ShopId,
+      currency:invoiceData.currency._id,
       customerId: currentInvoiceCustomerId,
+      type:invoiceData.type,
+      totalAmount:invoiceTotal,
+      // items:invoiceItems,
       invoiceItems, // شامل آیتم‌های فاکتور
       // سایر اطلاعات مورد نیاز
     };

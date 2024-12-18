@@ -49,7 +49,7 @@ function AddPurchaseInvoice() {
         console.error("خطا در واکشی ارزها:", error);
       }
     };
-
+    
     fetchContacts();
     fetchCurrencies();
   }, [ShopId]);
@@ -101,15 +101,18 @@ function AddPurchaseInvoice() {
     // این تابع می‌تواند برای پردازش نهایی داده‌های فرم مورد استفاده قرار گیرد
     console.log(data);
   };
+  const description = watch('description');
 
   // ایجاد invoiceData شامل توضیحات
   const invoiceData = {
     customer: contactsOptions.find(c => c._id === selectedCustomer) || "",
-    currency: currencies.find(c => c._id === selectedCurrency)?.title || "",
+    currency: currencies.find(c => c._id === selectedCurrency) || "",
     totalItems,
     totalPrice,
     totalRows,
-    description: "", // مقدار اولیه توضیحات
+    
+    type: "Purchase",
+    description, // مقدار اولیه توضیحات
     ShopId
   };
 
@@ -139,10 +142,7 @@ function AddPurchaseInvoice() {
     }
   }, []);
 
-  const handleEditClick = useCallback((invoiceItem) => {
-    setSelectedInvoiceItem(invoiceItem);
-    setIsOpenAddInvoiceItem(true);
-  }, []);
+
 
   const handleAddInvoiceItemClick = useCallback(() => {
     setIsOpenAddInvoiceItem(true);
