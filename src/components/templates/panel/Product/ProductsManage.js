@@ -88,7 +88,6 @@ function ProductManage() {
             : {}
         };
         const response = await GetAllAccountsByOptions(ShopId, parentAccountId, options);
-        
         if (response.status === 200) {
           setAccounts(response.Accounts);
           setTotalPages(response.totalPages);

@@ -557,8 +557,110 @@ export async function GetAccountsByStartingCharacter(storeId, startingChar = "",
 
 
 
+// export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
+// console.log("storeId, parentId = null, options = {}",storeId, parentId , options );
+
+//   await connectDB();
+
+//   if (!storeId) {
+//     throw new Error("فروشگاه مشخص نشده است.");
+//   }
+
+//   const {
+//     fields = null,
+//     populateFields = [],
+//     limit = 0,
+//     page = 1,    // شماره صفحه (پیش‌فرض ۱)
+//     // skip = 0,
+//     sort = { accountCode: 1 },
+//     additionalFilters = {}
+//   } = options;
+
+//   // ساختار فیلتر اولیه با storeId
+//   const filter = { store: storeId };
+
+//   // اعمال پدر حساب (parentAccount) به صورت جداگانه
+//   if (parentId !== null) {
+//     filter.parentAccount = parentId;
+//   } else {
+//     filter.parentAccount = null; // حساب‌های ریشه
+//   }
+
+//   // اعمال فیلترهای اضافی
+//   if (additionalFilters && typeof additionalFilters === 'object') {
+//     Object.assign(filter, additionalFilters);
+//   }
+//   // محاسبه تعداد کل آیتم‌ها مطابق فیلتر
+//   const total = await Account.countDocuments(filter);
+//   // محاسبه مجموع صفحات
+//   const totalPages = Math.ceil(total / limit);
+//   // محاسبه skip
+//   const skip = (page - 1) * limit;
+//   if (skip > 0) {
+//     // اعمال skip فقط اگر نیاز بود
+//   }
+
+//   // شروع ساخت کوئری
+//   let query = Account.find(filter);
+
+//   // انتخاب فیلدها اگر مشخص شده باشد
+//   if (fields && Array.isArray(fields) && fields.length > 0) {
+//     query = query.select(fields.join(' '));
+//   }
+
+//   // پاپیولیت کردن فیلدها اگر مشخص شده باشد
+//   if (populateFields && Array.isArray(populateFields) && populateFields.length > 0) {
+//     populateFields.forEach(field => {
+//       query = query.populate(field);
+//     });
+//   }
+
+//   // اعمال مرتب‌سازی
+//   if (sort && typeof sort === 'object') {
+//     query = query.sort(sort);
+//   }
+
+//   // اعمال صفحه‌بندی
+//   if (limit > 0) {
+//     query = query.limit(limit);
+//   }
+
+//   if (skip > 0) {
+//     query = query.skip(skip);
+//   }
+
+//   // اجرای کوئری با lean برای بهینه‌سازی
+//   const accounts = await query.lean();
+
+//   // تبدیل ObjectId و سایر فیلدهای مربوطه به رشته
+//   const plainAccounts = accounts?.map((account) => {
+//     return {
+//       ...account,
+//       _id: account._id?.toString() || null,
+//       accountCode: account.accountCode?.toString() || null,
+//       title: account.title?.toString() || null,
+//       store: account.store?.toString() || null,
+//       parentAccount: account.parentAccount?.toString() || null,
+//       accountType: account.accountType?.toString() || null,
+//       accountNature: account.accountNature?.toString() || null,
+//       accountStatus: account.accountStatus?.toString() || null,
+//       isSystem: account.isSystem, // حفظ نوع بولین
+//       createdAt: account.createdAt?.toISOString() || null,
+//       updatedBy: account.updatedBy?.toString() || null,
+//       updatedAt: account.updatedAt?.toISOString() || null,
+//       createdBy: account.createdBy?.toString() || null,
+//     };
+//   });
+
+//   return { 
+//     Accounts: plainAccounts, 
+//     total, 
+//     totalPages, 
+//     currentPage: page, 
+//     status: 200 
+//   };
+// }
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
-console.log("storeId, parentId = null, options = {}",storeId, parentId , options );
 
   await connectDB();
 
@@ -570,35 +672,34 @@ console.log("storeId, parentId = null, options = {}",storeId, parentId , options
     fields = null,
     populateFields = [],
     limit = 0,
-    page = 1,    // شماره صفحه (پیش‌فرض ۱)
-    // skip = 0,
+    page = 1,
     sort = { accountCode: 1 },
     additionalFilters = {}
   } = options;
 
   // ساختار فیلتر اولیه با storeId
-  const filter = { store: storeId };
+  let filter = { store: storeId };
 
-  // اعمال پدر حساب (parentAccount) به صورت جداگانه
-  if (parentId !== null) {
+  // اعمال فیلتر parentAccount تنها در صورتی که parentId ارائه شده باشد
+  if (parentId !== null && parentId !== undefined) {
     filter.parentAccount = parentId;
-  } else {
-    filter.parentAccount = null; // حساب‌های ریشه
   }
 
   // اعمال فیلترهای اضافی
   if (additionalFilters && typeof additionalFilters === 'object') {
-    Object.assign(filter, additionalFilters);
+    filter = { ...filter, ...additionalFilters };
   }
+
+  console.log("Final Filter: ", filter);
+
   // محاسبه تعداد کل آیتم‌ها مطابق فیلتر
   const total = await Account.countDocuments(filter);
+  console.log("Total Accounts Found: ", total);
+
   // محاسبه مجموع صفحات
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
   // محاسبه skip
-  const skip = (page - 1) * limit;
-  if (skip > 0) {
-    // اعمال skip فقط اگر نیاز بود
-  }
+  const skip = limit > 0 ? (page - 1) * limit : 0;
 
   // شروع ساخت کوئری
   let query = Account.find(filter);
@@ -629,8 +730,19 @@ console.log("storeId, parentId = null, options = {}",storeId, parentId , options
     query = query.skip(skip);
   }
 
+  console.log("Executing Query with:", {
+    fields,
+    populateFields,
+    limit,
+    page,
+    sort,
+    skip,
+  });
+
   // اجرای کوئری با lean برای بهینه‌سازی
   const accounts = await query.lean();
+
+  console.log("Accounts Retrieved: ", accounts.length);
 
   // تبدیل ObjectId و سایر فیلدهای مربوطه به رشته
   const plainAccounts = accounts?.map((account) => {
@@ -660,6 +772,7 @@ console.log("storeId, parentId = null, options = {}",storeId, parentId , options
     status: 200 
   };
 }
+
 
 
   export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {

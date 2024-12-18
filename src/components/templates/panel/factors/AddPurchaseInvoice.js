@@ -24,7 +24,8 @@ function AddPurchaseInvoice() {
   const [selectedCurrency, setSelectedCurrency] = useState("");
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
 
-  const { register, formState: { errors } } = useForm();
+  // استفاده از react-hook-form
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
 
   const totalItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
   const totalPrice = invoiceItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
@@ -94,15 +95,32 @@ function AddPurchaseInvoice() {
   const handleCloseSubmitModal = () => {
     setIsOpenSubmitModal(false);
   };
+
+  // دریافت داده‌های توضیحات از react-hook-form
+  const onSubmit = (data) => {
+    // این تابع می‌تواند برای پردازش نهایی داده‌های فرم مورد استفاده قرار گیرد
+    console.log(data);
+  };
+
+  // ایجاد invoiceData شامل توضیحات
   const invoiceData = {
     customer: contactsOptions.find(c => c._id === selectedCustomer) || "",
     currency: currencies.find(c => c._id === selectedCurrency)?.title || "",
     totalItems,
     totalPrice,
     totalRows,
+    description: "", // مقدار اولیه توضیحات
     ShopId
   };
 
+  // به‌روزرسانی invoiceData با توضیحات وارد شده
+  useEffect(() => {
+    // اگر توضیحات از react-hook-form مدیریت می‌شود
+    const subscription = watch((value) => {
+      invoiceData.description = value.description || "";
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const handleDeleteInvoiceItem = useCallback(async (invoiceItemId) => {
     try {
@@ -164,10 +182,11 @@ function AddPurchaseInvoice() {
         invoiceItems={invoiceItems}
       />
 
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
           <h1 className="text-3xl font-MorabbaBold">فاکتور خرید</h1>
           <button
+            type="button"
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add invoiceItem"
             onClick={handleAddInvoiceItemClick}
@@ -176,11 +195,12 @@ function AddPurchaseInvoice() {
           </button>
         </div>
 
-        <div className="flex items-center gap-4 px-2">
-          <div className="flex items-center">
-            <label htmlFor="customer">مشتری:</label>
+        <div className="flex  gap-4 px-2">
+          {/* فیلد مشتری */}
+          <div className="flex flex-col mb-4">
+            <label htmlFor="customer" className="mb-2">مشتری:</label>
             <select
-              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${errors.customer ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.customer ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               id="customer"
               {...register("customer", { required: "مشتری الزامی است" })}
               value={selectedCustomer}
@@ -193,13 +213,14 @@ function AddPurchaseInvoice() {
                 </option>
               ))}
             </select>
-            {errors.customer && <span>{errors.customer.message}</span>}
+            {errors.customer && <span className="text-red-500">{errors.customer.message}</span>}
           </div>
 
-          <div className="flex items-center">
-            <label htmlFor="currency">ارز:</label>
+          {/* فیلد ارز */}
+          <div className="flex flex-col mb-4">
+            <label htmlFor="currency" className="mb-2">ارز:</label>
             <select
-              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${errors.currency ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.currency ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               id="currency"
               {...register("currency", { required: "ارز الزامی است" })}
               value={selectedCurrency}
@@ -212,8 +233,10 @@ function AddPurchaseInvoice() {
                 </option>
               ))}
             </select>
-            {errors.currency && <span>{errors.currency.message}</span>}
+            {errors.currency && <span className="text-red-500">{errors.currency.message}</span>}
           </div>
+
+   
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
@@ -227,7 +250,19 @@ function AddPurchaseInvoice() {
             />
           ))}
         </div>
-
+{/* /////////////////////////////// */}
+       {/* فیلد توضیحات - **زندگی تغییرات** */}
+       <div className="flex flex-col md:items-center md:flex-row m-2 md:col-span-2">
+            <label htmlFor="description" className="mb-2">توضیحات:</label>
+            <textarea
+              className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.description ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              id="description"
+              {...register("description")}
+              placeholder="توضیحات فاکتور را وارد کنید..."
+            ></textarea>
+            {errors.description && <span className="text-red-500">{errors.description.message}</span>}
+          </div>
+{/* /////////////////////////////// */}
         <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-4 mt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-800 dark:text-gray-200">
@@ -236,14 +271,15 @@ function AddPurchaseInvoice() {
               <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
             </div>
             <button
-            className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200"
-            onClick={handleOpenSubmitModal} // افزودن تابع باز کردن مودال
->
+              type="button"
+              className="mt-4 md:mt-0 bg-teal-600 text-white rounded-lg px-4 py-2 hover:bg-teal-700 transition duration-200"
+              onClick={handleOpenSubmitModal} // افزودن تابع باز کردن مودال
+            >
               ثبت فاکتور
             </button>
           </div>
         </div>
-      </div>
+      </form>
       <Toaster />
     </FormTemplate>
   );

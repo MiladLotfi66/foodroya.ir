@@ -30,7 +30,6 @@ const accountSchema = new Schema(
       ref: "Account",
       default: null,
     },
-
     // نوع حساب: صندوق، حساب عادی، حساب بانکی، کالا، دسته بندی کالا، اشخاص حقیقی، اشخاص حقوقی
     accountType: {
       type: String,
@@ -49,7 +48,6 @@ const accountSchema = new Schema(
       required: true,
       maxlength: 255,
     },
-
     // ماهیت حساب
     accountNature: {
       type: String,
@@ -58,7 +56,6 @@ const accountSchema = new Schema(
       trim: true,
       maxlength: 55,
     },
-
     // وضعیت حساب: فعال یا غیر فعال
     accountStatus: {
       type: String,
@@ -66,21 +63,18 @@ const accountSchema = new Schema(
       default: "فعال",
       required: true,
     },
-
     // ایجاد کننده: ارجاع به مدل User
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
     // ویرایش کننده: ارجاع به مدل User
     updatedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
-
     // تاریخ ایجاد و ویرایش
     createdAt: {
       type: Date,
@@ -90,7 +84,6 @@ const accountSchema = new Schema(
       type: Date,
       default: Date.now,
     },
-
     // سیستمی: مشخص می‌کند که حساب جزو حساب‌های سیستمی است یا خیر
     isSystem: {
       type: Boolean,
