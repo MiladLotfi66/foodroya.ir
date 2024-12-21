@@ -9,10 +9,9 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
   
   // تعریف متغیرها با حروف اختصاری
   const internalVariables = [
-    { value: 'averageBuyPriceForeign', label: 'میانگین قیمت خرید ارزی', alias: 'a' },
-    { value: 'latestBuyPriceForeign', label: 'آخرین قیمت خرید ارزی', alias: 'b' },
-    { value: 'averageBuyPriceBaseCurrency', label: 'میانگین قیمت خرید به ارز پایه', alias: 'c' },
-    { value: 'latestBuyPriceBaseCurrency', label: 'آخرین قیمت خرید به ارز پایه', alias: 'd' }
+    { value: 'averageBuyPrice', label: 'میانگین قیمت خرید', alias: 'a' },
+    { value: 'latestBuyPrice', label: 'آخرین قیمت خرید', alias: 'b' },
+    { value: 'salePrice', label: 'قیمت فروش', alias: 'c' },
   ];
 
   const inputRef = useRef(null);

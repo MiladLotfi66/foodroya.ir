@@ -34,7 +34,7 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
     // آغاز ترنسکشن
     await session.withTransaction(async () => {
       // اعتبارسنجی اولیه داده‌ها
-      const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'currency', 'accountAllocations'];
+      const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
       for (const field of requiredFields) {
         if (!invoiceData[field]) {
           throw new Error(`لطفاً فیلد ${field} را پر کنید.`);
@@ -48,10 +48,10 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
       const invoice = new Invoice({
         description: invoiceData.description || '',
         type: invoiceData.type,
-        totalCurrency: invoiceData.totalAmount,
+        // totalCurrency: invoiceData.totalAmount,
         totalItems: totalItems,
         contact: invoiceData.customerId,
-        currency: invoiceData.currency,
+        // currency: invoiceData.currency,
         shop: invoiceData.storeId,
         createdBy: user.id, // فرض بر این است که createdBy در invoiceData موجود است
         updatedBy: user.id, // فرض بر این است که updatedBy در invoiceData موجود است
@@ -78,7 +78,7 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice,
           invoice: invoice._id,
-          currency: invoiceData.currency,
+          // currency: invoiceData.currency,
           description: item.description || '',
           Features: item.Features || [],
         });
@@ -110,7 +110,7 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
           account: allocation.accountId,
           debit: allocation.amount, // فرض بر این است که debit است
           credit: 0,
-          currency: invoice.currency,
+          // currency: invoice.currency,
           description: `تراکنش مربوط به فاکتور ${invoice._id}`,
           type: "invoice",
           shop: invoice.shop,

@@ -12,7 +12,7 @@ import Select, { components } from "react-select";
 import { GetAccountsByStartingCharacter } from "../Account/accountActions";
 import { XMarkIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { AddFinancialDocumentAction , EditFinancialDocumentAction} from "./FinancialDocumentsServerActions";
-import { GetAllCurrencies } from "../Currency/currenciesServerActions";
+// import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import { customSelectStyles } from "../Product/selectStyles";
 
 function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancialDocuments }) {
@@ -24,7 +24,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
   const [totalDebtors, setTotalDebtors] = useState(0);
   const [totalCreditors, setTotalCreditors] = useState(0);
   const [isBalanced, setIsBalanced] = useState(false);
-  const [currencies, setCurrencies] = useState([]);
+  // const [currencies, setCurrencies] = useState([]);
   const { theme } = useTheme();
 
   const {
@@ -114,7 +114,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
 
       reset({
         description: description || "",
-        currency: transactions[0]?.currency?._id || "", // فرض می‌کنیم همه تراکنش‌ها از یک ارز هستند
+        // currency: transactions[0]?.currency?._id || "", // فرض می‌کنیم همه تراکنش‌ها از یک ارز هستند
         debtors:
           debtorsTransactions.length > 0
             ? debtorsTransactions
@@ -128,32 +128,32 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
   }, [financialDocument, reset]);
 
   ///////////////////////////
-  useEffect(() => {
-    const fetchCurrencies = async () => {
-      setIsLoading(true); // شروع بارگذاری
-      try {
-        await getCurrencies(ShopId);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
-      } finally {
-        setIsLoading(false); // پایان بارگذاری
-      }
-    };
-    fetchCurrencies();
-  }, [ShopId]);
+  // useEffect(() => {
+  //   const fetchCurrencies = async () => {
+  //     setIsLoading(true); // شروع بارگذاری
+  //     try {
+  //       await getCurrencies(ShopId);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //       toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
+  //     } finally {
+  //       setIsLoading(false); // پایان بارگذاری
+  //     }
+  //   };
+  //   fetchCurrencies();
+  // }, [ShopId]);
   ////////////////////////////////////////
-  const getCurrencies = async (ShopId) => {
-    try {
-      const result = await GetAllCurrencies(ShopId);
-      if (result && result.currencies) {
-        setCurrencies(result.currencies);
-      }
-    } catch (error) {
-      console.error("Error fetching currencies:", error);
-      toast.error("مشکلی در دریافت ارزها وجود دارد.");
-    }
-  };
+  // const getCurrencies = async (ShopId) => {
+  //   try {
+  //     const result = await GetAllCurrencies(ShopId);
+  //     if (result && result.currencies) {
+  //       setCurrencies(result.currencies);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching currencies:", error);
+  //     toast.error("مشکلی در دریافت ارزها وجود دارد.");
+  //   }
+  // };
   // واکشی حساب‌ها
   const fetchAccounts = useCallback(async () => {
     try {
@@ -292,25 +292,25 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
             onSubmit={handleSubmit(formSubmitting)}
             className="max-w-lg mx-auto rounded"
           >
-            <select
+            {/* <select
               className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
                 errors.description ? "border-red-400" : "border-gray-300"
               } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               {...register("currency", { required: "انتخاب ارز الزامی است" })}
-            >
+            > */}
               {/* گزینه‌ی پیش‌فرض */}
-              <option value="">انتخاب ارز</option>
+              {/* <option value="">انتخاب ارز</option> */}
 
               {/* گزینه‌های دینامیک */}
-              {currencies.map((currency) => (
-                <option key={currency._id} value={currency._id}>
-                  {currency.title} ({currency.shortName})
-                </option>
-              ))}
-            </select>
-            {errors.currency && (
+              {/* {currencies.map((currency) => (
+                // <option key={currency._id} value={currency._id}>
+                //   {currency.title} ({currency.shortName})
+                // </option>
+              ))} */}
+            {/* </select> */}
+            {/* {errors.currency && (
               <span className="error">{errors.currency.message}</span>
-            )}
+            )} */}
 
             {/* بخش بدهکار */}
             <div

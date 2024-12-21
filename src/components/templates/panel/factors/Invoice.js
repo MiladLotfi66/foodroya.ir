@@ -15,12 +15,12 @@ const InvoiceSchema = new Schema(
       enum: ["Purchase", "Sale", "PurchaseReturns", "SalesReturns", "Losses"],
       required: true,
     },
-    totalCurrency: {
-      type: mongoose.Schema.Types.Decimal128,
-      required: true,
-      get: (v) => parseFloat(v.toString()),
-      set: (v) => mongoose.Types.Decimal128.fromString(v.toString()),
-    },
+    // totalCurrency: {
+    //   type: mongoose.Schema.Types.Decimal128,
+    //   required: true,
+    //   get: (v) => parseFloat(v.toString()),
+    //   set: (v) => mongoose.Types.Decimal128.fromString(v.toString()),
+    // },
     totalItems: {
       type: Number,
       required: true,
@@ -31,11 +31,11 @@ const InvoiceSchema = new Schema(
       ref: 'Contact',
       required: true,
     },
-    currency: {
-      type: Schema.Types.ObjectId,
-      ref: "Currency",
-      required: true,
-    },
+    // currency: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Currency",
+    //   required: true,
+    // },
     InvoiceItems: [
       {
         type: mongoose.Schema.Types.ObjectId,

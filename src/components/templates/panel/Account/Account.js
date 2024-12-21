@@ -99,16 +99,7 @@ const accountSchema = new Schema(
         );
       },
     },
-    currency: {
-      type: Schema.Types.ObjectId,
-      ref: "Currency",
-      required: function () {
-        return (
-          this.accountType === "اشخاص حقیقی" ||
-          this.accountType === "اشخاص حقوقی"
-        );
-      },
-    },
+ 
     creditLimit: {
       type: Number, // یا نوع مناسب دیگر
       required: function () {
@@ -118,6 +109,14 @@ const accountSchema = new Schema(
         );
       },
     },
+
+    balance: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+
+
     posConected: {
       type: Boolean, // یا نوع مناسب دیگر
       required: function () {

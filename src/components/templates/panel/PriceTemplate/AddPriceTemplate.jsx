@@ -186,8 +186,9 @@ function AddPriceTemplate({
     );
   };
 
+  
   const handleFormSubmit = async (formData) => {
-    
+
     setIsSubmit(true);
     try {
       const result = priceTemplate?._id
@@ -215,6 +216,8 @@ function AddPriceTemplate({
   };
 
   const formSubmitting = async (formData) => {
+    console.log(formData);
+    
     await handleFormSubmit(formData);
   };
 

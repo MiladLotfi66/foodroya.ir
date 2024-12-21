@@ -8,7 +8,7 @@ import { DeleteInvoiceItems } from "./invoiceItemsServerActions";
 import { Toaster, toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { GetAllContacts } from "../Contact/contactsServerActions";
-import { GetAllCurrencies } from "../Currency/currenciesServerActions";
+// import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import { v4 as uuidv4 } from 'uuid';
 import SubmitInvoiceModal from "./SubmitInvoiceModal";
 
@@ -19,9 +19,9 @@ function AddPurchaseInvoice() {
   const params = useParams();
   const { ShopId } = params;
   const [contactsOptions, setContactsOptions] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
+  // const [currencies, setCurrencies] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState("");
-  const [selectedCurrency, setSelectedCurrency] = useState("");
+  // const [selectedCurrency, setSelectedCurrency] = useState("");
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
 
   // استفاده از react-hook-form
@@ -41,17 +41,17 @@ function AddPurchaseInvoice() {
       }
     };
 
-    const fetchCurrencies = async () => {
-      try {
-        const response = await GetAllCurrencies(ShopId);
-        setCurrencies(response.currencies);
-      } catch (error) {
-        console.error("خطا در واکشی ارزها:", error);
-      }
-    };
+    // const fetchCurrencies = async () => {
+    //   try {
+    //     const response = await GetAllCurrencies(ShopId);
+    //     setCurrencies(response.currencies);
+    //   } catch (error) {
+    //     console.error("خطا در واکشی ارزها:", error);
+    //   }
+    // };
     
     fetchContacts();
-    fetchCurrencies();
+    // fetchCurrencies();
   }, [ShopId]);
 
   const handleAddNewInvoiceItem = useCallback((newInvoiceItem) => {
@@ -81,10 +81,10 @@ function AddPurchaseInvoice() {
       toast.error("لطفاً مشتری را انتخاب کنید.");
       return;
     }
-    if (!selectedCurrency) {
-      toast.error("لطفاً ارز را انتخاب کنید.");
-      return;
-    }
+    // if (!selectedCurrency) {
+    //   toast.error("لطفاً ارز را انتخاب کنید.");
+    //   return;
+    // }
     if (invoiceItems.length === 0) {
       toast.error("لطفاً حداقل یک آیتم به فاکتور اضافه کنید.");
       return;
@@ -106,7 +106,7 @@ function AddPurchaseInvoice() {
   // ایجاد invoiceData شامل توضیحات
   const invoiceData = {
     customer: contactsOptions.find(c => c._id === selectedCustomer) || "",
-    currency: currencies.find(c => c._id === selectedCurrency) || "",
+    // currency: currencies.find(c => c._id === selectedCurrency) || "",
     totalItems,
     totalPrice,
     totalRows,
@@ -217,7 +217,7 @@ function AddPurchaseInvoice() {
           </div>
 
           {/* فیلد ارز */}
-          <div className="flex flex-col mb-4">
+          {/* <div className="flex flex-col mb-4">
             <label htmlFor="currency" className="mb-2">ارز:</label>
             <select
               className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.currency ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
@@ -234,7 +234,7 @@ function AddPurchaseInvoice() {
               ))}
             </select>
             {errors.currency && <span className="text-red-500">{errors.currency.message}</span>}
-          </div>
+          </div> */}
 
    
         </div>

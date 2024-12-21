@@ -6,8 +6,7 @@ export const ledgerValidationSchema = yup.object().shape({
   //   .required('شناسه فروشگاه الزامی است')
   //   .matches(/^[0-9a-fA-F]{24}$/, 'شناسه فروشگاه نامعتبر است'),
   
-  currency: yup.string()
-    .required('انتخاب ارز الزامی است'),
+
       
   description: yup.string()
     .required('توضیحات الزامی است')

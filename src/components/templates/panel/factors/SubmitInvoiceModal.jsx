@@ -108,11 +108,10 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
     const invoiceDataToSubmit = {
       accountAllocations: allocatedAccounts, // تغییر ساختار داده برای ارسال چند حساب
       storeId: ShopId,
-      currency:invoiceData.currency._id,
+      // currency:invoiceData.currency._id,
       customerId: currentInvoiceCustomerId,
       type:invoiceData.type,
       totalAmount:invoiceTotal,
-      // items:invoiceItems,
       invoiceItems, // شامل آیتم‌های فاکتور
       // سایر اطلاعات مورد نیاز
     };

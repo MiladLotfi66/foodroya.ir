@@ -1,4 +1,4 @@
-// app/currencies/PriceTemplateCard.jsx
+// app/PriceTemplateCard.jsx
 "use client";
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";

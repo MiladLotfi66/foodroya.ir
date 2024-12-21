@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from "react";
 // import { Toaster, toast } from "react-hot-toast";
 import {
-  EnableFinancialDocumentAction,
-  DisableFinancialDocumentAction,
-  DeleteFinancialDocuments,
+   DeleteFinancialDocuments,
 } from "./FinancialDocumentsServerActions";
 import UserMiniInfo from "@/module/home/UserMiniInfo";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
@@ -28,39 +26,7 @@ function FinancialDocumentCard({
     setFinancialDocument(initialFinancialDocument);
   }, [initialFinancialDocument]);
 
-  const enableFunc = async () => {
-    try {
-      const response = await EnableFinancialDocumentAction(
-        financialDocument._id
-      );
-      if (response.status === 200) {
-        setFinancialDocument({ ...financialDocument, status: "فعال" }); // بروزرسانی وضعیت سند مالی بدون رفرش
-        // toast.success("سند مالی فعال شد.");
-      } else {
-        throw new Error(response.message || "خطا در فعال‌سازی سند مالی.");
-      }
-    } catch (error) {
-      console.error("خطا در فعال‌سازی سند مالی:", error);
-      // toast.error("خطا در فعال‌سازی سند مالی.");
-    }
-  };
 
-  const disableFunc = async () => {
-    try {
-      const response = await DisableFinancialDocumentAction(
-        financialDocument._id
-      );
-      if (response.status === 200) {
-        setFinancialDocument({ ...financialDocument, status: "غیرفعال" }); // بروزرسانی وضعیت سند مالی بدون رفرش
-        // toast.success("سند مالی غیرفعال شد.");
-      } else {
-        throw new Error(response.message || "خطا در غیرفعال‌سازی سند مالی.");
-      }
-    } catch (error) {
-      console.error("خطا در غیرفعال‌سازی سند مالی:", error);
-      // toast.error("خطا در غیرفعال‌سازی سند مالی.");
-    }
-  };
 
   const deleteFunc = async () => {
     try {
@@ -78,10 +44,10 @@ function FinancialDocumentCard({
   };
 
   // استخراج واحد پول و توضیحات (درصورتی که تراکنش‌ها وجود دارند)
-  const currencyTitle =
-    financialDocument.transactions.length > 0
-      ? financialDocument.transactions[0].currency.title
-      : "";
+  // const currencyTitle =
+  //   financialDocument.transactions.length > 0
+  //     ? financialDocument.transactions[0].currency.title
+  //     : "";
 
   const description = financialDocument.description || "";
 
@@ -143,13 +109,7 @@ function FinancialDocumentCard({
 
       {/* بخش واحد پول و توضیحات (یکبار نمایش داده می‌شود) */}
       <div className="  flex justify-between mb-4">
-        {currencyTitle && (
-          <div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              واحد پول: {currencyTitle}
-            </span>
-          </div>
-        )}
+        
         <div>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             تاریخ ایجاد: {formatDate(financialDocument.createdAt)}

@@ -9,7 +9,7 @@ import { createAccount, updateAccount } from "./accountActions";
 import ContactSelector from "@/module/home/ContactSelector";
 import { useParams } from "next/navigation";
 import ContactMiniInfo from "@/module/home/ContactMiniInfo";
-import { GetAllCurrencies } from "../Currency/currenciesServerActions";
+// import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import AddProduct from "../Product/AddProduct";
 
 function AddAccount({
@@ -19,7 +19,7 @@ function AddAccount({
   refreshAccounts,
 }) {
   const { ShopId } = useParams();
-  const [currencies, setCurrencies] = useState([]);
+  // const [currencies, setCurrencies] = useState([]);
   const [isSubmit, setIsSubmit] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // وضعیت بارگذاری جدید
   const [isContactSelectorOpen, setIsContactSelectorOpen] = useState(false);
@@ -42,7 +42,7 @@ function AddAccount({
       accountStatus: "فعال",
       accountContact: "",
       creditLimit: 0,
-      currency: "",
+      // currency: "",
       bankAcountNumber:"",
       bankCardNumber:"",
       posConected:true,
@@ -53,10 +53,10 @@ function AddAccount({
   const accountType = watch("accountType");
 
   useEffect(() => {
-    const fetchCurrenciesAndSetValues = async () => {
+    const fetchAndSetValues = async () => {
       setIsLoading(true); // شروع بارگذاری
       try {
-        await getCurrencies(ShopId);
+        // await getCurrencies(ShopId);
         if (account) {
           reset({
             title: account.title || "",
@@ -64,7 +64,7 @@ function AddAccount({
             accountStatus: account.accountStatus || "فعال",
             accountContact: account.contact?._id || "",
             creditLimit: account.creditLimit !== undefined ? account.creditLimit : "",
-            currency: account.currency?._id || "",
+            // currency: account.currency?._id || "",
             bankAcountNumber:account.bankAcountNumber||"",
 bankCardNumber:account.bankCardNumber||"",
 posConected:account.posConected||true,
@@ -81,7 +81,7 @@ posConected:account.posConected||true,
         setIsLoading(false); // پایان بارگذاری
       }
     };
-    fetchCurrenciesAndSetValues();
+    fetchAndSetValues();
     
   }, [ShopId, account, reset]);
 
@@ -147,17 +147,17 @@ posConected:account.posConected||true,
     }
   };
 
-  const getCurrencies = async (ShopId) => {
-    try {
-      const result = await GetAllCurrencies(ShopId);
-      if (result && result.currencies) {
-        setCurrencies(result.currencies);
-      }
-    } catch (error) {
-      console.error("Error fetching currencies:", error);
-      toast.error("مشکلی در دریافت ارزها وجود دارد.");
-    }
-  };
+  // const getCurrencies = async (ShopId) => {
+  //   try {
+  //     const result = await GetAllCurrencies(ShopId);
+  //     if (result && result.currencies) {
+  //       setCurrencies(result.currencies);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching currencies:", error);
+  //     toast.error("مشکلی در دریافت ارزها وجود دارد.");
+  //   }
+  // };
 
   const handleContactSelect = (contact) => {
     setValue("accountContact", contact._id);
@@ -369,34 +369,34 @@ posConected:account.posConected||true,
                 )}
               </div>
               {/* انتخاب ارز */}
-              <div className="flex-1">
-                <label className="block mb-1 text-gray-700">ارز</label>
-                <select
-                  {...register("currency")}
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                    errors.currency
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:ring-teal-500"
-                  }`}
-                  required
-                  disabled={isSubmit}
-                >
+              {/* <div className="flex-1"> */}
+                {/* <label className="block mb-1 text-gray-700">ارز</label> */}
+                {/* <select */}
+                  {/* {...register("currency")} */}
+                  {/* className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${ */}
+                    {/* errors.currency */}
+                      {/* ? "border-red-500 focus:ring-red-500" */}
+                      {/* : "border-gray-300 focus:ring-teal-500" */}
+                  {/* }`} */}
+                  {/* required */}
+                  {/* disabled={isSubmit} */}
+                {/* > */}
                   {/* گزینه‌ی پیش‌فرض */}
-                  <option value="" >انتخاب ارز</option>
+                  {/* <option value="" >انتخاب ارز</option> */}
 
                   {/* گزینه‌های دینامیک */}
-                  {currencies.map((currency) => (
-                    <option key={currency._id} value={currency._id}>
-                      {currency.title} ({currency.shortName})
-                    </option>
-                  ))}
-                </select>
-                {errors.currency && (
+                  {/* {currencies.map((currency) => ( */}
+                    {/* <option key={currency._id} value={currency._id}> */}
+                      {/* {currency.title} ({currency.shortName}) */}
+                    {/* </option> */}
+                  {/* ))} */}
+                {/* </select> */}
+                {/* {errors.currency && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.currency.message}
                   </p>
-                )}
-              </div>
+                )} */}
+              {/* </div> */}
             </div>
           </>
         )}

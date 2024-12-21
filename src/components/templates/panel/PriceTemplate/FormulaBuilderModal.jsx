@@ -5,7 +5,6 @@ import FormulaBuilder from "./FormulaBuilder";
 
 const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables , formole }) => {
   if (!isOpen) return null;
-console.log("formole",formole);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

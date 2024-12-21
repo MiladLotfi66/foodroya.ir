@@ -9,7 +9,7 @@ import PriceTemplate from "../PriceTemplate/PriceTemplate";
 import Product from "../Product/Product";
 import Feature from "../Product/Feature";
 import FeatureKey from "../Product/FeatureKey";
-import Currency from "../Currency/Currency";
+// import Currency from "../Currency/Currency";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 // ایجاد حساب جدید
@@ -26,7 +26,7 @@ export async function createAccount(data, session = null) {
     if (!userData) {
       return { status: 401, message: 'کاربر وارد نشده است.' };
     }
-    const { _id, title, accountType, accountStatus, parentAccount, store, currency, contact, creditLimit, posConected, bankAcountNumber, bankCardNumber, productId} = data;
+    const { _id, title, accountType, accountStatus, parentAccount, store, contact, creditLimit, posConected, bankAcountNumber, bankCardNumber, productId} = data;
     let accountCode = "";
     let parent = "";
     if (parentAccount) {
@@ -73,12 +73,9 @@ export async function createAccount(data, session = null) {
       if (!contact) {
         return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب مخاطب الزامیست" };
       }
-      if (!currency) {
-        return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب ارز الزامیست" };
-      }
+    
       newAccountData.creditLimit = creditLimit || 0;
       newAccountData.contact = contact;
-      newAccountData.currency = currency;
     }
     else if (accountType === "حساب بانکی") {
       newAccountData.posConected = posConected;
@@ -115,7 +112,6 @@ export async function createAccount(data, session = null) {
 }
 export async function updateAccount(id, data) {
   await connectDB();
-
   try {
     let userData;
     try {
@@ -155,7 +151,6 @@ export async function updateAccount(id, data) {
         updateFields.bankCardNumber = data.bankCardNumber;
         // حفظ فقط فیلدهای مرتبط با حساب بانکی
         unsetFields.contact = "";
-        unsetFields.currency = "";
         unsetFields.creditLimit = "";
         break;
 
@@ -167,11 +162,7 @@ export async function updateAccount(id, data) {
           return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب مخاطب الزامیست" };
         }
 
-        if (data.currency && mongoose.Types.ObjectId.isValid(data.currency)) {
-          updateFields.currency = new mongoose.Types.ObjectId(data.currency);
-        } else {
-          return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب ارز الزامیست" };
-        }
+  
 
         updateFields.contact = data.contact;
         updateFields.creditLimit = data.creditLimit;
@@ -188,7 +179,6 @@ export async function updateAccount(id, data) {
         unsetFields.bankCardNumber = "";
         unsetFields.posConected = "";
         unsetFields.contact = "";
-        unsetFields.currency = "";
         unsetFields.creditLimit = "";
         updateFields.accountType = data.accountType;
     }
@@ -424,8 +414,7 @@ export async function GetAllAccounts(storeId, parentId = null) {
       filter.parentAccount = null; // حساب‌های ریشه
     }
 
-    const accounts = await Account.find(filter).sort({ accountCode: 1 }).populate("contact").populate('currency')
-    .lean(); // افزودن .lean() اینجا
+    const accounts = await Account.find(filter).sort({ accountCode: 1 }).populate("contact").lean(); // افزودن .lean() اینجا
 
     const plainAccounts = accounts?.map((account) => {
       return {
@@ -512,7 +501,6 @@ export async function GetAccountsByStartingCharacter(storeId, startingChar = "",
     const accounts = await Account.find(filter)
       .sort({ accountCode: 1 })
       .populate('contact')
-      .populate('currency')
       .lean();
 
     if (!accounts || accounts.length === 0) {

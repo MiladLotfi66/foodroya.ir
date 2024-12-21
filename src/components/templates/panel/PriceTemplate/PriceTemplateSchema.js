@@ -4,7 +4,6 @@ import * as yup from "yup";
 
 const PriceTemplateSchema = yup.object().shape({
   title: yup.string().required("نام قالب قیمتی الزامی است.").max(100, "نام قالب قیمتی نباید بیشتر از ۱۰۰ کاراکتر باشد."),
-  type: yup.string().required("نوع سند الزامی است"),
 
   status: yup.string().oneOf(["فعال", "غیرفعال"], "وضعیت باید فعال یا غیرفعال باشد.").required("وضعیت الزامی است."),
   pricingFormulas: yup.array().of(

@@ -1,4 +1,4 @@
-// app/currencies/PriceTemplateManage.jsx
+// app/PriceTemplateManage.jsx
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
