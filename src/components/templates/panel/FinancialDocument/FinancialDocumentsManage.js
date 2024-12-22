@@ -5,7 +5,7 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import FinancialDocumentCard from "./FinancialDocumentCard";
 import AddFinancialDocument from "./AddFinancialDocument";
 import { useParams } from 'next/navigation';
-import { AddFinancialDocumentAction, DeleteFinancialDocuments, EditFinancialDocumentAction ,GetAllFinancialDocuments} from  "./FinancialDocumentsServerActions";
+import { GetAllFinancialDocuments} from  "./FinancialDocumentsServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function FinancialDocumentManage() {
@@ -107,7 +107,8 @@ function FinancialDocumentManage() {
               key={financialDocument._id}
               financialDocument={financialDocument}
               editFunction={() => handleEditClick(financialDocument)}
-              onDelete={() => handleDeleteFinancialDocument(financialDocument._id)} // پاس دادن تابع حذف
+              onDelete={() => handleDeleteFinancialDocument(financialDocument._id,ShopId)} // پاس دادن تابع حذف
+              ShopId={ShopId}
             />
           ))}
         </div>

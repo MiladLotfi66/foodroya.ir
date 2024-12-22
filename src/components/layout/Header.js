@@ -115,8 +115,8 @@ function Header() {
                 </li>
                 {ShopId && (
                   <li className="flex items-center">
-                    <a href={`${ShopId}/panel`}>پنل مدیریتی</a>
-                  </li>
+  <Link href={`/${ShopId}/panel`}>پنل مدیریتی</Link>
+  </li>
                 )}
                 <li className="flex items-center">
                   <button

@@ -72,10 +72,13 @@ export async function GetAllFinancialDocuments(shopId) {
  * @param {Object} data - داده‌های مورد نیاز برای ایجاد سند مالی
  * @returns {Object} - نتیجه عملیات
  */
+
 export async function AddFinancialDocumentAction(data) {
+  // اتصال به پایگاه داده
   await connectDB();
   let user;
 
+  // احراز هویت کاربر
   try {
     user = await authenticateUser();
   } catch (authError) {
@@ -84,6 +87,7 @@ export async function AddFinancialDocumentAction(data) {
       message: 'خطا در احراز هویت کاربر'
     };
   }
+
   if (!user) {
     return {
       status: 401,
@@ -91,136 +95,135 @@ export async function AddFinancialDocumentAction(data) {
     };
   }
 
-  // ایجاد جلسه (Session) برای تراکنش
+  // شروع جلسه تراکنش
   const session = await mongoose.startSession();
+  let result; // متغیری برای ذخیره نتیجه تراکنش
 
   try {
-    // بررسی داده‌های ورودی با استفاده از اسکیمای اعتبارسنجی
-    const { error } = ledgerValidationSchema.validate(data);
-    if (error) {
-      return {
-        status: 400,
-        message: error.details[0].message
-      };
-    }
-
-    // محاسبه جمع بدهکار و بستانکار
-    const totalDebit = data.debtors.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const totalCredit = data.creditors.reduce((sum, item) => sum + (item.amount || 0), 0);
-
-    // بررسی تراز بودن سند
-    if (totalDebit !== totalCredit) {
-      return {
-        status: 400,
-        message: 'مجموع بدهکار و بستانکار برابر نیست'
-      };
-    }
-
-    const userId = user.id;
-
-    // شروع تراکنش
-    session.startTransaction();
-
-    // ایجاد دفتر کل درون تراکنش
-    const ledger = new Ledger({
-      description: data.description,
-      transactions: [], // ابتدا خالی
-      createdBy: userId,
-      updatedBy: userId,
-      shop: data.ShopId,
-    });
-
-    await ledger.save({ session });
-
-    // تبدیل بدهکاران و بستانکاران به تراکنش‌ها
-    const transactions = [
-      // تراکنش‌های بدهکار
-      ...data.debtors.map(debtor => ({
-        ledger: ledger._id,
-        account: debtor.account,
-        debit: debtor.amount,
-        credit: 0,
-        description: data.description,
-        type: data.type,
-        shop: data.ShopId,
-        createdBy: userId,
-        updatedBy: userId,
-      })),
-      // تراکنش‌های بستانکار
-      ...data.creditors.map(creditor => ({
-        ledger: ledger._id,
-        account: creditor.account,
-        debit: 0,
-        credit: creditor.amount,
-        description: data.description,
-        type: data.type,
-        shop: data.ShopId,
-        createdBy: userId,
-        updatedBy: userId,
-      }))
-    ];
-
-    // ذخیره تراکنش‌ها درون تراکنش
-    const createdTransactions = await GeneralLedger.insertMany(transactions, { session });
-
-    // به‌روزرسانی دفتر کل با تراکنش‌ها درون تراکنش
-    ledger.transactions = createdTransactions.map(tx => tx._id);
-    await ledger.save({ session });
-
-    // تهیه عملیات به‌روزرسانی مانده حساب‌ها
-    const bulkOperations = [];
-
-    // به‌روزرسانی بدهکاران (افزایش مانده)
-    data.debtors.forEach(debtor => {
-      bulkOperations.push({
-        updateOne: {
-          filter: { _id: debtor.account },
-          update: { $inc: { balance: debtor.amount } }
-        }
-      });
-    });
-
-    // به‌روزرسانی بستانکاران (کاهش مانده)
-    data.creditors.forEach(creditor => {
-      bulkOperations.push({
-        updateOne: {
-          filter: { _id: creditor.account },
-          update: { $inc: { balance: -creditor.amount } }
-        }
-      });
-    });
-
-    // اجرای به‌روزرسانی‌ها به صورت دسته‌ای
-    if (bulkOperations.length > 0) {
-      await Account.bulkWrite(bulkOperations, { session });
-    }
-
-    // تعهد تراکنش
-    await session.commitTransaction();
-    session.endSession();
-
-    return {
-      status: 200,
-      message: 'سند حسابداری با موفقیت ثبت شد',
-      data: {
-        ledger: ledger._id,
-        transactionCount: createdTransactions.length,
-        totalAmount: totalDebit,
-        shop: data.ShopId
+    await session.withTransaction(async () => {
+      // بررسی داده‌های ورودی با استفاده از اسکیمای اعتبارسنجی
+      const { error } = ledgerValidationSchema.validate(data);
+      if (error) {
+        throw { status: 400, message: error.details[0].message };
       }
-    };
+
+      // محاسبه جمع بدهکار و بستانکار
+      const totalDebit = data.debtors.reduce((sum, item) => sum + (item.amount || 0), 0);
+      const totalCredit = data.creditors.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      // بررسی تراز بودن سند
+      if (totalDebit !== totalCredit) {
+        throw { status: 400, message: 'مجموع بدهکار و بستانکار برابر نیست' };
+      }
+
+      const userId = user.id;
+
+      // ایجاد دفتر کل درون تراکنش
+      const ledger = new Ledger({
+        description: data.description,
+        transactions: [], // ابتدا خالی
+        createdBy: userId,
+        updatedBy: userId,
+        shop: data.ShopId,
+      });
+
+      await ledger.save({ session });
+
+      // تبدیل بدهکاران و بستانکاران به تراکنش‌ها
+      const transactions = [
+        // تراکنش‌های بدهکار
+        ...data.debtors.map(debtor => ({
+          ledger: ledger._id,
+          account: debtor.account,
+          debit: debtor.amount,
+          credit: 0,
+          description: data.description,
+          type: data.type,
+          shop: data.ShopId,
+          createdBy: userId,
+          updatedBy: userId,
+        })),
+        // تراکنش‌های بستانکار
+        ...data.creditors.map(creditor => ({
+          ledger: ledger._id,
+          account: creditor.account,
+          debit: 0,
+          credit: creditor.amount,
+          description: data.description,
+          type: data.type,
+          shop: data.ShopId,
+          createdBy: userId,
+          updatedBy: userId,
+        }))
+      ];
+
+      // ذخیره تراکنش‌ها درون تراکنش
+      const createdTransactions = await GeneralLedger.insertMany(transactions, { session });
+
+      // به‌روزرسانی دفتر کل با تراکنش‌ها درون تراکنش
+      ledger.transactions = createdTransactions.map(tx => tx._id);
+      await ledger.save({ session });
+
+      // تهیه عملیات به‌روزرسانی مانده حساب‌ها
+      const bulkOperations = [];
+
+      // به‌روزرسانی بدهکاران (افزایش مانده)
+      data.debtors.forEach(debtor => {
+        bulkOperations.push({
+          updateOne: {
+            filter: { _id: debtor.account },
+            update: { $inc: { balance: debtor.amount } }
+          }
+        });
+      });
+
+      // به‌روزرسانی بستانکاران (کاهش مانده)
+      data.creditors.forEach(creditor => {
+        bulkOperations.push({
+          updateOne: {
+            filter: { _id: creditor.account },
+            update: { $inc: { balance: -creditor.amount } }
+          }
+        });
+      });
+
+      // اجرای به‌روزرسانی‌ها به صورت دسته‌ای
+      if (bulkOperations.length > 0) {
+        await Account.bulkWrite(bulkOperations, { session });
+      }
+
+      // تنظیم نتیجه تراکنش برای بازگرداندن خارج از بلاک تراکنش
+      result = {
+        status: 200,
+        message: 'سند حسابداری با موفقیت ثبت شد',
+        data: {
+          ledger: ledger._id,
+          transactionCount: createdTransactions.length,
+          totalAmount: totalDebit,
+          shop: data.ShopId
+        }
+      };
+    });
+
+    // برگرداندن نتیجه تعیین شده درون تراکنش
+    return result;
 
   } catch (error) {
-    // ابطال تراکنش در صورت بروز خطا
-    await session.abortTransaction();
-    session.endSession();
-
+    // مدیریت خطاها
+    if (error.status && error.message) {
+      return { status: error.status, message: error.message };
+    }
     return {
       status: 500,
       message: error.message || 'خطا در ایجاد سند حسابداری'
     };
+  } finally {
+    // پایان دادن به جلسه تراکنش
+    session.endSession();
   }
 }
+
+
 
 /**
  * ویرایش سند مالی
@@ -424,6 +427,8 @@ export async function EditFinancialDocumentAction(data, shopId) {
  * @returns {Object} - نتیجه عملیات
  */
 export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
+  console.log("financialDocumentId, shopId",financialDocumentId, shopId);
+  
   await connectDB();
   let user;
   

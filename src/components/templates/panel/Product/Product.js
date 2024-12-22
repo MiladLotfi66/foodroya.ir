@@ -12,7 +12,6 @@ const ProductSchema = new Schema({
   // generalFeatures: [{ type: Schema.Types.ObjectId, ref: "Feature" }],
   ShopId: { type: Schema.Types.ObjectId, ref: "Shop" },
   accountId: { type: Schema.Types.ObjectId, required: true, ref: 'Account' },
-
   pricingTemplate: {
     type: Schema.Types.ObjectId,
     ref: "PriceTemplate",

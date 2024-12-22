@@ -13,6 +13,7 @@ function FinancialDocumentCard({
   financialDocument: initialFinancialDocument,
   editFunction,
   onDelete,
+  ShopId
 }) {
   const [financialDocument, setFinancialDocument] = useState(
     initialFinancialDocument
@@ -30,7 +31,7 @@ function FinancialDocumentCard({
 
   const deleteFunc = async () => {
     try {
-      const response = await DeleteFinancialDocuments(financialDocument._id);
+      const response = await DeleteFinancialDocuments(financialDocument._id,ShopId);
       if (response.status === 200) {
         onDelete(); // حذف سند مالی از لیست
         // toast.success("سند مالی با موفقیت حذف شد.");
@@ -247,7 +248,6 @@ function FinancialDocumentCard({
           </div>
         )}
       </div>
-      {/* <Toaster position="top-right" reverseOrder={false} /> */}
     </div>
   );
 }

@@ -127,33 +127,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
     }
   }, [financialDocument, reset]);
 
-  ///////////////////////////
-  // useEffect(() => {
-  //   const fetchCurrencies = async () => {
-  //     setIsLoading(true); // شروع بارگذاری
-  //     try {
-  //       await getCurrencies(ShopId);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       toast.error("مشکلی در بارگذاری اطلاعات وجود دارد.");
-  //     } finally {
-  //       setIsLoading(false); // پایان بارگذاری
-  //     }
-  //   };
-  //   fetchCurrencies();
-  // }, [ShopId]);
-  ////////////////////////////////////////
-  // const getCurrencies = async (ShopId) => {
-  //   try {
-  //     const result = await GetAllCurrencies(ShopId);
-  //     if (result && result.currencies) {
-  //       setCurrencies(result.currencies);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching currencies:", error);
-  //     toast.error("مشکلی در دریافت ارزها وجود دارد.");
-  //   }
-  // };
+
   // واکشی حساب‌ها
   const fetchAccounts = useCallback(async () => {
     try {
@@ -231,10 +205,8 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
     try {
       const formDataObj = {
         ...formData,
-        
-        
+
       };
-      console.log("formData",formDataObj);
 
       let result;
       if (financialDocument?._id) {
@@ -243,6 +215,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
       } else {
         result = await AddFinancialDocumentAction(formDataObj, ShopId);
       }
+console.log("result",result);
 
       if (result.status === 201 || result.status === 200) {
         await refreshFinancialDocuments();
