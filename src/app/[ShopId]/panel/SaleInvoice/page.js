@@ -4,14 +4,17 @@ import { INVOICE_TYPES } from "@/templates/panel/factors/invoiceTypes";
 function Page() {
   return (
     <div>
-      {/* فاکتور خرید */}
-      <AddInvoice invoiceType={INVOICE_TYPES.PURCHASE} />
+  {/* فاکتور فروش */}
+  <AddInvoice invoiceType={INVOICE_TYPES.SALE} />
 
     
     </div>
   );
 }
 export default Page
+
+  // {/* برگشت از خرید */}
+  // <AddInvoice invoiceType={INVOICE_TYPES.PURCHASE_RETURN} />
 
   // {/* برگشت از فروش */}
   // <AddInvoice invoiceType={INVOICE_TYPES.SALE_RETURN} />

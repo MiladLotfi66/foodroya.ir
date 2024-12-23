@@ -4,12 +4,11 @@ import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 
 function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
-  const { _id, title, image, quantity = 1, unitPrice = 0, description = "" } = invoiceItem; // افزودن مقدار پیش‌فرض برای description
+  const { title, image, quantity = 1, unitPrice = 0, description = "" } = invoiceItem;
 
-  // محاسبه totalPrice در فرزند (در صورتی که والد آن را ارسال نکرده باشد)
-  const totalPrice = (quantity || 0) * (unitPrice || 0); // اطمینان از اینکه مقدار 0 باشد
+  const totalPrice = (quantity || 0) * (unitPrice || 0);
 
-  // تابع برای مدیریت تغییرات ورودی‌ها
+  // تابع تغییر مقادیر ورودی‌ها
   const handleChange = (e, field) => {
     const value = e.target.value;
     let updatedValue;
@@ -45,31 +44,16 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
     onUpdate(updatedItem); // گزارش تغییر به والد
   };
 
-  const deleteFunc = async () => {
-    try {
-      const response = await DeleteInvoiceItems(_id);
-      if (response.status === 200) {
-        onDelete();
-        toast.success("کالا با موفقیت حذف شد.");
-      } else {
-        throw new Error(response.message || "خطا در حذف کالا.");
-      }
-    } catch (error) {
-      console.error("خطا در حذف کالا:", error);
-      toast.error("خطا در حذف کالا.");
-    }
+  // تابع حذف آیتم که تنها به والد اطلاع می‌دهد
+  const deleteFunc = () => {
+    onDelete(); // والد مسئول انجام عملیات حذف است
   };
 
   return (
     <div className="relative bg-white dark:bg-zinc-800 shadow-md rounded-2xl p-4 transition duration-300 ease-in-out">
-      <div className="hidden">
-        <DeleteSvg />
-      </div>
-      <div>
       <div className="flex gap-2 justify-between items-center">
-        {/* بخش تصویر و دکمه حذف */}
+        {/* قسمت تصویر */}
         <div className="flex-shrink-0">
-        
           <img
             src={image || "https://via.placeholder.com/150"}
             alt={title}
@@ -78,6 +62,7 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
           />
         </div>
 
+        {/* اطلاعات آیتم */}
         <div className="ml-4 flex-1">
           <h2 className="text-sm sm:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
             {title}
@@ -119,41 +104,37 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
               step="0.01"
             />
           </div>
-
         </div>
-        
       </div>
-  {/* فیلد توضیحات */}
-  <div className="mt-2">
-            <label htmlFor="description" className="block text-sm text-gray-700 dark:text-gray-300">
-              توضیحات:
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={description}
-              onChange={(e) => handleChange(e, "description")}
-              className="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white"
-              placeholder="توضیحات کالا را وارد کنید"
-              rows="3"
-            />
-          </div>
 
-          {/* نمایش جمع کل */}
-          <div className="mt-3 flex justify-between">
-            <p className="text-sm sm:text-base">
-              جمع کل: {totalPrice.toLocaleString()} تومان
-            </p>
-            <svg
-            width="24"
-            height="24"
-            className="cursor-pointer text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition duration-300 ease-in-out"
-            aria-label="delete"
-            onClick={deleteFunc}
-          >
-            <use href="#DeleteSvg"></use>
-          </svg>
-          </div>
+      {/* فیلد توضیحات */}
+      <div className="mt-2">
+        <label htmlFor="description" className="block text-sm text-gray-700 dark:text-gray-300">
+          توضیحات:
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          value={description}
+          onChange={(e) => handleChange(e, "description")}
+          className="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white"
+          placeholder="توضیحات کالا را وارد کنید"
+          rows="3"
+        />
+      </div>
+
+      {/* نمایش جمع کل و دکمه حذف */}
+      <div className="mt-3 flex justify-between">
+        <p className="text-sm sm:text-base">
+          جمع کل: {totalPrice.toLocaleString()} تومان
+        </p>
+        <button
+          onClick={deleteFunc}
+          className="cursor-pointer text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition duration-300 ease-in-out"
+          aria-label="delete"
+        >
+          <DeleteSvg />
+        </button>
       </div>
 
       <Toaster />

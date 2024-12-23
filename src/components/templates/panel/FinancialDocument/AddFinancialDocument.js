@@ -215,7 +215,6 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
       } else {
         result = await AddFinancialDocumentAction(formDataObj, ShopId);
       }
-console.log("result",result);
 
       if (result.status === 201 || result.status === 200) {
         await refreshFinancialDocuments();

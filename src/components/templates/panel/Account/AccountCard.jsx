@@ -73,6 +73,7 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
           >
             {account.title}
           </h2>
+          <p className="text-sm">مانده حساب: {account.balance}</p>
           <p className="text-sm">کد حساب: {account.accountCode}</p>
           <p className="text-sm">نوع حساب: {account.accountType}</p>
           <p className={`text-sm ${account.accountStatus === "فعال" ? "text-green-500" : "text-red-500"}`}>

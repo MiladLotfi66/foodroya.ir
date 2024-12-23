@@ -1,5 +1,3 @@
-// app/components/templates/panel/factors/AddInvoiceItem.js
-
 "use client";
 import { useParams } from 'next/navigation';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -9,10 +7,7 @@ import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 import Pagination from "../Product/Pagination";
 
-function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceItems, onAddNewInvoiceItem }) { // باقی‌مانده پراپ‌ها تغییر نکرده‌اند
-  const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedProductFile, setSelectedProductFile] = useState(null);
+function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مانده پراپ‌ها تغییر نکرده‌اند
   const params = useParams();
   const { ShopId } = params;
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
@@ -34,7 +29,7 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       if (response.success && response.accountId) {
         setAnbarAccountId(response.accountId);
         setParentAccountId(response.accountId);
-        setPath([{ id: response.accountId, title: "انبار" }]);
+        setPath(['خانه', { id: response.accountId, title: "انبار" }]);
       } else {
         throw new Error("حساب انبار یافت نشد.");
       }
@@ -54,7 +49,7 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       setLoading(true);
       setSelectedParentAccount(parentAccountId);
       const options = {
-        fields: ['_id', 'title', 'accountType', 'accountStatus', 'productId','Features'],
+        fields: ['_id', 'title', 'accountType', 'accountStatus', 'productId', 'Features'],
         populateFields: [
           {
             path: 'productId',
@@ -117,17 +112,17 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
   // مدیریت کلیک روی بخش‌های Breadcrumb
   const handleBreadcrumbClick = useCallback((index) => {
     const selectedCrumb = path[index];
-    const newPath = path.slice(0, index + 1);
-    setPath(newPath);
-    setParentAccountId(selectedCrumb.id);
+    if (typeof selectedCrumb === 'string') {
+      // برچسب ابتدایی "خانه" را مدیریت می‌کنیم
+      setPath(['خانه']);
+      setParentAccountId(anbarAccountId);
+    } else {
+      const newPath = path.slice(0, index + 1);
+      setPath(newPath);
+      setParentAccountId(selectedCrumb.id);
+    }
     setCurrentPage(1);
-  }, [path]);
-
-  // مدیریت تغییر در جستجو
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1);
-  };
+  }, [path, anbarAccountId]);
 
   const onSubmitCreateAccount = async (data) => {
     try {
@@ -143,21 +138,25 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
       console.error("خطا در ایجاد حساب:", error);
     }
   }
-  const handleSelectProduct = (product) => {
-    const invoiceItemData = {
-      _id: product._id, // فرض بر این است که محصول دارای یک شناسه منحصر به فرد است
-      productId: product._id,
-      title: product.title,
-      quantity: 1, // مقدار پیش‌فرض، می‌توانید این را به کاربر بدهید
-      unitPrice: product.price, // فرض بر این است که محصول دارای قیمت است
-      totalPrice: product.price, // برای مقدار اولیه
-      // سایر فیلدهای مورد نیاز
-      image: product.images?.[0] || "https://via.placeholder.com/150", // مثال
-    };
-    onAddNewInvoiceItem(invoiceItemData); // انتقال داده به والد
-    onClose(); // بستن مدال
-  };
 
+  const handleSelectAccount = (account) => {
+    if (account.accountType === "کالا") {
+      const invoiceItemData = {
+        _id: account.productId._id, // فرض بر این است که محصول دارای یک شناسه منحصر به فرد است
+        productId: account.productId._id,
+        title: account.productId.title,
+        quantity: 1, // مقدار پیش‌فرض، می‌توانید این را به کاربر بدهید
+        unitPrice: account.productId.price, // فرض بر این که محصول دارای قیمت است
+        totalPrice: account.productId.price, // برای مقدار اولیه
+        // سایر فیلدهای مورد نیاز
+        image: account.productId.images?.[0] || "https://via.placeholder.com/150", // مثال
+      };
+      onAddNewInvoiceItem(invoiceItemData); // انتقال داده به والد
+      onClose(); // بستن مدال
+    } else if (account.accountType === "دسته بندی کالا") {
+      handleOpenAccount(account);
+    }
+  };
 
   return (
     <div>
@@ -184,7 +183,16 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
                 className="w-full border rounded px-2 py-1"
               />
             </div>
-                  </div>
+            {/* افزودن حساب جدید (در صورت نیاز) */}
+            {/* 
+            <button
+              className="bg-green-500 text-white px-4 py-2 rounded"
+              onClick={() => setShowCreateAccountModal(true)}
+            >
+              افزودن حساب
+            </button>
+            */}
+          </div>
 
           {/* لیست محصولات */}
           {loading ? (
@@ -193,13 +201,17 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
             <>
               <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {accounts.map(account => (
-                  <div key={account._id}>
-                    {account.accountType === "کالا" && (
-                      <div 
-                        className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105"
-                      >
-                        {/* بخش تصاویر */}
-                        <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
+                  <div
+                    key={account._id}
+                    onClick={() => handleSelectAccount(account)}
+                    className={`flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105 cursor-pointer ${
+                      account.accountType === "کالا" ? "border-2 border-teal-500" : ""
+                    }`}
+                  >
+                    {/* بخش تصاویر یا آیکون دسته‌بندی */}
+                    <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
+                      {account.accountType === "کالا" ? (
+                        <>
                           <img
                             src={account?.productId?.images?.[0] || "https://via.placeholder.com/150"}
                             alt={account?.productId?.title}
@@ -211,33 +223,19 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
                               +{account.productId.images.length - 1}
                             </div>
                           )}
-                        </div>
+                        </>
+                      ) : (
+                        <FaFolder className="text-yellow-500 text-4xl mx-auto mt-4" />
+                      )}
+                    </div>
 
-                        {/* بخش اطلاعات محصول */}
-                        <div className="flex flex-col flex-1 m-2 h-15">
-                          {/* عنوان محصول */}
-                          <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
-                            {account?.productId?.title}
-                          </h2>
-                          {/* دکمه انتخاب محصول */}
-                          <button
-                            className="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                            onClick={() => handleSelectProduct(account.productId)}
-                          >
-                            انتخاب
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {account.accountType === "دسته بندی کالا" && (
-                      <div
-                        className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105 m-2"
-                        onClick={() => handleBreadcrumbClick(path.length)} // قابلیت تغییر مسیر
-                      >
-                        <FaFolder className="text-yellow-500 text-md mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
-                        <p className="flex text-center h-15 line-clamp-3 items-center">{account.title}</p>
-                      </div>
-                    )}
+                    {/* بخش اطلاعات محصول یا دسته‌بندی */}
+                    <div className="flex flex-col flex-1 m-2 h-15">
+                      {/* عنوان محصول یا دسته‌بندی */}
+                      <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
+                        {account?.accountType === "کالا" ? account?.productId?.title : account.title}
+                      </h2>
+                    </div>
                   </div>
                 ))}
                 {accounts.length === 0 && <p>محصولی یافت نشد.</p>}
@@ -252,53 +250,45 @@ function AddInvoiceItem({ invoiceItem, invoiceItemFile, onClose, refreshInvoiceI
             </>
           )}
 
-          {/* مدال ایجاد محصول جدید */}
-          {showCreateAccountModal && (
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-              onClick={() => setShowCreateAccountModal(false)}
-            >
-              <div
-                className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h2 className="text-xl mb-4">ایجاد دسته بندی کالا</h2>
-                <form onSubmit={handleSubmit(onSubmitCreateAccount)} className="flex flex-col space-y-4">
-                  <div>
-                    <label className="block mb-1">نام دسته بندی</label>
-                    <input
-                      type="text"
-                      {...register('name', { required: true })}
-                      className="w-full border rounded px-3 py-2"
-                    />
-                    {errors.name && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => { setShowCreateAccountModal(false); reset(); }}
-                      className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                    >
-                      انصراف
-                    </button>
-                    <button
-                      type="submit"
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    >
-                      ایجاد
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
           {/* <Toaster /> */}
         </div>
       </div>
-      
-      {/* <Toaster /> */}
+
+      {/* مودال ایجاد حساب جدید (در صورت نیاز) */}
+      {showCreateAccountModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={() => setShowCreateAccountModal(false)}
+        >
+          <div
+            className="relative bg-white dark:bg-zinc-700 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl mb-4">ایجاد حساب جدید</h2>
+            <form onSubmit={handleSubmit(onSubmitCreateAccount)}>
+              <div className="mb-4">
+                <label htmlFor="title" className="block mb-2">عنوان حساب</label>
+                <input
+                  id="title"
+                  type="text"
+                  {...register('title', { required: "عنوان حساب الزامی است" })}
+                  className="w-full border rounded px-3 py-2"
+                />
+                {errors.title && <span className="text-red-500">{errors.title.message}</span>}
+              </div>
+              {/* افزودن فیلدهای دیگر در صورت نیاز */}
+              <div className="flex justify-end">
+                <button type="button" onClick={() => setShowCreateAccountModal(false)} className="mr-2 px-4 py-2 bg-gray-300 rounded">
+                  انصراف
+                </button>
+                <button type="submit" className="px-4 py-2 bg-teal-500 text-white rounded">
+                  ذخیره
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

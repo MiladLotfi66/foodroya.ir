@@ -4,8 +4,7 @@ import { AddPurchaseInvoiceAction } from './invoiceItemsServerActions';
 
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
   // به‌روزرسانی وضعیت به آرایه از حساب‌های تخصیص‌یافته
-  console.log("invoiceData",invoiceData);
-  console.log("invoiceItems",invoiceItems);
+  console.log("isOpen, onClose, invoiceData, invoiceItems",isOpen, onClose, invoiceData, invoiceItems);
   
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([
@@ -14,7 +13,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const ShopId = invoiceData.ShopId;
-  const currentInvoiceCustomerId = invoiceData.customer?._id || '';
+  const currentInvoiceCustomerId = invoiceData.contact?._id || '';
   
   useEffect(() => {
     if (isOpen && ShopId && currentInvoiceCustomerId) {
@@ -43,7 +42,6 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
       };
 
       const response = await GetAllAccountsByOptions(ShopId, null, options);
-      console.log("response", response);
       if (response.status === 200) {
         setAccounts(response.Accounts);
       } else {

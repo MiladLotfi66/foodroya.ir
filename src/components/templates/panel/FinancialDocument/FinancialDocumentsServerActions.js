@@ -427,7 +427,6 @@ export async function EditFinancialDocumentAction(data, shopId) {
  * @returns {Object} - نتیجه عملیات
  */
 export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
-  console.log("financialDocumentId, shopId",financialDocumentId, shopId);
   
   await connectDB();
   let user;

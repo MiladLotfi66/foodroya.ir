@@ -15,7 +15,6 @@ import Account from '../Account/Account'; // اطمینان از وارد کرد
  * @returns {Object} - نتیجه عملیات
  */
 export async function AddPurchaseInvoiceAction(invoiceData) {
-  console.log("invoiceData", invoiceData);
   
   // اتصال به پایگاه داده
   await connectDB();

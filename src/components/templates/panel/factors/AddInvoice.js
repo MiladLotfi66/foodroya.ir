@@ -4,22 +4,22 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import InvoiceItemCard from "./InvoiceItemCard";
 import AddInvoiceItem from "./AddInvoiceItem";
 import { useParams } from "next/navigation";
-// حذف import اکشن سروری حذف اقلام
-// import { DeleteInvoiceItems } from "./invoiceItemsServerActions"; 
 import { Toaster, toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { GetAllContacts } from "../Contact/contactsServerActions";
 import { v4 as uuidv4 } from 'uuid';
 import SubmitInvoiceModal from "./SubmitInvoiceModal";
+import Link from "next/link";
+import { INVOICE_TYPES } from "./invoiceTypes"; // وارد کردن انواع فاکتورها
 
-function AddPurchaseInvoice() {
+function AddInvoice({ invoiceType }) {
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [isOpenAddInvoiceItem, setIsOpenAddInvoiceItem] = useState(false);
   const [selectedInvoiceItem, setSelectedInvoiceItem] = useState(null);
   const params = useParams();
   const { ShopId } = params;
   const [contactsOptions, setContactsOptions] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [selectedContact, setSelectedContact] = useState(""); // نام عمومی‌تر
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
 
   // استفاده از react-hook-form
@@ -46,7 +46,7 @@ function AddPurchaseInvoice() {
     const itemWithUniqueKey = {
       ...newInvoiceItem,
       uniqueKey: uuidv4(),
-      totalPrice: (parseInt(newInvoiceItem.quantity, 10) || 0) * (parseFloat(newInvoiceItem.unitPrice) || 0), // اطمینان از تبدیل به عدد
+      totalPrice: (parseInt(newInvoiceItem.quantity, 10) || 0) * (parseFloat(newInvoiceItem.unitPrice) || 0),
     };
     setInvoiceItems((prevInvoiceItems) => [...prevInvoiceItems, itemWithUniqueKey]);
     toast.success("کالا با موفقیت افزوده شد.");
@@ -56,7 +56,7 @@ function AddPurchaseInvoice() {
   const handleUpdateInvoiceItem = useCallback((updatedItem) => {
     const updatedItemWithTotalPrice = {
       ...updatedItem,
-      totalPrice: (parseInt(updatedItem.quantity, 10) || 0) * (parseFloat(updatedItem.unitPrice) || 0), // اطمینان از محاسبه مجدد
+      totalPrice: (parseInt(updatedItem.quantity, 10) || 0) * (parseFloat(updatedItem.unitPrice) || 0),
     };
     setInvoiceItems((prevInvoiceItems) =>
       prevInvoiceItems.map(item => item.uniqueKey === updatedItemWithTotalPrice.uniqueKey ? updatedItemWithTotalPrice : item)
@@ -65,11 +65,11 @@ function AddPurchaseInvoice() {
 
   const handleOpenSubmitModal = () => {
     // بررسی صحت داده‌ها قبل از باز کردن مودال (اختیاری)
-    if (!selectedCustomer) {
-      toast.error("لطفاً مشتری را انتخاب کنید.");
+    if (!selectedContact) {
+      toast.error(`لطفاً ${getContactLabel()} را انتخاب کنید.`);
       return;
     }
-  
+
     if (invoiceItems.length === 0) {
       toast.error("لطفاً حداقل یک آیتم به فاکتور اضافه کنید.");
       return;
@@ -85,16 +85,17 @@ function AddPurchaseInvoice() {
   // دریافت داده‌های توضیحات از react-hook-form
   const onSubmit = (data) => {
     // این تابع می‌تواند برای پردازش نهایی داده‌های فرم مورد استفاده قرار گیرد
+    // بسته به نیاز می‌توانید ارسال داده‌ها به سرور را در اینجا پیاده‌سازی کنید
   };
   const description = watch('description');
 
   // ایجاد invoiceData شامل توضیحات
   const invoiceData = {
-    customer: contactsOptions.find(c => c._id === selectedCustomer) || "",
+    contact: contactsOptions.find(c => c._id === selectedContact) || "",
     totalItems,
     totalPrice,
     totalRows,
-    type: "Purchase",
+    type: invoiceType,
     description, // مقدار اولیه توضیحات
     ShopId
   };
@@ -124,6 +125,39 @@ function AddPurchaseInvoice() {
     setIsOpenAddInvoiceItem(false);
     setSelectedInvoiceItem(null);
   }, []);
+
+  // تابع برای دریافت برچسب مناسب بر اساس نوع فاکتور
+  const getContactLabel = () => {
+    switch (invoiceType) {
+      case INVOICE_TYPES.PURCHASE:
+      case INVOICE_TYPES.PURCHASE_RETURN:
+      case INVOICE_TYPES.WASTE:
+        return "تامین‌کننده";
+      case INVOICE_TYPES.SALE:
+      case INVOICE_TYPES.SALE_RETURN:
+        return "مشتری";
+      default:
+        return "مشتری/تامین‌کننده";
+    }
+  };
+
+  // عنوان صفحه بر اساس نوع فاکتور
+  const getPageTitle = () => {
+    switch (invoiceType) {
+      case INVOICE_TYPES.PURCHASE:
+        return "فاکتور خرید";
+      case INVOICE_TYPES.SALE:
+        return "فاکتور فروش";
+      case INVOICE_TYPES.PURCHASE_RETURN:
+        return "برگشت از خرید";
+      case INVOICE_TYPES.SALE_RETURN:
+        return "برگشت از فروش";
+      case INVOICE_TYPES.WASTE:
+        return "فاکتور ضایعات";
+      default:
+        return "فاکتور";
+    }
+  };
 
   return (
     <FormTemplate>
@@ -155,7 +189,7 @@ function AddPurchaseInvoice() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">فاکتور خرید</h1>
+          <h1 className="text-3xl font-MorabbaBold">{getPageTitle()}</h1>
           <button
             type="button"
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
@@ -165,53 +199,60 @@ function AddPurchaseInvoice() {
             افزودن کالا
           </button>
         </div>
-
         <div className="flex  gap-4 px-2">
-          {/* فیلد مشتری */}
-          <div className="flex flex-col mb-4">
-            <label htmlFor="customer" className="mb-2">مشتری:</label>
+          {/* فیلد مشتری/تامین‌کننده */}
+          <div className="flex items-center gap-2 mb-4">
+            <label htmlFor="contact" className="mb-2">{getContactLabel()}:</label>
             <select
-              className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.customer ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-              id="customer"
-              {...register("customer", { required: "مشتری الزامی است" })}
-              value={selectedCustomer}
-              onChange={(e) => setSelectedCustomer(e.target.value)}
+              className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.contact ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+              id="contact"
+              {...register("contact", { required: `${getContactLabel()} الزامی است` })}
+              value={selectedContact}
+              onChange={(e) => setSelectedContact(e.target.value)}
             >
-              <option value="">انتخاب مشتری</option>
+              <option value="">انتخاب {getContactLabel()}</option>
               {contactsOptions.map((contact) => (
                 <option key={contact._id} value={contact.uniqueKey || contact._id}>
                   {contact.name}
                 </option>
               ))}
             </select>
-            {errors.customer && <span className="text-red-500">{errors.customer.message}</span>}
-          </div>   
+            {errors.contact && <span className="text-red-500">{errors.contact.message}</span>}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {invoiceItems.map((invoiceItem) => (
-            <InvoiceItemCard
-              key={invoiceItem.uniqueKey}
-              invoiceItem={invoiceItem}
-              editFunction={() => handleEditClick(invoiceItem)} // اطمینان از تعریف handleEditClick
-              onDelete={() => handleDeleteInvoiceItem(invoiceItem.uniqueKey)} // استفاده از uniqueKey
-              onUpdate={handleUpdateInvoiceItem}
-            />
-          ))}
-        </div>
-        
-        {/* فیلد توضیحات - **زندگی تغییرات** */}
+  {invoiceItems.length > 0 ? (
+    invoiceItems.map((invoiceItem) => (
+      <InvoiceItemCard
+        key={invoiceItem.uniqueKey}
+        invoiceItem={invoiceItem}
+        editFunction={() => handleEditClick(invoiceItem)} // اطمینان از تعریف handleEditClick
+        onDelete={() => handleDeleteInvoiceItem(invoiceItem.uniqueKey)} // استفاده از uniqueKey
+        onUpdate={handleUpdateInvoiceItem}
+        invoiceType={invoiceType} // اگر نیاز به تنظیمات خاص برای نوع فاکتور دارید
+      />
+    ))
+  ) : (
+    <div className="col-span-full border border-gray-300 rounded p-8 text-center text-gray-500">
+      هنوز کالایی انتخاب نشده است.
+    </div>
+  )}
+</div>
+
+
+        {/* فیلد توضیحات */}
         <div className="flex flex-col md:items-center md:flex-row m-2 md:col-span-2">
           <label htmlFor="description" className="mb-2">توضیحات:</label>
           <textarea
             className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.description ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
             id="description"
             {...register("description")}
-            placeholder="توضیحات فاکتور را وارد کنید..."
+            placeholder={`توضیحات ${getPageTitle()} را وارد کنید...`}
           ></textarea>
           {errors.description && <span className="text-red-500">{errors.description.message}</span>}
         </div>
-        
+
         <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-4 mt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-800 dark:text-gray-200">
@@ -234,4 +275,4 @@ function AddPurchaseInvoice() {
   );
 }
 
-export default AddPurchaseInvoice;
+export default AddInvoice;
