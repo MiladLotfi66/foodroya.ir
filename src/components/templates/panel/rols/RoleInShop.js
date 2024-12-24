@@ -2,9 +2,14 @@ import { Schema, model, models } from "mongoose";
 
 const schema = new Schema(
   {
-    UserId: {
+    // UserId: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "User", // تصحیح نام مدل رفرنس
+    //   required: true,
+    // },
+    ContactId: {
       type: Schema.Types.ObjectId,
-      ref: "User", // تصحیح نام مدل رفرنس
+      ref: "Contact", // تصحیح نام مدل رفرنس
       required: true,
     },
     ShopId: {

@@ -30,6 +30,7 @@ function ContactManager() {
       }
 
       const response = await GetAllContacts(ShopId);
+console.log("response",response);
 
       setContacts(response.contacts);
     } catch (error) {
@@ -114,7 +115,7 @@ function ContactManager() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {contacts.map((contact) => (
+          {contacts?.map((contact) => (
             <ContactCard
               className="p-2 md:p-4"
               key={contact._id}

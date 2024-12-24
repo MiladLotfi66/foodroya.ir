@@ -18,6 +18,8 @@ const ContactSchema = yup.object().shape({
   nationalId: yup
     .string()
     .notRequired(),
+    roles: yup.array().of(yup.string()).min(1, "حداقل یک نقش باید انتخاب شود"),
+
 });
 
 export default ContactSchema;

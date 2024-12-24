@@ -11,15 +11,60 @@ import { useParams } from "next/navigation";
 import { AddContactAction, EditContactAction } from "./contactsServerActions";
 import UserSelector from "@/module/User/UserSelector"; // وارد کردن کامپوننت UserSelector
 import UserMiniInfo from "@/module/home/UserMiniInfo";
+import { AddRoleToContact, GetShopRolesByShopId, RemoveContactFromRole } from "../rols/RolesPermissionActions";
 
 function AddContact({ contact = {}, onClose, refreshContacts }) {
-  
   const [isSubmit, setIsSubmit] = useState(false);
   const { ShopId } = useParams();
   const [isUserSelectorOpen, setIsUserSelectorOpen] = useState(false); // کنترل باز بودن UserSelector
   const [selectedUser, setSelectedUser] = useState(
     contact?.userAccount || null
   ); // State to store selected User
+  const [allRoles, setAllRoles] = useState([]); // لیست تمام نقش‌ها
+  const [contactRoles, setContactRoles] = useState([]); // نقش‌های مخاطب
+  const [isRolesLoading, setIsRolesLoading] = useState(false); // وضعیت بارگذاری نقش‌ها
+
+  // مقداردهی صحیح contactRoles از RolesId
+  useEffect(() => {
+    if (contact?.RolesId) {
+      if (Array.isArray(contact.RolesId) && typeof contact.RolesId[0] === 'object') {
+        // اگر RolesId شامل اشیاء نقش باشد، شناسه‌های آنها را استخراج کنید
+        const roleIds = contact.RolesId.map(role => role._id.toString());
+        setContactRoles(roleIds);
+      } else {
+        // در غیر این صورت، به عنوان شناسه‌های مستقیم در نظر بگیرید
+        setContactRoles(contact.RolesId.map(role => role.toString()));
+      }
+    } else {
+      setContactRoles([]);
+    }
+  }, [contact]);
+
+  const fetchRoles = async () => {
+    setIsRolesLoading(true);
+    try {
+      const response = await GetShopRolesByShopId(ShopId);
+      if (response.status === 200) {
+        // تبدیل _id نقش‌ها به رشته‌ها
+        const roles = response.Roles.map(role => ({
+          ...role,
+          _id: role._id.toString(),
+        }));
+        setAllRoles(roles);
+      } else {
+        toast.error("خطا در دریافت نقش‌ها");
+      }
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      toast.error("خطا در دریافت نقش‌ها");
+    } finally {
+      setIsRolesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, [ShopId]);
 
   const {
     register,
@@ -31,6 +76,7 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
     mode: "all",
     defaultValues: {
       name: contact?.name || "",
+      roles: contactRoles, // اکنون contactRoles به درستی تنظیم شده است
       economicCode: contact?.economicCode || "",
       userAccount: selectedUser,
       address: contact?.address || "",
@@ -41,6 +87,11 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
     },
     resolver: yupResolver(ContactSchema),
   });
+
+  // همگام‌سازی contactRoles با فرم
+  useEffect(() => {
+    setValue("roles", contactRoles);
+  }, [contactRoles, setValue]);
 
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
@@ -57,11 +108,18 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
       formDataObj.append("nationalId", formData.nationalId);
       formDataObj.append("economicCode", formData.economicCode);
       if (selectedUser) {
-        formDataObj.append("userAccount",selectedUser?._id);
+        formDataObj.append("userAccount", selectedUser?._id);
       }
       if (contact?._id) {
         formDataObj.append("id", contact._id);
       }
+      // اضافه کردن نقش‌ها به FormData
+      if (formData.roles && formData.roles.length > 0) {
+        formData.roles.forEach(roleId => {
+          formDataObj.append("roles", roleId);
+        });
+      }
+
       let result;
       if (contact?._id) {
         // اگر مخاطب برای ویرایش است
@@ -99,7 +157,7 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
   // تابع برای دریافت کاربر انتخاب شده
   const handleUserSelect = (user) => {
     setValue("userAccount", user._id);
-    setSelectedUser(user); // Set the selected user
+    setSelectedUser(user); // تنظیم کاربر انتخاب شده
   };
 
   return (
@@ -144,6 +202,37 @@ function AddContact({ contact = {}, onClose, refreshContacts }) {
             required
           />
           {errors.name && <p className="text-red-500">{errors.name.message}</p>}
+        </div>
+
+        {/* بخش نقش‌ها */}
+        <div>
+          <label className="block mb-1">نقش‌ها</label>
+          {isRolesLoading ? (
+            <HashLoader size={20} color="#123abc" />
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {allRoles.map((role) => (
+                <div key={role._id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`role-${role._id}`}
+                    checked={contactRoles.includes(role._id)}
+                    onChange={(e) => {
+                      const roleId = role._id;
+                      if (e.target.checked) {
+                        setContactRoles([...contactRoles, roleId]);
+                      } else {
+                        setContactRoles(contactRoles.filter(r => r !== roleId));
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  <label htmlFor={`role-${role._id}`}>{role.RoleTitle}</label>
+                </div>
+              ))}
+            </div>
+          )}
+          {errors.roles && <p className="text-red-500">{errors.roles.message}</p>}
         </div>
 
         {/* فیلد کد اقتصادی */}

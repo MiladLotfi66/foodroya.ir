@@ -84,6 +84,10 @@ const ContactSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'ویرایش کننده الزامی است'],
     },
+    RolesId: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "rolePerimision", 
+    }],
     // افزودن فیلدهای اضافی در صورت نیاز
   },
   {

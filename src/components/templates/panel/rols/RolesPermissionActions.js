@@ -5,18 +5,24 @@ import { cookies } from "next/headers";
 import RoleSchema from "@/utils/yupSchemas/RoleSchema";
 import RoleInShop from "@/templates/panel/rols/RoleInShop";
 import Shop from "@/templates/Shop/shops";
-import User from "@/models/Users";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
+import Contact from "../Contact/Contact";
+import mongoose from "mongoose";
 
-
-export async function AddRoleToUser(UserId, ShopId, RoleId) {
+export async function AddRoleToContact(ContactId, ShopId, RoleId) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
     // اتصال به دیتابیس
     await connectDB();
-    // دریافت آی‌دی شاپ
+    
+    // اعتبارسنجی ShopId
     if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
+
+    // احراز هویت کاربر
     let userData;
     try {
       userData = await authenticateUser();
@@ -25,39 +31,56 @@ export async function AddRoleToUser(UserId, ShopId, RoleId) {
       console.log("Authentication failed:", authError);
     }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-    // ایجاد رکورد جدید
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // ایجاد رکورد جدید در RoleInShop
     const newRoleInShop = new RoleInShop({
-      UserId,
+      ContactId,
       ShopId,
       RoleId,
       CreatedBy: userData.id,
       LastEditedBy: userData.id, // فرض بر این است که خالق همان شخص آخرین ویرایشگر است
     });
 
-    // ذخیره رکورد در دیتابیس
-    await newRoleInShop.save();
+    await newRoleInShop.save({ session });
+
+    // بروزرسانی Contact.RolesId
+    await Contact.findByIdAndUpdate(
+      ContactId,
+      { $addToSet: { RolesId: RoleId } }, // از $addToSet استفاده می‌کنیم تا از افزودن تکراری جلوگیری شود
+      { new: true, session }
+    );
+
+    // تکمیل تراکنش
+    await session.commitTransaction();
+    session.endSession();
 
     return { success: true, message: 'رکورد جدید با موفقیت ذخیره شد.' };
   } catch (error) {
+    // لغو تراکنش در صورت خطا
+    await session.abortTransaction();
+    session.endSession();
     console.error('خطا در ذخیره رکورد:', error);
     return { success: false, message: 'خطا در ذخیره رکورد', error };
   }
 }
 
-export async function  RemoveUserFromRole (UserId, ShopId, RoleId) {
+export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   
   try {
     // اتصال به دیتابیس
     await connectDB();
-    // دریافت آی‌دی شاپ
     
+    // اعتبارسنجی ShopId
     if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
 
+    // احراز هویت کاربر
     let userData;
     try {
       userData = await authenticateUser();
@@ -66,21 +89,37 @@ export async function  RemoveUserFromRole (UserId, ShopId, RoleId) {
       console.log("Authentication failed:", authError);
     }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }    // پیدا کردن و حذف رکورد
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // پیدا کردن و حذف رکورد در RoleInShop
     const result = await RoleInShop.findOneAndDelete({
-      UserId,
+      ContactId,
       ShopId,
       RoleId
-    });
+    }, { session });
 
     if (!result) {
       throw new Error('Record not found');
     }
 
+    // بروزرسانی Contact.RolesId
+    await Contact.findByIdAndUpdate(
+      ContactId,
+      { $pull: { RolesId: RoleId } }, // از $pull برای حذف نقش استفاده می‌کنیم
+      { new: true, session }
+    );
+
+    // تکمیل تراکنش
+    await session.commitTransaction();
+    session.endSession();
+
     return { success: true, message: 'رکورد با موفقیت حذف شد.' };
   } catch (error) {
+    // لغو تراکنش در صورت خطا
+    await session.abortTransaction();
+    session.endSession();
     console.error('خطا در حذف رکورد:', error);
     return { success: false, message: 'خطا در حذف رکورد', error };
   }
@@ -88,12 +127,12 @@ export async function  RemoveUserFromRole (UserId, ShopId, RoleId) {
 
 
 // بررسی دسترسی کاربر
-const hasUserAccess = async (userId) => {
+const hasContactAccess = async (contactId) => {
   try {
     await connectDB();
     return true; // در اینجا می‌توانید منطق دسترسی را تعریف کنید
   } catch (error) {
-    console.error("Error in hasUserAccess function:", error);
+    console.error("Error in hasContactAccess function:", error);
     return false;
   }
 };
@@ -168,7 +207,7 @@ export async function EditRole(RoleData , roleId) {
       throw new Error("نقشی با این آی‌دی یافت نشد");
     }
 
-    if (!await hasUserAccess(Role.CreatedBy)) {
+    if (!await hasContactAccess(Role.CreatedBy)) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -216,7 +255,7 @@ export async function DeleteRole(RoleID) {
       throw new Error("نقش مورد نظر یافت نشد");
     }
 
-    if (!await hasUserAccess(Role.CreatedBy)) {
+    if (!await hasContactAccess(Role.CreatedBy)) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -250,7 +289,7 @@ export async function EnableRole(RoleID) {
       throw new Error("نقشی با این آی‌دی یافت نشد");
     }
 
-    if (!await hasUserAccess(Role.CreatedBy)) {
+    if (!await hasContactAccess(Role.CreatedBy)) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -288,7 +327,7 @@ export async function DisableRole(RoleID) {
       throw new Error("نقشی با این آی‌دی یافت نشد");
     }
 
-    if (!await hasUserAccess(Role.CreatedBy)) {
+    if (!await hasContactAccess(Role.CreatedBy)) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -341,7 +380,7 @@ console.log("ShopId",ShopId);
       shop.followers?.map(async (follower) => {
         // بررسی اینکه آیا این فالور برای این فروشگاه نقش خاصی دارد یا خیر
         const roleInShop = await RoleInShop.findOne({
-          UserId: follower._id,
+          ContactId: follower._id,
           ShopId: ShopId,
           RoleId: roleId,
         });
@@ -357,6 +396,51 @@ console.log("ShopId",ShopId);
     return { status: 200, data: followersWithRoles };
   } catch (error) {
     console.error("خطا در دریافت فالورها و بررسی نقش:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
+export async function GetAllContactsWithRoles(ShopId, roleId) {
+  try {
+    await connectDB();
+
+    // اعتبارسنجی ورودی‌ها
+    if (!ShopId || !roleId) {
+      return { status: 400, error: "شناسه غرفه و شناسه نقش الزامی است." };
+    }
+
+    // دریافت تمامی مخاطبین مربوط به غرفه
+    const ShopContacts = await Contact.find({ shop: ShopId }).lean();
+    console.log("ShopContacts", ShopContacts);
+
+    // اگر هیچ مخاطبی پیدا نشود
+    if (!ShopContacts || ShopContacts.length === 0) {
+      return { status: 404, error: "هیچ مخاطبی برای این غرفه پیدا نشد." };
+    }
+
+    // تهیه لیستی از شناسه مخاطبین
+    const contactIds = ShopContacts.map(contact => contact._id);
+
+    // دریافت نقش‌هایی که مخاطبین با شناسه‌های مشخص شده برای نقش داده شده دارند
+    const rolesInShop = await RoleInShop.find({
+      ShopId: ShopId,
+      RoleId: roleId,
+      ContactId: { $in: contactIds }
+    }).select('ContactId').lean();
+
+    // استخراج شناسه مخاطبین که نقش مشخص شده را دارند
+    const contactsWithRoleIds = rolesInShop.map(role => role.ContactId.toString());
+
+    // علامت‌گذاری مخاطبین با بررسی اینکه آیا شناسه آن‌ها در لیست دارند یا خیر
+    const contactsWithRoles = ShopContacts.map(contact => ({
+      ...contact,
+      _id: contact._id.toString(),
+      hasRole: contactsWithRoleIds.includes(contact._id.toString())
+    }));
+
+    return { status: 200, data: contactsWithRoles };
+  } catch (error) {
+    console.error("خطا در دریافت مخاطبین و بررسی نقش‌ها:", error);
     return { error: error.message, status: 500 };
   }
 }
@@ -454,32 +538,32 @@ export async function GetShopIdByShopUniqueName(ShopUniqueName) {
   }
 }
 
-export async function  getUsersByRoleId (roleId) {
+export async function  getContactsByRoleId (roleId) {
   try {
     await connectDB();
-    // const rolesInShop = await RoleInShop.find({ RoleId: roleId }).populate('UserId');
+    // const rolesInShop = await RoleInShop.find({ RoleId: roleId }).populate('ContactId');
     const rolesInShop = await RoleInShop.find({ RoleId: roleId }) .populate({
-      path: 'UserId',
-      select: '_id name userImage'
+      path: 'ContactId',
+      select: '_id name'
     });
 
-    const users = rolesInShop?.map(roleInShop => {
-      const user = roleInShop.UserId;
-      return user ? { _id: user._id.toString(), name: user.name , userImage:user.userImage} : null;
-    }).filter(user => user !== null); // حذف موارد null
+    const contacts = rolesInShop?.map(roleInShop => {
+      const contact = roleInShop.ContactId;
+      return contact ? { _id: contact._id.toString(), name: contact.name } : null;
+    }).filter(contact => contact !== null); // حذف موارد null
 
     // بررسی داده‌های برگردانده شده
 
-    return users;
+    return contacts;
   } catch (error) {
-    console.error("Error fetching user names by RoleId:", error.message);
-     throw new Error("Error fetching user names by RoleId");
+    console.error("Error fetching contact names by RoleId:", error.message);
+     throw new Error("Error fetching contact names by RoleId");
   }
 };
 
 
 
-export async function GetUserRolsAtShop({ userId, shopId }) {
+export async function GetContactRolsAtShop({ contactId, shopId }) {
   try {
     await connectDB();
     
@@ -495,15 +579,16 @@ export async function GetUserRolsAtShop({ userId, shopId }) {
   if (!userData) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }    // یافتن نقش‌های کاربر در فروشگاه خاص
-    const rolesInShop = await RoleInShop.find({ UserId: userId, ShopId: shopId }).populate('RoleId');
+    const rolesInShop = await RoleInShop.find({ ContactId: contactId, ShopId: shopId }).populate('RoleId');
     
     // استخراج آی‌دی‌های نقش‌ها و ایجاد یک آرایه
     const roleIds = rolesInShop?.map(item => item.RoleId._id.toString());
 
     return { message: "Roles retrieved successfully", status: 200, data: roleIds };
   } catch (error) {
-    console.error("Error in GetUserRolesAtShop action:", error.message);
+    console.error("Error in GetContactRolesAtShop action:", error.message);
     return { error: error.message, status: 500 };
   }
 }
+
 

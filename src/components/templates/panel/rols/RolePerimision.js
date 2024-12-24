@@ -36,6 +36,7 @@ const schema = new Schema(
       enum: ["add", "edit", "delete", "view"],
       default: [],
     },
+    
   
     RoleStatus: { type: Boolean, required: true },
 

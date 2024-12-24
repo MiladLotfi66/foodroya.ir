@@ -4,23 +4,16 @@ import connectDB from "@/utils/connectToDB";
 import Contact from "./Contact";
 import Account from "@/templates/panel/Account/Account";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-
+import RolePerimision from "../rols/RolePerimision";
+import RoleInShop from "../rols/RoleInShop";
 import mongoose from "mongoose";
 import { p2e } from "@/utils/ReplaceNumber";
-/**
- * تبدیل مستندات Mongoose به اشیاء ساده
- * @param {Array} docs - آرایه‌ای از مستندات
- * @returns {Array} - آرایه‌ای از اشیاء ساده
- */
+
 function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
 }
 
-/**
- * دریافت تمام مخاطبها
- * @param {string} shopId - شناسه فروشگاه
- * @returns {Object} - شامل وضعیت و آرایه‌ای از مخاطبها
- */
+
 export async function GetAllContacts(shopId) {
   
   await connectDB();
@@ -43,6 +36,7 @@ export async function GetAllContacts(shopId) {
       .populate('createdBy')
       .populate('updatedBy')
       .populate('userAccount')
+      .populate('RolesId') // اطمینان از واکشی نقش‌ها
       .lean(); // استفاده از lean() برای دریافت اشیاء ساده
 
     return { status: 200, contacts: convertToPlainObjects(contacts) };
@@ -52,11 +46,7 @@ export async function GetAllContacts(shopId) {
   }
 }
 
-/**
- * افزودن مخاطب جدید
- * @param {FormData} formData - داده‌های فرم
- * @returns {Object} - نتیجه عملیات
- */
+
 export async function AddContactAction(formData) {
   await connectDB();
   let user;
@@ -80,8 +70,19 @@ if (!user) {
     nationalId,
     economicCode,
     userAccount,
-    ShopId 
+    ShopId,
+    roles // دریافت نقش‌ها
   } = Object.fromEntries(formData.entries());
+  // پردازش نقش‌ها (اگر به صورت چندگانه ارسال شده‌اند)
+  const rolesArray = formData.getAll('roles'); // دریافت تمام نقش‌ها به صورت آرایه
+
+  // اعتبارسنجی نقش‌ها
+  if (rolesArray && rolesArray.length > 0) {
+    const validRoles = await RolePerimision.find({ _id: { $in: rolesArray }, ShopId });
+    if (validRoles.length !== rolesArray.length) {
+      return { status: 400, message: 'یکی یا چند نقش انتخاب شده معتبر نیستند.' };
+    }
+  }
 
   // اعتبارسنجی فیلدهای الزامی
   if (!phoneNumber || typeof phoneNumber !== 'string' || !/^\d{10,15}$/.test(phoneNumber)) {
@@ -99,7 +100,6 @@ if (!user) {
       return { status: 400, message: 'شماره ملی باید 10 رقم باشد.' };
     }
   }
-  console.log("111111");
   
   if (economicCode) {
     economicCode = p2e(economicCode);
@@ -113,10 +113,6 @@ if (!user) {
     return { status: 400, message: 'حساب کاربری نامعتبر است.' };
   }
 
-
-  const createdBy = user.id;
-  const updatedBy = user.id;
-
   // پاک‌سازی فیلدهای خالی
   const contactData = {
     name,
@@ -126,10 +122,11 @@ if (!user) {
     nationalId: nationalId || undefined,
     economicCode: economicCode || undefined,
     userAccount: userAccount || undefined,
-    createdBy,
-    updatedBy,
+    RolesId: rolesArray, // اضافه کردن نقش‌ها
+    createdBy: user.id,
+    updatedBy: user.id,
+    shop: ShopId,
   };
-  console.log("۲۲۲۲۲");
 
 
   // بررسی یکتایی نام مخاطب
@@ -138,28 +135,40 @@ if (!user) {
     return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
   }
 
-  // اضافه کردن shopId به داده‌های مخاطب
-  contactData.shop = ShopId;
+
+  // شروع تراکنش
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
     const newContact = new Contact(contactData);
     const savedContact = await newContact.save();
 
+    // ایجاد مستندات RoleInShop برای هر نقش
+    if (rolesArray && rolesArray.length > 0) {
+      const roleInShopDocs = rolesArray.map(roleId => ({
+        ContactId: savedContact._id,
+        ShopId: ShopId,
+        RoleId: roleId,
+        LastEditedBy: user.id,
+        CreatedBy: user.id,
+      }));
+      await RoleInShop.insertMany(roleInShopDocs, { session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
     const plainContact = JSON.parse(JSON.stringify(savedContact));
     return { status: 201, contact: plainContact };
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error adding contact:", error);
     return { status: 500, message: 'خطایی در ایجاد مخاطب رخ داد.' };
   }
 }
 
-
-/**
- * ویرایش مخاطب
- * @param {FormData} formData - داده‌های فرم
- * @param {string} ShopId - نام یکتا فروشگاه
- * @returns {Object} - نتیجه عملیات
- */
 export async function EditContactAction(formData) {
   await connectDB();
   let user;
@@ -183,9 +192,24 @@ export async function EditContactAction(formData) {
     nationalId,
     economicCode,
     userAccount,
-    ShopId 
+    ShopId,
+    roles // دریافت نقش‌ها
   } = Object.fromEntries(formData.entries());
 
+  // پردازش نقش‌ها (اگر به صورت چندگانه ارسال شده‌اند)
+  const rolesArray = formData.getAll('roles'); // دریافت تمام نقش‌ها به صورت آرایه
+ // اعتبارسنجی نقش‌ها
+    // اعتبارسنجی شناسه‌های نقش
+    const areRoleIdsValid = rolesArray.every(id => mongoose.Types.ObjectId.isValid(id));
+    if (!areRoleIdsValid) {
+      return { status: 400, message: 'یکی یا چند شناسه نقش نامعتبر است.' };
+    }
+    // اعتبارسنجی نقش‌ها با استفاده از مدل یکسان (Role)
+    const validRoles = await RolePerimision.find({ _id: { $in: rolesArray }, ShopId });
+    if (validRoles.length !== rolesArray.length) {
+      return { status: 400, message: 'یکی یا چند نقش انتخاب شده معتبر نیستند.' };
+    }
+  
   // اعتبارسنجی فیلدهای الزامی
   if (!phoneNumber || typeof phoneNumber !== 'string' || !/^\d{10,15}$/.test(phoneNumber)) {
     return { status: 400, message: 'شماره تماس الزامی است و باید بین 10 تا 15 رقم باشد.' };
@@ -255,23 +279,59 @@ export async function EditContactAction(formData) {
     nationalId: nationalId !== undefined ? nationalId : existingContact.nationalId,
     economicCode: economicCode !== undefined ? economicCode : existingContact.economicCode,
     userAccount: userAccount !== undefined ? userAccount : existingContact.userAccount,
+    RolesId: rolesArray, // اضافه کردن نقش‌ها
     shop: shopId,
     updatedBy: user.id,
   };
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const updatedContact = await Contact.findByIdAndUpdate(id, updateData, { new: true })
+    // به‌روزرسانی مخاطب
+    const updatedContact = await Contact.findByIdAndUpdate(id, updateData, { new: true, session })
       .populate('shop')
       .populate('createdBy')
       .populate('updatedBy')
       .populate('userAccount')
       .lean();
 
+    // به‌روزرسانی نقش‌ها در RoleInShop
+    // ابتدا نقش‌های فعلی را پیدا کنید
+    const existingRoles = await RoleInShop.find({ ContactId: id, ShopId: shopId }).session(session).lean();
+    const existingRoleIds = existingRoles.map(r => r.RoleId.toString());
+
+    // نقش‌های جدیدی که باید اضافه شوند
+    const rolesToAdd = rolesArray.filter(role => !existingRoleIds.includes(role));
+
+    // نقش‌هایی که باید حذف شوند
+    const rolesToRemove = existingRoleIds.filter(role => !rolesArray.includes(role));
+
+    // اضافه کردن نقش‌های جدید
+    if (rolesToAdd.length > 0) {
+      const newRoleInShopDocs = rolesToAdd.map(roleId => ({
+        ContactId: id,
+        ShopId: shopId,
+        RoleId: roleId,
+        LastEditedBy: user.id,
+        CreatedBy: user.id,
+      }));
+      await RoleInShop.insertMany(newRoleInShopDocs, { session });
+    }
+
+    // حذف نقش‌هایی که دیگر تعلق ندارند
+    if (rolesToRemove.length > 0) {
+      await RoleInShop.deleteMany({ ContactId: id, RoleId: { $in: rolesToRemove } }, { session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
     const plainContact = convertToPlainObjects([updatedContact])[0];
-
     return { status: 200, contact: plainContact };
-
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error editing contact:", error);
     if (error.code === 11000) { // خطای Duplicate Key
       if (error.keyPattern.name) {
@@ -285,12 +345,6 @@ export async function EditContactAction(formData) {
   }
 }
 
-
-/**
- * حذف مخاطب
- * @param {string} contactId - شناسه مخاطب
- * @returns {Object} - نتیجه عملیات
- */
 export async function DeleteContacts(contactId) {
   await connectDB();
   let user;
@@ -301,36 +355,37 @@ export async function DeleteContacts(contactId) {
     console.log("Authentication failed:", authError);
   }
 
-if (!user) {
-  return { status: 401, message: 'کاربر وارد نشده است.' };
-}
-
-/////////////////////////////
-const session = await mongoose.startSession();
-session.startTransaction();
-try {
-  // بررسی وابستگی‌ها
-  const linkedAccount = await Account.findOne({ contact: contactId }).session(session).exec();
-  if (linkedAccount) {
-    return { status: 500, message: 'این مخاطب در حساب‌ها استفاده شده است و قابل حذف نیست.' };
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
   }
 
-  // حذف مخاطب
-  const result = await Contact.findOneAndDelete({ _id: contactId }).session(session).exec();
-  if (!result) {
-    return { status: 404, message: 'مخاطب یافت نشد.' };
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // بررسی وابستگی‌ها
+    const linkedAccount = await Account.findOne({ contact: contactId }).session(session).exec();
+    if (linkedAccount) {
+      return { status: 500, message: 'این مخاطب در حساب‌ها استفاده شده است و قابل حذف نیست.' };
+    }
+
+    // حذف مخاطب
+    const result = await Contact.findOneAndDelete({ _id: contactId }).session(session).exec();
+    if (!result) {
+      return { status: 404, message: 'مخاطب یافت نشد.' };
+    }
+
+    // حذف نقش‌های مرتبط در RoleInShop
+    await RoleInShop.deleteMany({ ContactId: contactId }).session(session).exec();
+
+    // تایید تراکنش
+    await session.commitTransaction();
+    session.endSession();
+    return { status: 200, message: 'مخاطب با موفقیت حذف شد.' };
+  } catch (error) {
+    // بازگرداندن تراکنش در صورت خطا
+    await session.abortTransaction();
+    session.endSession();
+    console.error('خطا در حذف مخاطب:', error.message);
+    return { status: 500, message: 'خطایی در حذف مخاطب رخ داد.' };
   }
-
-  // تایید تراکنش
-  await session.commitTransaction();
-  session.endSession();
-  return { status: 200, message: 'مخاطب با موفقیت حذف شد.' };
-} catch (error) {
-  // بازگرداندن تراکنش در صورت خطا
-  await session.abortTransaction();
-  session.endSession();
-  console.error('خطا در حذف مخاطب:', error.message);
 }
-}
-
-

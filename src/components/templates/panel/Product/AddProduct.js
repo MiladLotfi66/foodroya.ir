@@ -68,6 +68,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
     mode: "all",
     defaultValues: {
       title: product?.title || "",
+      price: product?.price || "", // اضافه کردن قیمت
       secondaryTitle: product?.secondaryTitle || "",
       pricingTemplate: product?.pricingTemplate?._id || "",
       parentAccount: parentAccount,
@@ -100,6 +101,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
         name: product.name,
         description: product.description,
         title: product.title,
+        price: product.price || "", // اضافه کردن قیمت
         secondaryTitle: product.secondaryTitle,
         pricingTemplate: product.pricingTemplate?._id || "",
         parentAccount: product.parentAccount,
@@ -202,6 +204,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       });
 
       formDataObj.append("title", formData.title);
+      formDataObj.append("price", formData.price); // اضافه کردن قیمت
       formDataObj.append("pricingTemplate", formData.pricingTemplate);
       formDataObj.append("parentAccount", parentAccount);
       const tags = formData.tags?.map((tag) => tag.value).join(",");
@@ -388,6 +391,18 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               <p className="text-red-500">{errors.title.message}</p>
             )}
           </div>
+          <div>
+  <label className="block mb-1">قیمت محصول</label>
+  <input
+    type="number"
+    step="0.01" // برای امکان وارد کردن اعداد اعشاری، در صورت نیاز
+    {...register("price")}
+    className="react-select-container w-full border rounded px-3 py-2"
+  />
+  {errors.price && (
+    <p className="text-red-500">{errors.price.message}</p>
+  )}
+</div>
 
           <div>
             <label className="block mb-1">دسته بندی کالا و تگ ها</label>
