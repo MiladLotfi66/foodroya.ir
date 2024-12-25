@@ -1,5 +1,4 @@
 import { Schema, model, models } from "mongoose";
-
 const schema = new Schema(
   {
     // UserId: {
@@ -19,7 +18,7 @@ const schema = new Schema(
     },
     RoleId: {
       type: Schema.Types.ObjectId,
-      ref: "RolePermission", // اصلاح نام مدل ؛ باید با نام صحیح هماهنگ باشد
+      ref: "rolePerimision", // اصلاح نام مدل ؛ باید با نام صحیح هماهنگ باشد
       required: true,
     },
     LastEditedBy: {

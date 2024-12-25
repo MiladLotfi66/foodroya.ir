@@ -12,7 +12,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
   const { ShopId } = params;
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
-  const [path, setPath] = useState(['خانه']); // مقدار اولیه مسیر
+  const [path, setPath] = useState(['انبار']); // مقدار اولیه مسیر
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
@@ -142,21 +142,20 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
   const handleSelectAccount = (account) => {
     if (account.accountType === "کالا") {
       const invoiceItemData = {
-        _id: account.productId._id, // فرض بر این است که محصول دارای یک شناسه منحصر به فرد است
+        _id: account.productId._id,
         productId: account.productId._id,
         title: account.productId.title,
-        quantity: 1, // مقدار پیش‌فرض، می‌توانید این را به کاربر بدهید
-        unitPrice: account.productId.price, // فرض بر این که محصول دارای قیمت است
-        totalPrice: account.productId.price, // برای مقدار اولیه
-        // سایر فیلدهای مورد نیاز
-        image: account.productId.images?.[0] || "https://via.placeholder.com/150", // مثال
+        quantity: 1,
+        // حذف unitPrice و totalPrice
+        image: account.productId.images?.[0] || "https://via.placeholder.com/150",
       };
-      onAddNewInvoiceItem(invoiceItemData); // انتقال داده به والد
-      onClose(); // بستن مدال
+      onAddNewInvoiceItem(invoiceItemData);
+      onClose();
     } else if (account.accountType === "دسته بندی کالا") {
       handleOpenAccount(account);
     }
   };
+  
 
   return (
     <div>
@@ -183,15 +182,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
                 className="w-full border rounded px-2 py-1"
               />
             </div>
-            {/* افزودن حساب جدید (در صورت نیاز) */}
-            {/* 
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded"
-              onClick={() => setShowCreateAccountModal(true)}
-            >
-              افزودن حساب
-            </button>
-            */}
+            
           </div>
 
           {/* لیست محصولات */}
@@ -250,7 +241,6 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
             </>
           )}
 
-          {/* <Toaster /> */}
         </div>
       </div>
 

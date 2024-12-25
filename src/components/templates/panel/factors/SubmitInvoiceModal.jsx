@@ -4,7 +4,6 @@ import { AddPurchaseInvoiceAction } from './invoiceItemsServerActions';
 
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
   // به‌روزرسانی وضعیت به آرایه از حساب‌های تخصیص‌یافته
-  console.log("isOpen, onClose, invoiceData, invoiceItems",isOpen, onClose, invoiceData, invoiceItems);
   
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([

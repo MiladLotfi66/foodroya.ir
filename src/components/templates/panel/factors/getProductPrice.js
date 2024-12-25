@@ -1,19 +1,13 @@
-// Import کتابخانه‌ها و مدل‌ها
-import math from 'mathjs';
+"use server";
+import * as math from 'mathjs'; // اصلاح نحوه وارد کردن mathjs
 import mongoose from 'mongoose';
-import PriceTemplate from '../PriceTemplate/PriceTemplate';
 import Product from '../Product/Product';
 import RoleInShop from '../rols/RoleInShop';
 import InvoiceItem from './InvoiceItem';
 import Account from '../Account/Account';
+import rolePerimision from '../rols/rolePerimision';
 
-/**
- * محاسبه قیمت محصول بر اساس نقش‌های کاربر
- * @param {String} productId - شناسه محصول
- * @param {String} userId - شناسه کاربر
- * @returns {Number} - پایین‌ترین قیمت محاسبه‌شده
- */
-async function getProductPrice(productId, userId) {
+async function getProductPrice(productId, contactId) {
   try {
     // ۱. دریافت محصول با قالب قیمتی مرتبط
     const product = await Product.findById(productId).populate('pricingTemplate').exec();
@@ -24,11 +18,13 @@ async function getProductPrice(productId, userId) {
 
     // ۲. دریافت نقش‌های کاربر در فروشگاه مربوطه
     const rolesInShop = await RoleInShop.find({
-      UserId: mongoose.Types.ObjectId(userId),
-      ShopId: mongoose.Types.ObjectId(product.ShopId),
+      ContactId: new mongoose.Types.ObjectId(contactId),
+      ShopId: new mongoose.Types.ObjectId(product.ShopId),
     }).populate('RoleId').exec();
 
-    const roleIds = rolesInShop.map(role => role.RoleId.toString());
+    const roleIds = rolesInShop.map(role => {
+      return role.RoleId._id.toString(); // افزودن return
+    });
 
     // ۳. جمع‌آوری فرمول‌های قیمتی مرتبط با نقش‌های کاربر
     let formulas = [];
@@ -49,37 +45,41 @@ async function getProductPrice(productId, userId) {
 
     // ۴. دریافت داده‌های مورد نیاز برای فرمول
     // a. قیمت فروش محصول
-    const salePrice = product.salePrice;
+    const salePrice = product.price;
     if (salePrice == null) throw new Error('قیمت فروش محصول مشخص نشده است.');
 
     // b. بها تمام شده = میزان حساب کالا / تعداد کالا
     const account = await Account.findById(product.accountId).exec();
+
     if (!account) throw new Error('حساب مربوط به محصول یافت نشد.');
     if (product.stock === 0) throw new Error('موجودی محصول صفر است.');
-    const costPrice = parseFloat(account.amount.toString()) / product.stock;
+    const costPrice = parseFloat(account.balance.toString()) / product.stock;
 
     // c. آخرین قیمت خرید از اقلام فاکتور
-    const lastInvoiceItem = await InvoiceItem.findOne({ product: mongoose.Types.ObjectId(productId) })
+    const lastInvoiceItem = await InvoiceItem.findOne({ product: new mongoose.Types.ObjectId(productId) })
       .sort({ createdAt: -1 })
       .exec();
     const lastPurchasePrice = lastInvoiceItem ? parseFloat(lastInvoiceItem.unitPrice.toString()) : 0;
 
     // ۵. تعریف متغیرهای فرمول
     const variables = {
-      salePrice,
-      costPrice,
-      lastPurchasePrice,
+      a: costPrice,          // 'a' به معنی میزان حساب کالا / تعداد کالا
+      b: lastPurchasePrice, // 'b' به معنی آخرین قیمت خرید
+      c: salePrice,         // 'c' به معنی قیمت فروش
     };
 
     // ۶. محاسبه قیمت‌های مختلف بر اساس فرمول‌ها
     const prices = formulas.map(formula => {
       try {
-        // اطمینان از امن بودن فرمول
-        const compiledFormula = math.compile(formula);
+
         // ارزیابی فرمول با استفاده از متغیرها
+        const compiledFormula = math.compile(formula);
+
         const result = compiledFormula.evaluate(variables);
+
         // اطمینان از اینکه نتیجه عددی است
         if (typeof result !== 'number') throw new Error('نتیجه فرمول عددی نیست.');
+
         return result;
       } catch (error) {
         console.error(`خطا در ارزیابی فرمول "${formula}":`, error.message);
@@ -99,4 +99,5 @@ async function getProductPrice(productId, userId) {
     throw error;
   }
 }
+
 export default getProductPrice;

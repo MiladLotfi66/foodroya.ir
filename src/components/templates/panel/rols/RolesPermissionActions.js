@@ -1,5 +1,5 @@
 "use server";
-import RolePerimision from "@/templates/panel/rols/RolePerimision";
+import RolePerimision from "@/templates/panel/rols/rolePerimision";
 import connectDB from "@/utils/connectToDB";
 import { cookies } from "next/headers";
 import RoleSchema from "@/utils/yupSchemas/RoleSchema";

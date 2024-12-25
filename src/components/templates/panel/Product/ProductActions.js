@@ -72,6 +72,7 @@ export async function AddProductAction(formData) {
     const isSaleable = formData.get('isSaleable') === 'true';
     const isMergeable = formData.get('isMergeable') === 'true';
     const description = formData.get('description');
+    const price = formData.get('price');
 
     // اعتبارسنجی فیلدهای الزامی
     if (!title || !unit || !ShopId) {
@@ -129,6 +130,7 @@ export async function AddProductAction(formData) {
       isSaleable,
       isMergeable,
       description,
+      price,
       parentAccount,
       createdBy: user.id,
       updatedBy: user.id,
@@ -260,6 +262,7 @@ export async function EditProductAction(formData, ShopId) {
       const isSaleable = formData.get('isSaleable') === 'true';
       const isMergeable = formData.get('isMergeable') === 'true';
       const description = formData.get('description');
+      const price = formData.get('price');
 
       // اعتبارسنجی فیلدهای الزامی
       if (!title || !unit) {
@@ -378,6 +381,7 @@ export async function EditProductAction(formData, ShopId) {
       existingProduct.isSaleable = isSaleable;
       existingProduct.isMergeable = isMergeable;
       existingProduct.description = description;
+      existingProduct.price = price;
       existingProduct.images = updatedImagePaths;
       existingProduct.Features = insertedFeatureIds;
       existingProduct.updatedBy = user.id;

@@ -43,7 +43,6 @@ function RolsManage() {
     try {
       const response = await GetShopRolesByShopId(ShopId);
       setRols(response.Roles);
-      
       // فرض می‌کنیم هر نقش دارای یک فیلد contacts که آرایه‌ای از مخاطبان است
       const counts = {};
       

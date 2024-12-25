@@ -10,36 +10,28 @@ const schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Shop",
       required: true
-
     },
-
     LastEditedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true
     },
-
     CreatedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true
     },
-
     bannersPermissions: {
       type: [String],
       enum: ["add", "edit", "delete", "view"],
       default: [],
     },
-
     rolesPermissions: {
       type: [String],
       enum: ["add", "edit", "delete", "view"],
       default: [],
     },
-    
-  
     RoleStatus: { type: Boolean, required: true },
-
   },
   { timestamps: true }
 );

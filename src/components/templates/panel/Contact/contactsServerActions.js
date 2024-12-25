@@ -4,7 +4,7 @@ import connectDB from "@/utils/connectToDB";
 import Contact from "./Contact";
 import Account from "@/templates/panel/Account/Account";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-import RolePerimision from "../rols/RolePerimision";
+import RolePerimision from "../rols/rolePerimision";
 import RoleInShop from "../rols/RoleInShop";
 import mongoose from "mongoose";
 import { p2e } from "@/utils/ReplaceNumber";

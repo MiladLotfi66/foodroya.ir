@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import SubmitInvoiceModal from "./SubmitInvoiceModal";
 import Link from "next/link";
 import { INVOICE_TYPES } from "./invoiceTypes"; // وارد کردن انواع فاکتورها
+import getProductPrice from "./getProductPrice";
 
 function AddInvoice({ invoiceType }) {
   const [invoiceItems, setInvoiceItems] = useState([]);
@@ -42,16 +43,60 @@ function AddInvoice({ invoiceType }) {
     fetchContacts();
   }, [ShopId]);
 
-  const handleAddNewInvoiceItem = useCallback((newInvoiceItem) => {
-    const itemWithUniqueKey = {
-      ...newInvoiceItem,
-      uniqueKey: uuidv4(),
-      totalPrice: (parseInt(newInvoiceItem.quantity, 10) || 0) * (parseFloat(newInvoiceItem.unitPrice) || 0),
+  // استفاده از useEffect برای بروز رسانی قیمت‌ها هنگام تغییر مخاطب
+  useEffect(() => {
+    const updatePrices = async () => {
+      if (!selectedContact || invoiceItems.length === 0) return; // اضافه کردن بررسی تعداد اقلام
+
+      try {
+        const updatedItems = await Promise.all(invoiceItems.map(async (item) => {
+          const newPrice = await getProductPrice(item.productId, selectedContact);
+          return {
+            ...item,
+            unitPrice: newPrice,
+            totalPrice: (parseInt(item.quantity, 10) || 0) * (parseFloat(newPrice) || 0),
+          };
+        }));
+        setInvoiceItems(updatedItems);
+        toast.success("قیمت‌ها با موفقیت به‌روزرسانی شدند.");
+      } catch (error) {
+        console.error("خطا در بروز رسانی قیمت‌ها:", error);
+        toast.error("خطا در بروز رسانی قیمت‌ها.");
+      }
     };
-    setInvoiceItems((prevInvoiceItems) => [...prevInvoiceItems, itemWithUniqueKey]);
-    toast.success("کالا با موفقیت افزوده شد.");
-    setIsOpenAddInvoiceItem(false);
-  }, []);
+
+    updatePrices();
+  }, [selectedContact, invoiceItems.length]); // اضافه کردن invoiceItems.length به وابستگی‌ها
+
+  const handleAddNewInvoiceItem = useCallback(async (newInvoiceItem) => {
+    if (!selectedContact) 
+      {
+      toast.error("لطفاً مشتری را انتخاب کنید قبل از افزودن کالا.");
+      return;
+    }
+  
+    try {
+      let unitPrice = 0;
+      if (invoiceType === INVOICE_TYPES.SALE) {
+        // فقط برای فاکتور فروش قیمت را از سرور دریافت کنید
+        const fetchedPrice = await getProductPrice(newInvoiceItem.productId, selectedContact);
+        unitPrice = fetchedPrice;
+      } 
+  
+      const itemWithUniqueKey = {
+        ...newInvoiceItem,
+        uniqueKey: uuidv4(),
+        unitPrice: unitPrice,
+        totalPrice: (parseInt(newInvoiceItem.quantity, 10) || 0) * (parseFloat(unitPrice) || 0),
+      };
+      setInvoiceItems((prevInvoiceItems) => [...prevInvoiceItems, itemWithUniqueKey]);
+      toast.success("کالا با موفقیت افزوده شد.");
+      setIsOpenAddInvoiceItem(false);
+    } catch (error) {
+      console.error("خطا در دریافت قیمت کالا:", error);
+      toast.error("خطا در دریافت قیمت کالا.");
+    }
+  }, [selectedContact, invoiceType]);
 
   const handleUpdateInvoiceItem = useCallback((updatedItem) => {
     const updatedItemWithTotalPrice = {
@@ -64,7 +109,6 @@ function AddInvoice({ invoiceType }) {
   }, []);
 
   const handleOpenSubmitModal = () => {
-    // بررسی صحت داده‌ها قبل از باز کردن مودال (اختیاری)
     if (!selectedContact) {
       toast.error(`لطفاً ${getContactLabel()} را انتخاب کنید.`);
       return;
@@ -77,30 +121,25 @@ function AddInvoice({ invoiceType }) {
     setIsOpenSubmitModal(true);
   };
 
-  // تابع بستن مودال ثبت فاکتور
   const handleCloseSubmitModal = () => {
     setIsOpenSubmitModal(false);
   };
 
-  // دریافت داده‌های توضیحات از react-hook-form
   const onSubmit = (data) => {
-    // این تابع می‌تواند برای پردازش نهایی داده‌های فرم مورد استفاده قرار گیرد
-    // بسته به نیاز می‌توانید ارسال داده‌ها به سرور را در اینجا پیاده‌سازی کنید
+    // پردازش نهایی داده‌های فرم
   };
   const description = watch('description');
 
-  // ایجاد invoiceData شامل توضیحات
   const invoiceData = {
     contact: contactsOptions.find(c => c._id === selectedContact) || "",
     totalItems,
     totalPrice,
     totalRows,
     type: invoiceType,
-    description, // مقدار اولیه توضیحات
+    description,
     ShopId
   };
 
-  // به‌روزرسانی invoiceData با توضیحات وارد شده
   useEffect(() => {
     const subscription = watch((value) => {
       invoiceData.description = value.description || "";
@@ -108,7 +147,6 @@ function AddInvoice({ invoiceType }) {
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  // تغییر در تابع حذف: انجام عملیات حذف به صورت محلی
   const handleDeleteInvoiceItem = useCallback((invoiceItemId) => {
     setInvoiceItems((prevInvoiceItems) =>
       prevInvoiceItems.filter((item) => item.uniqueKey !== invoiceItemId)
@@ -126,7 +164,6 @@ function AddInvoice({ invoiceType }) {
     setSelectedInvoiceItem(null);
   }, []);
 
-  // تابع برای دریافت برچسب مناسب بر اساس نوع فاکتور
   const getContactLabel = () => {
     switch (invoiceType) {
       case INVOICE_TYPES.PURCHASE:
@@ -141,7 +178,6 @@ function AddInvoice({ invoiceType }) {
     }
   };
 
-  // عنوان صفحه بر اساس نوع فاکتور
   const getPageTitle = () => {
     switch (invoiceType) {
       case INVOICE_TYPES.PURCHASE:
@@ -174,7 +210,7 @@ function AddInvoice({ invoiceType }) {
               invoiceItem={selectedInvoiceItem}
               onClose={handleCloseModal}
               onAddNewInvoiceItem={handleAddNewInvoiceItem}
-              onUpdateInvoiceItem={handleUpdateInvoiceItem}
+              onUpdate={handleUpdateInvoiceItem}
             />
           </div>
         </div>
@@ -199,7 +235,7 @@ function AddInvoice({ invoiceType }) {
             افزودن کالا
           </button>
         </div>
-        <div className="flex  gap-4 px-2">
+        <div className="flex gap-4 px-2">
           {/* فیلد مشتری/تامین‌کننده */}
           <div className="flex items-center gap-2 mb-4">
             <label htmlFor="contact" className="mb-2">{getContactLabel()}:</label>
@@ -222,24 +258,23 @@ function AddInvoice({ invoiceType }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-  {invoiceItems.length > 0 ? (
-    invoiceItems.map((invoiceItem) => (
-      <InvoiceItemCard
-        key={invoiceItem.uniqueKey}
-        invoiceItem={invoiceItem}
-        editFunction={() => handleEditClick(invoiceItem)} // اطمینان از تعریف handleEditClick
-        onDelete={() => handleDeleteInvoiceItem(invoiceItem.uniqueKey)} // استفاده از uniqueKey
-        onUpdate={handleUpdateInvoiceItem}
-        invoiceType={invoiceType} // اگر نیاز به تنظیمات خاص برای نوع فاکتور دارید
-      />
-    ))
-  ) : (
-    <div className="col-span-full border border-gray-300 rounded p-8 text-center text-gray-500">
-      هنوز کالایی انتخاب نشده است.
-    </div>
-  )}
-</div>
-
+          {invoiceItems.length > 0 ? (
+            invoiceItems.map((invoiceItem) => (
+              <InvoiceItemCard
+                key={invoiceItem.uniqueKey}
+                invoiceItem={invoiceItem}
+                editFunction={() => handleEditClick(invoiceItem)} // اطمینان از تعریف handleEditClick
+                onDelete={() => handleDeleteInvoiceItem(invoiceItem.uniqueKey)} // استفاده از uniqueKey
+                onUpdate={handleUpdateInvoiceItem}
+                invoiceType={invoiceType} // اگر نیاز به تنظیمات خاص برای نوع فاکتور دارید
+              />
+            ))
+          ) : (
+            <div className="col-span-full border border-gray-300 rounded p-8 text-center text-gray-500">
+              هنوز کالایی انتخاب نشده است.
+            </div>
+          )}
+        </div>
 
         {/* فیلد توضیحات */}
         <div className="flex flex-col md:items-center md:flex-row m-2 md:col-span-2">
