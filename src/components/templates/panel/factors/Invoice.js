@@ -12,7 +12,7 @@ const InvoiceSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["Purchase", "Sale", "PurchaseReturns", "SalesReturns", "Losses"],
+      enum: ["Purchase", "Sale", "PurchaseReturn", "SaleReturn", "Waste"],
       required: true,
     },
     totalPrice: {

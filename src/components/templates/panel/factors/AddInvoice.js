@@ -221,6 +221,7 @@ function AddInvoice({ invoiceType }) {
         onClose={handleCloseSubmitModal}
         invoiceData={invoiceData}
         invoiceItems={invoiceItems}
+        invoiceType={invoiceType}
       />
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">

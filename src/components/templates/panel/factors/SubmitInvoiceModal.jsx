@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GetAllAccountsByOptions } from '../Account/accountActions';
-import { AddPurchaseInvoiceAction } from './invoiceItemsServerActions';
+import {  AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction, AddSalesReturnAction, AddWasteAction  } from './invoiceItemsServerActions';
 
-const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
+const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
   // به‌روزرسانی وضعیت به آرایه از حساب‌های تخصیص‌یافته
   
   const [accounts, setAccounts] = useState([]);
@@ -110,12 +110,32 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
       type:invoiceData.type,
       totalAmount:invoiceTotal,
       invoiceItems, // شامل آیتم‌های فاکتور
+      type: invoiceType,
+
       // سایر اطلاعات مورد نیاز
     };
 
     try {
-      // فراخوانی اکشن ثبت فاکتور
-      const response = await AddPurchaseInvoiceAction(invoiceDataToSubmit);
+      let response;
+      switch(invoiceType) {
+        case 'Purchase':
+          response = await AddPurchaseInvoiceAction(invoiceDataToSubmit);
+          break;
+        case 'Sale':
+          response = await AddSalesInvoiceAction(invoiceDataToSubmit);
+          break;
+        case 'PurchaseReturn':
+          response = await AddPurchaseReturnAction(invoiceDataToSubmit);
+          break;
+        case 'SaleReturn':
+          response = await AddSalesReturnAction(invoiceDataToSubmit);
+          break;
+        case 'Waste':
+          response = await AddWasteAction(invoiceDataToSubmit);
+          break;
+        default:
+          throw new Error('نوع فاکتور نامعتبر');
+      }
       
       if (response.success) {
         alert('فاکتور با موفقیت ثبت شد.');
@@ -129,7 +149,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems }) => {
       alert('یک خطای غیرمنتظره رخ داد.');
     }
   };
-
+  
   if (!isOpen) {
     return null;
   }
