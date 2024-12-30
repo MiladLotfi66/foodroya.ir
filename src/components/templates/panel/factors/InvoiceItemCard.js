@@ -1,13 +1,32 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
-
-function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
-  const { title, image, quantity = 1, unitPrice = 0, description = "" } = invoiceItem;
+import { getLastPurchasedPrice } from "./invoiceItemsServerActions";
+ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
+  const { title, image, quantity = 1, unitPrice = 0, description = "" , productId } = invoiceItem;
 
   const totalPrice = (quantity || 0) * (unitPrice || 0);
+  const [lastPrice, setLastPrice] = useState(0);
+const [priceLoading, setPriceLoading] = useState({});
 
+  useEffect(() => {
+    const fetchPrices = async () => {
+      setPriceLoading(true);
+      try {
+        const price = await getLastPurchasedPrice(productId);
+        
+        setLastPrice(price);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setPriceLoading(false);
+      }
+    };
+  
+    fetchPrices();
+  }, [productId]);
+  
   // تابع تغییر مقادیر ورودی‌ها
   const handleChange = (e, field) => {
     const value = e.target.value;
@@ -51,8 +70,12 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
 
   return (
     <div className="relative bg-white dark:bg-zinc-800 shadow-md rounded-2xl p-4 transition duration-300 ease-in-out">
+        <h2 className="text-sm sm:text-md lg:text-lg font-bold text-gray-900 dark:text-white line-clamp-3 h-20 items-center text-center content-center">
+            {title}
+          </h2>
       <div className="flex gap-2 justify-between items-center">
         {/* قسمت تصویر */}
+
         <div className="flex-shrink-0">
           <img
             src={image || "https://via.placeholder.com/150"}
@@ -63,13 +86,10 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
         </div>
 
         {/* اطلاعات آیتم */}
-        <div className="ml-4 flex-1">
-          <h2 className="text-sm sm:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
-            {title}
-          </h2>
+        <div className="flex-1">
 
           {/* فیلد قابل ویرایش تعداد */}
-          <div className="mt-3">
+          <div >
             <label htmlFor="quantity" className="block text-sm text-gray-700 dark:text-gray-300">
               تعداد:
             </label>
@@ -122,7 +142,12 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
           rows="3"
         />
       </div>
+            {/* آخرین قیمت خرید*/}
 
+      <p htmlFor="LastPrice" className="block text-sm text-gray-700 dark:text-gray-300">
+          آخرین قیمت خرید: {Number(lastPrice).toLocaleString() } تومان 
+
+        </p>
       {/* نمایش جمع کل و دکمه حذف */}
       <div className="mt-3 flex justify-between">
         <p className="text-sm sm:text-base">

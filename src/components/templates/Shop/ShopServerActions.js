@@ -345,8 +345,179 @@ export async function EditShop(ShopData) {
   }
 }
 
-export async function AddShopServerAction(ShopData) {
+// export async function AddShopServerAction(ShopData) {
   
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+
+//   try {
+//     // استخراج توکن JWT و احراز هویت کاربر
+//     let userData;
+//     try {
+//       userData = await authenticateUser();
+//     } catch (authError) {
+//       userData = null;
+//       console.log("Authentication failed:", authError);
+//     }
+
+//   if (!userData) {
+//     return { status: 401, message: 'کاربر وارد نشده است.' };
+//   }
+  
+
+//     // تبدیل FormData به شیء ساده
+//     const shopDataObject = {};
+//     ShopData.forEach((value, key) => {
+//       shopDataObject[key] = value;
+//     });
+
+//     // اعتبارسنجی داده‌ها
+//     const validatedData = await ShopSchema.validate(shopDataObject, {
+//       abortEarly: false,
+//     });
+
+//     const {
+//       ShopUniqueName,
+//       ShopName,
+//       ShopSmallDiscription,
+//       ShopDiscription,
+//       ShopAddress,
+//       ShopPhone,
+//       ShopMobile,
+//       ShopStatus,
+//       Logo,
+//       TextLogo,
+//       BackGroundShop,
+//       BackGroundpanel,
+//     } = validatedData;
+
+//     // پردازش و ذخیره تصاویر
+//     const LogoUrl = await processAndSaveImage(Logo);
+//     const TextLogoUrl = await processAndSaveImage(TextLogo);
+//     const BackGroundShopUrl = await processAndSaveImage(BackGroundShop);
+//     const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel);
+
+//     // ایجاد فروشگاه جدید با استفاده از نشست تراکنش
+//     const newShop = new shops({
+//       ShopUniqueName,
+//       ShopName,
+//       ShopSmallDiscription,
+//       ShopDiscription,
+//       ShopAddress,
+//       ShopPhone,
+//       ShopMobile,
+//       ShopStatus,
+//       LogoUrl,
+//       TextLogoUrl,
+//       BackGroundShopUrl,
+//       BackGroundpanelUrl,
+//       CreatedBy: userData.id,
+//       LastEditedBy: userData.id,
+//     });
+    
+//     await newShop.save({ session });
+//     const darayiId = new mongoose.Types.ObjectId();
+
+//     // تعریف حساب‌های پیش‌فرض
+//     const defaultAccounts = [
+//       {
+//         _id: darayiId, // تنظیم _id مشخص برای حساب والد
+//         accountCode: '1000',
+//         title: 'دارایی',
+//         store: newShop._id,
+//         parentAccount: null,
+//         accountType: 'گروه حساب',
+//         accountNature: 'بستانکار', // اصلاح شده
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//       {
+//         accountCode: '2000',
+//         title: 'بدهی',
+//         store: newShop._id,
+//         parentAccount: null,
+//         accountType: 'گروه حساب',
+//         accountNature: 'بدهی',
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//       {
+//         accountCode: '3000',
+//         title: 'سرمایه',
+//         store: newShop._id,
+//         parentAccount: null,
+//         accountType: 'گروه حساب',
+//         accountNature: 'بستانکار',
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//       {
+//         accountCode: '4000',
+//         title: 'درآمد',
+//         store: newShop._id,
+//         parentAccount: null,
+//         accountType: 'گروه حساب',
+//         accountNature: 'بستانکار',
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//       {
+//         accountCode: '5000',
+//         title: 'هزینه',
+//         store: newShop._id,
+//         parentAccount: null,
+//         accountType: 'گروه حساب',
+//         accountNature: 'بدهی',
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//       {
+//         accountCode: '6000',
+//         title: 'حساب انتظامی',
+//         store: newShop._id,
+//         parentAccount: null,
+//         accountType: 'گروه حساب',
+//         accountNature: 'بدون ماهیت', // می‌توانید اصلاح کنید بر اساس نیاز
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//       {
+//         accountCode: '1000-1',
+//         title: 'انبار',
+//         store: newShop._id,
+//         parentAccount: darayiId,
+//         accountType: 'انبار',
+//         accountNature: 'بدهی', // می‌توانید اصلاح کنید بر اساس نیاز
+//         accountStatus: 'فعال',
+//         createdBy: userData.id,
+//         isSystem: true,
+//       },
+//     ];
+    
+
+//     // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش
+//     await Account.insertMany(defaultAccounts, { session });
+
+//     // تکمیل تراکنش
+//     await session.commitTransaction();
+//     session.endSession();
+
+//     return { message: "فروشگاه و حساب‌های مرتبط با موفقیت ثبت شدند", status: 201 };
+//   } catch (error) {
+//     // ابورت تراکنش در صورت بروز خطا
+//     await session.abortTransaction();
+//     session.endSession();
+//     console.error("خطا در عملیات افزودن فروشگاه:", error);
+//     return { error: error.message, status: 500 };
+//   }
+// }
+export async function AddShopServerAction(ShopData) {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -360,10 +531,9 @@ export async function AddShopServerAction(ShopData) {
       console.log("Authentication failed:", authError);
     }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-  
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
 
     // تبدیل FormData به شیء ساده
     const shopDataObject = {};
@@ -414,25 +584,33 @@ export async function AddShopServerAction(ShopData) {
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
     });
-    
+
     await newShop.save({ session });
+
+    // تعریف ObjectId های حساب‌های گروه اصلی
     const darayiId = new mongoose.Types.ObjectId();
+    const bedahiId = new mongoose.Types.ObjectId();
+    const sarmayeId = new mongoose.Types.ObjectId();
+    const daramadId = new mongoose.Types.ObjectId();
+    const hazineId = new mongoose.Types.ObjectId();
+    const hesabEntezamiId = new mongoose.Types.ObjectId();
 
     // تعریف حساب‌های پیش‌فرض
     const defaultAccounts = [
       {
-        _id: darayiId, // تنظیم _id مشخص برای حساب والد
+        _id: darayiId, // حساب گروه دارایی
         accountCode: '1000',
         title: 'دارایی',
         store: newShop._id,
         parentAccount: null,
         accountType: 'گروه حساب',
-        accountNature: 'بستانکار', // اصلاح شده
+        accountNature: 'بستانکار',
         accountStatus: 'فعال',
         createdBy: userData.id,
         isSystem: true,
       },
       {
+        _id: bedahiId, // حساب گروه بدهی
         accountCode: '2000',
         title: 'بدهی',
         store: newShop._id,
@@ -444,6 +622,7 @@ export async function AddShopServerAction(ShopData) {
         isSystem: true,
       },
       {
+        _id: sarmayeId, // حساب گروه سرمایه
         accountCode: '3000',
         title: 'سرمایه',
         store: newShop._id,
@@ -455,6 +634,7 @@ export async function AddShopServerAction(ShopData) {
         isSystem: true,
       },
       {
+        _id: daramadId, // حساب گروه درآمد
         accountCode: '4000',
         title: 'درآمد',
         store: newShop._id,
@@ -466,6 +646,7 @@ export async function AddShopServerAction(ShopData) {
         isSystem: true,
       },
       {
+        _id: hazineId, // حساب گروه هزینه
         accountCode: '5000',
         title: 'هزینه',
         store: newShop._id,
@@ -477,12 +658,13 @@ export async function AddShopServerAction(ShopData) {
         isSystem: true,
       },
       {
+        _id: hesabEntezamiId, // حساب انتظامی
         accountCode: '6000',
         title: 'حساب انتظامی',
         store: newShop._id,
         parentAccount: null,
-        accountType: 'گروه حساب',
-        accountNature: 'بدون ماهیت', // می‌توانید اصلاح کنید بر اساس نیاز
+        accountType: 'حساب انتظامی',
+        accountNature: 'بدون ماهیت',
         accountStatus: 'فعال',
         createdBy: userData.id,
         isSystem: true,
@@ -498,8 +680,52 @@ export async function AddShopServerAction(ShopData) {
         createdBy: userData.id,
         isSystem: true,
       },
+      // حساب‌های جدید اضافه شده
+      {
+        accountCode: '4000-1',
+        title: 'فروش کالا',
+        store: newShop._id,
+        parentAccount: daramadId, // زیرمجموعه حساب درآمد
+        accountType: 'حساب عادی',
+        accountNature: 'بستانکار',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '5000-1',
+        title: 'بهای تمام شده ی کالای فروش رفته',
+        store: newShop._id,
+        parentAccount: hazineId, // زیرمجموعه حساب هزینه
+        accountType: 'حساب عادی',
+        accountNature: 'بدهی',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '5000-2', // تغییر کد حساب به 5002
+        title: 'برگشت از فروش',
+        store: newShop._id,
+        parentAccount: hazineId, // زیرمجموعه حساب هزینه
+        accountType: 'حساب عادی',
+        accountNature: 'بدهی', // طبیعت بدهکار برای حساب‌های هزینه
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
+      {
+        accountCode: '5000-3',
+        title: 'تخفیفات',
+        store: newShop._id,
+        parentAccount: hazineId, // زیرمجموعه حساب درآمد
+        accountType: 'حساب عادی',
+        accountNature: 'بدهی',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
     ];
-    
 
     // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش
     await Account.insertMany(defaultAccounts, { session });

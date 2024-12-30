@@ -46,8 +46,11 @@ function AddInvoice({ invoiceType }) {
   // استفاده از useEffect برای بروز رسانی قیمت‌ها هنگام تغییر مخاطب
   useEffect(() => {
     const updatePrices = async () => {
-      if (!selectedContact || invoiceItems.length === 0) return; // اضافه کردن بررسی تعداد اقلام
-
+      if (!selectedContact || invoiceItems.length === 0) return;
+  
+      // فقط برای فاکتورهای فروش بروز رسانی قیمت‌ها
+      if (invoiceType !== INVOICE_TYPES.SALE) return;
+  
       try {
         const updatedItems = await Promise.all(invoiceItems.map(async (item) => {
           const newPrice = await getProductPrice(item.productId, selectedContact);
@@ -64,10 +67,10 @@ function AddInvoice({ invoiceType }) {
         toast.error("خطا در بروز رسانی قیمت‌ها.");
       }
     };
-
+  
     updatePrices();
-  }, [selectedContact, invoiceItems.length]); // اضافه کردن invoiceItems.length به وابستگی‌ها
-
+  }, [selectedContact, invoiceItems.length, invoiceType]); // اضافه کردن invoiceType به وابستگی‌ها
+  
   const handleAddNewInvoiceItem = useCallback(async (newInvoiceItem) => {
     if (!selectedContact) 
       {

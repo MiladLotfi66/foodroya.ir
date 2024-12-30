@@ -315,12 +315,16 @@ function ProductManage() {
                       </div>
   
                       {/* بخش اطلاعات محصول */}
-                      <div className="flex flex-col flex-1 m-2 h-15">
+                      <div className="flex gap-2 flex-col flex-1 m-2 h-15">
                         {/* عنوان محصول */}
                         <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
-                          {account?.productId?.title}
-                        </h2>
-  
+                          عنوان :  {account?.productId?.title}
+                        </h2> 
+                        {/* موجودی محصول */}
+                        <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
+                         موجودی :  {account?.productId?.stock}
+                        </h2> 
+                       
                         {/* دکمه‌های عملیات */}
                         <div className="flex gap-2 mt-4 items-center text-center justify-center">
                           {/* دکمه ویرایش */}

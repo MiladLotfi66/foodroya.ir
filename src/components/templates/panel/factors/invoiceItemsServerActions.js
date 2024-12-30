@@ -8,12 +8,9 @@ import connectDB from '@/utils/connectToDB';
 import { authenticateUser } from '@/templates/Shop/ShopServerActions';
 import Product from '../Product/Product';
 import Account from '../Account/Account';
+import { GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
+// توابع کمکی
 
-// توابع کمکی مشترک
-
-/**
- * احراز هویت کاربر
- */
 async function getAuthenticatedUser() {
   try {
     const user = await authenticateUser();
@@ -24,11 +21,6 @@ async function getAuthenticatedUser() {
   }
 }
 
-/**
- * اعتبارسنجی داده‌های فاکتور
- * @param {Object} invoiceData 
- * @param {Array} requiredFields 
- */
 function validateInvoiceData(invoiceData, requiredFields) {
   for (const field of requiredFields) {
     if (!invoiceData[field]) {
@@ -37,14 +29,7 @@ function validateInvoiceData(invoiceData, requiredFields) {
   }
 }
 
-/**
- * ایجاد و ذخیره اقلام فاکتور
- * @param {Array} invoiceItems 
- * @param {String} invoiceId 
- * @param {mongoose.ClientSession} session 
- * @returns {Array} invoiceItemIds
- */
-async function createInvoiceItems(invoiceItems, invoiceId, session) {
+async function createInvoiceItems(invoiceItems, invoiceId, session, isPurchase) {
   const invoiceItemIds = [];
   const accountIdMap = {};
   const bulkProductOperations = {};
@@ -57,16 +42,40 @@ async function createInvoiceItems(invoiceItems, invoiceId, session) {
       }
     }
 
-    const product = await Product.findById(item.productId).session(session);
+    const product = await Product.findById(item.productId).populate('accountId').session(session);
     if (!product || !product.accountId) {
       throw new Error(`محصول با شناسه ${item.productId} معتبر نیست یا حساب موجودی ندارد.`);
     }
 
-    const amount = item.totalPrice;
-    if (accountIdMap[product.accountId.toString()]) {
-      accountIdMap[product.accountId.toString()] += amount;
-    } else {
-      accountIdMap[product.accountId.toString()] = amount;
+    let costOfGoods = 0;
+
+    if (!isPurchase) {
+      if (product.stock > 0 && product.accountId.balance > 0) {
+        costOfGoods = (product.accountId.balance / product.stock) * item.quantity;
+      } else {
+        const lastPurchasePrice = await getLastPurchasedPrice(product._id);
+        if (lastPurchasePrice) {
+          costOfGoods = parseFloat(lastPurchasePrice) * item.quantity;
+        } else {
+          throw new Error(`قیمت خرید اخیر برای محصول ${product.title} یافت نشد.`);
+        }
+      }
+
+      if (accountIdMap[product.accountId._id.toString()]) {
+        accountIdMap[product.accountId._id.toString()] += costOfGoods;
+      } else {
+        accountIdMap[product.accountId._id.toString()] = costOfGoods;
+      }
+    }
+
+    if (isPurchase) {
+      const purchaseCost = item.unitPrice * item.quantity;
+      
+      if (accountIdMap[product.accountId._id.toString()]) {
+        accountIdMap[product.accountId._id.toString()] += purchaseCost;
+      } else {
+        accountIdMap[product.accountId._id.toString()] = purchaseCost;
+      }
     }
 
     const invoiceItem = new InvoiceItem({
@@ -92,12 +101,8 @@ async function createInvoiceItems(invoiceItems, invoiceId, session) {
   return { invoiceItemIds, accountIdMap, bulkProductOperations };
 }
 
-/**
- * به‌روزرسانی موجودی محصولات
- * @param {Object} bulkProductOperations 
- * @param {Boolean} isPurchase 
- * @param {mongoose.ClientSession} session 
- */
+
+
 async function updateProductStock(bulkProductOperations, isPurchase, session) {
   const bulkProductOpsArray = Object.values(bulkProductOperations).map(op => ({
     updateOne: {
@@ -115,18 +120,8 @@ async function updateProductStock(bulkProductOperations, isPurchase, session) {
   }
 }
 
-/**
- * ایجاد Ledger و GeneralLedger
- * @param {String} description 
- * @param {String} shopId 
- * @param {String} userId 
- * @param {Array} accountAllocations 
- * @param {Object} accountIdMap 
- * @param {Boolean} isPurchase 
- * @param {mongoose.ClientSession} session 
- * @returns {String} ledgerId
- */
-async function createFinancialDocuments(description, shopId, userId, accountAllocations, accountIdMap, isPurchase, session) {
+
+async function createFinancialDocuments(description, shopId, userId, accountAllocations, accountIdMap, isPurchase, totalCostOfGoods, session) {
   const ledger = new Ledger({
     description,
     shop: shopId,
@@ -138,14 +133,20 @@ async function createFinancialDocuments(description, shopId, userId, accountAllo
 
   const generalLedgers = [];
   const bulkAccountOperations = {};
+  const validateAmount = (amount) => {
+    return isNaN(amount) ? 0 : amount;
+    
+  };
 
-  // ایجاد GeneralLedger برای حساب‌های تخصیص داده شده
   for (const allocation of accountAllocations) {
+    
+    
     const generalLedger = new GeneralLedger({
       ledger: ledger._id,
       account: allocation.accountId,
-      debit: isPurchase ? 0 : allocation.amount,
-      credit: isPurchase ? allocation.amount : 0,
+      debit: isPurchase ? 0 : validateAmount(allocation.amount),
+      credit: isPurchase ? validateAmount(allocation.amount) : 0,
+    
       description: `تراکنش مربوط به ${description}`,
       type: "invoice",
       shop: shopId,
@@ -171,13 +172,12 @@ async function createFinancialDocuments(description, shopId, userId, accountAllo
     }
   }
 
-  // ایجاد GeneralLedger برای حساب‌های موجودی
-  for (const [accountId, amount] of Object.entries(accountIdMap)) {
+  for (const [accountId, costOfGoods] of Object.entries(accountIdMap)) {
     const generalLedger = new GeneralLedger({
       ledger: ledger._id,
       account: accountId,
-      debit: isPurchase ? amount : 0,
-      credit: isPurchase ? 0 : amount,
+      debit: isPurchase ? validateAmount(costOfGoods) : 0,
+      credit: isPurchase ? 0 : validateAmount(costOfGoods),
       description: `تراکنش مربوط به ${description}`,
       type: "invoice",
       shop: shopId,
@@ -190,20 +190,19 @@ async function createFinancialDocuments(description, shopId, userId, accountAllo
 
     if (isPurchase) {
       if (bulkAccountOperations[accountId.toString()]) {
-        bulkAccountOperations[accountId.toString()].debit += amount;
+        bulkAccountOperations[accountId.toString()].debit += costOfGoods;
       } else {
-        bulkAccountOperations[accountId.toString()] = { accountId: accountId, debit: amount };
+        bulkAccountOperations[accountId.toString()] = { accountId: accountId, debit: costOfGoods };
       }
     } else {
       if (bulkAccountOperations[accountId.toString()]) {
-        bulkAccountOperations[accountId.toString()].credit += amount;
+        bulkAccountOperations[accountId.toString()].credit += costOfGoods;
       } else {
-        bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
+        bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: costOfGoods };
       }
     }
   }
 
-  // به‌روزرسانی حساب‌ها
   await updateAccountsBalance(bulkAccountOperations, session);
 
   ledger.transactions = generalLedgers;
@@ -212,18 +211,12 @@ async function createFinancialDocuments(description, shopId, userId, accountAllo
   return ledger._id;
 }
 
-/**
- * به‌روزرسانی مانده حساب‌ها
- * @param {Object} bulkAccountOperations 
- * @param {mongoose.ClientSession} session 
- */
+
 async function updateAccountsBalance(bulkAccountOperations, session) {
   const bulkAccountOpsArray = Object.values(bulkAccountOperations).map(op => {
     const updateFields = {};
 
-    if (op.debit && op.credit) {
-      updateFields.balance = op.debit - op.credit;
-    } else if (op.debit) {
+    if (op.debit) {
       updateFields.balance = op.debit;
     } else if (op.credit) {
       updateFields.balance = -op.credit;
@@ -238,21 +231,20 @@ async function updateAccountsBalance(bulkAccountOperations, session) {
   });
 
   if (bulkAccountOpsArray.length > 0) {
+    console.log("11111111");
+
     const bulkWriteAccountResult = await Account.bulkWrite(bulkAccountOpsArray, { session });
+
     const modifiedCount = bulkWriteAccountResult.nModified || bulkWriteAccountResult.modifiedCount;
+
     if (modifiedCount !== bulkAccountOpsArray.length) {
       throw new Error('بعضی از به‌روزرسانی‌های مانده حساب‌ها موفقیت‌آمیز نبودند.');
     }
   }
 }
 
-// اکشن‌های اصلی
 
-/**
- * تابع AddPurchaseInvoiceAction برای ثبت فاکتور خرید همراه با اقلام و اسناد مالی
- * @param {Object} invoiceData - داده‌های فاکتور خرید
- * @returns {Object} - نتیجه عملیات
- */
+
 export async function AddPurchaseInvoiceAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -264,14 +256,11 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
 
   try {
     const result = await session.withTransaction(async () => {
-      // اعتبارسنجی داده‌ها
       const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
       validateInvoiceData(invoiceData, requiredFields);
 
-      // محاسبه totalItems
       const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
 
-      // ایجاد فاکتور
       const invoice = new Invoice({
         description: invoiceData.description || '',
         type: invoiceData.type,
@@ -285,17 +274,13 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
 
       await invoice.save({ session });
 
-      // ایجاد اقلام فاکتور
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session);
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, true);
 
-      // به‌روزرسانی موجودی محصولات (افزایش برای خرید)
       await updateProductStock(bulkProductOperations, true, session);
 
-      // به‌روزرسانی فیلد InvoiceItems در فاکتور
       invoice.InvoiceItems = invoiceItemIds;
       await invoice.save({ session });
 
-      // ایجاد اسناد مالی
       await createFinancialDocuments(
         `ثبت فاکتور خرید ${invoice._id}`,
         invoice.shop,
@@ -303,6 +288,7 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
         invoiceData.accountAllocations,
         accountIdMap,
         true,
+        0,
         session
       );
 
@@ -318,11 +304,6 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
   }
 }
 
-/**
- * تابع AddSalesInvoiceAction برای ثبت فاکتور فروش همراه با اقلام و اسناد مالی
- * @param {Object} invoiceData - داده‌های فاکتور فروش
- * @returns {Object} - نتیجه عملیات
- */
 export async function AddSalesInvoiceAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -331,20 +312,18 @@ export async function AddSalesInvoiceAction(invoiceData) {
   }
 
   const session = await mongoose.startSession();
+console.log("111111111111");
 
   try {
     const result = await session.withTransaction(async () => {
-      // اعتبارسنجی داده‌ها
       const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
       validateInvoiceData(invoiceData, requiredFields);
 
-      // محاسبه totalItems
       const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
 
-      // ایجاد فاکتور
       const invoice = new Invoice({
         description: invoiceData.description || '',
-        type: invoiceData.type, // باید نوع فاکتور فروش باشد
+        type: invoiceData.type,
         totalPrice: invoiceData.totalAmount,
         totalItems: totalItems,
         contact: invoiceData.customerId,
@@ -352,56 +331,51 @@ export async function AddSalesInvoiceAction(invoiceData) {
         createdBy: user.id,
         updatedBy: user.id,
       });
-
       await invoice.save({ session });
 
-      // ایجاد اقلام فاکتور
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session);
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, false);
 
-      // بررسی موجودی و به‌روزرسانی موجودی محصولات (کاهش برای فروش)
+      let totalCostOfGoods = 0;
+      let totalSales = invoiceData.totalAmount;
+
       for (const item of invoiceData.invoiceItems) {
-        const product = await Product.findById(item.productId).session(session);
-        if (product.stock < item.quantity) {
-          throw new Error(`موجودی محصول ${product.title} کافی نیست. موجودی فعلی: ${product.stock}`);
+        const product = await Product.findById(item.productId).populate('accountId').session(session);
+        if (!product || product.stock < item.quantity) {
+          throw new Error(`موجودی محصول ${product?.title || '[نامشخص]'} کافی نیست. موجودی فعلی: ${product?.stock || 0}`);
         }
+        const costPerUnit = product.stock > 0 ? product.accountId.balance / product.stock : 0;
+        totalCostOfGoods += costPerUnit * item.quantity;
       }
+
       await updateProductStock(bulkProductOperations, false, session);
 
-      // به‌روزرسانی فیلد InvoiceItems در فاکتور
       invoice.InvoiceItems = invoiceItemIds;
       await invoice.save({ session });
 
-      // ایجاد اسناد مالی
-      await createFinancialDocuments(
+      await createFinancialDocumentsForSales(
         `ثبت فاکتور فروش ${invoice._id}`,
         invoice.shop,
         user.id,
         invoiceData.accountAllocations,
         accountIdMap,
-        false,
+        totalCostOfGoods,
+        totalSales,
         session
       );
 
       return invoice;
     });
 
-    return { success: true, message: 'فاکتور با موفقیت ثبت شد.' };
+    return { success: true, message: 'فاکتور فروش با موفقیت ثبت شد.' };
   } catch (error) {
     console.error('خطا در AddSalesInvoiceAction:', error);
-    return { success: false, message: `ثبت فاکتور با مشکل مواجه شد: ${error.message}` };
+    return { success: false, message: `ثبت فاکتور فروش با مشکل مواجه شد: ${error.message}` };
   } finally {
     session.endSession();
   }
 }
 
-/**
- * تابع AddPurchaseReturnAction برای ثبت برگشت از خرید
- * @param {Object} invoiceData - داده‌های برگشت از خرید
- * @returns {Object} - نتیجه عملیات
- */
 export async function AddPurchaseReturnAction(invoiceData) {
-  console.log("invoiceData",invoiceData);
-  
   await connectDB();
   const user = await getAuthenticatedUser();
   if (!user) {
@@ -412,18 +386,15 @@ export async function AddPurchaseReturnAction(invoiceData) {
 
   try {
     const result = await session.withTransaction(async () => {
-      // اعتبارسنجی داده‌ها
       const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
       validateInvoiceData(invoiceData, requiredFields);
 
-      // محاسبه totalItems
       const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
 
-      // ایجاد برگشت خرید به عنوان فاکتور منفی
       const invoice = new Invoice({
         description: invoiceData.description || '',
-        type: invoiceData.type, // باید نوع برگشت خرید باشد
-        totalPrice: -invoiceData.totalAmount,
+        type: invoiceData.type,
+        totalPrice: -invoiceData.totalAmount,  // توجه: مبلغ کل باید منفی باشد
         totalItems: totalItems,
         contact: invoiceData.customerId,
         shop: invoiceData.storeId,
@@ -433,24 +404,20 @@ export async function AddPurchaseReturnAction(invoiceData) {
 
       await invoice.save({ session });
 
-      // ایجاد اقلام برگشت خرید
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session);
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, true);
 
-      // به‌روزرسانی موجودی محصولات (کاهش برگشت خرید یعنی کاهش بدهی موجودی)
-      await updateProductStock(bulkProductOperations, false, session);
+      await updateProductStock(bulkProductOperations, false, session);  // توجه: برای برگشت باید به نوعی مدیریت شود
 
-      // به‌روزرسانی فیلد InvoiceItems در فاکتور
       invoice.InvoiceItems = invoiceItemIds;
       await invoice.save({ session });
 
-      // ایجاد اسناد مالی
-      await createFinancialDocuments(
+      // استفاده از تابع مخصوص برگشت از خرید برای حسابداری
+      await createFinancialDocumentsForPurchaseReturn(
         `ثبت برگشت خرید ${invoice._id}`,
         invoice.shop,
         user.id,
         invoiceData.accountAllocations,
         accountIdMap,
-        true, // بازگشت از خرید مانند خرید است
         session
       );
 
@@ -466,87 +433,6 @@ export async function AddPurchaseReturnAction(invoiceData) {
   }
 }
 
-/**
- * تابع AddSalesReturnAction برای ثبت برگشت از فروش
- * @param {Object} invoiceData - داده‌های برگشت از فروش
- * @returns {Object} - نتیجه عملیات
- */
-export async function AddSalesReturnAction(invoiceData) {
-  await connectDB();
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-
-  const session = await mongoose.startSession();
-
-  try {
-    const result = await session.withTransaction(async () => {
-      // اعتبارسنجی داده‌ها
-      const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
-      validateInvoiceData(invoiceData, requiredFields);
-
-      // محاسبه totalItems
-      const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
-
-      // ایجاد برگشت فروش به عنوان فاکتور منفی
-      const invoice = new Invoice({
-        description: invoiceData.description || '',
-        type: invoiceData.type, // باید نوع برگشت فروش باشد
-        totalPrice: -invoiceData.totalAmount,
-        totalItems: totalItems,
-        contact: invoiceData.customerId,
-        shop: invoiceData.storeId,
-        createdBy: user.id,
-        updatedBy: user.id,
-      });
-
-      await invoice.save({ session });
-
-      // ایجاد اقلام برگشت فروش
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session);
-
-      // بررسی موجودی و به‌روزرسانی موجودی محصولات (افزایش برگشت فروش یعنی افزایش موجودی)
-      for (const item of invoiceData.invoiceItems) {
-        const product = await Product.findById(item.productId).session(session);
-        if (!product) {
-          throw new Error(`محصول با شناسه ${item.productId} معتبر نیست.`);
-        }
-      }
-      await updateProductStock(bulkProductOperations, true, session); // افزایش موجودی
-
-      // به‌روزرسانی فیلد InvoiceItems در فاکتور
-      invoice.InvoiceItems = invoiceItemIds;
-      await invoice.save({ session });
-
-      // ایجاد اسناد مالی
-      await createFinancialDocuments(
-        `ثبت برگشت فروش ${invoice._id}`,
-        invoice.shop,
-        user.id,
-        invoiceData.accountAllocations,
-        accountIdMap,
-        false, // برگشت فروش
-        session
-      );
-
-      return invoice;
-    });
-
-    return { success: true, message: 'بازگشت فروش با موفقیت ثبت شد.' };
-  } catch (error) {
-    console.error('خطا در AddSalesReturnAction:', error);
-    return { success: false, message: `ثبت بازگشت فروش با مشکل مواجه شد: ${error.message}` };
-  } finally {
-    session.endSession();
-  }
-}
-
-/**
- * تابع AddWasteAction برای مدیریت ضایعات
- * @param {Object} invoiceData - داده‌های ضایعات
- * @returns {Object} - نتیجه عملیات
- */
 export async function AddWasteAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -558,47 +444,40 @@ export async function AddWasteAction(invoiceData) {
 
   try {
     const result = await session.withTransaction(async () => {
-      // اعتبارسنجی داده‌ها
-      const requiredFields = ['type', 'invoiceItems', 'storeId', 'accountAllocations','customerId'];
+      const requiredFields = ['type', 'invoiceItems', 'storeId', 'accountAllocations', 'customerId'];
       validateInvoiceData(invoiceData, requiredFields);
 
-      // محاسبه totalItems و totalAmount
       const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
       const totalAmount = invoiceData.invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
 
-      // ایجاد سند ضایعات
       const waste = new Invoice({
         description: invoiceData.description || '',
-        type: invoiceData.type, // باید نوع ضایعات باشد
+        type: invoiceData.type,
         totalPrice: totalAmount,
         totalItems: totalItems,
         shop: invoiceData.storeId,
         createdBy: user.id,
         updatedBy: user.id,
         contact: invoiceData.customerId,
-
       });
 
       await waste.save({ session });
 
-      // ایجاد اقلام ضایعات
       const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, waste._id, session);
 
-      // به‌روزرسانی موجودی محصولات (کاهش ضایعات)
       await updateProductStock(bulkProductOperations, false, session);
 
-      // به‌روزرسانی فیلد InvoiceItems در سند ضایعات
       waste.InvoiceItems = invoiceItemIds;
       await waste.save({ session });
 
-      // ایجاد اسناد مالی برای ضایعات
       await createFinancialDocuments(
         `ثبت ضایعات ${waste._id}`,
         waste.shop,
         user.id,
         invoiceData.accountAllocations,
         accountIdMap,
-        false, // ضایعات ممکن است به طور خاص نیاز به منطق متفاوت داشته باشند
+        false,
+        0,
         session
       );
 
@@ -613,3 +492,463 @@ export async function AddWasteAction(invoiceData) {
     session.endSession();
   }
 }
+async function createFinancialDocumentsForSales(
+  description,
+  shopId,
+  userId,
+  accountAllocations,
+  accountIdMap,
+  totalCostOfGoods,
+  totalSales,
+  session
+) {
+  
+  // دریافت شماره حساب بهای تمام‌شده و فروش کالا
+  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-1');
+  if (!costOfGoodsAccount.success) {
+    throw new Error(costOfGoodsAccount.message); // خطا در دریافت حساب بهای تمام‌شده کالا
+  }
+  
+  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '4000-1');
+  if (!salesRevenueAccount.success) {
+    throw new Error(salesRevenueAccount.message); // خطا در دریافت حساب فروش کالا
+  }
+
+  const ledger = new Ledger({
+    description,
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await ledger.save({ session });
+
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+
+  for (const allocation of accountAllocations) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: allocation.accountId,
+      debit: allocation.amount,
+      credit: 0,
+      description: `تراکنش مربوط به ${description}`,
+      type: 'invoice',
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (bulkAccountOperations[allocation.accountId.toString()]) {
+      bulkAccountOperations[allocation.accountId.toString()].debit += allocation.amount;
+    } else {
+      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, debit: allocation.amount };
+    }
+  }
+
+  // ثبت بهای تمام‌شده کالا (Cost of Goods Sold)
+  const costOfGoodsLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: costOfGoodsAccount.accountId,
+    debit: totalCostOfGoods,
+    credit: 0,
+    description: `بهای تمام‌شده کالا ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await costOfGoodsLedger.save({ session });
+  generalLedgers.push(costOfGoodsLedger._id);
+
+  // ثبت درآمد فروش کالا (Sales Revenue)
+  const salesRevenueLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: salesRevenueAccount.accountId,
+    debit: 0,
+    credit: totalSales,
+    description: `ثبت درآمد فروش ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await salesRevenueLedger.save({ session });
+  generalLedgers.push(salesRevenueLedger._id);
+
+  for (const [accountId, amount] of Object.entries(accountIdMap)) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: accountId,
+      debit: 0,
+      credit: amount,
+      description: `ثبت بستانکاری کالا برای ${description}`,
+      type: "invoice",
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (!bulkAccountOperations[accountId.toString()]) {
+      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
+    } else {
+      bulkAccountOperations[accountId.toString()].credit += amount;
+    }
+  }
+
+  await updateAccountsBalance(bulkAccountOperations, session);
+
+  ledger.transactions = generalLedgers;
+  await ledger.save({ session });
+
+  return ledger._id;
+}
+
+async function createFinancialDocumentsForPurchaseReturn(
+  description,
+  shopId,
+  userId,
+  accountAllocations,
+  accountIdMap,
+  session
+) {
+  const ledger = new Ledger({
+    description,
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await ledger.save({ session });
+
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+
+  // ایجاد ترازنامه‌ها برای هر تخصیصی
+  for (const allocation of accountAllocations) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: allocation.accountId,
+      debit: allocation.amount, // باید بدهکار شود.
+      credit: 0,
+      description: `تراکنش مربوط به ${description}`,
+      type: 'invoice',
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (bulkAccountOperations[allocation.accountId.toString()]) {
+      bulkAccountOperations[allocation.accountId.toString()].debit += allocation.amount;
+    } else {
+      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, debit: allocation.amount };
+    }
+  }
+
+  // برای حساب‌های مربوط به موجودی، بستانکار و هزینه‌های برگشت از خرید، در بدهکار ثبت می‌شود
+  for (const [accountId, amount] of Object.entries(accountIdMap)) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: accountId,
+      debit: 0,
+      credit: amount, // برای موجودی باید بستانکار شود.
+      description: `ثبت بستانکاری برای بازگشت خرید ${description}`,
+      type: "invoice",
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (!bulkAccountOperations[accountId.toString()]) {
+      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
+    } else {
+      bulkAccountOperations[accountId.toString()].credit += amount;
+    }
+  }
+
+  await updateAccountsBalance(bulkAccountOperations, session);
+
+  ledger.transactions = generalLedgers;
+  await ledger.save({ session });
+
+  return ledger._id;
+}
+
+export async function AddSalesReturnAction(invoiceData) {
+  await connectDB();
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    const result = await session.withTransaction(async () => {
+      const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
+      validateInvoiceData(invoiceData, requiredFields);
+
+      const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
+
+      const invoice = new Invoice({
+        description: invoiceData.description || '',
+        type: invoiceData.type,
+        totalPrice: -invoiceData.totalAmount,  // فاکتور برگشتی کل مبلغ منفی است
+        totalItems: totalItems,
+        contact: invoiceData.customerId,
+        shop: invoiceData.storeId,
+        createdBy: user.id,
+        updatedBy: user.id,
+      });
+
+      await invoice.save({ session });
+
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, false);
+
+      let totalCostOfGoods = 0;
+      let totalSales = invoiceData.totalAmount;
+
+      for (const item of invoiceData.invoiceItems) {
+        const product = await Product.findById(item.productId).populate('accountId').session(session);
+        if (!product) {
+          throw new Error(`محصول با شناسه ${item.productId} یافت نشد.`);
+        }
+        const costPerUnit = product.stock > 0 && product.accountId.balance > 0 ? product.accountId.balance / product.stock : await getLastPurchasedPrice(product._id);
+        if (!costPerUnit) {
+          throw new Error(`قیمت خرید اخیر برای محصول ${product.title} یافت نشد.`);
+        }
+        totalCostOfGoods += parseFloat(costPerUnit) * item.quantity;
+      }
+
+      await updateProductStock(bulkProductOperations, true, session);  // در برگشت کالا به موجودی اضافه می‌شود
+
+      invoice.InvoiceItems = invoiceItemIds;
+      await invoice.save({ session });
+      await createFinancialDocumentsForSalesReturn(
+        `ثبت برگشت از فروش ${invoice._id}`,
+        invoice.shop,
+        user.id,
+        invoiceData.accountAllocations,
+        accountIdMap,
+        totalCostOfGoods,
+        totalSales,
+        session
+      );
+      return invoice;
+    });
+    return { success: true, message: 'فاکتور برگشت با موفقیت ثبت شد.' };
+  } catch (error) {
+    console.error('خطا در AddSalesReturnAction:', error);
+    return { success: false, message: `ثبت برگشت با مشکل مواجه شد: ${error.message}` };
+  } finally {
+    session.endSession();
+  }
+}
+
+async function createFinancialDocumentsForSalesReturn(
+  description,
+  shopId,
+  userId,
+  accountAllocations,
+  accountIdMap,
+  totalCostOfGoods,
+  totalSales,
+  session
+) {
+
+  // دریافت حساب‌های مرتبط
+  const salesReturnsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-2'); // فرض بر کد حساب برگشت از فروش
+  if (!salesReturnsAccount.success) {
+    throw new Error(salesReturnsAccount.message); // خطا در دریافت حساب برگشت از فروش
+  }
+
+  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-1');
+  if (!costOfGoodsAccount.success) {
+    throw new Error(costOfGoodsAccount.message); // خطا در دریافت حساب بهای تمام‌شده کالا
+  }
+
+  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '4000-1');
+  if (!salesRevenueAccount.success) {
+    throw new Error(salesRevenueAccount.message); // خطا در دریافت حساب فروش کالا
+  }
+
+  const ledger = new Ledger({
+    description,
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await ledger.save({ session });
+
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+
+  // تخصیصات حساب‌ها
+  for (const allocation of accountAllocations) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: allocation.accountId,
+      debit: 0,
+      credit: allocation.amount, // برای دریافتی بستانکار می‌شود
+      description: `تراکنش مربوط به ${description}`,
+      type: 'invoice',
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (bulkAccountOperations[allocation.accountId.toString()]) {
+      bulkAccountOperations[allocation.accountId.toString()].credit += allocation.amount;
+    } else {
+      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, credit: allocation.amount };
+    }
+  }
+
+  // ثبت بدهکار در حساب برگشت از فروش
+  const salesReturnLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: salesReturnsAccount.accountId,
+    debit: totalSales,
+    credit: 0,
+    description: `برگشت از فروش ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await salesReturnLedger.save({ session });
+  generalLedgers.push(salesReturnLedger._id);
+
+  // بستانکاری بهای تمام شده کالای فروخته شده
+  const costOfGoodsSoldLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: costOfGoodsAccount.accountId,
+    debit: 0,
+    credit: totalCostOfGoods,
+    description: `بهای تمام شده برگشت از فروش ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await costOfGoodsSoldLedger.save({ session });
+  generalLedgers.push(costOfGoodsSoldLedger._id);
+
+  // ثبت بدهکاری برای حساب‌های مرتبط با کالا
+  for (const [accountId, amount] of Object.entries(accountIdMap)) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: accountId,
+      debit: amount,      // اصلاح: بدهکار کردن حساب کالا
+      credit: 0,
+      description: `ثبت بدهکاری برای کالا در برگشت از فروش ${description}`,
+      type: "invoice",
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (!bulkAccountOperations[accountId.toString()]) {
+      bulkAccountOperations[accountId.toString()] = { accountId: accountId, debit: amount };
+    } else {
+      bulkAccountOperations[accountId.toString()].debit += amount;
+    }
+  }
+
+  await updateAccountsBalance(bulkAccountOperations, session);
+
+  ledger.transactions = generalLedgers;
+  await ledger.save({ session });
+
+  return ledger._id;
+}
+
+
+export async function getLastPurchasedPrice(productId) {
+  await connectDB();
+  console.log("productId", productId);
+
+  // اعتبارسنجی productId
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    console.error('شناسه محصول معتبر نیست:', productId);
+    return null;
+  }
+
+  try {
+    const productObjectId = new mongoose.Types.ObjectId(productId);
+
+    const pipeline = [
+      // فیلتر کردن فاکتورهای از نوع 'Purchase'
+      { $match: { type: 'Purchase' } },
+
+      // الحاق اسناد InvoiceItem به هر Invoice
+      {
+        $lookup: {
+          from: 'invoiceitems', // نام مجموعه 'InvoiceItem' در پایگاه داده
+          localField: 'InvoiceItems',
+          foreignField: '_id',
+          as: 'invoiceItemsPopulated'
+        }
+      },
+
+      // فیلتر کردن فاکتورهایی که حداقل یکی از InvoiceItems آنها محصول مورد نظر را دارد
+      { $match: { 'invoiceItemsPopulated.product': productObjectId } },
+
+      // مرتب‌سازی براساس تاریخ ایجاد به ترتیب نزولی
+      { $sort: { createdAt: -1 } },
+
+      // محدود کردن به اولین سند (آخرین فاکتور)
+      { $limit: 1 },
+
+      // باز کردن آرایه invoiceItemsPopulated به اسناد جداگانه
+      { $unwind: '$invoiceItemsPopulated' },
+
+      // فیلتر کردن InvoiceItems Populated برای محصول مورد نظر
+      { $match: { 'invoiceItemsPopulated.product': productObjectId } },
+
+      // انتخاب فیلد unitPrice از InvoiceItem مربوطه
+      { $project: { unitPrice: '$invoiceItemsPopulated.unitPrice', _id: 0 } }
+    ];
+
+    const result = await Invoice.aggregate(pipeline).exec();
+
+    if (!result || result.length === 0) {
+      console.log('هیچ فاکتور خریدی برای این محصول یافت نشد.');
+      return null;
+    }
+
+    const unitPrice = result[0].unitPrice;
+
+    // تبدیل unitPrice به رشته قبل از بازگرداندن آن
+    return unitPrice.toString();
+
+  } catch (error) {
+    console.error('خطا در دریافت آخرین قیمت خرید:', error);
+    return null;
+  }
+}
+
+
+
