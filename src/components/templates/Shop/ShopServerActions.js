@@ -725,6 +725,17 @@ export async function AddShopServerAction(ShopData) {
         createdBy: userData.id,
         isSystem: true,
       },
+      {
+        accountCode: '5000-4',
+        title: 'ضایعات',
+        store: newShop._id,
+        parentAccount: hazineId, // زیرمجموعه حساب درآمد
+        accountType: 'حساب عادی',
+        accountNature: 'بدهی',
+        accountStatus: 'فعال',
+        createdBy: userData.id,
+        isSystem: true,
+      },
     ];
 
     // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش

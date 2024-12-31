@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GetAllAccountsByOptions } from '../Account/accountActions';
-import {  AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction, AddSalesReturnAction, AddWasteAction  } from './invoiceItemsServerActions';
+import { AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction, AddSalesReturnAction, AddWasteAction } from './invoiceItemsServerActions';
 
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
-  // به‌روزرسانی وضعیت به آرایه از حساب‌های تخصیص‌یافته
-  
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([
     { accountId: '', amount: 0 }
@@ -13,12 +11,20 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
   const ShopId = invoiceData.ShopId;
   const currentInvoiceCustomerId = invoiceData.contact?._id || '';
-  
+
   useEffect(() => {
-    if (isOpen && ShopId && currentInvoiceCustomerId) {
+    if (isOpen && ShopId && currentInvoiceCustomerId && invoiceType !== 'Waste') {
       fetchAccounts();
     }
-  }, [isOpen, ShopId, currentInvoiceCustomerId]);
+  }, [isOpen, ShopId, currentInvoiceCustomerId, invoiceType]);
+
+  // بازنشانی تخصیص حساب‌ها و حساب‌ها هنگام بستن مودال
+  useEffect(() => {
+    if (!isOpen) {
+      setAllocatedAccounts([{ accountId: '', amount: 0 }]);
+      setAccounts([]);
+    }
+  }, [isOpen]);
 
   const fetchAccounts = async () => {
     setIsLoading(true);
@@ -75,45 +81,50 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // اعتبارسنجی چند حساب انتخاب شده
-    if (allocatedAccounts.length === 0) {
-      alert('لطفاً حداقل یک حساب را انتخاب کنید.');
-      return;
-    }
-
-    // بررسی اینکه همه حساب‌ها انتخاب شده و مبالغ معتبر هستند
-    for (let i = 0; i < allocatedAccounts.length; i++) {
-      if (!allocatedAccounts[i].accountId) {
-        alert(`لطفاً حساب در ردیف ${i + 1} را انتخاب کنید.`);
+    // اگر نوع فاکتور Waste نیست، اعتبارسنجی تخصیص حساب‌ها را انجام دهید
+    if (invoiceType !== 'Waste') {
+      // اعتبارسنجی چند حساب انتخاب شده
+      if (allocatedAccounts.length === 0) {
+        alert('لطفاً حداقل یک حساب را انتخاب کنید.');
         return;
       }
-      if (allocatedAccounts[i].amount <= 0) {
-        alert(`مبلغ در ردیف ${i + 1} باید بزرگتر از صفر باشد.`);
+
+      // بررسی اینکه همه حساب‌ها انتخاب شده و مبالغ معتبر هستند
+      for (let i = 0; i < allocatedAccounts.length; i++) {
+        if (!allocatedAccounts[i].accountId) {
+          alert(`لطفاً حساب در ردیف ${i + 1} را انتخاب کنید.`);
+          return;
+        }
+        if (allocatedAccounts[i].amount <= 0) {
+          alert(`مبلغ در ردیف ${i + 1} باید بزرگتر از صفر باشد.`);
+          return;
+        }
+      }
+
+      // محاسبه مجموع مبالغ تخصیص‌یافته و مقایسه با مبلغ کل فاکتور
+      const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount), 0);
+      const invoiceTotal = invoiceData.totalPrice || 0;
+
+      if (totalAllocated !== invoiceTotal) {
+        alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated}) با مبلغ کل فاکتور (${invoiceTotal}) مطابقت ندارد.`);
         return;
       }
     }
 
-    // محاسبه مجموع مبالغ تخصیص‌یافته و مقایسه با مبلغ کل فاکتور
-    const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount), 0);
-    const invoiceTotal = invoiceData.totalPrice || 0;
-
-    if (totalAllocated !== invoiceTotal) {
-      alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated}) با مبلغ کل فاکتور (${invoiceTotal}) مطابقت ندارد.`);
-      return;
-    }
-
+    // ایجاد داده‌های ارسال شده بر اساس نوع فاکتور
     const invoiceDataToSubmit = {
-      accountAllocations: allocatedAccounts, // تغییر ساختار داده برای ارسال چند حساب
       storeId: ShopId,
-      // currency:invoiceData.currency._id,
       customerId: currentInvoiceCustomerId,
-      type:invoiceData.type,
-      totalAmount:invoiceTotal,
-      invoiceItems, // شامل آیتم‌های فاکتور
       type: invoiceType,
-
+      totalAmount: invoiceData.totalPrice,
+      invoiceItems, // شامل آیتم‌های فاکتور
       // سایر اطلاعات مورد نیاز
     };
+
+    // اگر نوع فاکتور غیر از Waste بود، حساب‌ها را اضافه کنید
+    if (invoiceType !== 'Waste') {
+      invoiceDataToSubmit.accountAllocations = allocatedAccounts;
+    }
 
     try {
       let response;
@@ -163,67 +174,71 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
         <form onSubmit={handleSubmit}>
           <h2 className="text-2xl mb-4">ثبت فاکتور</h2>
           
-          {/* رندر کردن چند حساب تخصیص‌یافته */}
-          {allocatedAccounts.map((allocation, index) => (
-            <div key={index} className="mb-4 border-b pb-4">
-              <label htmlFor={`account-${index}`} className="block mb-2">حساب {index + 1}:</label>
-              <select
-                id={`account-${index}`}
-                value={allocation.accountId}
-                onChange={(e) => handleAccountChange(index, 'accountId', e.target.value)}
-                disabled={isLoading}
-                className="w-full mb-2 border rounded px-4 py-2"
+          {/* رندر کردن بخش تخصیص حساب‌ها مگر در حالت Waste */}
+          {invoiceType !== 'Waste' && (
+            <>
+              {allocatedAccounts.map((allocation, index) => (
+                <div key={index} className="mb-4 border-b pb-4">
+                  <label htmlFor={`account-${index}`} className="block mb-2">حساب {index + 1}:</label>
+                  <select
+                    id={`account-${index}`}
+                    value={allocation.accountId}
+                    onChange={(e) => handleAccountChange(index, 'accountId', e.target.value)}
+                    disabled={isLoading}
+                    className="w-full mb-2 border rounded px-4 py-2"
+                  >
+                    <option value="" disabled>
+                      {isLoading ? 'در حال بارگذاری...' : 'حساب را انتخاب کنید'}
+                    </option>
+                    {accounts.map(account => (
+                      <option key={account._id} value={account._id}>
+                        {account.title} ({account.accountType})
+                      </option>
+                    ))}
+                  </select>
+
+                  <label htmlFor={`amount-${index}`} className="block mb-2">مبلغ {index + 1}:</label>
+                  <input
+                    type="number"
+                    id={`amount-${index}`}
+                    min="0"
+                    value={allocation.amount}
+                    onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
+                    className="w-full mb-2 border rounded px-4 py-2"
+                    placeholder="مبلغ"
+                  />
+
+                  {/* دکمه حذف حساب، فقط اگر بیش از یک حساب وجود داشته باشد */}
+                  {allocatedAccounts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAccount(index)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      حذف
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* دکمه افزودن حساب */}
+              <button
+                type="button"
+                onClick={handleAddAccount}
+                className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
               >
-                <option value="" disabled>
-                  {isLoading ? 'در حال بارگذاری...' : 'حساب را انتخاب کنید'}
-                </option>
-                {accounts.map(account => (
-                  <option key={account._id} value={account._id}>
-                    {account.title} ({account.accountType})
-                  </option>
-                ))}
-              </select>
+                افزودن حساب
+              </button>
 
-              <label htmlFor={`amount-${index}`} className="block mb-2">مبلغ {index + 1}:</label>
-              <input
-                type="number"
-                id={`amount-${index}`}
-                min="0"
-                value={allocation.amount}
-                onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
-                className="w-full mb-2 border rounded px-4 py-2"
-                placeholder="مبلغ"
-              />
-
-              {/* دکمه حذف حساب، فقط اگر بیش از یک حساب وجود داشته باشد */}
-              {allocatedAccounts.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveAccount(index)}
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  حذف
-                </button>
-              )}
-            </div>
-          ))}
-
-          {/* دکمه افزودن حساب */}
-          <button
-            type="button"
-            onClick={handleAddAccount}
-            className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-          >
-            افزودن حساب
-          </button>
-
-          {/* نمایش مجموع مبالغ تخصیص‌یافته */}
-          <div className="mb-4">
-            <strong>مجموع تخصیص‌یافته:</strong> {allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount || 0), 0)}
-          </div> 
-          <div className="mb-4">
-            <strong>جمع کل فاکتور:</strong>{invoiceData.totalPrice}
-          </div>
+              {/* نمایش مجموع مبالغ تخصیص‌یافته */}
+              <div className="mb-4">
+                <strong>مجموع تخصیص‌یافته:</strong> {allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount || 0), 0)}
+              </div>
+              <div className="mb-4">
+                <strong>جمع کل فاکتور:</strong> {invoiceData.totalPrice}
+              </div>
+            </>
+          )}
 
           {/* سایر فیلدهای مورد نیاز */}
 

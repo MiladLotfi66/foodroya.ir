@@ -97,6 +97,7 @@ async function createInvoiceItems(invoiceItems, invoiceId, session, isPurchase) 
       bulkProductOperations[item.productId] = { productId: item.productId, quantity: item.quantity };
     }
   }
+console.log("invoiceItemIds, accountIdMap, bulkProductOperations",invoiceItemIds, accountIdMap, bulkProductOperations);
 
   return { invoiceItemIds, accountIdMap, bulkProductOperations };
 }
@@ -242,9 +243,6 @@ async function updateAccountsBalance(bulkAccountOperations, session) {
     }
   }
 }
-
-
-
 export async function AddPurchaseInvoiceAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -444,8 +442,10 @@ export async function AddWasteAction(invoiceData) {
 
   try {
     const result = await session.withTransaction(async () => {
-      const requiredFields = ['type', 'invoiceItems', 'storeId', 'accountAllocations', 'customerId'];
+      const requiredFields = ['type', 'invoiceItems', 'storeId','customerId'];
+      
       validateInvoiceData(invoiceData, requiredFields);
+console.log("invoiceData.invoiceItems",invoiceData.invoiceItems);
 
       const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
       const totalAmount = invoiceData.invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
@@ -458,31 +458,35 @@ export async function AddWasteAction(invoiceData) {
         shop: invoiceData.storeId,
         createdBy: user.id,
         updatedBy: user.id,
-        contact: invoiceData.customerId,
+        contact:invoiceData.customerId,
       });
 
       await waste.save({ session });
 
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, waste._id, session);
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, waste._id, session, false);
+console.log("accountIdMap2------",accountIdMap);
 
+      // کاهش موجودی کالا
       await updateProductStock(bulkProductOperations, false, session);
 
       waste.InvoiceItems = invoiceItemIds;
       await waste.save({ session });
+      console.log("111111111111");
 
-      await createFinancialDocuments(
+      // ثبت اسناد مالی برای ضایعات
+      await createFinancialDocumentsForWaste(
         `ثبت ضایعات ${waste._id}`,
         waste.shop,
         user.id,
-        invoiceData.accountAllocations,
+        // invoiceData.accountAllocations,
         accountIdMap,
-        false,
-        0,
+        totalAmount,
         session
       );
 
       return waste;
     });
+    console.log("33333333333333");
 
     return { success: true, message: 'ضایعات با موفقیت ثبت شد.' };
   } catch (error) {
@@ -492,6 +496,98 @@ export async function AddWasteAction(invoiceData) {
     session.endSession();
   }
 }
+async function createFinancialDocumentsForWaste(
+  description,
+  shopId,
+  userId,
+  accountIdMap,
+  totalWasteAmount,
+  session
+) {
+  console.log("accountIdMap",accountIdMap);
+  // دریافت شماره حساب هزینه‌های ضایعات
+  const wasteExpenseAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-4'); // فرض بر کد حساب هزینه‌های ضایعات
+  if (!wasteExpenseAccount.success) {
+    throw new Error(wasteExpenseAccount.message); // خطا در دریافت حساب هزینه‌های ضایعات
+  }
+  
+  console.log("aaaaaaaaaaaaaa");
+
+  // دریافت حساب‌های موجودی کالا از map
+  const inventoryAccounts = Object.keys(accountIdMap);
+
+  const ledger = new Ledger({
+    description,
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await ledger.save({ session });
+
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+  console.log("22222222222");
+
+  // ثبت تراکنش بدهکار برای هزینه‌های ضایعات
+  const wasteLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: wasteExpenseAccount.accountId,
+    debit: totalWasteAmount,
+    credit: 0,
+    description: `ثبت هزینه‌های ضایعات برای ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await wasteLedger.save({ session });
+  generalLedgers.push(wasteLedger._id);
+
+  // ثبت تراکنش بستانکار برای حساب‌های موجودی کالا
+  for (const accountId of inventoryAccounts) {
+    const amount = accountIdMap[accountId];
+
+    const inventoryLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: accountId,
+      debit: 0,
+      credit: amount,
+      description: `کاهش موجودی کالا به علت ضایعات برای ${description}`,
+      type: "invoice",
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await inventoryLedger.save({ session });
+    generalLedgers.push(inventoryLedger._id);
+
+    // به‌روزرسانی عملیات حسابداری
+    if (bulkAccountOperations[accountId.toString()]) {
+      bulkAccountOperations[accountId.toString()].credit += amount;
+    } else {
+      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
+    }
+  }
+
+  // ثبت تراکنش بدهکار برای حساب هزینه‌های ضایعات
+  if (bulkAccountOperations[wasteExpenseAccount.accountId.toString()]) {
+    bulkAccountOperations[wasteExpenseAccount.accountId.toString()].debit += totalWasteAmount;
+  } else {
+    bulkAccountOperations[wasteExpenseAccount.accountId.toString()] = { accountId: wasteExpenseAccount.accountId, debit: totalWasteAmount };
+  }
+
+  // به‌روزرسانی مانده حساب‌ها
+  await updateAccountsBalance(bulkAccountOperations, session);
+
+  ledger.transactions = generalLedgers;
+  await ledger.save({ session });
+
+  return ledger._id;
+}
+
 async function createFinancialDocumentsForSales(
   description,
   shopId,
