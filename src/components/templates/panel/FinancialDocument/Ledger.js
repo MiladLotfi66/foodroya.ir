@@ -43,7 +43,6 @@ LedgerSchema.pre('save', async function(next) {
   if (this.transactions && this.transactions.length > 0) {
     try {
       const GeneralLedger = mongoose.model('GeneralLedger');
-      
       const aggregateResult = await GeneralLedger.aggregate([
         { $match: { ledger: this._id } },
         {

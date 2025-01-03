@@ -4,10 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FaFolder, FaSearch } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import Breadcrumb from '@/utils/Breadcrumb';
-import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
+import { GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 import Pagination from "../Product/Pagination";
+import { Toaster, toast } from "react-hot-toast";
 
-function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مانده پراپ‌ها تغییر نکرده‌اند
+function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // باقی‌مانده پراپ‌ها تغییر نکرده‌اند
   const params = useParams();
   const { ShopId } = params;
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
@@ -21,7 +22,9 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const limit = 12;
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register,  formState: { errors } } = useForm();
+  const allowedInvoiceTypes = ["Sale","PurchaseReturn","Waste"];
+  const isAllowedInvoiceType = allowedInvoiceTypes.includes(invoiceType);
 
   const fetchAnbarAccountId = async () => {
     try {
@@ -124,33 +127,24 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
     setCurrentPage(1);
   }, [path, anbarAccountId]);
 
-  const onSubmitCreateAccount = async (data) => {
-    try {
-      const response = await createAccount(ShopId, data);
-      if (response.success) {
-        refreshAccounts();
-        setShowCreateAccountModal(false);
-        reset();
-      } else {
-        throw new Error(response.message || "خطا در ایجاد حساب.");
-      }
-    } catch (error) {
-      console.error("خطا در ایجاد حساب:", error);
-    }
-  }
 
   const handleSelectAccount = (account) => {
     if (account.accountType === "کالا") {
-      const invoiceItemData = {
-        _id: account.productId._id,
-        productId: account.productId._id,
-        title: account.productId.title,
-        quantity: 1,
-        // حذف unitPrice و totalPrice
-        image: account.productId.images?.[0] || "https://via.placeholder.com/150",
-      };
-      onAddNewInvoiceItem(invoiceItemData);
-      onClose();
+      if (!account.productId?.stock && isAllowedInvoiceType) {
+    
+        toast.error("کالا با موجودی ۰ را نمی توان به فاکتور فروش ، برگشت از خرید و ضایعات اضافه کرد.");
+      }else{
+        const invoiceItemData = {
+          _id: account.productId._id,
+          productId: account.productId._id,
+          title: account.productId.title,
+          quantity: 1,
+          image: account.productId.images?.[0] || "https://via.placeholder.com/150",
+        };
+        onAddNewInvoiceItem(invoiceItemData);
+        onClose();
+      }
+     
     } else if (account.accountType === "دسته بندی کالا") {
       handleOpenAccount(account);
     }
@@ -190,7 +184,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
             <p>در حال بارگذاری...</p>
           ) : (
             <>
-              <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {accounts.map(account => (
                   <div
                     key={account._id}
@@ -225,6 +219,11 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
                       {/* عنوان محصول یا دسته‌بندی */}
                       <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
                         {account?.accountType === "کالا" ? account?.productId?.title : account.title}
+                      </h2> 
+                       <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
+                        {account?.accountType === "کالا" ? <>
+    {account.productId?.stock} {account.productId?.unit}
+  </> : ""}
                       </h2>
                     </div>
                   </div>
@@ -255,7 +254,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl mb-4">ایجاد حساب جدید</h2>
-            <form onSubmit={handleSubmit(onSubmitCreateAccount)}>
+            <form >
               <div className="mb-4">
                 <label htmlFor="title" className="block mb-2">عنوان حساب</label>
                 <input
@@ -279,6 +278,8 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem }) { // باقی‌مان
           </div>
         </div>
       )}
+            <Toaster />
+
     </div>
   );
 }

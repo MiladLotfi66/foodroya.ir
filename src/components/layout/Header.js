@@ -121,13 +121,7 @@ function Header() {
                 <li className="flex items-center">
                   <button
                     onClick={handleSignOut}
-                    // onClick={() => {
-                    //   // const res = await logOutServerAction();
-                    //   // if (res.status === 200) {
-                    //   signOut();
-                    //     location.replace("/");
-                    //   // }
-                    // }}
+                   
                   >
                     خروج
                   </button>

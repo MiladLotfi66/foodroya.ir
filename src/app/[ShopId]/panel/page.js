@@ -28,6 +28,7 @@ function Page() {
       <Link className='p-3' href={`/${ShopId}/panel/PurchaseReturnInvoice`} >برگشت از خرید</Link>
       <Link className='p-3' href={`/${ShopId}/panel/SaleReturnInvoice`} >برگشت از فروش</Link>
       <Link className='p-3' href={`/${ShopId}/panel/WasteInvoice`} >ضایعات</Link>
+      <Link className='p-3' href={`/${ShopId}/panel/AllInvoice`} >تمام فاکتور ها</Link>
         </div>
       </div>
 

@@ -8,20 +8,10 @@ import GeneralLedger from "./GeneralLedger";
 import Account from '../Account/Account';
 import { ledgerValidationSchema } from "./FinancialDocumentSchema";
 
-/**
- * تبدیل مستندات Mongoose به اشیاء ساده
- * @param {Array} docs - آرایه‌ای از مستندات
- * @returns {Array} - آرایه‌ای از اشیاء ساده
- */
 function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
 }
 
-/**
- * دریافت تمام اسناد مالی
- * @param {string} shopId - شناسه فروشگاه
- * @returns {Object} - شامل وضعیت و آرایه‌ای از اسناد مالی
- */
 export async function GetAllFinancialDocuments(shopId) {
   await connectDB();
   let user;
@@ -46,7 +36,7 @@ export async function GetAllFinancialDocuments(shopId) {
               path: 'account',
               select: 'title accountType' // فیلدهای مورد نیاز از مدل Account
             },
-       
+
           ]
         },
         {
@@ -66,12 +56,6 @@ export async function GetAllFinancialDocuments(shopId) {
     return { status: 500, message: 'خطایی در دریافت اسناد مالی رخ داد.' };
   }
 }
-
-/**
- * افزودن سند مالی جدید
- * @param {Object} data - داده‌های مورد نیاز برای ایجاد سند مالی
- * @returns {Object} - نتیجه عملیات
- */
 
 export async function AddFinancialDocumentAction(data) {
   // اتصال به پایگاه داده
@@ -164,32 +148,23 @@ export async function AddFinancialDocumentAction(data) {
       ledger.transactions = createdTransactions.map(tx => tx._id);
       await ledger.save({ session });
 
-      // تهیه عملیات به‌روزرسانی مانده حساب‌ها
-      const bulkOperations = [];
-
+      // به‌روزرسانی مانده حساب‌ها به صورت فردی
       // به‌روزرسانی بدهکاران (افزایش مانده)
-      data.debtors.forEach(debtor => {
-        bulkOperations.push({
-          updateOne: {
-            filter: { _id: debtor.account },
-            update: { $inc: { balance: debtor.amount } }
-          }
-        });
-      });
+      for (const debtor of data.debtors) {
+        await Account.updateOne(
+          { _id: debtor.account },
+          { $inc: { balance: debtor.amount } },
+          { session, runValidators: true }
+        );
+      }
 
       // به‌روزرسانی بستانکاران (کاهش مانده)
-      data.creditors.forEach(creditor => {
-        bulkOperations.push({
-          updateOne: {
-            filter: { _id: creditor.account },
-            update: { $inc: { balance: -creditor.amount } }
-          }
-        });
-      });
-
-      // اجرای به‌روزرسانی‌ها به صورت دسته‌ای
-      if (bulkOperations.length > 0) {
-        await Account.bulkWrite(bulkOperations, { session });
+      for (const creditor of data.creditors) {
+        await Account.updateOne(
+          { _id: creditor.account },
+          { $inc: { balance: -creditor.amount } },
+          { session, runValidators: true }
+        );
       }
 
       // تنظیم نتیجه تراکنش برای بازگرداندن خارج از بلاک تراکنش
@@ -223,14 +198,6 @@ export async function AddFinancialDocumentAction(data) {
   }
 }
 
-
-
-/**
- * ویرایش سند مالی
- * @param {Object} data - داده‌های مورد نیاز برای ویرایش سند مالی
- * @param {string} shopId - شناسه فروشگاه
- * @returns {Object} - نتیجه عملیات
- */
 export async function EditFinancialDocumentAction(data, shopId) {
   await connectDB();
   let user;
@@ -294,31 +261,22 @@ export async function EditFinancialDocumentAction(data, shopId) {
     // استخراج تراکنش‌های قدیمی
     const oldTransactions = await GeneralLedger.find({ ledger: ledger._id }).session(session);
 
-    // آماده‌سازی عملیات بازگرداندن تأثیر تراکنش‌های قدیمی
-    const reverseBulkOperations = [];
-
-    oldTransactions.forEach(tx => {
+    // بازگرداندن تأثیر تراکنش‌های قدیمی به صورت فردی
+    for (const tx of oldTransactions) {
       if (tx.debit > 0) {
-        reverseBulkOperations.push({
-          updateOne: {
-            filter: { _id: tx.account },
-            update: { $inc: { balance: -tx.debit } }
-          }
-        });
+        await Account.updateOne(
+          { _id: tx.account },
+          { $inc: { balance: -tx.debit } },
+          { session, runValidators: true }
+        );
       }
       if (tx.credit > 0) {
-        reverseBulkOperations.push({
-          updateOne: {
-            filter: { _id: tx.account },
-            update: { $inc: { balance: tx.credit } }
-          }
-        });
+        await Account.updateOne(
+          { _id: tx.account },
+          { $inc: { balance: tx.credit } },
+          { session, runValidators: true }
+        );
       }
-    });
-
-    // اجرای عملیات بازگرداندن تأثیر تراکنش‌های قدیمی
-    if (reverseBulkOperations.length > 0) {
-      await Account.bulkWrite(reverseBulkOperations, { session });
     }
 
     // حذف تراکنش‌های قدیمی
@@ -363,32 +321,23 @@ export async function EditFinancialDocumentAction(data, shopId) {
 
     await ledger.save({ session });
 
-    // تهیه عملیات به‌روزرسانی مانده حساب‌ها بر اساس تراکنش‌های جدید
-    const newBulkOperations = [];
-
+    // به‌روزرسانی مانده حساب‌ها بر اساس تراکنش‌های جدید به صورت فردی
     // به‌روزرسانی بدهکاران (افزایش مانده)
-    data.debtors.forEach(debtor => {
-      newBulkOperations.push({
-        updateOne: {
-          filter: { _id: debtor.account },
-          update: { $inc: { balance: debtor.amount } }
-        }
-      });
-    });
+    for (const debtor of data.debtors) {
+      await Account.updateOne(
+        { _id: debtor.account },
+        { $inc: { balance: debtor.amount } },
+        { session, runValidators: true }
+      );
+    }
 
     // به‌روزرسانی بستانکاران (کاهش مانده)
-    data.creditors.forEach(creditor => {
-      newBulkOperations.push({
-        updateOne: {
-          filter: { _id: creditor.account },
-          update: { $inc: { balance: -creditor.amount } }
-        }
-      });
-    });
-
-    // اجرای به‌روزرسانی‌ها به صورت دسته‌ای
-    if (newBulkOperations.length > 0) {
-      await Account.bulkWrite(newBulkOperations, { session });
+    for (const creditor of data.creditors) {
+      await Account.updateOne(
+        { _id: creditor.account },
+        { $inc: { balance: -creditor.amount } },
+        { session, runValidators: true }
+      );
     }
 
     // تعهد تراکنش
@@ -420,17 +369,11 @@ export async function EditFinancialDocumentAction(data, shopId) {
   }
 }
 
-/**
- * حذف سند مالی
- * @param {string} financialDocumentId - شناسه سند مالی
- * @param {string} shopId - شناسه فروشگاه
- * @returns {Object} - نتیجه عملیات
- */
 export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
-  
+
   await connectDB();
   let user;
-  
+
   try {
     user = await authenticateUser();
   } catch (authError) {
@@ -448,7 +391,7 @@ export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
   try {
     // پیدا کردن و حذف سند مالی (Ledger)
     const deletedLedger = await Ledger.findOneAndDelete({ _id: financialDocumentId, shop: shopId }).session(session);
-    
+
     if (!deletedLedger) {
       await session.abortTransaction();
       session.endSession();
@@ -458,31 +401,22 @@ export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
     // استخراج تراکنش‌های مرتبط (GeneralLedger)
     const relatedTransactions = await GeneralLedger.find({ ledger: financialDocumentId }).session(session);
 
-    // آماده‌سازی عملیات بازگرداندن تأثیر تراکنش‌ها
-    const reverseBulkOperations = [];
-
-    relatedTransactions.forEach(tx => {
+    // بازگرداندن تأثیر تراکنش‌ها به صورت فردی
+    for (const tx of relatedTransactions) {
       if (tx.debit > 0) {
-        reverseBulkOperations.push({
-          updateOne: {
-            filter: { _id: tx.account },
-            update: { $inc: { balance: -tx.debit } }
-          }
-        });
+        await Account.updateOne(
+          { _id: tx.account },
+          { $inc: { balance: -tx.debit } },
+          { session, runValidators: true }
+        );
       }
       if (tx.credit > 0) {
-        reverseBulkOperations.push({
-          updateOne: {
-            filter: { _id: tx.account },
-            update: { $inc: { balance: tx.credit } }
-          }
-        });
+        await Account.updateOne(
+          { _id: tx.account },
+          { $inc: { balance: tx.credit } },
+          { session, runValidators: true }
+        );
       }
-    });
-
-    // اجرای عملیات بازگرداندن تأثیر تراکنش‌ها
-    if (reverseBulkOperations.length > 0) {
-      await Account.bulkWrite(reverseBulkOperations, { session });
     }
 
     // حذف تراکنش‌های مرتبط
@@ -493,7 +427,7 @@ export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
     session.endSession();
 
     return { status: 200, message: 'سند مالی با موفقیت حذف شد و تأثیر آن بر مانده حساب‌ها بازگردانده شد.' };
-    
+
   } catch (error) {
     // ابطال تراکنش در صورت بروز خطا
     await session.abortTransaction();

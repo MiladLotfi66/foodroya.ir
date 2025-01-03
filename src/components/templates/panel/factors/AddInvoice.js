@@ -64,13 +64,16 @@ function AddInvoice({ invoiceType }) {
         toast.success("قیمت‌ها با موفقیت به‌روزرسانی شدند.");
       } catch (error) {
         console.error("خطا در بروز رسانی قیمت‌ها:", error);
-        toast.error("خطا در بروز رسانی قیمت‌ها.");
+        
+        // استخراج پیام خطا از سرور
+        const errorMessage = error?.message || "خطا در بروز رسانی قیمت‌ها.";
+        toast.error(errorMessage);
       }
     };
   
     updatePrices();
-  }, [selectedContact, invoiceItems.length, invoiceType]); // اضافه کردن invoiceType به وابستگی‌ها
-  
+  }, [selectedContact, invoiceItems.length, invoiceType]);
+    
   const handleAddNewInvoiceItem = useCallback(async (newInvoiceItem) => {
     if (!selectedContact) 
       {
@@ -81,11 +84,11 @@ function AddInvoice({ invoiceType }) {
     try {
       let unitPrice = 0;
       if (invoiceType === INVOICE_TYPES.SALE) {
+        
         // فقط برای فاکتور فروش قیمت را از سرور دریافت کنید
         const fetchedPrice = await getProductPrice(newInvoiceItem.productId, selectedContact);
         unitPrice = fetchedPrice;
       } 
-  
       const itemWithUniqueKey = {
         ...newInvoiceItem,
         uniqueKey: uuidv4(),
@@ -96,9 +99,11 @@ function AddInvoice({ invoiceType }) {
       toast.success("کالا با موفقیت افزوده شد.");
       setIsOpenAddInvoiceItem(false);
     } catch (error) {
-      console.error("خطا در دریافت قیمت کالا:", error);
-      toast.error("خطا در دریافت قیمت کالا.");
-    }
+    
+      // استخراج پیام خطا از سرور
+      const errorMessage = error?.message || "خطا در دریافت قیمت کالا.";
+      toast.error(errorMessage);
+      }
   }, [selectedContact, invoiceType]);
 
   const handleUpdateInvoiceItem = useCallback((updatedItem) => {
@@ -214,6 +219,7 @@ function AddInvoice({ invoiceType }) {
               onClose={handleCloseModal}
               onAddNewInvoiceItem={handleAddNewInvoiceItem}
               onUpdate={handleUpdateInvoiceItem}
+              invoiceType={invoiceType}
             />
           </div>
         </div>
@@ -260,7 +266,6 @@ function AddInvoice({ invoiceType }) {
             {errors.contact && <span className="text-red-500">{errors.contact.message}</span>}
           </div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
           {invoiceItems.length > 0 ? (
             invoiceItems.map((invoiceItem) => (
@@ -279,7 +284,6 @@ function AddInvoice({ invoiceType }) {
             </div>
           )}
         </div>
-
         {/* فیلد توضیحات */}
         <div className="flex flex-col md:items-center md:flex-row m-2 md:col-span-2">
           <label htmlFor="description" className="mb-2">توضیحات:</label>

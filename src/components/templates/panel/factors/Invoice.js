@@ -31,11 +31,7 @@ const InvoiceSchema = new Schema(
       ref: 'Contact',
       required: true,
     },
-    // currency: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: "Currency",
-    //   required: true,
-    // },
+  
     InvoiceItems: [
       {
         type: mongoose.Schema.Types.ObjectId,

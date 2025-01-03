@@ -536,13 +536,10 @@ export async function GetAccountsByStartingCharacter(storeId, startingChar = "",
 
 
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
-
   await connectDB();
-
   if (!storeId) {
     throw new Error("فروشگاه مشخص نشده است.");
   }
-
   const {
     fields = null,
     populateFields = [],
@@ -551,74 +548,47 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
     sort = { accountCode: 1 },
     additionalFilters = {}
   } = options;
-
   // ساختار فیلتر اولیه با storeId
   let filter = { store: storeId };
-
   // اعمال فیلتر parentAccount تنها در صورتی که parentId ارائه شده باشد
   if (parentId !== null && parentId !== undefined) {
     filter.parentAccount = parentId;
   }
-
   // اعمال فیلترهای اضافی
   if (additionalFilters && typeof additionalFilters === 'object') {
     filter = { ...filter, ...additionalFilters };
   }
-
-  console.log("Final Filter: ", filter);
-
   // محاسبه تعداد کل آیتم‌ها مطابق فیلتر
   const total = await Account.countDocuments(filter);
-  console.log("Total Accounts Found: ", total);
-
   // محاسبه مجموع صفحات
   const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
   // محاسبه skip
   const skip = limit > 0 ? (page - 1) * limit : 0;
-
   // شروع ساخت کوئری
   let query = Account.find(filter);
-
   // انتخاب فیلدها اگر مشخص شده باشد
   if (fields && Array.isArray(fields) && fields.length > 0) {
     query = query.select(fields.join(' '));
   }
-
   // پاپیولیت کردن فیلدها اگر مشخص شده باشد
   if (populateFields && Array.isArray(populateFields) && populateFields.length > 0) {
     populateFields.forEach(field => {
       query = query.populate(field);
     });
   }
-
   // اعمال مرتب‌سازی
   if (sort && typeof sort === 'object') {
     query = query.sort(sort);
   }
-
   // اعمال صفحه‌بندی
   if (limit > 0) {
     query = query.limit(limit);
   }
-
   if (skip > 0) {
     query = query.skip(skip);
   }
-
-  console.log("Executing Query with:", {
-    fields,
-    populateFields,
-    limit,
-    page,
-    sort,
-    skip,
-  });
-
   // اجرای کوئری با lean برای بهینه‌سازی
   const accounts = await query.lean();
-
-  console.log("Accounts Retrieved: ", accounts.length);
-
   // تبدیل ObjectId و سایر فیلدهای مربوطه به رشته
   const plainAccounts = accounts?.map((account) => {
     return {
@@ -651,7 +621,6 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
 
 
   export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {
-console.log("storeId, accountCode",storeId, accountCode);
 
     try {
       if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {

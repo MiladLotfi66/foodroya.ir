@@ -9,9 +9,9 @@ import { authenticateUser } from '@/templates/Shop/ShopServerActions';
 import Product from '../Product/Product';
 import Account from '../Account/Account';
 import { GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
-// توابع کمکی
 
-async function getAuthenticatedUser() {
+// توابع کمکی
+export async function getAuthenticatedUser() {
   try {
     const user = await authenticateUser();
     return user;
@@ -21,7 +21,7 @@ async function getAuthenticatedUser() {
   }
 }
 
-function validateInvoiceData(invoiceData, requiredFields) {
+export async function validateInvoiceData(invoiceData, requiredFields) {
   for (const field of requiredFields) {
     if (!invoiceData[field]) {
       throw new Error(`لطفاً فیلد ${field} را پر کنید.`);
@@ -29,7 +29,7 @@ function validateInvoiceData(invoiceData, requiredFields) {
   }
 }
 
-async function createInvoiceItems(invoiceItems, invoiceId, session, isPurchase) {
+export async function createInvoiceItems(invoiceItems, invoiceId, session, isPurchase) {
   const invoiceItemIds = [];
   const accountIdMap = {};
   const bulkProductOperations = {};
@@ -97,32 +97,23 @@ async function createInvoiceItems(invoiceItems, invoiceId, session, isPurchase) 
       bulkProductOperations[item.productId] = { productId: item.productId, quantity: item.quantity };
     }
   }
-console.log("invoiceItemIds, accountIdMap, bulkProductOperations",invoiceItemIds, accountIdMap, bulkProductOperations);
+  console.log("invoiceItemIds, accountIdMap, bulkProductOperations",invoiceItemIds, accountIdMap, bulkProductOperations);
 
   return { invoiceItemIds, accountIdMap, bulkProductOperations };
 }
 
-
-
-async function updateProductStock(bulkProductOperations, isPurchase, session) {
-  const bulkProductOpsArray = Object.values(bulkProductOperations).map(op => ({
-    updateOne: {
-      filter: { _id: op.productId },
-      update: { $inc: { stock: isPurchase ? op.quantity : -op.quantity } },
-    }
-  }));
-
-  if (bulkProductOpsArray.length > 0) {
-    const bulkWriteProductResult = await Product.bulkWrite(bulkProductOpsArray, { session });
-    const modifiedCount = bulkWriteProductResult.nModified || bulkWriteProductResult.modifiedCount;
-    if (modifiedCount !== bulkProductOpsArray.length) {
-      throw new Error('بعضی از به‌روزرسانی‌های موجودی محصول موفقیت‌آمیز نبودند.');
+export async function updateProductStock(bulkProductOperations, isPurchase, session) {
+  for (const op of Object.values(bulkProductOperations)) {
+    const update = { $inc: { stock: isPurchase ? op.quantity : -op.quantity } };
+    const options = { session, runValidators: true, context: 'query' };
+    const updatedProduct = await Product.findByIdAndUpdate(op.productId, update, options);
+    if (!updatedProduct) {
+      throw new Error(`به‌روزرسانی محصول با شناسه ${op.productId} موفقیت‌آمیز نبود.`);
     }
   }
 }
 
-
-async function createFinancialDocuments(description, shopId, userId, accountAllocations, accountIdMap, isPurchase, totalCostOfGoods, session) {
+export async function createFinancialDocuments(description, shopId, userId, accountAllocations, accountIdMap, isPurchase, totalCostOfGoods, session) {
   const ledger = new Ledger({
     description,
     shop: shopId,
@@ -136,18 +127,14 @@ async function createFinancialDocuments(description, shopId, userId, accountAllo
   const bulkAccountOperations = {};
   const validateAmount = (amount) => {
     return isNaN(amount) ? 0 : amount;
-    
   };
 
   for (const allocation of accountAllocations) {
-    
-    
     const generalLedger = new GeneralLedger({
       ledger: ledger._id,
       account: allocation.accountId,
       debit: isPurchase ? 0 : validateAmount(allocation.amount),
       credit: isPurchase ? validateAmount(allocation.amount) : 0,
-    
       description: `تراکنش مربوط به ${description}`,
       type: "invoice",
       shop: shopId,
@@ -212,37 +199,143 @@ async function createFinancialDocuments(description, shopId, userId, accountAllo
   return ledger._id;
 }
 
-
-async function updateAccountsBalance(bulkAccountOperations, session) {
-  const bulkAccountOpsArray = Object.values(bulkAccountOperations).map(op => {
+export async function updateAccountsBalance(bulkAccountOperations, session) {
+  for (const op of Object.values(bulkAccountOperations)) {
     const updateFields = {};
-
     if (op.debit) {
       updateFields.balance = op.debit;
     } else if (op.credit) {
       updateFields.balance = -op.credit;
     }
 
-    return {
-      updateOne: {
-        filter: { _id: op.accountId },
-        update: { $inc: { balance: updateFields.balance } },
-      }
-    };
-  });
-
-  if (bulkAccountOpsArray.length > 0) {
-    console.log("11111111");
-
-    const bulkWriteAccountResult = await Account.bulkWrite(bulkAccountOpsArray, { session });
-
-    const modifiedCount = bulkWriteAccountResult.nModified || bulkWriteAccountResult.modifiedCount;
-
-    if (modifiedCount !== bulkAccountOpsArray.length) {
-      throw new Error('بعضی از به‌روزرسانی‌های مانده حساب‌ها موفقیت‌آمیز نبودند.');
+    const update = { $inc: { balance: updateFields.balance } };
+    const options = { session, runValidators: true, context: 'query' };
+    const updatedAccount = await Account.findByIdAndUpdate(op.accountId, update, options);
+    if (!updatedAccount) {
+      throw new Error(`به‌روزرسانی حساب با شناسه ${op.accountId} موفقیت‌آمیز نبود.`);
     }
   }
 }
+
+export async function createFinancialDocumentsForSales(
+  description,
+  shopId,
+  userId,
+  accountAllocations,
+  accountIdMap,
+  totalCostOfGoods,
+  totalSales,
+  session
+) {
+  // دریافت شماره حساب بهای تمام‌شده و فروش کالا
+  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-1');
+  if (!costOfGoodsAccount.success) {
+    throw new Error(costOfGoodsAccount.message); // خطا در دریافت حساب بهای تمام‌شده کالا
+  }
+  
+  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '4000-1');
+  if (!salesRevenueAccount.success) {
+    throw new Error(salesRevenueAccount.message); // خطا در دریافت حساب فروش کالا
+  }
+
+  const ledger = new Ledger({
+    description,
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await ledger.save({ session });
+
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+
+  for (const allocation of accountAllocations) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: allocation.accountId,
+      debit: allocation.amount,
+      credit: 0,
+      description: `تراکنش مربوط به ${description}`,
+      type: 'invoice',
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (bulkAccountOperations[allocation.accountId.toString()]) {
+      bulkAccountOperations[allocation.accountId.toString()].debit += allocation.amount;
+    } else {
+      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, debit: allocation.amount };
+    }
+  }
+
+  // ثبت بهای تمام‌شده کالا (Cost of Goods Sold)
+  const costOfGoodsLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: costOfGoodsAccount.accountId,
+    debit: totalCostOfGoods,
+    credit: 0,
+    description: `بهای تمام‌شده کالا ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await costOfGoodsLedger.save({ session });
+  generalLedgers.push(costOfGoodsLedger._id);
+
+  // ثبت درآمد فروش کالا (Sales Revenue)
+  const salesRevenueLedger = new GeneralLedger({
+    ledger: ledger._id,
+    account: salesRevenueAccount.accountId,
+    debit: 0,
+    credit: totalSales,
+    description: `ثبت درآمد فروش ${description}`,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  await salesRevenueLedger.save({ session });
+  generalLedgers.push(salesRevenueLedger._id);
+
+  for (const [accountId, amount] of Object.entries(accountIdMap)) {
+    const generalLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: accountId,
+      debit: 0,
+      credit: amount,
+      description: `ثبت بستانکاری کالا برای ${description}`,
+      type: "invoice",
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    await generalLedger.save({ session });
+    generalLedgers.push(generalLedger._id);
+
+    if (!bulkAccountOperations[accountId.toString()]) {
+      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
+    } else {
+      bulkAccountOperations[accountId.toString()].credit += amount;
+    }
+  }
+
+  await updateAccountsBalance(bulkAccountOperations, session);
+
+  ledger.transactions = generalLedgers;
+  await ledger.save({ session });
+
+  return ledger._id;
+}
+
 export async function AddPurchaseInvoiceAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -310,7 +403,6 @@ export async function AddSalesInvoiceAction(invoiceData) {
   }
 
   const session = await mongoose.startSession();
-console.log("111111111111");
 
   try {
     const result = await session.withTransaction(async () => {
@@ -431,283 +523,6 @@ export async function AddPurchaseReturnAction(invoiceData) {
   }
 }
 
-export async function AddWasteAction(invoiceData) {
-  await connectDB();
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-
-  const session = await mongoose.startSession();
-
-  try {
-    const result = await session.withTransaction(async () => {
-      const requiredFields = ['type', 'invoiceItems', 'storeId','customerId'];
-      
-      validateInvoiceData(invoiceData, requiredFields);
-console.log("invoiceData.invoiceItems",invoiceData.invoiceItems);
-
-      const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
-      const totalAmount = invoiceData.invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
-
-      const waste = new Invoice({
-        description: invoiceData.description || '',
-        type: invoiceData.type,
-        totalPrice: totalAmount,
-        totalItems: totalItems,
-        shop: invoiceData.storeId,
-        createdBy: user.id,
-        updatedBy: user.id,
-        contact:invoiceData.customerId,
-      });
-
-      await waste.save({ session });
-
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, waste._id, session, false);
-console.log("accountIdMap2------",accountIdMap);
-
-      // کاهش موجودی کالا
-      await updateProductStock(bulkProductOperations, false, session);
-
-      waste.InvoiceItems = invoiceItemIds;
-      await waste.save({ session });
-      console.log("111111111111");
-
-      // ثبت اسناد مالی برای ضایعات
-      await createFinancialDocumentsForWaste(
-        `ثبت ضایعات ${waste._id}`,
-        waste.shop,
-        user.id,
-        // invoiceData.accountAllocations,
-        accountIdMap,
-        totalAmount,
-        session
-      );
-
-      return waste;
-    });
-    console.log("33333333333333");
-
-    return { success: true, message: 'ضایعات با موفقیت ثبت شد.' };
-  } catch (error) {
-    console.error('خطا در AddWasteAction:', error);
-    return { success: false, message: `ثبت ضایعات با مشکل مواجه شد: ${error.message}` };
-  } finally {
-    session.endSession();
-  }
-}
-async function createFinancialDocumentsForWaste(
-  description,
-  shopId,
-  userId,
-  accountIdMap,
-  totalWasteAmount,
-  session
-) {
-  console.log("accountIdMap",accountIdMap);
-  // دریافت شماره حساب هزینه‌های ضایعات
-  const wasteExpenseAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-4'); // فرض بر کد حساب هزینه‌های ضایعات
-  if (!wasteExpenseAccount.success) {
-    throw new Error(wasteExpenseAccount.message); // خطا در دریافت حساب هزینه‌های ضایعات
-  }
-  
-  console.log("aaaaaaaaaaaaaa");
-
-  // دریافت حساب‌های موجودی کالا از map
-  const inventoryAccounts = Object.keys(accountIdMap);
-
-  const ledger = new Ledger({
-    description,
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await ledger.save({ session });
-
-  const generalLedgers = [];
-  const bulkAccountOperations = {};
-  console.log("22222222222");
-
-  // ثبت تراکنش بدهکار برای هزینه‌های ضایعات
-  const wasteLedger = new GeneralLedger({
-    ledger: ledger._id,
-    account: wasteExpenseAccount.accountId,
-    debit: totalWasteAmount,
-    credit: 0,
-    description: `ثبت هزینه‌های ضایعات برای ${description}`,
-    type: "invoice",
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await wasteLedger.save({ session });
-  generalLedgers.push(wasteLedger._id);
-
-  // ثبت تراکنش بستانکار برای حساب‌های موجودی کالا
-  for (const accountId of inventoryAccounts) {
-    const amount = accountIdMap[accountId];
-
-    const inventoryLedger = new GeneralLedger({
-      ledger: ledger._id,
-      account: accountId,
-      debit: 0,
-      credit: amount,
-      description: `کاهش موجودی کالا به علت ضایعات برای ${description}`,
-      type: "invoice",
-      shop: shopId,
-      createdBy: userId,
-      updatedBy: userId,
-    });
-
-    await inventoryLedger.save({ session });
-    generalLedgers.push(inventoryLedger._id);
-
-    // به‌روزرسانی عملیات حسابداری
-    if (bulkAccountOperations[accountId.toString()]) {
-      bulkAccountOperations[accountId.toString()].credit += amount;
-    } else {
-      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
-    }
-  }
-
-  // ثبت تراکنش بدهکار برای حساب هزینه‌های ضایعات
-  if (bulkAccountOperations[wasteExpenseAccount.accountId.toString()]) {
-    bulkAccountOperations[wasteExpenseAccount.accountId.toString()].debit += totalWasteAmount;
-  } else {
-    bulkAccountOperations[wasteExpenseAccount.accountId.toString()] = { accountId: wasteExpenseAccount.accountId, debit: totalWasteAmount };
-  }
-
-  // به‌روزرسانی مانده حساب‌ها
-  await updateAccountsBalance(bulkAccountOperations, session);
-
-  ledger.transactions = generalLedgers;
-  await ledger.save({ session });
-
-  return ledger._id;
-}
-
-async function createFinancialDocumentsForSales(
-  description,
-  shopId,
-  userId,
-  accountAllocations,
-  accountIdMap,
-  totalCostOfGoods,
-  totalSales,
-  session
-) {
-  
-  // دریافت شماره حساب بهای تمام‌شده و فروش کالا
-  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-1');
-  if (!costOfGoodsAccount.success) {
-    throw new Error(costOfGoodsAccount.message); // خطا در دریافت حساب بهای تمام‌شده کالا
-  }
-  
-  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '4000-1');
-  if (!salesRevenueAccount.success) {
-    throw new Error(salesRevenueAccount.message); // خطا در دریافت حساب فروش کالا
-  }
-
-  const ledger = new Ledger({
-    description,
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await ledger.save({ session });
-
-  const generalLedgers = [];
-  const bulkAccountOperations = {};
-
-  for (const allocation of accountAllocations) {
-    const generalLedger = new GeneralLedger({
-      ledger: ledger._id,
-      account: allocation.accountId,
-      debit: allocation.amount,
-      credit: 0,
-      description: `تراکنش مربوط به ${description}`,
-      type: 'invoice',
-      shop: shopId,
-      createdBy: userId,
-      updatedBy: userId,
-    });
-
-    await generalLedger.save({ session });
-    generalLedgers.push(generalLedger._id);
-
-    if (bulkAccountOperations[allocation.accountId.toString()]) {
-      bulkAccountOperations[allocation.accountId.toString()].debit += allocation.amount;
-    } else {
-      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, debit: allocation.amount };
-    }
-  }
-
-  // ثبت بهای تمام‌شده کالا (Cost of Goods Sold)
-  const costOfGoodsLedger = new GeneralLedger({
-    ledger: ledger._id,
-    account: costOfGoodsAccount.accountId,
-    debit: totalCostOfGoods,
-    credit: 0,
-    description: `بهای تمام‌شده کالا ${description}`,
-    type: "invoice",
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await costOfGoodsLedger.save({ session });
-  generalLedgers.push(costOfGoodsLedger._id);
-
-  // ثبت درآمد فروش کالا (Sales Revenue)
-  const salesRevenueLedger = new GeneralLedger({
-    ledger: ledger._id,
-    account: salesRevenueAccount.accountId,
-    debit: 0,
-    credit: totalSales,
-    description: `ثبت درآمد فروش ${description}`,
-    type: "invoice",
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await salesRevenueLedger.save({ session });
-  generalLedgers.push(salesRevenueLedger._id);
-
-  for (const [accountId, amount] of Object.entries(accountIdMap)) {
-    const generalLedger = new GeneralLedger({
-      ledger: ledger._id,
-      account: accountId,
-      debit: 0,
-      credit: amount,
-      description: `ثبت بستانکاری کالا برای ${description}`,
-      type: "invoice",
-      shop: shopId,
-      createdBy: userId,
-      updatedBy: userId,
-    });
-
-    await generalLedger.save({ session });
-    generalLedgers.push(generalLedger._id);
-
-    if (!bulkAccountOperations[accountId.toString()]) {
-      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
-    } else {
-      bulkAccountOperations[accountId.toString()].credit += amount;
-    }
-  }
-
-  await updateAccountsBalance(bulkAccountOperations, session);
-
-  ledger.transactions = generalLedgers;
-  await ledger.save({ session });
-
-  return ledger._id;
-}
-
 async function createFinancialDocumentsForPurchaseReturn(
   description,
   shopId,
@@ -784,204 +599,6 @@ async function createFinancialDocumentsForPurchaseReturn(
   return ledger._id;
 }
 
-export async function AddSalesReturnAction(invoiceData) {
-  await connectDB();
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-
-  const session = await mongoose.startSession();
-
-  try {
-    const result = await session.withTransaction(async () => {
-      const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
-      validateInvoiceData(invoiceData, requiredFields);
-
-      const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
-
-      const invoice = new Invoice({
-        description: invoiceData.description || '',
-        type: invoiceData.type,
-        totalPrice: -invoiceData.totalAmount,  // فاکتور برگشتی کل مبلغ منفی است
-        totalItems: totalItems,
-        contact: invoiceData.customerId,
-        shop: invoiceData.storeId,
-        createdBy: user.id,
-        updatedBy: user.id,
-      });
-
-      await invoice.save({ session });
-
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, false);
-
-      let totalCostOfGoods = 0;
-      let totalSales = invoiceData.totalAmount;
-
-      for (const item of invoiceData.invoiceItems) {
-        const product = await Product.findById(item.productId).populate('accountId').session(session);
-        if (!product) {
-          throw new Error(`محصول با شناسه ${item.productId} یافت نشد.`);
-        }
-        const costPerUnit = product.stock > 0 && product.accountId.balance > 0 ? product.accountId.balance / product.stock : await getLastPurchasedPrice(product._id);
-        if (!costPerUnit) {
-          throw new Error(`قیمت خرید اخیر برای محصول ${product.title} یافت نشد.`);
-        }
-        totalCostOfGoods += parseFloat(costPerUnit) * item.quantity;
-      }
-
-      await updateProductStock(bulkProductOperations, true, session);  // در برگشت کالا به موجودی اضافه می‌شود
-
-      invoice.InvoiceItems = invoiceItemIds;
-      await invoice.save({ session });
-      await createFinancialDocumentsForSalesReturn(
-        `ثبت برگشت از فروش ${invoice._id}`,
-        invoice.shop,
-        user.id,
-        invoiceData.accountAllocations,
-        accountIdMap,
-        totalCostOfGoods,
-        totalSales,
-        session
-      );
-      return invoice;
-    });
-    return { success: true, message: 'فاکتور برگشت با موفقیت ثبت شد.' };
-  } catch (error) {
-    console.error('خطا در AddSalesReturnAction:', error);
-    return { success: false, message: `ثبت برگشت با مشکل مواجه شد: ${error.message}` };
-  } finally {
-    session.endSession();
-  }
-}
-
-async function createFinancialDocumentsForSalesReturn(
-  description,
-  shopId,
-  userId,
-  accountAllocations,
-  accountIdMap,
-  totalCostOfGoods,
-  totalSales,
-  session
-) {
-
-  // دریافت حساب‌های مرتبط
-  const salesReturnsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-2'); // فرض بر کد حساب برگشت از فروش
-  if (!salesReturnsAccount.success) {
-    throw new Error(salesReturnsAccount.message); // خطا در دریافت حساب برگشت از فروش
-  }
-
-  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-1');
-  if (!costOfGoodsAccount.success) {
-    throw new Error(costOfGoodsAccount.message); // خطا در دریافت حساب بهای تمام‌شده کالا
-  }
-
-  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '4000-1');
-  if (!salesRevenueAccount.success) {
-    throw new Error(salesRevenueAccount.message); // خطا در دریافت حساب فروش کالا
-  }
-
-  const ledger = new Ledger({
-    description,
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-  await ledger.save({ session });
-
-  const generalLedgers = [];
-  const bulkAccountOperations = {};
-
-  // تخصیصات حساب‌ها
-  for (const allocation of accountAllocations) {
-    const generalLedger = new GeneralLedger({
-      ledger: ledger._id,
-      account: allocation.accountId,
-      debit: 0,
-      credit: allocation.amount, // برای دریافتی بستانکار می‌شود
-      description: `تراکنش مربوط به ${description}`,
-      type: 'invoice',
-      shop: shopId,
-      createdBy: userId,
-      updatedBy: userId,
-    });
-
-    await generalLedger.save({ session });
-    generalLedgers.push(generalLedger._id);
-
-    if (bulkAccountOperations[allocation.accountId.toString()]) {
-      bulkAccountOperations[allocation.accountId.toString()].credit += allocation.amount;
-    } else {
-      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, credit: allocation.amount };
-    }
-  }
-
-  // ثبت بدهکار در حساب برگشت از فروش
-  const salesReturnLedger = new GeneralLedger({
-    ledger: ledger._id,
-    account: salesReturnsAccount.accountId,
-    debit: totalSales,
-    credit: 0,
-    description: `برگشت از فروش ${description}`,
-    type: "invoice",
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await salesReturnLedger.save({ session });
-  generalLedgers.push(salesReturnLedger._id);
-
-  // بستانکاری بهای تمام شده کالای فروخته شده
-  const costOfGoodsSoldLedger = new GeneralLedger({
-    ledger: ledger._id,
-    account: costOfGoodsAccount.accountId,
-    debit: 0,
-    credit: totalCostOfGoods,
-    description: `بهای تمام شده برگشت از فروش ${description}`,
-    type: "invoice",
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await costOfGoodsSoldLedger.save({ session });
-  generalLedgers.push(costOfGoodsSoldLedger._id);
-
-  // ثبت بدهکاری برای حساب‌های مرتبط با کالا
-  for (const [accountId, amount] of Object.entries(accountIdMap)) {
-    const generalLedger = new GeneralLedger({
-      ledger: ledger._id,
-      account: accountId,
-      debit: amount,      // اصلاح: بدهکار کردن حساب کالا
-      credit: 0,
-      description: `ثبت بدهکاری برای کالا در برگشت از فروش ${description}`,
-      type: "invoice",
-      shop: shopId,
-      createdBy: userId,
-      updatedBy: userId,
-    });
-
-    await generalLedger.save({ session });
-    generalLedgers.push(generalLedger._id);
-
-    if (!bulkAccountOperations[accountId.toString()]) {
-      bulkAccountOperations[accountId.toString()] = { accountId: accountId, debit: amount };
-    } else {
-      bulkAccountOperations[accountId.toString()].debit += amount;
-    }
-  }
-
-  await updateAccountsBalance(bulkAccountOperations, session);
-
-  ledger.transactions = generalLedgers;
-  await ledger.save({ session });
-
-  return ledger._id;
-}
-
-
 export async function getLastPurchasedPrice(productId) {
   await connectDB();
   console.log("productId", productId);
@@ -1045,6 +662,3 @@ export async function getLastPurchasedPrice(productId) {
     return null;
   }
 }
-
-
-

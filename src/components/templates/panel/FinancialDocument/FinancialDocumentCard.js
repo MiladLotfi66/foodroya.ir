@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-// import { Toaster, toast } from "react-hot-toast";
 import {
    DeleteFinancialDocuments,
 } from "./FinancialDocumentsServerActions";
@@ -13,7 +12,8 @@ function FinancialDocumentCard({
   financialDocument: initialFinancialDocument,
   editFunction,
   onDelete,
-  ShopId
+  ShopId,
+  onError
 }) {
   const [financialDocument, setFinancialDocument] = useState(
     initialFinancialDocument
@@ -30,25 +30,29 @@ function FinancialDocumentCard({
 
 
   const deleteFunc = async () => {
+    const isConfirmed = window.confirm("آیا از حذف این سند مالی اطمینان دارید؟");
+    if (!isConfirmed) return; // اگر کاربر لغو کند، ادامه نده
+  
     try {
-      const response = await DeleteFinancialDocuments(financialDocument._id,ShopId);
-      if (response.status === 200) {
-        onDelete(); // حذف سند مالی از لیست
-        // toast.success("سند مالی با موفقیت حذف شد.");
-      } else {
-        throw new Error(response.message || "خطا در حذف سند مالی.");
+      if (initialFinancialDocument.transactions[0].type==="invoice") {
+        onError("برای حذف سند مالی فاکتور ها باید خود فاکتور را حذف کنید."); // ارسال پیام خطا به والد
+
+      }else{
+
+        const response = await DeleteFinancialDocuments(financialDocument._id,ShopId);
+        if (response.status === 200) {
+          onDelete(); // حذف سند مالی از لیست
+        } else {
+          onError("خطا در حذف سند مالی."); // ارسال پیام خطا به والد
+
+        }
       }
     } catch (error) {
-      console.error("خطا در حذف سند مالی:", error);
       // toast.error("خطا در حذف سند مالی.");
     }
   };
 
-  // استخراج واحد پول و توضیحات (درصورتی که تراکنش‌ها وجود دارند)
-  // const currencyTitle =
-  //   financialDocument.transactions.length > 0
-  //     ? financialDocument.transactions[0].currency.title
-  //     : "";
+
 
   const description = financialDocument.description || "";
 

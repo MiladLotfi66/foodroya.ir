@@ -5,7 +5,7 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import CurrencyCard from "./CurrencyCard";
 import AddCurrency from "./AddCurrency";
 import { useParams } from 'next/navigation';
-import { AddCurrencyAction, DeleteCurrencies, EditCurrencyAction ,GetAllCurrencies} from "./currenciesServerActions";
+import { GetAllCurrencies} from "./currenciesServerActions";
 import { Toaster, toast } from "react-hot-toast";
 
 function CurrencyManage() {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GetAllAccountsByOptions } from '../Account/accountActions';
-import { AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction, AddSalesReturnAction, AddWasteAction } from './invoiceItemsServerActions';
-
+import { AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction } from './invoiceItemsServerActions';
+import { AddWasteAction ,AddSalesReturnAction} from './invoiceItemsServerActions2';
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([
@@ -80,7 +80,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     // اگر نوع فاکتور Waste نیست، اعتبارسنجی تخصیص حساب‌ها را انجام دهید
     if (invoiceType !== 'Waste') {
       // اعتبارسنجی چند حساب انتخاب شده
@@ -88,7 +88,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
         alert('لطفاً حداقل یک حساب را انتخاب کنید.');
         return;
       }
-
+  
       // بررسی اینکه همه حساب‌ها انتخاب شده و مبالغ معتبر هستند
       for (let i = 0; i < allocatedAccounts.length; i++) {
         if (!allocatedAccounts[i].accountId) {
@@ -100,17 +100,17 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
           return;
         }
       }
-
+  
       // محاسبه مجموع مبالغ تخصیص‌یافته و مقایسه با مبلغ کل فاکتور
       const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount), 0);
       const invoiceTotal = invoiceData.totalPrice || 0;
-
+  
       if (totalAllocated !== invoiceTotal) {
         alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated}) با مبلغ کل فاکتور (${invoiceTotal}) مطابقت ندارد.`);
         return;
       }
     }
-
+  
     // ایجاد داده‌های ارسال شده بر اساس نوع فاکتور
     const invoiceDataToSubmit = {
       storeId: ShopId,
@@ -120,12 +120,12 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
       invoiceItems, // شامل آیتم‌های فاکتور
       // سایر اطلاعات مورد نیاز
     };
-
+  
     // اگر نوع فاکتور غیر از Waste بود، حساب‌ها را اضافه کنید
     if (invoiceType !== 'Waste') {
       invoiceDataToSubmit.accountAllocations = allocatedAccounts;
     }
-
+  
     try {
       let response;
       switch(invoiceType) {
@@ -153,13 +153,17 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
         onClose();
       } else {
         console.error('خطا در ثبت فاکتور:', response.message);
-        alert('ثبت فاکتور با خطا مواجه شد.');
+        // نمایش پیام خطای دقیق به کاربر
+        alert(`ثبت فاکتور با خطا مواجه شد: ${response.message}`);
       }
     } catch (error) {
       console.error('خطای غیرمنتظره:', error);
-      alert('یک خطای غیرمنتظره رخ داد.');
+      // بررسی اینکه آیا خطا دارای پیام است
+      const errorMessage = error.message || 'یک خطای غیرمنتظره رخ داد.';
+      alert(`یک خطای غیرمنتظره رخ داد: ${errorMessage}`);
     }
   };
+  
   
   if (!isOpen) {
     return null;

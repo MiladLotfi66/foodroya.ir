@@ -40,6 +40,10 @@ function FinancialDocumentManage() {
     setFinancialDocuments((prevFinancialDocuments) => prevFinancialDocuments.filter(financialDocument => financialDocument._id !== financialDocumentId));
     toast.success("سند مالی با موفقیت حذف شد.");
   }, []);
+  // تابع برای دریافت خطا از فرزند
+  const handleChildError = (errorMessage) => {
+    toast.error(errorMessage || "خطایی رخ داد.");
+  };
 
   const handleOverlayClick = useCallback((e) => {
     if (e.target === e.currentTarget) {
@@ -50,9 +54,15 @@ function FinancialDocumentManage() {
   }, []);
 
   const handleEditClick = useCallback((financialDocument) => {
-    setSelectedFinancialDocument(financialDocument);
-    setSelectedFinancialDocumentFile(null); // ریست کردن فایل سند مالی در حالت ویرایش
-    setIsOpenAddFinancialDocument(true);
+    if (financialDocument.transactions[0].type==="invoice") {
+      toast.error("برای ویرایش سند مالی فاکتور ها باید خود فاکتور را ویرایش کنید.");
+
+    }else{
+      setSelectedFinancialDocument(financialDocument);
+      setSelectedFinancialDocumentFile(null); // ریست کردن فایل سند مالی در حالت ویرایش
+      setIsOpenAddFinancialDocument(true);
+
+    }
   }, []);
 
   const handleAddFinancialDocumentClick = useCallback(() => {
@@ -109,6 +119,8 @@ function FinancialDocumentManage() {
               editFunction={() => handleEditClick(financialDocument)}
               onDelete={() => handleDeleteFinancialDocument(financialDocument._id,ShopId)} // پاس دادن تابع حذف
               ShopId={ShopId}
+              onError={handleChildError} // ارسال تابع handleChildError به فرزند
+
             />
           ))}
         </div>

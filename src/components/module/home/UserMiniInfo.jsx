@@ -2,6 +2,8 @@
 import React from "react";
 import Image from "next/image";
 import PropTypes from "prop-types";
+import usericone from "@/public/Images/jpg/user.webp";
+
 
 const UserMiniInfo = ({ userImage, name, username }) => {
   
@@ -9,7 +11,7 @@ const UserMiniInfo = ({ userImage, name, username }) => {
     <div className="flex items-center mt-2">
       <Image
         className="rounded-full"
-        src={userImage}
+        src={userImage|| usericone}
         alt={`${name} تصویر`}
         width={40}
         height={40}
