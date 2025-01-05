@@ -392,8 +392,6 @@ export async function deactivateAccount(id) {
 }
 // دریافت تمام حساب‌ها
 export async function GetAllAccounts(storeId, parentId = null) {
-  console.log("11111111111");
-  
   await connectDB();
 
   if (!storeId) {
@@ -407,68 +405,21 @@ export async function GetAllAccounts(storeId, parentId = null) {
     filter.parentAccount = null; // حساب‌های ریشه
   }
 
-  const accounts = await Account.find(filter)
-    .sort({ accountCode: 1 })
-    .populate({
-      path: 'contact',
-      select: 'name email' // انتخاب فقط فیلدهای ضروری
-    })
-    .populate({
-      path: 'productId',
-      select: 'title images', // انتخاب فقط فیلدهای ضروری
-      populate: {
-        path: 'images',
-        select: 'url' // فرض می‌کنیم که تصاویر شامل فیلد URL هستند
-      }
-    })
-    .lean(); // افزودن .lean() برای دریافت اشیاء ساده
+  try {
+    const accounts = await Account.find(filter)
+      .sort({ accountCode: 1 })
+      .populate("contact")
+      .lean(); // افزودن .lean() برای دریافت اشیاء ساده
 
-  const plainAccounts = accounts?.map((account) => {
-    return {
-      ...account,
-      _id: account._id?.toString() || null,
-      accountCode: account.accountCode?.toString() || null,
-      title: account.title?.toString() || null,
-      store: account.store?.toString() || null,
-      parentAccount: account.parentAccount?.toString() || null,
-      accountType: account.accountType?.toString() || null,
-      accountNature: account.accountNature?.toString() || null,
-      accountStatus: account.accountStatus?.toString() || null,
-      isSystem: account.isSystem, // حفظ نوع بولین
-      createdAt: account.createdAt?.toISOString() || null,
-      updatedBy: account.updatedBy?.toString() || null,
-      updatedAt: account.updatedAt?.toISOString() || null,
-      createdBy: account.createdBy?.toString() || null,
-      
-      // تبدیل فیلد contact به اشیاء ساده
-      contact: account.contact
-        ? {
-            _id: account.contact._id?.toString() || null,
-            name: account.contact.name || null,
-            email: account.contact.email || null,
-          }
-        : null,
+    // استفاده از تابع simplifyObject برای ساده‌سازی هر حساب
+    const simplifiedAccounts = accounts.map((account) => simplifyObject(account));
 
-      // تبدیل فیلد productId به اشیاء ساده
-      productId: account.productId
-        ? {
-            _id: account.productId._id?.toString() || null,
-            title: account.productId.title || null,
-            images: account.productId.images?.map(img => ({
-              _id: img._id?.toString() || null,
-              url: img.url || null
-            })) || []
-          }
-        : null,
-
-      // حذف سایر فیلدهای غیرضروری مانند __v
-      // به صورت دستی می‌توانید این فیلدها را حذف کنید یا با استفاده از روش‌های دیگر مدیریت کنید
-    };
-  });
-
-  return { Accounts: plainAccounts, status: 200 };
+    return { Accounts: simplifiedAccounts, status: 200 };
+  } catch (error) {
+    console.error('Error fetching accounts:', error);
+    throw new Error('مشکلی در دریافت حساب‌ها رخ داده است.');
+  }
 }
-
 
 // دریافت حساب‌ها بر اساس شروع یک کاراکتر خاص
 export async function GetAccountsByStartingCharacter(storeId, startingChar = "", field = 'title', accountType = "") {
@@ -574,81 +525,143 @@ export async function GetAccountsByStartingCharacter(storeId, startingChar = "",
   }
 }
 
+function simplifyObject(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(item => simplifyObject(item));
+  } else if (obj && typeof obj === 'object') {
+    // اگر شیء یک Buffer است، آن را به رشته base64 تبدیل کنید
+    if (Buffer.isBuffer(obj)) {
+      return obj.toString('base64');
+    }
+
+    // اگر شیء یک Date است، آن را به رشته ISO تبدیل کنید
+    if (obj instanceof Date) {
+      return obj.toISOString();
+    }
+
+    // اگر شیء یک ObjectId است، آن را به رشته تبدیل کنید
+    if (obj instanceof mongoose.Types.ObjectId) {
+      return obj.toString();
+    }
+
+    // اگر شیء دارای toJSON است و غیر از Buffer و ObjectId آن را نادیده بگیردیم
+    if (typeof obj.toJSON === 'function' && !(obj instanceof Buffer)) {
+      obj = obj.toJSON();
+    }
+
+    const simplified = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        
+        // نادیده گرفتن توابع
+        if (typeof value === 'function') {
+          continue;
+        }
+
+        // تبدیل Buffer
+        if (Buffer.isBuffer(value)) {
+          simplified[key] = value.toString('base64');
+        }
+        // تبدیل Date
+        else if (value instanceof Date) {
+          simplified[key] = value.toISOString();
+        }
+        // تبدیل ObjectId
+        else if (value instanceof mongoose.Types.ObjectId) {
+          simplified[key] = value.toString();
+        }
+        // تبدیل بازگشتی
+        else if (Array.isArray(value) || (value && typeof value === 'object')) {
+          simplified[key] = simplifyObject(value);
+        }
+        // سایر انواع داده‌ها
+        else {
+          simplified[key] = value;
+        }
+      }
+    }
+    return simplified;
+  }
+  return obj;
+}
+
 
 
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
   await connectDB();
+
   if (!storeId) {
     throw new Error("فروشگاه مشخص نشده است.");
   }
+
   const {
     fields = null,
     populateFields = [],
     limit = 0,
     page = 1,
-    sort = { accountCode: 1 },
+    sort = { accountType: 1 },
     additionalFilters = {}
   } = options;
+
   // ساختار فیلتر اولیه با storeId
   let filter = { store: storeId };
+
   // اعمال فیلتر parentAccount تنها در صورتی که parentId ارائه شده باشد
   if (parentId !== null && parentId !== undefined) {
     filter.parentAccount = parentId;
   }
+
   // اعمال فیلترهای اضافی
   if (additionalFilters && typeof additionalFilters === 'object') {
     filter = { ...filter, ...additionalFilters };
   }
+
+
   // محاسبه تعداد کل آیتم‌ها مطابق فیلتر
   const total = await Account.countDocuments(filter);
+
   // محاسبه مجموع صفحات
   const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
   // محاسبه skip
   const skip = limit > 0 ? (page - 1) * limit : 0;
+
   // شروع ساخت کوئری
   let query = Account.find(filter);
+
   // انتخاب فیلدها اگر مشخص شده باشد
   if (fields && Array.isArray(fields) && fields.length > 0) {
     query = query.select(fields.join(' '));
   }
+
   // پاپیولیت کردن فیلدها اگر مشخص شده باشد
   if (populateFields && Array.isArray(populateFields) && populateFields.length > 0) {
     populateFields.forEach(field => {
       query = query.populate(field);
     });
   }
+
   // اعمال مرتب‌سازی
   if (sort && typeof sort === 'object') {
     query = query.sort(sort);
   }
+
   // اعمال صفحه‌بندی
   if (limit > 0) {
     query = query.limit(limit);
   }
+
   if (skip > 0) {
     query = query.skip(skip);
   }
+
+
   // اجرای کوئری با lean برای بهینه‌سازی
   const accounts = await query.lean();
-  // تبدیل ObjectId و سایر فیلدهای مربوطه به رشته
-  const plainAccounts = accounts?.map((account) => {
-    return {
-      ...account,
-      _id: account._id?.toString() || null,
-      accountCode: account.accountCode?.toString() || null,
-      title: account.title?.toString() || null,
-      store: account.store?.toString() || null,
-      parentAccount: account.parentAccount?.toString() || null,
-      accountType: account.accountType?.toString() || null,
-      accountNature: account.accountNature?.toString() || null,
-      accountStatus: account.accountStatus?.toString() || null,
-      isSystem: account.isSystem, // حفظ نوع بولین
-      createdAt: account.createdAt?.toISOString() || null,
-      updatedBy: account.updatedBy?.toString() || null,
-      updatedAt: account.updatedAt?.toISOString() || null,
-      createdBy: account.createdBy?.toString() || null,
-    };
-  });
+
+
+  // ساده‌سازی تمام فیلدها شامل پاپیولیت شده‌ها
+  const plainAccounts = accounts?.map(account => simplifyObject(account));
 
   return { 
     Accounts: plainAccounts, 
@@ -658,7 +671,6 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
     status: 200 
   };
 }
-
 
 
   export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {

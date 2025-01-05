@@ -150,6 +150,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
     }
   };
   
+console.log("accounts",accounts);
 
   return (
     <div>

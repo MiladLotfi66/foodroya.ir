@@ -97,7 +97,6 @@ export async function createInvoiceItems(invoiceItems, invoiceId, session, isPur
       bulkProductOperations[item.productId] = { productId: item.productId, quantity: item.quantity };
     }
   }
-  console.log("invoiceItemIds, accountIdMap, bulkProductOperations",invoiceItemIds, accountIdMap, bulkProductOperations);
 
   return { invoiceItemIds, accountIdMap, bulkProductOperations };
 }
@@ -601,7 +600,6 @@ async function createFinancialDocumentsForPurchaseReturn(
 
 export async function getLastPurchasedPrice(productId) {
   await connectDB();
-  console.log("productId", productId);
 
   // اعتبارسنجی productId
   if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -648,7 +646,6 @@ export async function getLastPurchasedPrice(productId) {
     const result = await Invoice.aggregate(pipeline).exec();
 
     if (!result || result.length === 0) {
-      console.log('هیچ فاکتور خریدی برای این محصول یافت نشد.');
       return null;
     }
 

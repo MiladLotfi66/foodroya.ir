@@ -438,8 +438,7 @@ export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
 }
 
 export async function getAccountTransactions(accountId) {
-  console.log("accountId",accountId);
-  
+
   // احراز هویت کاربر
   const user = await authenticateUser();
   if (!user) {
@@ -461,8 +460,49 @@ export async function getAccountTransactions(accountId) {
 
   // دریافت تراکنش‌ها مربوط به حساب
   const transactions = await GeneralLedger.find({ account: accountId })
-    // .populate('ledger') // فرض بر این است که فیلد ledger در مدل GeneralLedger تعریف شده است
-    .sort({ date: -1 }); // مرتب‌سازی تراکنش‌ها به ترتیب تاریخ نزولی
+    .sort({ date: -1 })
+    .lean(); // استفاده از lean() برای دریافت اشیاء ساده
 
-  return transactions;
+  // ساده‌سازی و تبدیل به اشیاء ساده جاوااسکریپت
+  const simplifiedTransactions = transactions.map(transaction => {
+    return {
+      _id: transaction._id?.toString(),  // اضافه کردن _id اصلی تراکنش
+
+      ledger: {
+        id: transaction.ledger?._id?.toString(),
+        // اضافه کردن سایر فیلدهای مورد نیاز ledger
+      },
+      account: {
+        id: transaction.account?._id?.toString(),
+        // اضافه کردن سایر فیلدهای مورد نیاز account
+      },
+      debit: Number(transaction.debit) || 0,
+      credit: Number(transaction.credit) || 0,
+      description: transaction.description,
+      type: transaction.type,
+      shop: transaction.shop ? {
+        id: transaction.shop?._id?.toString(),
+        name: transaction.shop?.name,
+        // اضافه کردن سایر فیلدهای مورد نیاز shop
+      } : null,
+      createdBy: transaction.createdBy ? {
+        id: transaction.createdBy?._id?.toString(),
+        name: transaction.createdBy?.name,
+        // اضافه کردن سایر فیلدهای مورد نیاز user
+      } : null,
+      updatedBy: transaction.updatedBy ? {
+        id: transaction.updatedBy?._id?.toString(),
+        name: transaction.updatedBy?.name,
+        // اضافه کردن سایر فیلدهای مورد نیاز user
+      } : null,
+      createdAt: transaction.createdAt?.toISOString(),
+      updatedAt: transaction.updatedAt?.toISOString(),
+    };
+  });
+
+  return simplifiedTransactions;
 }
+
+
+
+

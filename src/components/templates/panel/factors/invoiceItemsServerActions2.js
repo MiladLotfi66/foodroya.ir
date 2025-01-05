@@ -110,14 +110,12 @@ async function createFinancialDocumentsForWaste(
   totalWasteAmount,
   session
 ) {
-  console.log("accountIdMap", accountIdMap);
   // دریافت شماره حساب هزینه‌های ضایعات
   const wasteExpenseAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-4'); // فرض بر کد حساب هزینه‌های ضایعات
   if (!wasteExpenseAccount.success) {
     throw new Error(wasteExpenseAccount.message); // خطا در دریافت حساب هزینه‌های ضایعات
   }
 
-  console.log("Initial steps completed.");
 
   // دریافت حساب‌های موجودی کالا از map
   const inventoryAccounts = Object.keys(accountIdMap);

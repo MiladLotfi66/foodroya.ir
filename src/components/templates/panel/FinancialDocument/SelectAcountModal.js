@@ -79,9 +79,6 @@ function SelectAccountModal({ onSelect, onCancel, onError, selectionMode }) {
         const newPath = [...path, { id: account._id, title: account.title, accountCode: account.accountCode }];
         setPath(newPath);
         setParentAccountId(account._id);
-    //           if(onError) {
-    //     onError("نوع حساب انتخاب شده مجاز نیست.");
-    //   }
     }
   };
 
