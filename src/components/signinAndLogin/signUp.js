@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import Usersvg from "@/module/svgs/Usersvg";
 import Phonesvg from "@/module/svgs/phoneSvg1";
 import Locksvg from "@/module/svgs/Locksvg";
@@ -15,7 +15,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
 import FormStep from "@/module/User/FormStep";
 import InputField from "@/module/User/InputField";
-import { checkUsernameUnique ,signUpServerAction } from "./Actions/signUpServerAction";
+import { checkUsernameUnique, signUpServerAction } from "./Actions/signUpServerAction";
+
 function SignUp() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -28,10 +29,10 @@ function SignUp() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setError,
     clearErrors,
-    watch,
     trigger,
   } = useForm({
     mode: "all",
@@ -44,10 +45,16 @@ function SignUp() {
     resolver: yupResolver(RegisterSchema),
   });
 
+  // *******************دریافت مقدار username با useWatch********************
+  const username = useWatch({
+    control,
+    name: "username",
+    defaultValue: "",
+  });
+
   // *******************بررسی یکتایی نام کاربری با Debounce********************
   useEffect(() => {
     const checkUsername = async () => {
-      const username = watch("username");
       if (username && username.trim().length >= 3) {
         setIsCheckingUsername(true);
         const result = await checkUsernameUnique(username.trim());
@@ -73,7 +80,7 @@ function SignUp() {
     }, 500); // تاخیر ۵۰۰ میلی‌ثانیه
 
     return () => clearTimeout(delayDebounceFn);
-  }, [watch("username"), setError, clearErrors]);
+  }, [username, setError, clearErrors]);
 
   // *******************submit ********************
   const formsubmitting = async (data) => {

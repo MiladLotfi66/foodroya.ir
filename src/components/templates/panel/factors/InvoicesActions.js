@@ -100,3 +100,30 @@ export async function GetShopInvocesByShopId(ShopId) {
     return { error: error.message, status: 500 };
   }
 }
+export async function DeleteInvoice(ShopId) {
+  try {
+    await connectDB();
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    if (!ShopId) {
+      throw new Error("ShopId not found");
+    }
+
+
+
+    return {  status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت فاکتور‌ها:", error);
+    return { error: error.message, status: 500 };
+  }
+}

@@ -436,3 +436,33 @@ export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
     return { status: 500, message: 'خطایی در حذف سند مالی رخ داد.' };
   }
 }
+
+export async function getAccountTransactions(accountId) {
+  console.log("accountId",accountId);
+  
+  // احراز هویت کاربر
+  const user = await authenticateUser();
+  if (!user) {
+    throw new Error('Unauthorized');
+  }
+
+  // اتصال به پایگاه داده
+  await connectDB();
+
+  if (!accountId) {
+    throw new Error('Account ID is required');
+  }
+
+  // بررسی وجود حساب
+  const account = await Account.findById(accountId);
+  if (!account) {
+    throw new Error('Account not found');
+  }
+
+  // دریافت تراکنش‌ها مربوط به حساب
+  const transactions = await GeneralLedger.find({ account: accountId })
+    // .populate('ledger') // فرض بر این است که فیلد ledger در مدل GeneralLedger تعریف شده است
+    .sort({ date: -1 }); // مرتب‌سازی تراکنش‌ها به ترتیب تاریخ نزولی
+
+  return transactions;
+}

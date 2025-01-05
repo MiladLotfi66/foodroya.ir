@@ -11,15 +11,13 @@ function InvoiceManage() {
   const [selectedInvioce, setSelectedInvioce] = useState(null);
   const params = useParams();
   const { ShopId } = params;
-  const [invoices, SetInvoices] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   
-
   const refreshInvioces = useCallback(async () => {
     try {
       const response = await GetShopInvocesByShopId(ShopId);
-      console.log("response",response);
       
-      SetInvoices(response.Invoices);
+      setInvoices(response.Invoices);
       // فرض می‌کنیم هر فاکتور دارای یک فیلد contacts که آرایه‌ای از مخاطبان است
      
     } catch (error) {

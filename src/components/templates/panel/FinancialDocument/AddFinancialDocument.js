@@ -264,26 +264,7 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
             onSubmit={handleSubmit(formSubmitting)}
             className="max-w-lg mx-auto rounded"
           >
-            {/* <select
-              className={`w-full mb-4 mt-2 border bg-gray-300 dark:bg-zinc-600 ${
-                errors.description ? "border-red-400" : "border-gray-300"
-              } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-              {...register("currency", { required: "انتخاب ارز الزامی است" })}
-            > */}
-              {/* گزینه‌ی پیش‌فرض */}
-              {/* <option value="">انتخاب ارز</option> */}
-
-              {/* گزینه‌های دینامیک */}
-              {/* {currencies.map((currency) => (
-                // <option key={currency._id} value={currency._id}>
-                //   {currency.title} ({currency.shortName})
-                // </option>
-              ))} */}
-            {/* </select> */}
-            {/* {errors.currency && (
-              <span className="error">{errors.currency.message}</span>
-            )} */}
-
+ 
             {/* بخش بدهکار */}
             <div
               className="border-l-4 border-red-500 p-1 md:p-4  text-xs md:text-base mb-1

@@ -392,43 +392,84 @@ export async function deactivateAccount(id) {
 }
 // دریافت تمام حساب‌ها
 export async function GetAllAccounts(storeId, parentId = null) {
+  console.log("11111111111");
   
-    await connectDB();
-  
-    if (!storeId) {
-      throw new Error("فروشگاه مشخص نشده است.");
-    }
+  await connectDB();
 
-    const filter = { store: storeId };
-    if (parentId) {
-      filter.parentAccount = parentId;
-    } else {
-      filter.parentAccount = null; // حساب‌های ریشه
-    }
+  if (!storeId) {
+    throw new Error("فروشگاه مشخص نشده است.");
+  }
 
-    const accounts = await Account.find(filter).sort({ accountCode: 1 }).populate("contact").lean(); // افزودن .lean() اینجا
+  const filter = { store: storeId };
+  if (parentId) {
+    filter.parentAccount = parentId;
+  } else {
+    filter.parentAccount = null; // حساب‌های ریشه
+  }
 
-    const plainAccounts = accounts?.map((account) => {
-      return {
-        ...account,
-        _id: account._id?.toString() || null, // تبدیل ObjectId به string
-        accountCode: account.accountCode?.toString() || null,
-        title: account.title?.toString() || null,
-        store: account.store?.toString() || null,
-        parentAccount: account.parentAccount?.toString() || null,
-        accountType: account.accountType?.toString() || null,
-        accountNature: account.accountNature?.toString() || null,
-        accountStatus: account.accountStatus?.toString() || null,
-        isSystem: account.isSystem, // حفظ نوع بولین
-        createdAt: account.createdAt?.toISOString() || null, // تبدیل تاریخ به ISO string
-        updatedBy: account.updatedBy?.toString() || null,
-        updatedAt: account.updatedAt?.toISOString() || null,
-        createdBy: account.createdBy?.toString() || null,
-      };
-    });
+  const accounts = await Account.find(filter)
+    .sort({ accountCode: 1 })
+    .populate({
+      path: 'contact',
+      select: 'name email' // انتخاب فقط فیلدهای ضروری
+    })
+    .populate({
+      path: 'productId',
+      select: 'title images', // انتخاب فقط فیلدهای ضروری
+      populate: {
+        path: 'images',
+        select: 'url' // فرض می‌کنیم که تصاویر شامل فیلد URL هستند
+      }
+    })
+    .lean(); // افزودن .lean() برای دریافت اشیاء ساده
 
-    return { Accounts: plainAccounts, status: 200 };
+  const plainAccounts = accounts?.map((account) => {
+    return {
+      ...account,
+      _id: account._id?.toString() || null,
+      accountCode: account.accountCode?.toString() || null,
+      title: account.title?.toString() || null,
+      store: account.store?.toString() || null,
+      parentAccount: account.parentAccount?.toString() || null,
+      accountType: account.accountType?.toString() || null,
+      accountNature: account.accountNature?.toString() || null,
+      accountStatus: account.accountStatus?.toString() || null,
+      isSystem: account.isSystem, // حفظ نوع بولین
+      createdAt: account.createdAt?.toISOString() || null,
+      updatedBy: account.updatedBy?.toString() || null,
+      updatedAt: account.updatedAt?.toISOString() || null,
+      createdBy: account.createdBy?.toString() || null,
+      
+      // تبدیل فیلد contact به اشیاء ساده
+      contact: account.contact
+        ? {
+            _id: account.contact._id?.toString() || null,
+            name: account.contact.name || null,
+            email: account.contact.email || null,
+          }
+        : null,
+
+      // تبدیل فیلد productId به اشیاء ساده
+      productId: account.productId
+        ? {
+            _id: account.productId._id?.toString() || null,
+            title: account.productId.title || null,
+            images: account.productId.images?.map(img => ({
+              _id: img._id?.toString() || null,
+              url: img.url || null
+            })) || []
+          }
+        : null,
+
+      // حذف سایر فیلدهای غیرضروری مانند __v
+      // به صورت دستی می‌توانید این فیلدها را حذف کنید یا با استفاده از روش‌های دیگر مدیریت کنید
+    };
+  });
+
+  return { Accounts: plainAccounts, status: 200 };
 }
+
+
 // دریافت حساب‌ها بر اساس شروع یک کاراکتر خاص
 export async function GetAccountsByStartingCharacter(storeId, startingChar = "", field = 'title', accountType = "") {
   

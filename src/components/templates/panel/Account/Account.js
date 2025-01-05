@@ -35,16 +35,6 @@ const accountSchema = new Schema(
     accountType: {
       type: String,
       enum: [
-        "صندوق",
-        "حساب عادی",
-        "گروه حساب",
-        "حساب بانکی",
-        "کالا",
-        "دسته بندی کالا",
-        "اشخاص حقیقی",
-        "اشخاص حقوقی",
-        "انبار",
-        "حساب انتظامی",
       ],
       required: true,
       maxlength: 255,

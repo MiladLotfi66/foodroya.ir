@@ -23,6 +23,7 @@ function Page() {
       <Link className='p-3' href={`/${ShopId}/panel/priceTemplate`} >قالب قیمت</Link>
       <Link className='p-3' href={`/${ShopId}/panel/products`} >محصولات</Link>
       <Link className='p-3' href={`/${ShopId}/panel/FinancialDocuments`} >اسناد مالی</Link>
+      <Link className='p-3' href={`/${ShopId}/panel/DetailedAccount`} > حساب معین </Link>
       <Link className='p-3' href={`/${ShopId}/panel/PurchaseInvoice`} >فاکتور خرید</Link>
       <Link className='p-3' href={`/${ShopId}/panel/SaleInvoice`} >فاکتور فروش</Link>
       <Link className='p-3' href={`/${ShopId}/panel/PurchaseReturnInvoice`} >برگشت از خرید</Link>

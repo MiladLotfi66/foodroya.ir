@@ -15,6 +15,8 @@ const ActionButton = forwardRef(({ onClick, Icon, label, className = '' }, ref) 
     </button>
   );
 });
+// تعیین displayName برای کامپوننت
+ActionButton.displayName = 'ActionButton';
 
 // اضافه کردن PropTypes برای اطمینان از نوع props
 ActionButton.propTypes = {
@@ -22,11 +24,6 @@ ActionButton.propTypes = {
   Icon: PropTypes.elementType.isRequired,
   label: PropTypes.string.isRequired,
   className: PropTypes.string,
-};
-
-// تعیین مقدار پیش‌فرض برای props
-ActionButton.defaultProps = {
-  className: '',
 };
 
 export default ActionButton;

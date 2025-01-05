@@ -25,13 +25,10 @@ function AccountManage() {
           console.error("شماره یکتای فروشگاه موجود نیست.");
           return;
         }
-
-
         if (!ShopId) {
           console.error("فروشگاهی با این نام یافت نشد.");
           return;
         }
-
         const response = await GetAllAccounts(ShopId, parentId);
 
         if (response.status === 200) {
@@ -56,7 +53,6 @@ function AccountManage() {
     setAccounts((prevAccounts) =>
       prevAccounts.filter((account) => account._id !== accountId)
     );
-    // toast.success("حساب با موفقیت حذف شد.");
   }, []);
 
   const handleOverlayClick = useCallback((e) => {

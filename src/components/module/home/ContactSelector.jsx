@@ -37,7 +37,7 @@ import { useParams } from 'next/navigation';
     if (isOpen) {
       fetchContacts();
     }
-  }, [isOpen]);
+  }, [fetchContacts]);
 
   if (!isOpen) return null;
 
