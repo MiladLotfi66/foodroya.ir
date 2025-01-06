@@ -30,7 +30,6 @@ function ContactManager() {
       }
 
       const response = await GetAllContacts(ShopId);
-console.log("response",response);
 
       setContacts(response.contacts);
     } catch (error) {

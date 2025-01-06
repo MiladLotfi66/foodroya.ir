@@ -388,3 +388,269 @@ async function createFinancialDocumentsForSalesReturn(
 
   return ledger._id;
 }
+
+//////////////////////////
+// کدهای ثابت حسابداری
+const ACCOUNT_CODES = {
+  EXPENSE: '5000-1',
+  COST_OF_GOODS_SOLD: '5000-1',
+  SALES_RETURN: '5000-2',
+  DISCOUNTS: '5000-3',
+  WASTE: '5000-4',
+  SALES: '4000-1'
+};
+
+export async function deleteInvoiceAction(invoiceId, storeId) {
+  let session;
+  try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+
+      const user = await getAuthenticatedUser();
+      if (!user) {
+          throw new Error('دسترسی غیرمجاز');
+      }
+
+      const invoice = await Invoice.findOne({
+          _id: invoiceId,
+          shop: storeId
+      }).populate('InvoiceItems').session(session);
+console.log("invoice-------------------------------",invoice);
+
+      if (!invoice) {
+          throw new Error('فاکتور یافت نشد');
+      }
+
+      const totalAmount = invoice.totalPrice;
+
+      // برگرداندن تغییرات موجودی و به‌روزرسانی مانده حساب‌ها
+      for (const item of invoice.InvoiceItems) {
+          const product = await Product.findById(item.product).session(session);
+          if (!product) {
+              throw new Error(`محصول ${item.productId} یافت نشد`);
+          }
+
+          switch (invoice.type) {
+              case 'SALE':
+                  product.stock += item.quantity;
+                  const costOfGoodsSold = item.quantity * product.costPrice;
+                  await updateAccountsBalanceIndividually([
+                      {
+                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.SALES),
+                          amount: -totalAmount
+                      },
+                      {
+                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.COST_OF_GOODS_SOLD),
+                          amount: -costOfGoodsSold
+                      }
+                  ], session);
+                  break;
+
+              case 'WASTE':
+                  product.stock += item.quantity;
+                  await updateAccountsBalanceIndividually([
+                      {
+                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.WASTE),
+                          amount: -totalAmount
+                      }
+                  ], session);
+                  break;
+
+              case 'SALES_RETURN':
+                  product.stock -= item.quantity;
+                  await updateAccountsBalanceIndividually([
+                      {
+                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.SALES_RETURN),
+                          amount: -totalAmount
+                      },
+                      {
+                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.COST_OF_GOODS_SOLD),
+                          amount: totalAmount
+                      }
+                  ], session);
+                  break;
+
+              // در صورت نیاز سایر موارد اضافه شود
+          }
+
+          await product.save({ session });
+      }
+
+      // حذف اسناد حسابداری مرتبط
+      await Ledger.deleteMany({
+          shop: storeId,
+          'transactions.type': 'invoice',
+          'transactions.referenceId': invoice._id
+      }).session(session);
+
+      await GeneralLedger.deleteMany({
+          shop: storeId,
+          type: 'invoice',
+          referenceId: invoice._id
+      }).session(session);
+
+      // حذف آیتم‌های فاکتور
+      await InvoiceItem.deleteMany({
+          invoiceId: invoice._id
+      }).session(session);
+
+      // حذف فاکتور
+      await Invoice.deleteOne({
+          _id: invoice._id
+      }).session(session);
+
+      await session.commitTransaction();
+      return { success: true, message: 'فاکتور با موفقیت حذف شد' };
+
+  } catch (error) {
+      if (session) {
+          await session.abortTransaction();
+      }
+      throw error;
+  } finally {
+      if (session) {
+          session.endSession();
+      }
+  }
+}
+
+
+// تابع ویرایش فاکتور
+async function editInvoiceAction(invoiceId, storeId, userId, updatedData) {
+  let session;
+  try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+
+      // بررسی دسترسی کاربر
+      const user = await getAuthenticatedUser();
+      if (!user) {
+          throw new Error('دسترسی غیرمجاز');
+      }
+
+      // اعتبارسنجی داده‌های جدید
+      const requiredFields = ['type', 'invoiceItems', 'storeId'];
+      validateInvoiceData(updatedData, requiredFields);
+
+      // دریافت فاکتور اصلی
+      const originalInvoice = await Invoice.findOne({
+          _id: invoiceId,
+          shop: storeId
+      }).populate('InvoiceItems').session(session);
+
+      if (!originalInvoice) {
+          throw new Error('فاکتور یافت نشد');
+      }
+
+      // برگرداندن تغییرات موجودی قبلی
+      for (const item of originalInvoice.InvoiceItems) {
+          const product = await Product.findById(item.productId).session(session);
+          if (!product) {
+              throw new Error(`محصول ${item.productId} یافت نشد`);
+          }
+
+          // برگرداندن موجودی به حالت قبل
+          switch (originalInvoice.type) {
+              case 'PURCHASE':
+                  product.stock -= item.quantity;
+                  break;
+              case 'SALE':
+                  product.stock += item.quantity;
+                  break;
+              case 'WASTE':
+                  product.stock += item.quantity;
+                  break;
+          }
+
+          await product.save({ session });
+      }
+
+      // حذف اسناد حسابداری قبلی
+      await Ledger.deleteMany({
+          shop: storeId,
+          'transactions.referenceId': originalInvoice._id
+      }).session(session);
+
+      await GeneralLedger.deleteMany({
+          shop: storeId,
+          referenceId: originalInvoice._id
+      }).session(session);
+
+      // حذف آیتم‌های قبلی فاکتور
+      await InvoiceItem.deleteMany({
+          invoiceId: originalInvoice._id
+      }).session(session);
+
+      // ایجاد آیتم‌های جدید فاکتور
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(
+          updatedData.invoiceItems,
+          originalInvoice._id,
+          session,
+          originalInvoice.type === 'PURCHASE'
+      );
+
+      // به‌روزرسانی موجودی برای آیتم‌های جدید
+      await updateProductStock(
+          bulkProductOperations,
+          originalInvoice.type === 'SALES_RETURN' || originalInvoice.type === 'PURCHASE',
+          session
+      );
+
+      // به‌روزرسانی فاکتور
+      const totalItems = updatedData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
+      const totalAmount = updatedData.invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+
+      const updatedInvoice = await Invoice.findOneAndUpdate(
+          { _id: invoiceId },
+          {
+              ...updatedData,
+              InvoiceItems: invoiceItemIds,
+              totalItems,
+              totalPrice: totalAmount,
+              updatedBy: userId,
+              updatedAt: new Date()
+          },
+          { new: true, session }
+      );
+
+      // ایجاد اسناد مالی جدید
+      switch (originalInvoice.type) {
+          case 'WASTE':
+              await createFinancialDocumentsForWaste(
+                  `ویرایش ضایعات ${updatedInvoice._id}`,
+                  storeId,
+                  userId,
+                  accountIdMap,
+                  totalAmount,
+                  session
+              );
+              break;
+          case 'SALES_RETURN':
+              await createFinancialDocumentsForSalesReturn(
+                  `ویرایش برگشت از فروش ${updatedInvoice._id}`,
+                  storeId,
+                  userId,
+                  updatedData.accountAllocations,
+                  accountIdMap,
+                  totalAmount, // بهای تمام شده
+                  totalAmount, // مبلغ فروش
+                  session
+              );
+              break;
+          // سایر موارد را می‌توانید اضافه کنید
+      }
+
+      await session.commitTransaction();
+      return { success: true, message: 'فاکتور با موفقیت به‌روزرسانی شد', invoice: updatedInvoice };
+
+  } catch (error) {
+      if (session) {
+          await session.abortTransaction();
+      }
+      throw error;
+  } finally {
+      if (session) {
+          session.endSession();
+      }
+  }
+}

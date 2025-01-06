@@ -1,7 +1,7 @@
 //src/components/module/home/ContactSelector.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { GetAllContacts } from "@/templates/panel/Contact/contactsServerActions";
 import { useParams } from 'next/navigation';
@@ -13,31 +13,28 @@ import { useParams } from 'next/navigation';
   let { ShopId } = useParams();
 
   // فرض می‌کنیم که API برای دریافت مخاطبان موجود است
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     setLoading(true);
     try {
-
-      const response =await GetAllContacts(ShopId); // مسیر API را بر اساس نیاز خود تنظیم کنید
-      
-      if (response.status===200) {
-        const data = response.contacts;
-        setContacts(data);
+      const response = await GetAllContacts(ShopId);
+      if (response.status === 200) {
+        setContacts(response.contacts);
       } else {
         toast.error("خطایی در دریافت مخاطبان رخ داده است.");
       }
     } catch (error) {
-      console.error("Error fetching contacts:", error);
       toast.error("خطایی در دریافت مخاطبان رخ داده است.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [ShopId]);  // وابستگی به ShopId تغییر کرده
+  
 
   useEffect(() => {
     if (isOpen) {
       fetchContacts();
     }
-  }, [fetchContacts]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

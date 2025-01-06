@@ -216,7 +216,6 @@ function AddPriceTemplate({
   };
 
   const formSubmitting = async (formData) => {
-    console.log(formData);
     
     await handleFormSubmit(formData);
   };

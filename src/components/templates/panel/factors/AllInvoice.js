@@ -7,8 +7,10 @@ import InvoiceCard from "./InvoiceCard";
 import EditSvg from "@/module/svgs/EditSvg";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import { GetShopInvocesByShopId } from "./InvoicesActions";
+import { deleteInvoiceAction } from "./invoiceItemsServerActions2";
+
 function InvoiceManage() {
-  const [selectedInvioce, setSelectedInvioce] = useState(null);
+  const [selectedInvioce, setSelectedInvoice] = useState(null);
   const params = useParams();
   const { ShopId } = params;
   const [invoices, setInvoices] = useState([]);
@@ -38,28 +40,30 @@ function InvoiceManage() {
 
 
   const handleDeleteInvoice = useCallback(async (InvoiceID) => {
-    let res = await DeleteInvoice(InvoiceID);
-    if (res.status === 200) {
-      const updatedInvoices = invoices.filter((role) => role._id !== InvoiceID);
+    let res = await deleteInvoiceAction(InvoiceID,ShopId);
+    console.log("res",res);
+    
+    if (res.success) {
+      const updatedInvoices = invoices.filter((invoice) => invoice._id !== InvoiceID);
       setInvoices(updatedInvoices);
       
      
     } else {
-      console.error("Error deleting role:", res.status);
+      console.error("Error deleting invoice:", res.status);
     }
   }, [invoices]);
 
 
 
-  const handleEditClick = (role) => {
-    setIsOpenAddRole(true);
-    setSelectedRole(role);
+  const handleEditClick = (invoice) => {
+    setIsOpenAddInvoice(true);
+    setSelectedInvoice(invoice);
   };
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
-      setIsOpenAddRole(false);
-      setSelectedRole(null);
+      setIsOpenAddInvoice(false);
+      setSelectedInvoice(null);
       setIsOpenContactsList(false);
       setSelectedContacts([]);
       setUserListButtonName("");
@@ -67,8 +71,8 @@ function InvoiceManage() {
   };
 
   const handleCloseModal = () => {
-    setIsOpenAddRole(false);
-    setSelectedRole(null);
+    setIsOpenAddInvoice(false);
+    setSelectedInvoice(null);
   };
 
 

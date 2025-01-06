@@ -9,8 +9,6 @@ import { createAccount, updateAccount } from "./accountActions";
 import ContactSelector from "@/module/home/ContactSelector";
 import { useParams } from "next/navigation";
 import ContactMiniInfo from "@/module/home/ContactMiniInfo";
-// import { GetAllCurrencies } from "../Currency/currenciesServerActions";
-import AddProduct from "../Product/AddProduct";
 
 function AddAccount({
   account = null,
@@ -42,7 +40,6 @@ function AddAccount({
       accountStatus: "فعال",
       accountContact: "",
       creditLimit: 0,
-      // currency: "",
       bankAcountNumber:"",
       bankCardNumber:"",
       posConected:true,
@@ -64,14 +61,12 @@ function AddAccount({
             accountStatus: account.accountStatus || "فعال",
             accountContact: account.contact?._id || "",
             creditLimit: account.creditLimit !== undefined ? account.creditLimit : "",
-            // currency: account.currency?._id || "",
             bankAcountNumber:account.bankAcountNumber||"",
 bankCardNumber:account.bankCardNumber||"",
 posConected:account.posConected||true,
 
           });
           setSelectedContact(account.contact || null);
-          console.log(account);
           
         }
       } catch (error) {
@@ -147,17 +142,7 @@ posConected:account.posConected||true,
     }
   };
 
-  // const getCurrencies = async (ShopId) => {
-  //   try {
-  //     const result = await GetAllCurrencies(ShopId);
-  //     if (result && result.currencies) {
-  //       setCurrencies(result.currencies);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching currencies:", error);
-  //     toast.error("مشکلی در دریافت ارزها وجود دارد.");
-  //   }
-  // };
+
 
   const handleContactSelect = (contact) => {
     setValue("accountContact", contact._id);
@@ -224,8 +209,8 @@ posConected:account.posConected||true,
             <option value="حساب عادی">حساب عادی</option>
             <option value="گروه حساب">گروه حساب</option>
             <option value="حساب بانکی">حساب بانکی</option>
-            <option value="کالا">کالا</option>
-            <option value="دسته بندی کالا">دسته بندی کالا</option>
+            {/* <option value="کالا">کالا</option>
+            <option value="دسته بندی کالا">دسته بندی کالا</option> */}
             <option value="اشخاص حقیقی">اشخاص حقیقی</option>
             <option value="اشخاص حقوقی">اشخاص حقوقی</option>
             <option value="انبار">انبار</option>
@@ -368,35 +353,7 @@ posConected:account.posConected||true,
                   </p>
                 )}
               </div>
-              {/* انتخاب ارز */}
-              {/* <div className="flex-1"> */}
-                {/* <label className="block mb-1 text-gray-700">ارز</label> */}
-                {/* <select */}
-                  {/* {...register("currency")} */}
-                  {/* className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${ */}
-                    {/* errors.currency */}
-                      {/* ? "border-red-500 focus:ring-red-500" */}
-                      {/* : "border-gray-300 focus:ring-teal-500" */}
-                  {/* }`} */}
-                  {/* required */}
-                  {/* disabled={isSubmit} */}
-                {/* > */}
-                  {/* گزینه‌ی پیش‌فرض */}
-                  {/* <option value="" >انتخاب ارز</option> */}
-
-                  {/* گزینه‌های دینامیک */}
-                  {/* {currencies.map((currency) => ( */}
-                    {/* <option key={currency._id} value={currency._id}> */}
-                      {/* {currency.title} ({currency.shortName}) */}
-                    {/* </option> */}
-                  {/* ))} */}
-                {/* </select> */}
-                {/* {errors.currency && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.currency.message}
-                  </p>
-                )} */}
-              {/* </div> */}
+          
             </div>
           </>
         )}
@@ -463,12 +420,7 @@ posConected:account.posConected||true,
  </div>
     ))}
 
- {/* فیلد کالا */}
- {(accountType === "کالا" && (
-<div>
-  <AddProduct/>
-</div>
- ))}
+
         {/* دکمه ارسال */}
         <button
           type="submit"

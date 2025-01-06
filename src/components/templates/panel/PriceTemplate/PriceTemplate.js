@@ -24,7 +24,6 @@ const PriceTemplateSchema = new mongoose.Schema({
     type: String,
     required: [true, 'عنوان قالب قیمتی الزامی است.'],
     trim: true,
-    unique: true, // فرض بر اینکه عنوان قالب قیمتی باید یکتا باشد
     maxlength: [100, 'عنوان قالب قیمتی نباید بیشتر از ۱۰۰ کاراکتر باشد.'],
   },
 
@@ -66,7 +65,7 @@ const PriceTemplateSchema = new mongoose.Schema({
 });
 
 // افزودن ایندکس برای بهبود عملکرد جستجو بر اساس فروشگاه
-PriceTemplateSchema.index({ shop: 1 });
+PriceTemplateSchema.index({ title: 1, shop: 1 }, { unique: true });
 
 // module.exports = mongoose.model('PriceTemplate', PriceTemplateSchema);
 export default mongoose.models.PriceTemplate || mongoose.model('PriceTemplate', PriceTemplateSchema);

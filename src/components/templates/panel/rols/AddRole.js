@@ -14,7 +14,6 @@ import { useState, useEffect } from "react";
 import { AddRoleServerAction, EditRole } from "./RolesPermissionActions";
 
 function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
-  console.log(role);
   
   const [isSubmit, setIsSubmit] = useState(false);
   const [bannerPermissionState, setBannerPermissionState] = useState(role?.bannersPermissions || []);

@@ -3,12 +3,17 @@
 import connectDB from "@/utils/connectToDB";
 import PriceTemplate from "./PriceTemplate";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
+import mongoose from 'mongoose';
+
+
+
+
 function convertToPlainObjects(docs) {
     return docs.map(doc => JSON.parse(JSON.stringify(doc)));
   }
   
 export async function GetAllPriceTemplates(ShopId) {
-    
+
     await connectDB();
     let user;
     try {
