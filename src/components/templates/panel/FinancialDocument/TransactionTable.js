@@ -2,10 +2,11 @@ import React, { useMemo } from 'react';
 import moment from "moment-jalaali";
 
 const TransactionTable = ({ transactions }) => {
+  
   // محاسبه مانده حساب
   const displayTransactions = useMemo(() => {
     // ترتیب‌بندی تراکنش‌ها از قدیمی به جدید
-    const ordered = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const ordered = [...transactions].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     
     // محاسبه مانده حساب
     let balance = 0;
@@ -51,7 +52,7 @@ const TransactionTable = ({ transactions }) => {
           {displayTransactions.map((txn) => (
             <tr key={txn._id} className="hover:bg-gray-50 dark:hover:bg-gray-500">
               <td className="px-1 md:px-2 py-1 border-b text-center text-xs md:text-lg sm:px-4 sm:py-2 w-1/5">
-                {moment(txn.date).format("jYYYY/jMM/jDD HH:mm")}
+                {moment(txn.createdAt).format("jYYYY/jMM/jDD HH:mm")}
               </td>
               <td className="px-1 md:px-2 py-1 border-b text-xs md:text-lg sm:px-4 sm:py-2 w-2/5">{txn.description}</td>
               <td className="px-1 md:px-2 py-1 border-b text-right text-xs md:text-lg sm:px-4 sm:py-2 w-1/10">

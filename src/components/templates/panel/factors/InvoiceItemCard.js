@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import { getLastPurchasedPrice } from "./invoiceItemsServerActions";
+
  function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
   const { title, image, quantity = 1, unitPrice = 0, description = "" , productId } = invoiceItem;
 

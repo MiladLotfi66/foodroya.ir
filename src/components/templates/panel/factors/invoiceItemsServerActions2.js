@@ -389,7 +389,6 @@ async function createFinancialDocumentsForSalesReturn(
   return ledger._id;
 }
 
-//////////////////////////
 // کدهای ثابت حسابداری
 const ACCOUNT_CODES = {
   EXPENSE: '5000-1',
@@ -400,257 +399,175 @@ const ACCOUNT_CODES = {
   SALES: '4000-1'
 };
 
-export async function deleteInvoiceAction(invoiceId, storeId) {
-  let session;
+export async function deleteInvoiceAction(invoiceId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-      session = await mongoose.startSession();
-      session.startTransaction();
+    // ۱. دریافت فاکتور
+    const invoice = await Invoice.findById(invoiceId).session(session);
+    if (!invoice) {
+      throw new Error('فاکتور مورد نظر یافت نشد.');
+    }
 
-      const user = await getAuthenticatedUser();
-      if (!user) {
-          throw new Error('دسترسی غیرمجاز');
-      }
+    // ۲. دریافت اقلام فاکتور
+    const invoiceItems = await InvoiceItem.find({ invoice: invoiceId }).session(session);
+    const productIds = invoiceItems.map(item => item.product);
 
-      const invoice = await Invoice.findOne({
-          _id: invoiceId,
-          shop: storeId
-      }).populate('InvoiceItems').session(session);
-console.log("invoice-------------------------------",invoice);
+    // ۳. دریافت تراکنش‌های GeneralLedger مرتبط
+    const generalLedgers = await GeneralLedger.find({ referenceId: invoiceId }).session(session);
+    const accountIds = [...new Set(generalLedgers.map(gl => gl.account))]; // لیست یکتای حساب‌ها
 
-      if (!invoice) {
-          throw new Error('فاکتور یافت نشد');
-      }
+    // ۴. دریافت سند مالی Ledger مرتبط
+    // const ledger = await Ledger.findOne({ referenceId: invoiceId }).session(session);
 
-      const totalAmount = invoice.totalPrice;
+    // ۵. حذف اقلام فاکتور و به‌روزرسانی موجودی محصولات
+    for (const item of invoiceItems) {
+      await InvoiceItem.deleteOne({ _id: item._id }, { session });
 
-      // برگرداندن تغییرات موجودی و به‌روزرسانی مانده حساب‌ها
-      for (const item of invoice.InvoiceItems) {
-          const product = await Product.findById(item.product).session(session);
-          if (!product) {
-              throw new Error(`محصول ${item.productId} یافت نشد`);
-          }
+      // به‌روز رسانی موجودی محصول
+      const newStock = await calculateProductStock(item.product, session);
+      await Product.updateOne({ _id: item.product }, { stock: newStock }).session(session);
+    }
 
-          switch (invoice.type) {
-              case 'SALE':
-                  product.stock += item.quantity;
-                  const costOfGoodsSold = item.quantity * product.costPrice;
-                  await updateAccountsBalanceIndividually([
-                      {
-                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.SALES),
-                          amount: -totalAmount
-                      },
-                      {
-                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.COST_OF_GOODS_SOLD),
-                          amount: -costOfGoodsSold
-                      }
-                  ], session);
-                  break;
+    // ۶. حذف تراکنش‌های GeneralLedger
+    await GeneralLedger.deleteMany({ referenceId: invoiceId }).session(session);
 
-              case 'WASTE':
-                  product.stock += item.quantity;
-                  await updateAccountsBalanceIndividually([
-                      {
-                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.WASTE),
-                          amount: -totalAmount
-                      }
-                  ], session);
-                  break;
+  
+      await Ledger.deleteOne({ referenceId: invoiceId }).session(session);
+    
 
-              case 'SALES_RETURN':
-                  product.stock -= item.quantity;
-                  await updateAccountsBalanceIndividually([
-                      {
-                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.SALES_RETURN),
-                          amount: -totalAmount
-                      },
-                      {
-                          accountId: await GetAccountIdBystoreIdAndAccountCode(storeId, ACCOUNT_CODES.COST_OF_GOODS_SOLD),
-                          amount: totalAmount
-                      }
-                  ], session);
-                  break;
+    // ۸. حذف فاکتور
+    await Invoice.deleteOne({ _id: invoiceId }).session(session);
 
-              // در صورت نیاز سایر موارد اضافه شود
-          }
+    // ۹. به‌روزرسانی مانده حساب‌ها
+    const updatedAccounts = [];
+    for (const accountId of accountIds) {
+      const newBalance = await getAccountBalance(accountId, session);
+      await Account.updateOne({ _id: accountId }, { balance: newBalance }).session(session);
+      updatedAccounts.push(accountId);
+    }
 
-          await product.save({ session });
-      }
+    // ۱۰. ایجاد یک تراکنش GeneralLedger برای حذف فاکتور
+    // await GeneralLedger.create([{
+    //   account: invoice.account,
+    //   amount: -invoice.totalAmount,
+    //   description: 'حذف فاکتور',
+    //   date: new Date(),
+    //   referenceId: invoiceId,
+    // }], { session });
 
-      // حذف اسناد حسابداری مرتبط
-      await Ledger.deleteMany({
-          shop: storeId,
-          'transactions.type': 'invoice',
-          'transactions.referenceId': invoice._id
-      }).session(session);
+    // ۱۱. به‌روزرسانی مانده حساب اصلی فاکتور
+    // await getAccountBalance(invoice.account, session).then(newBalance => {
+    //   return Account.updateOne({ _id: invoice.account }, { balance: newBalance }).session(session);
+    // });
 
-      await GeneralLedger.deleteMany({
-          shop: storeId,
-          type: 'invoice',
-          referenceId: invoice._id
-      }).session(session);
-
-      // حذف آیتم‌های فاکتور
-      await InvoiceItem.deleteMany({
-          invoiceId: invoice._id
-      }).session(session);
-
-      // حذف فاکتور
-      await Invoice.deleteOne({
-          _id: invoice._id
-      }).session(session);
-
-      await session.commitTransaction();
-      return { success: true, message: 'فاکتور با موفقیت حذف شد' };
-
+    await session.commitTransaction();
+    session.endSession();
+    return { success: true };
   } catch (error) {
-      if (session) {
-          await session.abortTransaction();
-      }
-      throw error;
-  } finally {
-      if (session) {
-          session.endSession();
-      }
+    await session.abortTransaction();
+    session.endSession();
+    console.error('Error deleting invoice:', error);
+    return { success: false, message: error.message };
   }
 }
 
 
-// تابع ویرایش فاکتور
-async function editInvoiceAction(invoiceId, storeId, userId, updatedData) {
-  let session;
-  try {
-      session = await mongoose.startSession();
-      session.startTransaction();
 
-      // بررسی دسترسی کاربر
-      const user = await getAuthenticatedUser();
-      if (!user) {
-          throw new Error('دسترسی غیرمجاز');
-      }
-
-      // اعتبارسنجی داده‌های جدید
-      const requiredFields = ['type', 'invoiceItems', 'storeId'];
-      validateInvoiceData(updatedData, requiredFields);
-
-      // دریافت فاکتور اصلی
-      const originalInvoice = await Invoice.findOne({
-          _id: invoiceId,
-          shop: storeId
-      }).populate('InvoiceItems').session(session);
-
-      if (!originalInvoice) {
-          throw new Error('فاکتور یافت نشد');
-      }
-
-      // برگرداندن تغییرات موجودی قبلی
-      for (const item of originalInvoice.InvoiceItems) {
-          const product = await Product.findById(item.productId).session(session);
-          if (!product) {
-              throw new Error(`محصول ${item.productId} یافت نشد`);
-          }
-
-          // برگرداندن موجودی به حالت قبل
-          switch (originalInvoice.type) {
-              case 'PURCHASE':
-                  product.stock -= item.quantity;
-                  break;
-              case 'SALE':
-                  product.stock += item.quantity;
-                  break;
-              case 'WASTE':
-                  product.stock += item.quantity;
-                  break;
-          }
-
-          await product.save({ session });
-      }
-
-      // حذف اسناد حسابداری قبلی
-      await Ledger.deleteMany({
-          shop: storeId,
-          'transactions.referenceId': originalInvoice._id
-      }).session(session);
-
-      await GeneralLedger.deleteMany({
-          shop: storeId,
-          referenceId: originalInvoice._id
-      }).session(session);
-
-      // حذف آیتم‌های قبلی فاکتور
-      await InvoiceItem.deleteMany({
-          invoiceId: originalInvoice._id
-      }).session(session);
-
-      // ایجاد آیتم‌های جدید فاکتور
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(
-          updatedData.invoiceItems,
-          originalInvoice._id,
-          session,
-          originalInvoice.type === 'PURCHASE'
-      );
-
-      // به‌روزرسانی موجودی برای آیتم‌های جدید
-      await updateProductStock(
-          bulkProductOperations,
-          originalInvoice.type === 'SALES_RETURN' || originalInvoice.type === 'PURCHASE',
-          session
-      );
-
-      // به‌روزرسانی فاکتور
-      const totalItems = updatedData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
-      const totalAmount = updatedData.invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
-
-      const updatedInvoice = await Invoice.findOneAndUpdate(
-          { _id: invoiceId },
-          {
-              ...updatedData,
-              InvoiceItems: invoiceItemIds,
-              totalItems,
-              totalPrice: totalAmount,
-              updatedBy: userId,
-              updatedAt: new Date()
-          },
-          { new: true, session }
-      );
-
-      // ایجاد اسناد مالی جدید
-      switch (originalInvoice.type) {
-          case 'WASTE':
-              await createFinancialDocumentsForWaste(
-                  `ویرایش ضایعات ${updatedInvoice._id}`,
-                  storeId,
-                  userId,
-                  accountIdMap,
-                  totalAmount,
-                  session
-              );
-              break;
-          case 'SALES_RETURN':
-              await createFinancialDocumentsForSalesReturn(
-                  `ویرایش برگشت از فروش ${updatedInvoice._id}`,
-                  storeId,
-                  userId,
-                  updatedData.accountAllocations,
-                  accountIdMap,
-                  totalAmount, // بهای تمام شده
-                  totalAmount, // مبلغ فروش
-                  session
-              );
-              break;
-          // سایر موارد را می‌توانید اضافه کنید
-      }
-
-      await session.commitTransaction();
-      return { success: true, message: 'فاکتور با موفقیت به‌روزرسانی شد', invoice: updatedInvoice };
-
-  } catch (error) {
-      if (session) {
-          await session.abortTransaction();
-      }
-      throw error;
-  } finally {
-      if (session) {
-          session.endSession();
-      }
+export async function getAccountBalance(accountId, session) {
+  if (!mongoose.Types.ObjectId.isValid(accountId)) {
+    throw new Error('شناسه حساب معتبر نیست.');
   }
+
+  await connectDB();
+
+  const account = await Account.findById(accountId).session(session);
+
+  if (!account) {
+    throw new Error('حساب یافت نشد.');
+  }
+
+  const aggregationResult = await GeneralLedger.aggregate([
+    { $match: { account: new mongoose.Types.ObjectId(accountId) } },
+    {
+      $group: {
+        _id: '$account',
+        totalDebit: { $sum: '$debit' },
+        totalCredit: { $sum: '$credit' },
+      },
+    },
+  ]).session(session);
+
+  let balance = 0;
+
+  if (aggregationResult.length > 0) {
+    const { totalDebit, totalCredit } = aggregationResult[0];
+    balance = totalDebit - totalCredit;
+  }
+
+  return balance || 0; // اصلاح بازگشت مقدار
+
 }
+
+
+
+export async function calculateProductStock(productId, session) {
+  await connectDB();
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    throw new Error('شناسه محصول نامعتبر است');
+  }
+
+  const aggregationResult = await InvoiceItem.aggregate([
+    { $match: { product: new mongoose.Types.ObjectId(productId) } },
+    {
+      $lookup: {
+        from: 'invoices',
+        localField: 'invoice',
+        foreignField: '_id',
+        as: 'invoice',
+      },
+    },
+    { $unwind: '$invoice' },
+    {
+      $group: {
+        _id: '$invoice.type',
+        totalQuantity: { $sum: '$quantity' },
+      },
+    },
+  ]).session(session);
+
+  let stock = 0;
+
+  aggregationResult.forEach(group => {
+    const { _id: type, totalQuantity } = group;
+    switch (type) { // فرض بر این است که نوع فاکتور به حروف کوچک است
+      case 'Purchase':
+        
+        stock += totalQuantity;
+        break;
+      case 'Sale':
+        stock -= totalQuantity;
+        break;
+      case 'PurchaseReturn':
+        stock -= totalQuantity;
+        break;
+      case 'SalesReturn':
+        stock += totalQuantity;
+        break;
+      case 'Waste':
+        stock -= totalQuantity;
+        break;
+      default:
+        break;
+    }
+  });
+
+  return stock || 0; // اصلاح بازگشت مقدار
+}
+

@@ -7,7 +7,7 @@ import ActionButton from "../rols/ActionButton";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import moment from "moment-jalaali";
 import UserMiniInfo from "@/module/home/UserMiniInfo";
-
+import { calculateProductStock, getAccountBalance } from "./invoiceItemsServerActions2";
 // نگاشت نوع فاکتور به فارسی
 const invoiceTypeMap = {
   Purchase: "خرید",
@@ -190,7 +190,7 @@ const InvoiceCard = ({ invoice, handleDeleteInvoice, handleEditClick }) => {
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <ActionButton
-                  onClick={() => handleEditClick(invoice)}
+                  onClick={() => calculateProductStock("677cf7c005cca83b6f8a7279")}
                   Icon={EditSvg}
                   label="ویرایش فاکتور"
                   className="bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-400"

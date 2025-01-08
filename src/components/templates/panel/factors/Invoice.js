@@ -43,6 +43,11 @@ const InvoiceSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId, 
       ref: "Shop", 
       required: true 
+    }, 
+    Ledger: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Ledger", 
+      required: true 
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

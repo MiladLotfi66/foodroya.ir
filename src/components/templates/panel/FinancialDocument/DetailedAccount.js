@@ -30,7 +30,6 @@ function DetailedAccount() {
 
   // تابع برای واکشی تراکنش‌ها
   const handleGetAccountTransactions = async (accountId) => {
-    
     setLoading(true);
     setError(null);
     try {

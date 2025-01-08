@@ -28,7 +28,27 @@ const LedgerSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    type: { type: String, enum: ["financialDocument", "invoice"] },
+
+    referenceId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Invoice',
+          required: function() {
+            return this.type === 'invoice';
+          },
+          // می‌توانید از validate برای اطمینان بیشتر استفاده کنید
+          validate: {
+            validator: function(v) {
+              if (this.type === 'invoice' && !v) {
+                return false;
+              }
+              return true;
+            },
+            message: props => `referenceId is required when type is 'invoice'`,
+          },
+        },
   },
+
   {
     timestamps: true,
   }
