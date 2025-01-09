@@ -41,7 +41,6 @@ function InvoiceManage() {
 
   const handleDeleteInvoice = useCallback(async (InvoiceID) => {
     let res = await deleteInvoiceAction(InvoiceID,ShopId);
-    console.log("res",res);
     
     if (res.success) {
       const updatedInvoices = invoices.filter((invoice) => invoice._id !== InvoiceID);

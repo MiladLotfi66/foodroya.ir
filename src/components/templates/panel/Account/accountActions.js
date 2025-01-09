@@ -674,6 +674,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
 
 
   export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {
+console.log("--------------",storeId, accountCode);
 
     try {
       if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {

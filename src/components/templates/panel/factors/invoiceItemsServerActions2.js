@@ -428,22 +428,15 @@ export async function deleteInvoiceAction(invoiceId) {
     // ۵. حذف اقلام فاکتور و به‌روزرسانی موجودی محصولات
     for (const item of invoiceItems) {
       await InvoiceItem.deleteOne({ _id: item._id }, { session });
-
       // به‌روز رسانی موجودی محصول
       const newStock = await calculateProductStock(item.product, session);
       await Product.updateOne({ _id: item.product }, { stock: newStock }).session(session);
     }
-
     // ۶. حذف تراکنش‌های GeneralLedger
     await GeneralLedger.deleteMany({ referenceId: invoiceId }).session(session);
-
-  
-      await Ledger.deleteOne({ referenceId: invoiceId }).session(session);
-    
-
+    await Ledger.deleteOne({ referenceId: invoiceId }).session(session);
     // ۸. حذف فاکتور
     await Invoice.deleteOne({ _id: invoiceId }).session(session);
-
     // ۹. به‌روزرسانی مانده حساب‌ها
     const updatedAccounts = [];
     for (const accountId of accountIds) {

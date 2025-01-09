@@ -21,6 +21,7 @@ function FinancialDocumentCard({
   const [showAllTransactions, setShowAllTransactions] = useState(false); // مدیریت نمایش تراکنش‌ها
   const [showEditFields, setShowEditFields] = useState(false); // مدیریت نمایش فیلدهای ویرایش
 
+console.log("financialDocument",financialDocument);
 
   useEffect(() => {
     // هر بار که props سند مالی تغییر می‌کند، state محلی به‌روزرسانی می‌شود
@@ -115,9 +116,12 @@ function FinancialDocumentCard({
       {/* بخش واحد پول و توضیحات (یکبار نمایش داده می‌شود) */}
       <div className="  flex justify-between mb-4">
         
-        <div>
+        <div className="flex justify-between mb-4" >
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             تاریخ ایجاد: {formatDate(financialDocument.createdAt)}
+          </span>
+           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            نوع: {financialDocument?.type?"فاکتور":"سند مالی"}
           </span>
         </div>
       </div>
@@ -141,9 +145,9 @@ function FinancialDocumentCard({
                 </tr>
               </thead>
               <tbody>
-                {transactionsToDisplay.map((transaction, index) => (
+                {transactionsToDisplay?.map((transaction, index) => (
                   <tr
-                    key={transaction._id}
+                    key={transaction?._id}
                     className={`border-b dark:border-zinc-500 ${
                       index % 2 === 0
                         ? "bg-gray-50 dark:bg-zinc-700"
@@ -151,13 +155,13 @@ function FinancialDocumentCard({
                     } hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors`}
                   >
                     <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                      {transaction.account.title}
+                      {transaction?.account?.title}
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                      {transaction.debit}
+                      {transaction?.debit}
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                      {transaction.credit}
+                      {transaction?.credit}
                     </td>
                   </tr>
                 ))}

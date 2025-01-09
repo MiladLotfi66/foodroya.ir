@@ -9,7 +9,6 @@ export const ledgerValidationSchema = yup.object().shape({
 
       
   description: yup.string()
-    .required('توضیحات الزامی است')
     .max(255, 'حداکثر طول توضیحات 255 کاراکتر است'),
 
   debtors: yup.array().of(

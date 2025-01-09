@@ -4,7 +4,6 @@ const LedgerSchema = new mongoose.Schema(
   {
     description: {
       type: String,
-      required: true,
       trim: true,
       minlength: 0,
       maxlength: 255,

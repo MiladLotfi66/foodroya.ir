@@ -88,6 +88,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
         alert('لطفاً حداقل یک حساب را انتخاب کنید.');
         return;
       }
+  console.log("allocatedAccounts",allocatedAccounts);
   
       // بررسی اینکه همه حساب‌ها انتخاب شده و مبالغ معتبر هستند
       for (let i = 0; i < allocatedAccounts.length; i++) {
@@ -168,6 +169,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
   if (!isOpen) {
     return null;
   }
+console.log("account",accounts);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
