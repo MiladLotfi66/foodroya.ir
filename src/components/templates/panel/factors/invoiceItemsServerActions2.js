@@ -218,7 +218,7 @@ export async function AddSalesReturnAction(invoiceData) {
         updatedBy: user.id,
       });
 
-      await invoice.save({ session });
+      const invoiceId = invoice._id;
 
       const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, false);
 
@@ -241,9 +241,8 @@ export async function AddSalesReturnAction(invoiceData) {
       await updateProductStock(bulkProductOperations, true, session);
 
       invoice.InvoiceItems = invoiceItemIds;
-      await invoice.save({ session });
-      await createFinancialDocumentsForSalesReturn(
-        `ثبت برگشت از فروش ${invoice._id}`,
+      const ledgerId = await createFinancialDocumentsForSalesReturn(
+        invoice._id,
         invoice.shop,
         user.id,
         invoiceData.accountAllocations,
@@ -252,6 +251,8 @@ export async function AddSalesReturnAction(invoiceData) {
         totalSales,
         session
       );
+      invoice.Ledger = ledgerId;
+      await invoice.save({ session });
       return invoice;
     });
     return { success: true, message: 'فاکتور برگشت با موفقیت ثبت شد.' };
@@ -264,7 +265,7 @@ export async function AddSalesReturnAction(invoiceData) {
 }
 
 async function createFinancialDocumentsForSalesReturn(
-  description,
+  invoiceId,
   shopId,
   userId,
   accountAllocations,
@@ -290,12 +291,12 @@ async function createFinancialDocumentsForSalesReturn(
   }
 
   const ledger = new Ledger({
-    description,
+    referenceId:  invoiceId ,
+    type: "invoice",
     shop: shopId,
     createdBy: userId,
     updatedBy: userId,
   });
-  await ledger.save({ session });
 
   const generalLedgers = [];
   const bulkAccountOperations = {};
@@ -307,55 +308,52 @@ async function createFinancialDocumentsForSalesReturn(
       account: allocation.accountId,
       debit: 0,
       credit: allocation.amount, // برای دریافتی بستانکار می‌شود
-      description: `تراکنش مربوط به ${description}`,
-      type: 'invoice',
+      referenceId:  invoiceId ,
+      type: "invoice",
       shop: shopId,
       createdBy: userId,
       updatedBy: userId,
     });
 
-    await generalLedger.save({ session });
-    generalLedgers.push(generalLedger._id);
-
+    generalLedgers.push(generalLedger);
+    
     if (bulkAccountOperations[allocation.accountId.toString()]) {
       bulkAccountOperations[allocation.accountId.toString()].credit += allocation.amount;
     } else {
       bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, credit: allocation.amount };
     }
   }
-
+  
   // ثبت بدهکار در حساب برگشت از فروش
   const salesReturnLedger = new GeneralLedger({
     ledger: ledger._id,
     account: salesReturnsAccount.accountId,
     debit: totalSales,
     credit: 0,
-    description: `برگشت از فروش ${description}`,
+    referenceId:  invoiceId ,
     type: "invoice",
     shop: shopId,
     createdBy: userId,
     updatedBy: userId,
   });
-
-  await salesReturnLedger.save({ session });
-  generalLedgers.push(salesReturnLedger._id);
-
+  
+  generalLedgers.push(salesReturnLedger);
+  
   // بستانکاری بهای تمام شده کالای فروخته شده
   const costOfGoodsSoldLedger = new GeneralLedger({
     ledger: ledger._id,
     account: costOfGoodsAccount.accountId,
     debit: 0,
     credit: totalCostOfGoods,
-    description: `بهای تمام شده برگشت از فروش ${description}`,
+    referenceId:  invoiceId ,
     type: "invoice",
     shop: shopId,
     createdBy: userId,
     updatedBy: userId,
   });
-
-  await costOfGoodsSoldLedger.save({ session });
-  generalLedgers.push(costOfGoodsSoldLedger._id);
-
+  
+  generalLedgers.push(costOfGoodsSoldLedger);
+  
   // ثبت بدهکاری برای حساب‌های مرتبط با کالا
   for (const [accountId, amount] of Object.entries(accountIdMap)) {
     const generalLedger = new GeneralLedger({
@@ -363,27 +361,35 @@ async function createFinancialDocumentsForSalesReturn(
       account: accountId,
       debit: amount,      // اصلاح: بدهکار کردن حساب کالا
       credit: 0,
-      description: `ثبت بدهکاری برای کالا در برگشت از فروش ${description}`,
+      referenceId:  invoiceId ,
       type: "invoice",
       shop: shopId,
       createdBy: userId,
       updatedBy: userId,
     });
-
-    await generalLedger.save({ session });
-    generalLedgers.push(generalLedger._id);
-
+    
+    generalLedgers.push(generalLedger);
+    
     if (!bulkAccountOperations[accountId.toString()]) {
       bulkAccountOperations[accountId.toString()] = { accountId: accountId, debit: amount };
     } else {
       bulkAccountOperations[accountId.toString()].debit += amount;
     }
   }
-
+  
   // به‌روزرسانی مانده حساب‌ها به صورت فردی
+  // await generalLedger.save({ session });
+  // await salesReturnLedger.save({ session });
+  // await costOfGoodsSoldLedger.save({ session });
+  // await generalLedger.save({ session });
+  
+  const savedGeneralLedgers = await GeneralLedger.insertMany(generalLedgers, {
+      session,
+    });
+  
   await updateAccountsBalanceIndividually(bulkAccountOperations, session);
 
-  ledger.transactions = generalLedgers;
+  ledger.transactions = savedGeneralLedgers.map((gl) => gl._id);
   await ledger.save({ session });
 
   return ledger._id;

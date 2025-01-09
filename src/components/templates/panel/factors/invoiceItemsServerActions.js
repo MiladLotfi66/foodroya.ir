@@ -401,7 +401,6 @@ export async function AddSalesInvoiceAction(invoiceData) {
 }
 
 export async function AddPurchaseReturnAction(invoiceData) {
-  console.log("invoiceData--------------",invoiceData);
   
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -496,7 +495,6 @@ async function createFinancialDocumentsForPurchaseReturn(
     createdBy: userId,
     updatedBy: userId,
   });
-console.log("accountAllocations--------------",accountAllocations);
 
 
   const generalLedgers = [];
