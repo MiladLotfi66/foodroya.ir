@@ -4,8 +4,9 @@ import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import { getLastPurchasedPrice } from "./invoiceItemsServerActions";
 
- function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate }) {
+ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate,invoiceType }) {
   const { title, image, quantity = 1, unitPrice = 0, description = "" , productId } = invoiceItem;
+console.log("invoiceItem",invoiceItem);
 
   const totalPrice = (quantity || 0) * (unitPrice || 0);
   const [lastPrice, setLastPrice] = useState(0);
@@ -108,7 +109,8 @@ const [priceLoading, setPriceLoading] = useState({});
           </div>
 
           {/* فیلد قابل ویرایش قیمت واحد */}
-          <div className="mt-2">
+        
+          <div  className= {invoiceType!=="Waste"?"mt-2":"hidden mt-2"}>
             <label htmlFor="unitPrice" className="block text-sm text-gray-700 dark:text-gray-300">
               قیمت واحد:
             </label>
@@ -120,11 +122,12 @@ const [priceLoading, setPriceLoading] = useState({});
               onChange={(e) => handleChange(e, "unitPrice")}
               className={`mt-1 block w-full p-1 border ${
                 unitPrice < 0 ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white`}
-              min="0"
-              step="0.01"
-            />
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white`}
+                min="0"
+                step="0.01"
+                />
           </div>
+              
         </div>
       </div>
 

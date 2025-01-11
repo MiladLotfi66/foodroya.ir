@@ -1,24 +1,27 @@
 "use server";
-import mongoose from 'mongoose';
-import Invoice from './Invoice';
-import InvoiceItem from './InvoiceItem';
-import Ledger from '../FinancialDocument/Ledger';
-import GeneralLedger from '../FinancialDocument/GeneralLedger';
-import connectDB from '@/utils/connectToDB';
-import Product from '../Product/Product';
-import Account from '../Account/Account';
-import { GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
-import { getLastPurchasedPrice } from './invoiceItemsServerActions';
-import { 
+import mongoose from "mongoose";
+import Invoice from "./Invoice";
+import InvoiceItem from "./InvoiceItem";
+import Ledger from "../FinancialDocument/Ledger";
+import GeneralLedger from "../FinancialDocument/GeneralLedger";
+import connectDB from "@/utils/connectToDB";
+import Product from "../Product/Product";
+import Account from "../Account/Account";
+import { GetAccountIdBystoreIdAndAccountCode } from "../Account/accountActions";
+import { getLastPurchasedPrice } from "./invoiceItemsServerActions";
+import {
   getAuthenticatedUser,
   validateInvoiceData,
   createInvoiceItems,
   updateProductStock,
-  updateAccountsBalance // احتمالاً این تابع قبلاً هست و از bulk استفاده می‌کرد
-} from './invoiceItemsServerActions';
+  updateAccountsBalance, // احتمالاً این تابع قبلاً هست و از bulk استفاده می‌کرد
+} from "./invoiceItemsServerActions";
 
 // توابع کمکی
-async function updateAccountsBalanceIndividually(bulkAccountOperations, session) {
+async function updateAccountsBalanceIndividually(
+  bulkAccountOperations,
+  session
+) {
   for (const op of Object.values(bulkAccountOperations)) {
     const updateFields = {};
 
@@ -35,7 +38,9 @@ async function updateAccountsBalanceIndividually(bulkAccountOperations, session)
     );
 
     if (result.nModified !== 1 && result.modifiedCount !== 1) {
-      throw new Error(`به‌روزرسانی حساب با شناسه ${op.accountId} موفقیت‌آمیز نبود.`);
+      throw new Error(
+        `به‌روزرسانی حساب با شناسه ${op.accountId} موفقیت‌آمیز نبود.`
+      );
     }
   }
 }
@@ -44,22 +49,28 @@ export async function AddWasteAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
   if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
+    return { status: 401, message: "کاربر وارد نشده است." };
   }
 
   const session = await mongoose.startSession();
 
   try {
     const result = await session.withTransaction(async () => {
-      const requiredFields = ['type', 'invoiceItems', 'storeId','customerId'];
+      const requiredFields = ["type", "invoiceItems", "storeId", "customerId"];
 
       validateInvoiceData(invoiceData, requiredFields);
 
-      const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
-      const totalAmount = invoiceData.invoiceItems.reduce((acc, item) => acc + item.totalPrice, 0);
+      const totalItems = invoiceData.invoiceItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
+      const totalAmount = invoiceData.invoiceItems.reduce(
+        (acc, item) => acc + item.totalPrice,
+        0
+      );
 
-      const waste = new Invoice({
-        description: invoiceData.description || '',
+      const invoice = new Invoice({
+        description: invoiceData.description || "",
         type: invoiceData.type,
         totalPrice: totalAmount,
         totalItems: totalItems,
@@ -69,123 +80,145 @@ export async function AddWasteAction(invoiceData) {
         contact: invoiceData.customerId,
       });
 
-      await waste.save({ session });
+      const invoiceId = invoice._id;
 
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, waste._id, session, false);
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } =
+        await createInvoiceItems(
+          invoiceData.invoiceItems,
+          invoice._id,
+          session,
+          false,
+          invoiceData.type,
+
+        );
 
       // کاهش موجودی کالا
       await updateProductStock(bulkProductOperations, false, session);
 
-      waste.InvoiceItems = invoiceItemIds;
-      await waste.save({ session });
+      invoice.InvoiceItems = invoiceItemIds;
 
       // ثبت اسناد مالی برای ضایعات
-      await createFinancialDocumentsForWaste(
-        `ثبت ضایعات ${waste._id}`,
-        waste.shop,
+      const ledgerId = await createFinancialDocumentsForWaste(
+        invoiceId,
+        invoice.shop,
         user.id,
         // invoiceData.accountAllocations,
         accountIdMap,
-        totalAmount,
         session
       );
-
-      return waste;
+      invoice.Ledger = ledgerId;
+      await invoice.save({ session });
+      return invoice;
     });
-
-    return { success: true, message: 'ضایعات با موفقیت ثبت شد.' };
+    return { success: true, message: "ضایعات با موفقیت ثبت شد." };
   } catch (error) {
-    console.error('خطا در AddWasteAction:', error);
-    return { success: false, message: `ثبت ضایعات با مشکل مواجه شد: ${error.message}` };
+    console.error("خطا در AddWasteAction:", error);
+    return {
+      success: false,
+      message: `ثبت ضایعات با مشکل مواجه شد: ${error.message}`,
+    };
   } finally {
     session.endSession();
   }
 }
 
 async function createFinancialDocumentsForWaste(
-  description,
+  invoiceId,
   shopId,
   userId,
   accountIdMap,
-  totalWasteAmount,
   session
 ) {
   // دریافت شماره حساب هزینه‌های ضایعات
-  const wasteExpenseAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-4'); // فرض بر کد حساب هزینه‌های ضایعات
+  const wasteExpenseAccount = await GetAccountIdBystoreIdAndAccountCode(
+    shopId,
+    "5000-4"
+  ); // فرض بر کد حساب هزینه‌های ضایعات
   if (!wasteExpenseAccount.success) {
     throw new Error(wasteExpenseAccount.message); // خطا در دریافت حساب هزینه‌های ضایعات
   }
 
-
   // دریافت حساب‌های موجودی کالا از map
   const inventoryAccounts = Object.keys(accountIdMap);
+  // محاسبه مجموع مقادیر accountIdMap
+  const totalWasteAmount = Object.values(accountIdMap).reduce(
+    (acc, val) => acc + val,
+    0
+  );
 
   const ledger = new Ledger({
-    description,
-    shop: shopId,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-
-  await ledger.save({ session });
-
-  const generalLedgers = [];
-  const bulkAccountOperations = {};
-
-  // ثبت تراکنش بدهکار برای هزینه‌های ضایعات
-  const wasteLedger = new GeneralLedger({
-    ledger: ledger._id,
-    account: wasteExpenseAccount.accountId,
-    debit: totalWasteAmount,
-    credit: 0,
-    description: `ثبت هزینه‌های ضایعات برای ${description}`,
+    referenceId: invoiceId,
     type: "invoice",
     shop: shopId,
     createdBy: userId,
     updatedBy: userId,
   });
 
-  await wasteLedger.save({ session });
-  generalLedgers.push(wasteLedger._id);
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+
+  // ثبت تراکنش بدهکار برای هزینه‌های ضایعات
+  const wasteLedger = new GeneralLedger({
+    // const allamount = accountIdMap[accountId];
+
+    ledger: ledger._id,
+    account: wasteExpenseAccount.accountId,
+    debit: totalWasteAmount, // استفاده از مجموع حساب‌های موجودی کالا
+    credit: 0,
+    referenceId: invoiceId,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  generalLedgers.push(wasteLedger);
 
   // ثبت تراکنش بستانکار برای حساب‌های موجودی کالا
   for (const accountId of inventoryAccounts) {
     const amount = accountIdMap[accountId];
-
     const inventoryLedger = new GeneralLedger({
       ledger: ledger._id,
       account: accountId,
       debit: 0,
       credit: amount,
-      description: `کاهش موجودی کالا به علت ضایعات برای ${description}`,
+      referenceId: invoiceId,
       type: "invoice",
       shop: shopId,
       createdBy: userId,
       updatedBy: userId,
     });
 
-    await inventoryLedger.save({ session });
-    generalLedgers.push(inventoryLedger._id);
+    generalLedgers.push(inventoryLedger);
 
     // به‌روزرسانی عملیات حسابداری
     if (bulkAccountOperations[accountId.toString()]) {
       bulkAccountOperations[accountId.toString()].credit += amount;
     } else {
-      bulkAccountOperations[accountId.toString()] = { accountId: accountId, credit: amount };
+      bulkAccountOperations[accountId.toString()] = {
+        accountId: accountId,
+        credit: amount,
+      };
     }
   }
 
   // ثبت تراکنش بدهکار برای حساب هزینه‌های ضایعات
   if (bulkAccountOperations[wasteExpenseAccount.accountId.toString()]) {
-    bulkAccountOperations[wasteExpenseAccount.accountId.toString()].debit += totalWasteAmount;
+    bulkAccountOperations[wasteExpenseAccount.accountId.toString()].debit +=
+      totalWasteAmount;
   } else {
-    bulkAccountOperations[wasteExpenseAccount.accountId.toString()] = { accountId: wasteExpenseAccount.accountId, debit: totalWasteAmount };
+    bulkAccountOperations[wasteExpenseAccount.accountId.toString()] = {
+      accountId: wasteExpenseAccount.accountId,
+      debit: totalWasteAmount,
+    };
   }
 
+  const savedGeneralLedgers = await GeneralLedger.insertMany(generalLedgers, {
+    session,
+  });
   // به‌روزرسانی مانده حساب‌ها به صورت فردی
   await updateAccountsBalanceIndividually(bulkAccountOperations, session);
-
-  ledger.transactions = generalLedgers;
+  ledger.transactions = savedGeneralLedgers.map((gl) => gl._id);
   await ledger.save({ session });
 
   return ledger._id;
@@ -195,22 +228,32 @@ export async function AddSalesReturnAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
   if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
+    return { status: 401, message: "کاربر وارد نشده است." };
   }
 
   const session = await mongoose.startSession();
 
   try {
     const result = await session.withTransaction(async () => {
-      const requiredFields = ['type', 'totalAmount', 'invoiceItems', 'storeId', 'customerId', 'accountAllocations'];
+      const requiredFields = [
+        "type",
+        "totalAmount",
+        "invoiceItems",
+        "storeId",
+        "customerId",
+        "accountAllocations",
+      ];
       validateInvoiceData(invoiceData, requiredFields);
 
-      const totalItems = invoiceData.invoiceItems.reduce((acc, item) => acc + item.quantity, 0);
+      const totalItems = invoiceData.invoiceItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
 
       const invoice = new Invoice({
-        description: invoiceData.description || '',
+        description: invoiceData.description || "",
         type: invoiceData.type,
-        totalPrice: -invoiceData.totalAmount,  // فاکتور برگشتی کل مبلغ منفی است
+        totalPrice: -invoiceData.totalAmount, // فاکتور برگشتی کل مبلغ منفی است
         totalItems: totalItems,
         contact: invoiceData.customerId,
         shop: invoiceData.storeId,
@@ -220,19 +263,34 @@ export async function AddSalesReturnAction(invoiceData) {
 
       const invoiceId = invoice._id;
 
-      const { invoiceItemIds, accountIdMap, bulkProductOperations } = await createInvoiceItems(invoiceData.invoiceItems, invoice._id, session, false);
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } =
+        await createInvoiceItems(
+          invoiceData.invoiceItems,
+          invoice._id,
+          session,
+          false,
+          invoiceData.type,
+
+        );
 
       let totalCostOfGoods = 0;
       let totalSales = invoiceData.totalAmount;
 
       for (const item of invoiceData.invoiceItems) {
-        const product = await Product.findById(item.productId).populate('accountId').session(session);
+        const product = await Product.findById(item.productId)
+          .populate("accountId")
+          .session(session);
         if (!product) {
           throw new Error(`محصول با شناسه ${item.productId} یافت نشد.`);
         }
-        const costPerUnit = product.stock > 0 && product.accountId.balance > 0 ? product.accountId.balance / product.stock : await getLastPurchasedPrice(product._id);
+        const costPerUnit =
+          product.stock > 0 && product.accountId.balance > 0
+            ? product.accountId.balance / product.stock
+            : await getLastPurchasedPrice(product._id);
         if (!costPerUnit) {
-          throw new Error(`قیمت خرید اخیر برای محصول ${product.title} یافت نشد.`);
+          throw new Error(
+            `قیمت خرید اخیر برای محصول ${product.title} یافت نشد.`
+          );
         }
         totalCostOfGoods += parseFloat(costPerUnit) * item.quantity;
       }
@@ -255,10 +313,13 @@ export async function AddSalesReturnAction(invoiceData) {
       await invoice.save({ session });
       return invoice;
     });
-    return { success: true, message: 'فاکتور برگشت با موفقیت ثبت شد.' };
+    return { success: true, message: "فاکتور برگشت با موفقیت ثبت شد." };
   } catch (error) {
-    console.error('خطا در AddSalesReturnAction:', error);
-    return { success: false, message: `ثبت برگشت با مشکل مواجه شد: ${error.message}` };
+    console.error("خطا در AddSalesReturnAction:", error);
+    return {
+      success: false,
+      message: `ثبت برگشت با مشکل مواجه شد: ${error.message}`,
+    };
   } finally {
     session.endSession();
   }
@@ -275,23 +336,32 @@ async function createFinancialDocumentsForSalesReturn(
   session
 ) {
   // دریافت حساب‌های مرتبط
-  const salesReturnsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-2'); // فرض بر کد حساب برگشت از فروش
+  const salesReturnsAccount = await GetAccountIdBystoreIdAndAccountCode(
+    shopId,
+    "5000-2"
+  ); // فرض بر کد حساب برگشت از فروش
   if (!salesReturnsAccount.success) {
     throw new Error(salesReturnsAccount.message); // خطا در دریافت حساب برگشت از فروش
   }
 
-  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '5000-1');
+  const costOfGoodsAccount = await GetAccountIdBystoreIdAndAccountCode(
+    shopId,
+    "5000-1"
+  );
   if (!costOfGoodsAccount.success) {
     throw new Error(costOfGoodsAccount.message); // خطا در دریافت حساب بهای تمام‌شده کالا
   }
 
-  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(shopId, '4000-1');
+  const salesRevenueAccount = await GetAccountIdBystoreIdAndAccountCode(
+    shopId,
+    "4000-1"
+  );
   if (!salesRevenueAccount.success) {
     throw new Error(salesRevenueAccount.message); // خطا در دریافت حساب فروش کالا
   }
 
   const ledger = new Ledger({
-    referenceId:  invoiceId ,
+    referenceId: invoiceId,
     type: "invoice",
     shop: shopId,
     createdBy: userId,
@@ -308,7 +378,7 @@ async function createFinancialDocumentsForSalesReturn(
       account: allocation.accountId,
       debit: 0,
       credit: allocation.amount, // برای دریافتی بستانکار می‌شود
-      referenceId:  invoiceId ,
+      referenceId: invoiceId,
       type: "invoice",
       shop: shopId,
       createdBy: userId,
@@ -316,77 +386,78 @@ async function createFinancialDocumentsForSalesReturn(
     });
 
     generalLedgers.push(generalLedger);
-    
+
     if (bulkAccountOperations[allocation.accountId.toString()]) {
-      bulkAccountOperations[allocation.accountId.toString()].credit += allocation.amount;
+      bulkAccountOperations[allocation.accountId.toString()].credit +=
+        allocation.amount;
     } else {
-      bulkAccountOperations[allocation.accountId.toString()] = { accountId: allocation.accountId, credit: allocation.amount };
+      bulkAccountOperations[allocation.accountId.toString()] = {
+        accountId: allocation.accountId,
+        credit: allocation.amount,
+      };
     }
   }
-  
+
   // ثبت بدهکار در حساب برگشت از فروش
   const salesReturnLedger = new GeneralLedger({
     ledger: ledger._id,
     account: salesReturnsAccount.accountId,
     debit: totalSales,
     credit: 0,
-    referenceId:  invoiceId ,
+    referenceId: invoiceId,
     type: "invoice",
     shop: shopId,
     createdBy: userId,
     updatedBy: userId,
   });
-  
+
   generalLedgers.push(salesReturnLedger);
-  
+
   // بستانکاری بهای تمام شده کالای فروخته شده
   const costOfGoodsSoldLedger = new GeneralLedger({
     ledger: ledger._id,
     account: costOfGoodsAccount.accountId,
     debit: 0,
     credit: totalCostOfGoods,
-    referenceId:  invoiceId ,
+    referenceId: invoiceId,
     type: "invoice",
     shop: shopId,
     createdBy: userId,
     updatedBy: userId,
   });
-  
+
   generalLedgers.push(costOfGoodsSoldLedger);
-  
+
   // ثبت بدهکاری برای حساب‌های مرتبط با کالا
   for (const [accountId, amount] of Object.entries(accountIdMap)) {
     const generalLedger = new GeneralLedger({
       ledger: ledger._id,
       account: accountId,
-      debit: amount,      // اصلاح: بدهکار کردن حساب کالا
+      debit: amount, // اصلاح: بدهکار کردن حساب کالا
       credit: 0,
-      referenceId:  invoiceId ,
+      referenceId: invoiceId,
       type: "invoice",
       shop: shopId,
       createdBy: userId,
       updatedBy: userId,
     });
-    
+
     generalLedgers.push(generalLedger);
-    
+
     if (!bulkAccountOperations[accountId.toString()]) {
-      bulkAccountOperations[accountId.toString()] = { accountId: accountId, debit: amount };
+      bulkAccountOperations[accountId.toString()] = {
+        accountId: accountId,
+        debit: amount,
+      };
     } else {
       bulkAccountOperations[accountId.toString()].debit += amount;
     }
   }
-  
-  // به‌روزرسانی مانده حساب‌ها به صورت فردی
-  // await generalLedger.save({ session });
-  // await salesReturnLedger.save({ session });
-  // await costOfGoodsSoldLedger.save({ session });
-  // await generalLedger.save({ session });
-  
+
   const savedGeneralLedgers = await GeneralLedger.insertMany(generalLedgers, {
-      session,
-    });
-  
+    session,
+  });
+
   await updateAccountsBalanceIndividually(bulkAccountOperations, session);
 
   ledger.transactions = savedGeneralLedgers.map((gl) => gl._id);
@@ -397,18 +468,18 @@ async function createFinancialDocumentsForSalesReturn(
 
 // کدهای ثابت حسابداری
 const ACCOUNT_CODES = {
-  EXPENSE: '5000-1',
-  COST_OF_GOODS_SOLD: '5000-1',
-  SALES_RETURN: '5000-2',
-  DISCOUNTS: '5000-3',
-  WASTE: '5000-4',
-  SALES: '4000-1'
+  EXPENSE: "5000-1",
+  COST_OF_GOODS_SOLD: "5000-1",
+  SALES_RETURN: "5000-2",
+  DISCOUNTS: "5000-3",
+  WASTE: "5000-4",
+  SALES: "4000-1",
 };
 
 export async function deleteInvoiceAction(invoiceId) {
   const user = await getAuthenticatedUser();
   if (!user) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
+    return { status: 401, message: "کاربر وارد نشده است." };
   }
 
   const session = await mongoose.startSession();
@@ -417,16 +488,20 @@ export async function deleteInvoiceAction(invoiceId) {
     // ۱. دریافت فاکتور
     const invoice = await Invoice.findById(invoiceId).session(session);
     if (!invoice) {
-      throw new Error('فاکتور مورد نظر یافت نشد.');
+      throw new Error("فاکتور مورد نظر یافت نشد.");
     }
 
     // ۲. دریافت اقلام فاکتور
-    const invoiceItems = await InvoiceItem.find({ invoice: invoiceId }).session(session);
-    const productIds = invoiceItems.map(item => item.product);
+    const invoiceItems = await InvoiceItem.find({ invoice: invoiceId }).session(
+      session
+    );
+    const productIds = invoiceItems.map((item) => item.product);
 
     // ۳. دریافت تراکنش‌های GeneralLedger مرتبط
-    const generalLedgers = await GeneralLedger.find({ referenceId: invoiceId }).session(session);
-    const accountIds = [...new Set(generalLedgers.map(gl => gl.account))]; // لیست یکتای حساب‌ها
+    const generalLedgers = await GeneralLedger.find({
+      referenceId: invoiceId,
+    }).session(session);
+    const accountIds = [...new Set(generalLedgers.map((gl) => gl.account))]; // لیست یکتای حساب‌ها
 
     // ۴. دریافت سند مالی Ledger مرتبط
     // const ledger = await Ledger.findOne({ referenceId: invoiceId }).session(session);
@@ -436,7 +511,10 @@ export async function deleteInvoiceAction(invoiceId) {
       await InvoiceItem.deleteOne({ _id: item._id }, { session });
       // به‌روز رسانی موجودی محصول
       const newStock = await calculateProductStock(item.product, session);
-      await Product.updateOne({ _id: item.product }, { stock: newStock }).session(session);
+      await Product.updateOne(
+        { _id: item.product },
+        { stock: newStock }
+      ).session(session);
     }
     // ۶. حذف تراکنش‌های GeneralLedger
     await GeneralLedger.deleteMany({ referenceId: invoiceId }).session(session);
@@ -447,7 +525,10 @@ export async function deleteInvoiceAction(invoiceId) {
     const updatedAccounts = [];
     for (const accountId of accountIds) {
       const newBalance = await getAccountBalance(accountId, session);
-      await Account.updateOne({ _id: accountId }, { balance: newBalance }).session(session);
+      await Account.updateOne(
+        { _id: accountId },
+        { balance: newBalance }
+      ).session(session);
       updatedAccounts.push(accountId);
     }
 
@@ -471,16 +552,14 @@ export async function deleteInvoiceAction(invoiceId) {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.error('Error deleting invoice:', error);
+    console.error("Error deleting invoice:", error);
     return { success: false, message: error.message };
   }
 }
 
-
-
 export async function getAccountBalance(accountId, session) {
   if (!mongoose.Types.ObjectId.isValid(accountId)) {
-    throw new Error('شناسه حساب معتبر نیست.');
+    throw new Error("شناسه حساب معتبر نیست.");
   }
 
   await connectDB();
@@ -488,16 +567,16 @@ export async function getAccountBalance(accountId, session) {
   const account = await Account.findById(accountId).session(session);
 
   if (!account) {
-    throw new Error('حساب یافت نشد.');
+    throw new Error("حساب یافت نشد.");
   }
 
   const aggregationResult = await GeneralLedger.aggregate([
     { $match: { account: new mongoose.Types.ObjectId(accountId) } },
     {
       $group: {
-        _id: '$account',
-        totalDebit: { $sum: '$debit' },
-        totalCredit: { $sum: '$credit' },
+        _id: "$account",
+        totalDebit: { $sum: "$debit" },
+        totalCredit: { $sum: "$credit" },
       },
     },
   ]).session(session);
@@ -510,56 +589,54 @@ export async function getAccountBalance(accountId, session) {
   }
 
   return balance || 0; // اصلاح بازگشت مقدار
-
 }
-
-
 
 export async function calculateProductStock(productId, session) {
   await connectDB();
 
   if (!mongoose.Types.ObjectId.isValid(productId)) {
-    throw new Error('شناسه محصول نامعتبر است');
+    throw new Error("شناسه محصول نامعتبر است");
   }
 
   const aggregationResult = await InvoiceItem.aggregate([
     { $match: { product: new mongoose.Types.ObjectId(productId) } },
     {
       $lookup: {
-        from: 'invoices',
-        localField: 'invoice',
-        foreignField: '_id',
-        as: 'invoice',
+        from: "invoices",
+        localField: "invoice",
+        foreignField: "_id",
+        as: "invoice",
       },
     },
-    { $unwind: '$invoice' },
+    { $unwind: "$invoice" },
     {
       $group: {
-        _id: '$invoice.type',
-        totalQuantity: { $sum: '$quantity' },
+        _id: "$invoice.type",
+        totalQuantity: { $sum: "$quantity" },
       },
     },
   ]).session(session);
 
   let stock = 0;
 
-  aggregationResult.forEach(group => {
+  aggregationResult.forEach((group) => {
     const { _id: type, totalQuantity } = group;
-    switch (type) { // فرض بر این است که نوع فاکتور به حروف کوچک است
-      case 'Purchase':
-        
+    switch (
+      type // فرض بر این است که نوع فاکتور به حروف کوچک است
+    ) {
+      case "Purchase":
         stock += totalQuantity;
         break;
-      case 'Sale':
+      case "Sale":
         stock -= totalQuantity;
         break;
-      case 'PurchaseReturn':
+      case "PurchaseReturn":
         stock -= totalQuantity;
         break;
-      case 'SalesReturn':
+      case "SalesReturn":
         stock += totalQuantity;
         break;
-      case 'Waste':
+      case "Waste":
         stock -= totalQuantity;
         break;
       default:
@@ -569,4 +646,32 @@ export async function calculateProductStock(productId, session) {
 
   return stock || 0; // اصلاح بازگشت مقدار
 }
+export async function calculateProductCost(productId) {
+  await connectDB();
 
+  // بررسی اعتبار شناسه محصول
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    throw new Error("شناسه محصول نامعتبر است");
+  }
+
+  // بازیابی محصول با پر کردن accountId برای دسترسی به balance
+  const product = await Product.findById(productId).populate("accountId");
+
+  if (!product) {
+    throw new Error("محصولی با این شناسه یافت نشد");
+  }
+
+  const { accountId, stock } = product;
+
+  if (stock === 0) {
+    throw new Error("موجودی محصول نمی‌تواند صفر باشد");
+  }
+
+  if (!accountId || typeof accountId.balance !== "number") {
+    throw new Error("اطلاعات حساب مربوط به محصول نامعتبر است");
+  }
+
+  const costPrice = accountId.balance / stock;
+
+  return costPrice;
+}

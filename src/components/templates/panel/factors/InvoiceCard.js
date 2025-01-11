@@ -90,10 +90,10 @@ const InvoiceCard = ({ invoice, handleDeleteInvoice, handleEditClick }) => {
                           {item.quantity}
                         </td>
                         <td className="py-2 px-4 border-b dark:border-zinc-600 text-right">
-                          {Number(item.unitPrice.$numberDecimal).toLocaleString()} تومان
+                    {item.unitPrice}
                         </td>
                         <td className="py-2 px-4 border-b dark:border-zinc-600 text-right">
-                          {Number(item.totalPrice.$numberDecimal).toLocaleString()} تومان
+                          {item.totalPrice}
                         </td>
                       </tr>
                     ))}

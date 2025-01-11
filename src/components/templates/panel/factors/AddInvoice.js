@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import SubmitInvoiceModal from "./SubmitInvoiceModal";
 import { INVOICE_TYPES } from "./invoiceTypes"; // وارد کردن انواع فاکتورها
 import getProductPrice from "./getProductPrice";
+import { calculateProductCost } from "./invoiceItemsServerActions2";
 
 function AddInvoice({ invoiceType }) {
   const [invoiceItems, setInvoiceItems] = useState([]);
@@ -48,7 +49,9 @@ function AddInvoice({ invoiceType }) {
       if (!selectedContact || invoiceItems.length === 0) return;
   
       // فقط برای فاکتورهای فروش بروز رسانی قیمت‌ها
-      if (invoiceType !== INVOICE_TYPES.SALE) return;
+      if (invoiceType === INVOICE_TYPES.SALE ) {
+
+     
   
       try {
         const updatedItems = await Promise.all(invoiceItems.map(async (item) => {
@@ -63,11 +66,33 @@ function AddInvoice({ invoiceType }) {
         toast.success("قیمت‌ها با موفقیت به‌روزرسانی شدند.");
       } catch (error) {
         console.error("خطا در بروز رسانی قیمت‌ها:", error);
-        
-        // استخراج پیام خطا از سرور
+                // استخراج پیام خطا از سرور
         const errorMessage = error?.message || "خطا در بروز رسانی قیمت‌ها.";
         toast.error(errorMessage);
+
       }
+    }
+      else if  (invoiceType === INVOICE_TYPES.WASTE ) {
+        try {
+          const updatedItems = await Promise.all(invoiceItems.map(async (item) => {
+            const newPrice = await calculateProductCost(item.productId);
+            return {
+              ...item,
+              unitPrice: newPrice,
+              totalPrice: (parseInt(item.quantity, 10) || 0) * (parseFloat(newPrice) || 0),
+            };
+          }));
+          setInvoiceItems(updatedItems);
+          toast.success("قیمت‌ها با موفقیت به‌روزرسانی شدند.");
+        } catch (error) {
+          console.error("خطا در بروز رسانی قیمت‌ها:", error);
+                  // استخراج پیام خطا از سرور
+          const errorMessage = error?.message || "خطا در بروز رسانی قیمت‌ها.";
+          toast.error(errorMessage);
+        
+
+      }
+    }
     };
   
     updatePrices();

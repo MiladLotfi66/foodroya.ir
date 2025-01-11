@@ -24,6 +24,7 @@ export async function getAuthenticatedUser() {
 export async function validateInvoiceData(invoiceData, requiredFields) {
   for (const field of requiredFields) {
     if (!invoiceData[field]) {
+      
       throw new Error(`لطفاً فیلد ${field} را پر کنید.`);
     }
   }
@@ -33,23 +34,39 @@ export async function createInvoiceItems(
   invoiceItems,
   invoiceId,
   session,
-  isPurchase
+  isPurchase,
+  invoiceType,
+
 ) {
   const invoiceItemIds = [];
   const accountIdMap = {};
   const bulkProductOperations = {};
 
   for (const item of invoiceItems) {
-    const requiredItemFields = [
-      "productId",
-      "title",
-      "quantity",
-      "unitPrice",
-      "totalPrice",
-    ];
+    let requiredItemFields =[]
+    console.log("invoiceType-------",invoiceType);
+    
+    if (invoiceType==="Waste") {
+      requiredItemFields=[ 
+
+        "productId",
+        "title",
+        "quantity",
+        "totalPrice",
+      ] 
+    }else{
+
+      requiredItemFields= [
+        "productId",
+        "title",
+        "quantity",
+        "unitPrice",
+        "totalPrice",
+      ];
+    }
     for (const field of requiredItemFields) {
-      if (!item[field]) {
-        throw new Error(`لطفاً فیلد ${field} در اقلام فاکتور را پر کنید.`);
+      if (!item[field] ) {
+          throw new Error(`لطفاً فیلد ${field} در اقلام فاکتور را پر کنید.`);
       }
     }
 
@@ -343,7 +360,8 @@ export async function AddSalesInvoiceAction(invoiceData) {
           invoiceData.invoiceItems,
           invoiceId,
           session,
-          false
+          false,
+          invoiceData.type,
         );
 
       let totalCostOfGoods = 0;
@@ -445,7 +463,9 @@ export async function AddPurchaseReturnAction(invoiceData) {
           invoiceData.invoiceItems,
           invoice._id,
           session,
-          true
+          true,
+          invoiceData.type,
+
         );
 
       await updateProductStock(bulkProductOperations, false, session); // توجه: برای برگشت باید به نوعی مدیریت شود
@@ -678,7 +698,9 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
           invoiceData.invoiceItems,
           invoiceId,
           session,
-          true
+          true,
+          invoiceData.type,
+
         );
 
       await updateProductStock(bulkProductOperations, true, session);
