@@ -89,8 +89,10 @@ function SelectAccountModal({ onSelect, onCancel, onError, selectionMode }) {
   const filteredAccounts = useMemo(() => {
     if (!searchQuery) return accounts;
     return accounts.filter(account => 
-      account.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.accountCode.toLowerCase().includes(searchQuery.toLowerCase())
+      account?.title.toLowerCase().includes(searchQuery.toLowerCase()) 
+      ||
+      account.accountCode.toLowerCase().includes(searchQuery.toLowerCase()
+    )
     );
   }, [accounts, searchQuery]);
 

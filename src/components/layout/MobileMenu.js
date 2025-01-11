@@ -211,13 +211,12 @@ function MobileMenu({ isLogin }) {
                   </li>
 
                   {ShopId && (
-                    <li className="flex items-center">
-                      <Link
-                        href={`${ShopId}/panel`}
-                        onClick={() => dispatch(reversemobileMenu())}
-                      >
-                        پنل مدیریتی
-                      </Link>
+                    <li className="flex items-center"
+                                        onClick={() => dispatch(reversemobileMenu())}
+                    >
+
+                          <Link href={`/${ShopId}/panel`}>پنل مدیریتی</Link>
+
                     </li>
                   )}
 

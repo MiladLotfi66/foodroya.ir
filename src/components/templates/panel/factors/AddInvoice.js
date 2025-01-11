@@ -24,11 +24,13 @@ function AddInvoice({ invoiceType }) {
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
 
   // استفاده از react-hook-form
-  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const { register, handleSubmit,reset, watch, formState: { errors } } = useForm(
 
-  const totalItems = invoiceItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
-  const totalPrice = invoiceItems.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
-  const totalRows = invoiceItems.length;
+  );
+
+  const totalItems = invoiceItems?.reduce((acc, item) => acc + (item.quantity || 0), 0);
+  const totalPrice = invoiceItems?.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
+  const totalRows = invoiceItems?.length;
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -46,7 +48,7 @@ function AddInvoice({ invoiceType }) {
   // استفاده از useEffect برای بروز رسانی قیمت‌ها هنگام تغییر مخاطب
   useEffect(() => {
     const updatePrices = async () => {
-      if (!selectedContact || invoiceItems.length === 0) return;
+      if (!selectedContact || invoiceItems?.length === 0) return;
   
       // فقط برای فاکتورهای فروش بروز رسانی قیمت‌ها
       if (invoiceType === INVOICE_TYPES.SALE ) {
@@ -96,7 +98,7 @@ function AddInvoice({ invoiceType }) {
     };
   
     updatePrices();
-  }, [selectedContact, invoiceItems.length, invoiceType]);
+  }, [selectedContact, invoiceItems?.length, invoiceType]);
     
   const handleAddNewInvoiceItem = useCallback(async (newInvoiceItem) => {
     if (!selectedContact) 
@@ -155,6 +157,9 @@ function AddInvoice({ invoiceType }) {
 
   const handleCloseSubmitModal = () => {
     setIsOpenSubmitModal(false);
+  reset(); // ریست کردن فرم‌های مدیریت‌شده توسط react-hook-form
+  setSelectedContact(""); // ریست کردن وضعیت محلی انتخاب مخاطب
+  setInvoiceItems([]);
   };
 
   const onSubmit = (data) => {
@@ -291,8 +296,8 @@ function AddInvoice({ invoiceType }) {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
-          {invoiceItems.length > 0 ? (
-            invoiceItems.map((invoiceItem) => (
+          {invoiceItems?.length > 0 ? (
+            invoiceItems?.map((invoiceItem) => (
               <InvoiceItemCard
                 key={invoiceItem.uniqueKey}
                 invoiceItem={invoiceItem}
@@ -324,7 +329,7 @@ function AddInvoice({ invoiceType }) {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-800 dark:text-gray-200">
               <div>تعداد کل اقلام: <span className="font-bold">{totalItems}</span></div>
-              <div>جمع کل فاکتور: <span className="font-bold">{totalPrice.toLocaleString()} تومان</span></div>
+              <div>جمع کل فاکتور: <span className="font-bold">{totalPrice?.toLocaleString()} تومان</span></div>
               <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
             </div>
             <button

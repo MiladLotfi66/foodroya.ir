@@ -6,7 +6,6 @@ import { getLastPurchasedPrice } from "./invoiceItemsServerActions";
 
  function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate,invoiceType }) {
   const { title, image, quantity = 1, unitPrice = 0, description = "" , productId } = invoiceItem;
-console.log("invoiceItem",invoiceItem);
 
   const totalPrice = (quantity || 0) * (unitPrice || 0);
   const [lastPrice, setLastPrice] = useState(0);
