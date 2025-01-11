@@ -20,7 +20,6 @@ export async function getAuthenticatedUser() {
     return null;
   }
 }
-
 export async function validateInvoiceData(invoiceData, requiredFields) {
   for (const field of requiredFields) {
     if (!invoiceData[field]) {
@@ -29,7 +28,6 @@ export async function validateInvoiceData(invoiceData, requiredFields) {
     }
   }
 }
-
 export async function createInvoiceItems(
   invoiceItems,
   invoiceId,
@@ -138,7 +136,6 @@ export async function createInvoiceItems(
 
   return { invoiceItemIds, accountIdMap, bulkProductOperations };
 }
-
 export async function updateProductStock(
   bulkProductOperations,
   isPurchase,
@@ -159,7 +156,6 @@ export async function updateProductStock(
     }
   }
 }
-
 export async function updateAccountsBalance(bulkAccountOperations, session) {
   for (const op of Object.values(bulkAccountOperations)) {
     const updateFields = {};
@@ -183,7 +179,6 @@ export async function updateAccountsBalance(bulkAccountOperations, session) {
     }
   }
 }
-
 export async function createFinancialDocumentsForSales(
   invoiceId,
   shopId,
@@ -315,7 +310,6 @@ export async function createFinancialDocumentsForSales(
 
   return ledger._id;
 }
-
 export async function AddSalesInvoiceAction(invoiceData) {
   await connectDB();
   const user = await getAuthenticatedUser();
@@ -417,7 +411,6 @@ export async function AddSalesInvoiceAction(invoiceData) {
     session.endSession();
   }
 }
-
 export async function AddPurchaseReturnAction(invoiceData) {
   
   await connectDB();
@@ -499,7 +492,6 @@ export async function AddPurchaseReturnAction(invoiceData) {
     session.endSession();
   }
 }
-
 async function createFinancialDocumentsForPurchaseReturn(
   invoiceId,
   shopId,
@@ -588,7 +580,6 @@ async function createFinancialDocumentsForPurchaseReturn(
 
   return ledger._id;
 }
-
 export async function getLastPurchasedPrice(productId) {
   await connectDB();
 
