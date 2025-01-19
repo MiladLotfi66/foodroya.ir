@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GetAllAccountsByOptions } from '../Account/accountActions';
 import { AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction } from './invoiceItemsServerActions';
-import { AddWasteAction ,AddSalesReturnAction} from './invoiceItemsServerActions2';
+import { AddWasteAction ,AddSalesReturnAction} from './invoiceItemsServerActions';
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([

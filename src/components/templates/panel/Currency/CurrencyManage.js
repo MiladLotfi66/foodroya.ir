@@ -7,6 +7,7 @@ import AddCurrency from "./AddCurrency";
 import { useParams } from 'next/navigation';
 import { GetAllCurrencies} from "./currenciesServerActions";
 import { Toaster, toast } from "react-hot-toast";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function CurrencyManage() {
   const [currencies, setCurrencies] = useState([]);
@@ -15,6 +16,27 @@ function CurrencyManage() {
   const [selectedCurrencyFile, setSelectedCurrencyFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
   const { ShopId } = params;
+  const [BGImage, setbGImage] = useState([]);
+
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
+
   // بهینه‌سازی refreshCurrencies با استفاده از useCallback
   const refreshCurrencies = useCallback(async () => {
     try {
@@ -66,7 +88,7 @@ function CurrencyManage() {
   }, []);
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddCurrency && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

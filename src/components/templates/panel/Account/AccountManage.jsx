@@ -8,6 +8,7 @@ import Breadcrumb from "@/utils/Breadcrumb"; // وارد کردن کامپونن
 import { useParams } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { GetAllAccounts } from "./accountActions"; // فرض می‌کنیم تابع GetAllAccounts وجود دارد
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function AccountManage() {
   const [accounts, setAccounts] = useState([]);
@@ -16,7 +17,27 @@ function AccountManage() {
   const [path, setPath] = useState([{ id: null, title: "همه حساب‌ها", accountCode: "" }]); // مسیر اولیه با اطلاعات کامل
   const params = useParams();
   const { ShopId } = params;
+  const [BGImage, setbGImage] = useState([]);
 
+
+   const getShopPanelImage = useCallback(async () => {
+      try {
+        if (!ShopId) {
+          console.error("نام یکتای فروشگاه موجود نیست.");
+          return;
+        }
+  
+        const response = await GetShopLogos(ShopId);
+  
+        setbGImage(response.logos.backgroundPanelUrl);
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      }
+    }, [ShopId]);
+  
+    useEffect(() => {
+      getShopPanelImage();
+    }, [ShopId]);
   // بهینه‌سازی refreshAccounts با استفاده از useCallback
   const refreshAccounts = useCallback(
     async (parentId = null) => {
@@ -99,7 +120,7 @@ function AccountManage() {
   );
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddAccount && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

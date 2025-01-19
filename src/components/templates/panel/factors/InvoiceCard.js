@@ -7,7 +7,7 @@ import ActionButton from "../rols/ActionButton";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import moment from "moment-jalaali";
 import UserMiniInfo from "@/module/home/UserMiniInfo";
-import { calculateProductStock, getAccountBalance } from "./invoiceItemsServerActions2";
+import { calculateProductStock, getAccountBalance } from "./invoiceItemsServerActions";
 // نگاشت نوع فاکتور به فارسی
 const invoiceTypeMap = {
   Purchase: "خرید",

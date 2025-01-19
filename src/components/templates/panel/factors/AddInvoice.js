@@ -11,7 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 import SubmitInvoiceModal from "./SubmitInvoiceModal";
 import { INVOICE_TYPES } from "./invoiceTypes"; // وارد کردن انواع فاکتورها
 import getProductPrice from "./getProductPrice";
-import { calculateProductCost } from "./invoiceItemsServerActions2";
+import { calculateProductCost } from "./invoiceItemsServerActions";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function AddInvoice({ invoiceType }) {
   const [invoiceItems, setInvoiceItems] = useState([]);
@@ -22,15 +23,32 @@ function AddInvoice({ invoiceType }) {
   const [contactsOptions, setContactsOptions] = useState([]);
   const [selectedContact, setSelectedContact] = useState(""); // نام عمومی‌تر
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
+  const [BGImage, setbGImage] = useState([]);
 
   // استفاده از react-hook-form
-  const { register, handleSubmit,reset, watch, formState: { errors } } = useForm(
-
-  );
-
+  const { register, handleSubmit,reset, watch, formState: { errors } } = useForm();
   const totalItems = invoiceItems?.reduce((acc, item) => acc + (item.quantity || 0), 0);
   const totalPrice = invoiceItems?.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
   const totalRows = invoiceItems?.length;
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
+
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -233,7 +251,7 @@ function AddInvoice({ invoiceType }) {
   };
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddInvoiceItem && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

@@ -6,16 +6,36 @@ import { useCallback, useEffect, useState } from "react";
 import SelectAccountModal from "./SelectAcountModal";
 import { getAccountTransactions } from "./FinancialDocumentsServerActions";
 import TransactionTable from "./TransactionTable";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+
 function DetailedAccount() {
   const params = useParams();
   const { ShopId } = params;
+  const [BGImage, setbGImage] = useState([]);
 
   const [showSelectAccountModal, setShowSelectAccountModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [transactions, setTransactions] = useState();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
 
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
   // تابع برای باز کردن مودال
   const handleOpenModal = useCallback(() => {
     setShowSelectAccountModal(true);
@@ -72,7 +92,7 @@ function DetailedAccount() {
   }, []);
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         
         {/* مودال SelectAccountModal */}

@@ -12,6 +12,7 @@ import {
   GetAllContacts,
 } from "./contactsServerActions";
 import { Toaster, toast } from "react-hot-toast";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function ContactManager() {
   const [contacts, setContacts] = useState([]);
@@ -20,6 +21,26 @@ function ContactManager() {
   const [selectedContactFile, setSelectedContactFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
   const { ShopId } = params;
+  const [BGImage, setbGImage] = useState([]);
+
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
 
   // بهینه‌سازی refreshContacts با استفاده از useCallback
   const refreshContacts = useCallback(async () => {
@@ -80,7 +101,7 @@ function ContactManager() {
   }, []);
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddContact && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

@@ -15,6 +15,7 @@ import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 import { DeleteProducts } from './ProductActions';
 import Pagination from './Pagination';
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function ProductManage() {
   const [products, setProducts] = useState([]);
@@ -35,7 +36,26 @@ function ProductManage() {
   const [totalPages, setTotalPages] = useState(0); // وضعیت کل صفحات
   const limit = 12; // تعداد آیتم‌ها در هر صفحه
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const [BGImage, setbGImage] = useState([]);
 
+    const getShopPanelImage = useCallback(async () => {
+      try {
+        if (!ShopId) {
+          console.error("نام یکتای فروشگاه موجود نیست.");
+          return;
+        }
+  
+        const response = await GetShopLogos(ShopId);
+  
+        setbGImage(response.logos.backgroundPanelUrl);
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      }
+    }, [ShopId]);
+  
+    useEffect(() => {
+      getShopPanelImage();
+    }, [ShopId]);
   const fetchAnbarAccountId = async () => {
     try {
       const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1");
@@ -222,7 +242,7 @@ function ProductManage() {
 
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
 {isOpenAddProduct && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

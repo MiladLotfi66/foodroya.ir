@@ -33,6 +33,7 @@ import Link from "next/link";
 import { GetUserShopsCount } from "@/templates/Shop/ShopServerActions";
 import { GetUserFollowingShops,GetUserShops } from "@/templates/Shop/ShopServerActions";
 import AvatarGroupTailwind from "@/module/User/AvatarGroupTailwind.js";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function ProfilePage() {
   const { data: session } = useSession();
@@ -43,6 +44,7 @@ function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState(usericone);
   const [base64Image, setBase64Image] = useState(null);
   const [userShopCounter, setUserShopCounter] = useState(0);
+  const [BGImage, setbGImage] = useState([]);
 
   const [editField, setEditField] = useState(null);
   const [isEditingSecurityQuestion, setIsEditingSecurityQuestion] =
@@ -70,6 +72,25 @@ function ProfilePage() {
       newSecurityQuestion: { question: "", answer: "" },
     },
   });
+  
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
 
   const securityQuestionForm = useForm({
     mode: "all",
@@ -305,8 +326,8 @@ function ProfilePage() {
         )}
       </Head>
 
-      <FormTemplate>
-        <main>
+      <FormTemplate BGImage={BGImage}>
+      <main>
           <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-16 p-8 md:p-12 max-w-4xl mx-auto">
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-10">

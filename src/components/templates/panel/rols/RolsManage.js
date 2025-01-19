@@ -24,6 +24,7 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import UserPlus from "@/module/svgs/UserPlus";
 import RoleCard from "./RoleCard";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function RolsManage() {
   const [isOpenAddRole, setIsOpenAddRole] = useState(false);
@@ -34,7 +35,26 @@ function RolsManage() {
   const params = useParams();
   const { ShopId } = params;
   const [rols, setRols] = useState([]);
-  
+  const [BGImage, setbGImage] = useState([]);
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
+
   // مدیریت تعداد مخاطبان هر نقش
   const [contactCounts, setContactCounts] = useState({});
 
@@ -187,7 +207,7 @@ function RolsManage() {
   };
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddRole && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

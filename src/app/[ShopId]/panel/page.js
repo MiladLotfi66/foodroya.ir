@@ -2,12 +2,34 @@
 import FormTemplate from '@/templates/generalcomponnents/formTemplate';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useCallback, useEffect, useState } from 'react';
+
 function Page() {
   const params = useParams();
   const { ShopId} = params;
- 
+  const [BGImage, setbGImage] = useState([]);
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
+
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
           <h1 className="text-3xl font-MorabbaBold">مدیریت فروشگاه</h1>

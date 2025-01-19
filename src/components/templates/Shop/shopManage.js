@@ -146,7 +146,7 @@ function ShopManage() {
   };
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={'/Images/jpg/chefSign.webp'}>
       {isOpenAddShop && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

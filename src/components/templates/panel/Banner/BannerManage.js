@@ -4,10 +4,12 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
 import { GetAllBanners } from "./BannerServerActions";
 import AddBanner from "./AddBanner";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function BannerManage() {
   const [banners, setBanners] = useState([]);
+  const [BGImage, setbGImage] = useState([]);
   const [isOpenAddBanner, setIsOpenAddBanner] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [selectedBannerFile, setSelectedBannerFile] = useState(null); // افزودن استیت جدید
@@ -34,8 +36,29 @@ function BannerManage() {
     refreshBanners();
   }, [refreshBanners]);
 
+  const getShopPanelImage = useCallback(async () => {
+    try {
+      if (!ShopId) {
+        console.error("نام یکتای فروشگاه موجود نیست.");
+        return;
+      }
+
+      const response = await GetShopLogos(ShopId);
+
+      setbGImage(response.logos.backgroundPanelUrl);
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    getShopPanelImage();
+  }, [ShopId]);
+
   const handleDeleteBanner = useCallback((bannerId) => {
-    setBanners((prevBanners) => prevBanners.filter(banner => banner._id !== bannerId));
+    setBanners((prevBanners) =>
+      prevBanners.filter((banner) => banner._id !== bannerId)
+    );
   }, []);
 
   const handleOverlayClick = useCallback((e) => {
@@ -65,7 +88,7 @@ function BannerManage() {
   }, []);
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddBanner && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"

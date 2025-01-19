@@ -7,6 +7,7 @@ import AddFinancialDocument from "./AddFinancialDocument";
 import { useParams } from 'next/navigation';
 import { GetAllFinancialDocuments} from  "./FinancialDocumentsServerActions";
 import { Toaster, toast } from "react-hot-toast";
+import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function FinancialDocumentManage() {
   const [financialDocuments, setFinancialDocuments] = useState([]);
@@ -15,7 +16,26 @@ function FinancialDocumentManage() {
   const [selectedFinancialDocumentFile, setSelectedFinancialDocumentFile] = useState(null); // افزودن استیت جدید
   const params = useParams();
   const { ShopId } = params;
+  const [BGImage, setbGImage] = useState([]);
 
+    const getShopPanelImage = useCallback(async () => {
+      try {
+        if (!ShopId) {
+          console.error("نام یکتای فروشگاه موجود نیست.");
+          return;
+        }
+  
+        const response = await GetShopLogos(ShopId);
+  
+        setbGImage(response.logos.backgroundPanelUrl);
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      }
+    }, [ShopId]);
+  
+    useEffect(() => {
+      getShopPanelImage();
+    }, [ShopId]);
   // بهینه‌سازی refreshFinancialDocuments با استفاده از useCallback
   const refreshFinancialDocuments = useCallback(async () => {
     try {
@@ -78,7 +98,7 @@ function FinancialDocumentManage() {
   }, []);
 
   return (
-    <FormTemplate>
+    <FormTemplate BGImage={BGImage}>
       {isOpenAddFinancialDocument && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
