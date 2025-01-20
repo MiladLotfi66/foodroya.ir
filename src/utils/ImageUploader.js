@@ -4,22 +4,12 @@ import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
-/**
- * تنظیمات مربوط به آپلود تصاویر
- */
+
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp','image/jpg'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const MIN_SIZE = 10 * 1024; // 10KB
 
-/**
- * تبدیل تصویر به فرمت WebP و ذخیره آن در مسیر مشخص با بررسی حجم و نوع فایل
- * @param {Object} options - گزینه‌های آپلود
- * @param {Buffer} options.buffer - داده‌های باینری تصویر
- * @param {string} [options.uploadDir='uploads'] - مسیر نسبی برای ذخیره‌سازی تصویر (در داخل public)
- * @param {string} options.mimeType - نوع MIME فایل
- * @param {number} options.size - حجم فایل به بایت
- * @returns {Promise<string>} - مسیر دسترسی عمومی به تصویر ذخیره شده
- */
+
 export async function createImageUploader({ buffer, uploadDir = 'uploads', mimeType, size }) {
   try {
     // اعتبارسنجی نوع فایل
@@ -32,9 +22,6 @@ export async function createImageUploader({ buffer, uploadDir = 'uploads', mimeT
       throw new Error('حجم فایل بیش از حد مجاز (۵ مگابایت) است.');
     }
 
-    // if (size < MIN_SIZE) {
-    //   throw new Error('حجم فایل کمتر از حد مجاز (۱۰ کیلوبایت) است.');
-    // }
 
     // تعیین مسیر کامل پوشه آپلود
     const absoluteUploadDir = path.join(process.cwd(), 'public', uploadDir);

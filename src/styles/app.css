@@ -2229,10 +2229,6 @@ video {
   --tw-bg-opacity: 0.95;
 }
 
-.bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/chef2\.webp\'\)\] {
-  background-image: url('../../public/Images/jpg/chef2.webp');
-}
-
 .bg-\[url\(\'\.\.\/\.\.\/public\/Images\/jpg\/chefSign\.webp\'\)\] {
   background-image: url('../../public/Images/jpg/chefSign.webp');
 }
