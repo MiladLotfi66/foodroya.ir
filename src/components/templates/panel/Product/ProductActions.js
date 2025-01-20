@@ -3,16 +3,146 @@
 import mongoose from 'mongoose';
 import connectDB from "@/utils/connectToDB";
 import Product from "./Product";
+import Account from '../Account/Account';
+import GeneralLedger from '../FinancialDocument/GeneralLedger';
+
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid'; // برای تولید نام‌های یکتا
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-import { createImageUploader } from "@/utils/ImageUploader";
+// import { createImageUploader } from "@/utils/ImageUploader";
+import { createImageUploader2 } from "@/utils/ImageUploader";
 import { createAccount } from '../Account/accountActions';
 import Feature from './Feature';
 import { updateAccountBySession } from '../Account/accountActions';
 
-export async function GetAllProducts(shopId) {
+export async function DeleteProducts(productId,accountId) {
+  
+  await connectDB();
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  const user = await authenticateUser();
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+
+  try {
+    // یافتن محصول با حساب مرتبط
+    const product = await Product.findById(productId).populate('accountId').session(session);
+    if (!product) {
+      await session.abortTransaction();
+      session.endSession();
+      return { status: 404, message: 'محصول پیدا نشد.' };
+    }
+
+
+    // بررسی وجود تراکنش‌های مالی مرتبط با حساب محصول
+    const transactions = await GeneralLedger.find({ account:accountId }).session(session);
+    if (transactions.length > 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return { status: 400, message: 'حذف محصول ممکن نیست زیرا حساب مرتبط با آن دارای تراکنش‌های مالی است.' };
+    }
+
+    // حذف حساب مرتبط
+    const deletedAccount = await Account.findByIdAndDelete(accountId).session(session);
+    if (!deletedAccount) {
+      await session.abortTransaction();
+      session.endSession();
+      return { status: 500, message: 'خطایی در حذف حساب مرتبط رخ داد.' };
+    }
+
+    // حذف محصول
+    const deletedProduct = await Product.findByIdAndDelete(productId).session(session);
+    if (!deletedProduct) {
+      await session.abortTransaction();
+      session.endSession();
+      return { status: 500, message: 'خطایی در حذف محصول رخ داد.' };
+    }
+
+    // در صورت نیاز به حذف تصاویر مرتبط با محصول از سیستم فایل
+    if (deletedProduct.imagePath) { // فرض بر این است که فیلدی به نام imagePath وجود دارد
+      const imageFullPath = path.resolve('./public', deletedProduct.imagePath);
+      fs.unlink(imageFullPath, (err) => {
+        if (err) {
+          console.error('خطا در حذف تصویر محصول:', err);
+          // ممکن است بخواهید تصمیم بگیرید که آیا این خطا باعث لغو تراکنش شود یا خیر
+        }
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return { status: 200, message: 'محصول و حساب مرتبط با آن با موفقیت حذف شد.' };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error deleting product:", error);
+    return { status: 500, message: 'خطایی در حذف محصول رخ داد.' };
+  }
+}
+
+
+  export async function EnableProductAction(productId) {
+    await connectDB();
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+    try {
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        { status: 'فعال', updatedBy: user.id },
+        { new: true }
+      )
+        .populate('shop')
+        .populate('createdBy')
+        .populate('updatedBy')
+        .lean();
+      if (!updatedProduct) {
+        return { status: 404, message: 'محصول پیدا نشد.' };
+      }
+      const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
+      return { status: 200, message: 'محصول فعال شد.', product: plainProduct };
+    } catch (error) {
+      console.error("Error enabling product:", error);
+      return { status: 500, message: 'خطایی در فعال‌سازی محصول رخ داد.' };
+    }
+  }
+  export async function DisableProductAction(productId) {
+    await connectDB();
+    const user = await authenticateUser();
+  
+    if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+    try {
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        { status: 'غیرفعال', updatedBy: user.id },
+        { new: true }
+      )
+        .populate('shop')
+        .populate('createdBy')
+        .populate('updatedBy')
+        .lean();
+  
+      if (!updatedProduct) {
+        return { status: 404, message: 'محصول پیدا نشد.' };
+      }
+  
+      const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
+      return { status: 200, message: 'محصول غیرفعال شد.', product: plainProduct };
+    } catch (error) {
+      console.error("Error disabling product:", error);
+      return { status: 500, message: 'خطایی در غیرفعال‌سازی محصول رخ داد.' };
+    }
+  }
+  export async function GetAllProducts(shopId) {
     await connectDB();
     let user;
     try {
@@ -34,12 +164,6 @@ export async function GetAllProducts(shopId) {
       return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
     }
   }
-/**
- * Server Action برای افزودن محصول با استفاده از createImageUploader
- * @param {FormData} formData - داده‌های فرم شامل اطلاعات محصول و تصاویر
- * @returns {Promise<{ status: number, product?: object, message?: string }>}
- */
-
 export async function AddProductAction(formData) {
   
   await connectDB();
@@ -99,7 +223,7 @@ export async function AddProductAction(formData) {
         const buffer = Buffer.from(arrayBuffer);
         const mimeType = file.type;
         const size = file.size;
-        const imagePath = await createImageUploader({
+        const imagePath = await createImageUploader2({
           buffer,
           uploadDir,
           mimeType,
@@ -215,13 +339,8 @@ export async function AddProductAction(formData) {
     return { status: 500, message: error.message || 'خطایی در ایجاد محصول یا حساب رخ داد.' };
   }
 }
-
-
 export async function EditProductAction(formData, ShopId) {
-  console.log("EditProductAction - formData:", formData);
-
   await connectDB();
-
   let user;
   try {
     user = await authenticateUser();
@@ -229,17 +348,14 @@ export async function EditProductAction(formData, ShopId) {
     user = null;
     console.error("Authentication failed:", authError);
   }
-
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-
   // استخراج شناسه محصول از فرم دیتا
   const productId = formData.get('id');
   if (!productId) {
     return { status: 400, message: 'شناسه محصول الزامی است.' };
   }
-
   try {
     // بررسی وجود محصول
     const existingProduct = await Product.findById(productId).populate('Features');
@@ -293,7 +409,7 @@ export async function EditProductAction(formData, ShopId) {
           const buffer = Buffer.from(arrayBuffer);
           const mimeType = file.type;
           const size = file.size;
-          const imagePath = await createImageUploader({
+          const imagePath = await createImageUploader2({
             buffer,
             uploadDir,
             mimeType,
@@ -435,87 +551,3 @@ export async function EditProductAction(formData, ShopId) {
     return { status: 500, message: 'خطایی در پردازش درخواست رخ داد.' };
   }
 }
-
-
-
-
-  export async function DeleteProducts(productId) {
-    await connectDB();
-    const user = await authenticateUser();
-  
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
-    }
-  
-    try {
-      const deletedProduct = await Product.findByIdAndDelete(productId).lean();
-      if (!deletedProduct) {
-        return { status: 404, message: 'محصول پیدا نشد.' };
-      }
-      return { status: 200, message: 'محصول با موفقیت حذف شد.' };
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      return { status: 500, message: 'خطایی در حذف محصول رخ داد.' };
-    }
-  }
-  /**
-   * فعال‌سازی محصول
-   * @param {string} productId - شناسه محصول
-   * @returns {Object} - نتیجه عملیات
-   */
-  export async function EnableProductAction(productId) {
-    await connectDB();
-    const user = await authenticateUser();
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
-    }
-    try {
-      const updatedProduct = await Product.findByIdAndUpdate(
-        productId,
-        { status: 'فعال', updatedBy: user.id },
-        { new: true }
-      )
-        .populate('shop')
-        .populate('createdBy')
-        .populate('updatedBy')
-        .lean();
-      if (!updatedProduct) {
-        return { status: 404, message: 'محصول پیدا نشد.' };
-      }
-      const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
-      return { status: 200, message: 'محصول فعال شد.', product: plainProduct };
-    } catch (error) {
-      console.error("Error enabling product:", error);
-      return { status: 500, message: 'خطایی در فعال‌سازی محصول رخ داد.' };
-    }
-  }
-  export async function DisableProductAction(productId) {
-    await connectDB();
-    const user = await authenticateUser();
-  
-    if (!user) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
-    }
-    try {
-      const updatedProduct = await Product.findByIdAndUpdate(
-        productId,
-        { status: 'غیرفعال', updatedBy: user.id },
-        { new: true }
-      )
-        .populate('shop')
-        .populate('createdBy')
-        .populate('updatedBy')
-        .lean();
-  
-      if (!updatedProduct) {
-        return { status: 404, message: 'محصول پیدا نشد.' };
-      }
-  
-      const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
-      return { status: 200, message: 'محصول غیرفعال شد.', product: plainProduct };
-    } catch (error) {
-      console.error("Error disabling product:", error);
-      return { status: 500, message: 'خطایی در غیرفعال‌سازی محصول رخ داد.' };
-    }
-  }
-  

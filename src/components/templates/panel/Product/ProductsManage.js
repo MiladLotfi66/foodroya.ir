@@ -187,14 +187,17 @@ function ProductManage() {
   };
 
   // تابع حذف حساب (به‌روزرسانی شده برای هماهنگی با صفحه‌بندی)
-  const deleteFunc = async (accountId) => {
+  const deleteFunc = async (productId,accountId) => {
+    
+    
     try {
-      const response = await DeleteProducts(accountId);
+      const response = await DeleteProducts(productId,accountId);
       
       if (response.status === 200) {
-        handleDelete(); // حذف حساب از لیست
-        toast.success("حساب با موفقیت حذف شد.");
-      } else {
+        setAccounts((prevAccounts) => 
+          prevAccounts.filter(account => account._id !== accountId)
+      );
+} else {
         handleError(response.message || "خطا در حذف حساب.");
       }
     } catch (error) {
@@ -206,11 +209,6 @@ function ProductManage() {
 
   const handleError = useCallback((errorMessage) => { // افزودن تابع handleError
     toast.error(errorMessage);
-  }, []);
-
-  const handleDeleteProduct = useCallback((productId) => {
-    setProducts((prevProducts) => prevProducts.filter(product => product._id !== productId));
-    toast.success("محصول با موفقیت حذف شد.");
   }, []);
 
   const handleOverlayClick = useCallback((e) => {
@@ -359,7 +357,7 @@ function ProductManage() {
                           <button
                             aria-label="حذف"
                             className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                            onClick={() => deleteFunc(account._id)}
+                            onClick={() => deleteFunc(account.productId._id , account._id)}
                           >
                             <DeleteSvg />
                           </button>

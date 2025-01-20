@@ -56,7 +56,7 @@ const TagSelect = ({ control, errors }) => {
         const response = await AddTagAction(formData);
         if (response.status === 201) {
           const newTag = response.tag;
-          const newOption = { label: newTag.name, value: newTag.name };
+          const newOption = { label: newTag.name, value: newTag._id };
           setOptions((prev) => [...prev, newOption]);
           const updatedValue = [...(value || []), newOption];
           onChange(updatedValue);
