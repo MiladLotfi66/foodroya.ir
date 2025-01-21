@@ -4,12 +4,7 @@ import shops from "@/templates/Shop/shops";
 import Comment from "@/models/Comment";
 import Account from "@/templates/panel/Account/Account";
 import connectDB from "@/utils/connectToDB";
-import { cookies } from "next/headers";
-import fs from "fs";
-import path from "path";
 import ShopSchema from "@/utils/yupSchemas/ShopSchema";
-import { writeFile, unlink } from "fs/promises";
-import sharp from "sharp";
 import Users from "@/models/Users";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from 'next-auth/next';
@@ -19,6 +14,8 @@ import Contact from '../panel/Contact/Contact';
 import RoleInShop from '../panel/rols/RoleInShop';
 import rolePerimision from '../panel/rols/rolePerimision';
 import PriceTemplate from '../panel/PriceTemplate/PriceTemplate';
+import { processAndSaveImage } from '@/utils/ImageUploader';
+import { deleteOldImage } from '@/utils/ImageUploader';
 
 export const simplifyFollowers = (followers) => {
 
@@ -128,7 +125,6 @@ export async function GetShopCommentsArray(shopId) {
   try {
     // اتصال به دیتابیس
     await connectDB();
-
     // احراز هویت کاربر
     let userData;
     try {
@@ -171,38 +167,6 @@ export async function GetShopCommentsArray(shopId) {
     return { error: error.message, status: 500 };
   }
 }
-
-const processAndSaveImage = async (image, oldUrl) => {
-  if (image && typeof image !== "string") {
-    const buffer = Buffer.from(await image.arrayBuffer());
-    const now = process.hrtime.bigint(); // استفاده از میکروثانیه‌ها
-    const fileName = `${now}.webp`;
-    const filePath = path.join(
-      process.cwd(),
-      "/public/Uploads/Shops/" + fileName
-    );
-    const optimizedBuffer = await sharp(buffer)
-      .webp({ quality: 80 })
-      .toBuffer();
-    await writeFile(filePath, optimizedBuffer);
-
-    if (oldUrl) {
-      const oldFilePath = path.join(process.cwd(), "public", oldUrl);
-      try {
-        await unlink(oldFilePath);
-      } catch (unlinkError) {
-        if (unlinkError.code === "ENOENT") {
-          console.warn("File does not exist, skipping deletion", oldFilePath);
-        } else {
-          console.error("Error deleting old image", unlinkError);
-        }
-      }
-    }
-    return "/Uploads/Shops/" + fileName;
-  }
-  return image;
-};
-
 const hasUserAccess = async (userId) => {
   try {
     await connectDB();
@@ -314,15 +278,17 @@ export async function EditShop(ShopData) {
       BackGroundpanel,
     } = validatedData;
 
-    const LogoUrl = await processAndSaveImage(Logo, Shop.LogoUrl);
-    const TextLogoUrl = await processAndSaveImage(TextLogo, Shop.TextLogoUrl);
+    const LogoUrl = await processAndSaveImage(Logo, Shop.LogoUrl,'Uploads/Shops');
+    const TextLogoUrl = await processAndSaveImage(TextLogo, Shop.TextLogoUrl,'Uploads/Shops');
     const BackGroundShopUrl = await processAndSaveImage(
       BackGroundShop,
-      Shop.BackGroundShopUrl
+      Shop.BackGroundShopUrl,
+      'Uploads/Shops'
     );
     const BackGroundpanelUrl = await processAndSaveImage(
       BackGroundpanel,
-      Shop.BackGroundpanelUrl
+      Shop.BackGroundpanelUrl,
+      'Uploads/Shops'
     );
 
     const updatedShop = {
@@ -396,10 +362,10 @@ export async function AddShopServerAction(ShopData) {
     } = validatedData;
 
     // پردازش و ذخیره تصاویر
-    const LogoUrl = await processAndSaveImage(Logo);
-    const TextLogoUrl = await processAndSaveImage(TextLogo);
-    const BackGroundShopUrl = await processAndSaveImage(BackGroundShop);
-    const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel);
+    const LogoUrl = await processAndSaveImage(Logo,null,'Uploads/Shops');
+    const TextLogoUrl = await processAndSaveImage(TextLogo,null,'Uploads/Shops');
+    const BackGroundShopUrl = await processAndSaveImage(BackGroundShop,null,'Uploads/Shops');
+    const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel,null,'Uploads/Shops');
 
     // ایجاد فروشگاه جدید با استفاده از نشست تراکنش
     const newShop = new shops({
@@ -953,13 +919,9 @@ async function DeleteShops(ShopID) {
       userData = null;
       console.log("Authentication failed:", authError);
     }
-
   if (!userData) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  
-    
-
     const Shop = await shops.findById(ShopID);
 
     if (!Shop) {
@@ -969,19 +931,6 @@ async function DeleteShops(ShopID) {
     if (!(await hasUserAccess(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
-
-    const LogoUrl = path.join(process.cwd(), "public", Shop.LogoUrl);
-    const TextLogoUrl = path.join(process.cwd(), "public", Shop.TextLogoUrl);
-    const BackGroundShopUrl = path.join(
-      process.cwd(),
-      "public",
-      Shop.BackGroundShopUrl
-    );
-    const BackGroundpanelUrl = path.join(
-      process.cwd(),
-      "public",
-      Shop.BackGroundpanelUrl
-    );
 
       // به‌روزرسانی حذف امن
       const result = await shops.updateOne(
@@ -999,33 +948,28 @@ async function DeleteShops(ShopID) {
         throw new Error("فروشگاه مورد نظر حذف نشد");
       }
 
-    fs.unlink(LogoUrl, (err) => {
-      if (err) {
-        console.error("خطا در حذف فایل تصویر:", err);
-        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+    const deleteStatus=deleteOldImage(Shop.LogoUrl)
+    if (deleteStatus.status!==200) {
+      console.error("خطا در حذف فایل تصویر:", err);
+      throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+     }
+ 
+     const deleteStatus2=deleteOldImage(Shop.TextLogoUrl)
+     if (deleteStatus2.status!==200) {
+       console.error("خطا در حذف فایل تصویر:", err);
+       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+      }  
+         const deleteStatus3=deleteOldImage(Shop.BackGroundShopUrl)
+     if (deleteStatus3.status!==200) {
+       console.error("خطا در حذف فایل تصویر:", err);
+       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+      }  
+             const deleteStatus4=deleteOldImage(Shop.BackGroundpanelUrl)
+     if (deleteStatus4.status!==200) {
+       console.error("خطا در حذف فایل تصویر:", err);
+       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
       }
-    });
-
-    fs.unlink(TextLogoUrl, (err) => {
-      if (err) {
-        console.error("خطا در حذف فایل تصویر:", err);
-        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-      }
-    });
-
-    fs.unlink(BackGroundShopUrl, (err) => {
-      if (err) {
-        console.error("خطا در حذف فایل تصویر:", err);
-        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-      }
-    });
-
-    fs.unlink(BackGroundpanelUrl, (err) => {
-      if (err) {
-        console.error("خطا در حذف فایل تصویر:", err);
-        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-      }
-    });
+ 
 
     return { message: "فروشگاه و فایل تصویر با موفقیت حذف شدند", status: 200 };
   } catch (error) {

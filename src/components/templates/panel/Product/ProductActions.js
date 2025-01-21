@@ -5,13 +5,8 @@ import connectDB from "@/utils/connectToDB";
 import Product from "./Product";
 import Account from '../Account/Account';
 import GeneralLedger from '../FinancialDocument/GeneralLedger';
-
-import path from 'path';
-import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid'; // برای تولید نام‌های یکتا
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-// import { createImageUploader } from "@/utils/ImageUploader";
-import { createImageUploader2 } from "@/utils/ImageUploader";
+import { createImageUploader2, deleteOldImages } from "@/utils/ImageUploader";
 import { createAccount } from '../Account/accountActions';
 import Feature from './Feature';
 import { updateAccountBySession } from '../Account/accountActions';
@@ -63,15 +58,18 @@ export async function DeleteProducts(productId,accountId) {
       return { status: 500, message: 'خطایی در حذف محصول رخ داد.' };
     }
 
-    // در صورت نیاز به حذف تصاویر مرتبط با محصول از سیستم فایل
-    if (deletedProduct.imagePath) { // فرض بر این است که فیلدی به نام imagePath وجود دارد
-      const imageFullPath = path.resolve('./public', deletedProduct.imagePath);
-      fs.unlink(imageFullPath, (err) => {
-        if (err) {
-          console.error('خطا در حذف تصویر محصول:', err);
-          // ممکن است بخواهید تصمیم بگیرید که آیا این خطا باعث لغو تراکنش شود یا خیر
-        }
-      });
+    // حذف تصاویر مرتبط با محصول
+    if (deletedProduct.images && Array.isArray(deletedProduct.images) && deletedProduct.images.length > 0) { 
+      const deleteStatus = await deleteOldImages(deletedProduct.images);
+      if (deleteStatus.status !== 200) {
+        console.error('خطا در حذف تصاویر محصول:', deleteStatus.message);
+        // تصمیم‌گیری در مورد ادامه تراکنش یا لغو آن
+        await session.abortTransaction();
+        session.endSession();
+        return { status: 500, message: 'خطایی در حذف تصاویر رخ داد.' };
+      } else {
+        console.log(deleteStatus.message);
+      }
     }
 
     await session.commitTransaction();
@@ -214,7 +212,7 @@ export async function AddProductAction(formData) {
       throw new Error(`حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.`);
     }
 
-    const uploadDir = path.join('Uploads', 'Shop', 'images', ShopId, 'Products');
+    const uploadDir = (`Uploads/Shop/images/${ShopId}/Products`);
 
     // آپلود تصاویر
     const uploadPromises = newImages.map(async (file) => {
@@ -401,7 +399,7 @@ export async function EditProductAction(formData, ShopId) {
       }
 
       // آپلود تصاویر جدید
-      const uploadDir = path.join('Uploads', 'Shop', 'images', ShopId, 'Products');
+      const uploadDir = (`Uploads/Shop/images/${ShopId}/Products`);
 
       const uploadPromises = newImages.map(async (file) => {
         try {

@@ -2,13 +2,9 @@
 
 import Banner from "@/templates/panel/Banner/Banner";
 import connectDB from "@/utils/connectToDB";
-import fs from 'fs';
-import path from 'path';
-import sharp from 'sharp';
-import { promisify } from 'util';
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
-import { writeFile, unlink } from "fs/promises";
 import BannerSchema from "@/utils/yupSchemas/BannerSchima";
+import { deleteOldImage, processAndSaveImage } from "@/utils/ImageUploader";
 
 async function BannerServerEnableActions(BannerID) {
   try {
@@ -118,31 +114,28 @@ async function DeleteBanners(BannerID) {
     // یافتن بنر با استفاده از BannerID
     const banner = await Banner.findById(BannerID);
     if (!banner) {
-      throw new Error("بنر مورد نظر یافت نشد");
+      return { message: "بنر مورد نظر یافت نشد", status: 500 };
+
     }
 
     // مسیر فایل تصویر بنر
-    const imagePath = path.join(process.cwd(), "public", banner.imageUrl);
 
     // حذف بنر از دیتابیس
     const result = await Banner.deleteOne({ _id: BannerID });
     if (result.deletedCount === 0) {
-      throw new Error("بنر مورد نظر حذف نشد");
+      return { message: "بنر مورد نظر حذف نشد", status: 500 };
     }
 
-    // حذف فایل تصویر بنر
-    // await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
-    fs.unlink(imagePath, (err) => {
-      if (err) {
-        console.error("خطا در حذف فایل تصویر:", err);
-        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-      }
-    });
+  const deleteStatus=deleteOldImage(banner.imageUrl)
+   if (deleteStatus.status===200) {
+  return { message: "بنر و فایل تصویر با موفقیت حذف شدند", status: 200 };
+}else{
+  return { message: "خطای سرور، حذف بنر انجام نشد", status: 500 };
+}
 
-    return { message: "بنر و فایل تصویر با موفقیت حذف شدند", status: 200 };
   } catch (error) {
     console.error("خطا در حذف بنر:", error);
-    throw new Error("خطای سرور، حذف بنر انجام نشد");
+    return { message: "خطای سرور، حذف بنر انجام نشد", status: 500 };
   }
 }
 
@@ -153,42 +146,7 @@ function formDataToObject(formData) {
   });
   return object;
 }
-
-// const writeFile = promisify(fs.writeFile);
-const mkdir = promisify(fs.mkdir);
-const access = promisify(fs.access);
-
-const processAndSaveImage = async (image, shopId,directory) => {
-  if (image && typeof image !== "string") {
-    const buffer = Buffer.from(await image.arrayBuffer());
-    const now = process.hrtime.bigint(); 
-    const fileName = `${now}.webp`;
-    const directoryPath = path.join(process.cwd(), `public/Uploads/Shop/${shopId}/${directory}/`);
-    const filePath = path.join(directoryPath, fileName);
-
-    // ایجاد دایرکتوری در صورت عدم وجود
-    try {
-      await access(directoryPath);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        await mkdir(directoryPath, { recursive: true });
-      } else {
-        throw error;
-      }
-    }
-
-    const optimizedBuffer = await sharp(buffer)
-      .webp({ quality: 80 })
-      .toBuffer();
-
-    await writeFile(filePath, optimizedBuffer);
-    return `/Uploads/Shop/${shopId}/${directory}/` + fileName;
-  }
-  return image;
-};
-
 export async function AddBannerAction(data) {
-console.log("addbanner");
 
   try {
     await connectDB();
@@ -216,7 +174,7 @@ console.log("addbanner");
     } = validatedData;
 
     
-    const imageUrl = await processAndSaveImage(BannerImage,ShopId,"banners");
+    const imageUrl = await processAndSaveImage(BannerImage,null,`${ShopId}/banners`,);
 
     // ایجاد بنر جدید با آی‌دی فروشگاه
     const newBanner = new Banner({
@@ -230,7 +188,6 @@ console.log("addbanner");
       BannerLink,
       ShopId, // اضافه کردن آی‌دی فروشگاه
     });
-console.log("save",newBanner);
 
     await newBanner.save();
 
@@ -240,8 +197,6 @@ console.log("save",newBanner);
     return { status: 500, message: error.message };
   }
 }
-
-
 export async function EditBannerAction(data,ShopId) {
   try {
     await connectDB();
@@ -280,12 +235,12 @@ export async function EditBannerAction(data,ShopId) {
    let imageUrl
     if (typeof(BannerImage)!=="string") {
       
-   imageUrl = await processAndSaveImage(BannerImage,ShopId,"banners");
+   imageUrl = await processAndSaveImage(BannerImage,null,`${ShopId}/banners`,);
    try {
-    
-    await unlink(path.join(process.cwd(), 'public', banner.imageUrl));
-      } catch (unlinkError) {
-    console.error("Error deleting old image", unlinkError);
+   deleteOldImage(banner.imageUrl)
+   
+      } catch {
+    console.error("Error deleting old image");
   }
 }else {
    imageUrl =BannerImage
@@ -315,7 +270,6 @@ export async function EditBannerAction(data,ShopId) {
     return { status: 500, message: error.message };
   }
 }
-
 
 export {
   DeleteBanners,

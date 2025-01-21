@@ -3,6 +3,7 @@ import CompressionPlugin from 'compression-webpack-plugin';
 
 const nextConfig = {
   images: {
+    domains: ['c716244.parspack.net'], // افزودن دامنه مورد نظر
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
