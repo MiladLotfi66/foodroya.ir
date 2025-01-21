@@ -4,12 +4,11 @@ import DatePicker from "react-multi-date-picker";
 import { Calendar } from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
-
 import BirtdaySvg from "@/module/svgs/BirtdaySvg";
 import { useForm, Controller } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import NextImage from "next/image";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import { useSession } from "next-auth/react";
@@ -19,10 +18,10 @@ import {
   ChangeSecurityQuestion,
 } from "@/components/signinAndLogin/Actions/UsersServerActions";
 import usericone from "@/public/Images/jpg/user.webp";
+
 import PencilIcon from "@/module/svgs/PencilIcon";
 import Emailsvg from "@/module/svgs/Emailsvg";
 import keySvg from "@/module/svgs/keySvg";
-
 import Locksvg from "@/module/svgs/Locksvg";
 import Modal from "./Modal";
 import LocationSvg from "@/module/svgs/location";
@@ -33,7 +32,6 @@ import Link from "next/link";
 import { GetUserShopsCount } from "@/templates/Shop/ShopServerActions";
 import { GetUserFollowingShops,GetUserShops } from "@/templates/Shop/ShopServerActions";
 import AvatarGroupTailwind from "@/module/User/AvatarGroupTailwind.js";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 
 function ProfilePage() {
   const { data: session } = useSession();
@@ -44,7 +42,6 @@ function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState(usericone);
   const [base64Image, setBase64Image] = useState(null);
   const [userShopCounter, setUserShopCounter] = useState(0);
-  const [BGImage, setbGImage] = useState([]);
 
   const [editField, setEditField] = useState(null);
   const [isEditingSecurityQuestion, setIsEditingSecurityQuestion] =
@@ -73,24 +70,6 @@ function ProfilePage() {
     },
   });
   
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
 
   const securityQuestionForm = useForm({
     mode: "all",
@@ -182,17 +161,17 @@ function ProfilePage() {
       }
 
       // پردازش userImage مشابه قبل
-      if (
-        profileData.userImage &&
-        profileData.userImage.startsWith("data:image/")
-      ) {
-        profileData.userImage = profileData.userImage.replace(
-          /^data:image\/\w+;base64,/,
-          ""
-        );
-      } else {
-        delete profileData.userImage;
-      }
+      // if (
+      //   profileData.userImage &&
+      //   profileData.userImage.startsWith("data:image/")
+      // ) {
+      //   profileData.userImage = profileData.userImage.replace(
+      //     /^data:image\/\w+;base64,/,
+      //     ""
+      //   );
+      // } else {
+      //   delete profileData.userImage;
+      // }
 
       // حذف securityQuestion اگر تنظیم شده است
       if (user?.securityQuestion?.question && user?.securityQuestion?.answer) {
@@ -326,7 +305,7 @@ function ProfilePage() {
         )}
       </Head>
 
-      <FormTemplate BGImage={BGImage}>
+      <FormTemplate >
       <main>
           <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-16 p-8 md:p-12 max-w-4xl mx-auto">
             <header className="flex justify-between items-center mb-8">
@@ -422,7 +401,6 @@ function ProfilePage() {
                 </div>
               </section>
               <div className="flex justify-between items-center">
-                {/* غرفه های دنبال شده */}
 
                 <Link href="/Shop/allShop" className="mt-8 gap-2 first-line:flex-col text-center items-center justify-center">
                   <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">

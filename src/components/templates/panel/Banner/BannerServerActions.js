@@ -174,7 +174,7 @@ export async function AddBannerAction(data) {
     } = validatedData;
 
     
-    const imageUrl = await processAndSaveImage(BannerImage,null,`${ShopId}/banners`,);
+    const imageUrl = await processAndSaveImage(BannerImage,null,`/Uploads/Shop/images/${ShopId}/banners`,);
 
     // ایجاد بنر جدید با آی‌دی فروشگاه
     const newBanner = new Banner({
@@ -235,7 +235,7 @@ export async function EditBannerAction(data,ShopId) {
    let imageUrl
     if (typeof(BannerImage)!=="string") {
       
-   imageUrl = await processAndSaveImage(BannerImage,null,`${ShopId}/banners`,);
+   imageUrl = await processAndSaveImage(BannerImage,null,`/Uploads/Shop/images/${ShopId}/banners`,);
    try {
    deleteOldImage(banner.imageUrl)
    

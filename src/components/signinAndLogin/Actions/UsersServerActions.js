@@ -6,51 +6,119 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp'; // ایمپورت کتابخانه‌ی Sharp
 import bcrypt from 'bcryptjs';
+import { processAndSaveImage } from "@/utils/ImageUploader";
 
-export async function saveBase64Image(base64String, userId) {
-  return new Promise(async (resolve, reject) => {
+
+
+
+export async function UpdateUserProfile(profileData) {
+  try {
+    // اتصال به پایگاه داده
+    await connectDB();
+
+    // احراز هویت کاربر
+    let userData;
     try {
-      let data;
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
 
-      // بررسی وجود پیشوند
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    const userId = userData.id;
+
+    // پیدا کردن کاربر در پایگاه داده
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("کاربر یافت نشد");
+    }
+
+    // اگر تصویر جدید ارسال شده است، آن را پردازش و ذخیره کنید
+    if (profileData.userImage) {
+      const base64String = profileData.userImage;
+
+      // بررسی و استخراج داده‌های base64
       const matches = base64String.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/);
       if (matches && matches.length === 3) {
-        data = matches[2];
+        const mimeType = matches[1];
+        const data = matches[2];
+        const buffer = Buffer.from(data, 'base64');
+
+        // ایجاد یک شیء مشابه فایل برای ارسال به تابع processAndSaveImage
+        const mockImage = {
+          type: mimeType,
+          size: buffer.length,
+          async arrayBuffer() {
+            return buffer;
+          }
+        };
+
+        const uploadDir = 'Uploads/userImages';
+
+        // آپلود تصویر به S3 و دریافت URL جدید
+        const imageURL = await processAndSaveImage(mockImage, user.userImage, uploadDir);
+        profileData.userImage = imageURL;
       } else {
-        // اگر پیشوند وجود ندارد، فرض می‌کنیم که تنها داده‌ی base64 ارسال شده است
-        data = base64String;
+        throw new Error("فرمت تصویر ارسال شده نامعتبر است.");
       }
-
-      const buffer = Buffer.from(data, 'base64');
-
-      // تبدیل تصویر به فرمت WebP با استفاده از Sharp
-      const webpBuffer = await sharp(buffer)
-        .webp()
-        .toBuffer();
-
-      // ایجاد مسیر ذخیره‌سازی
-      const uploadDir = path.join(process.cwd(), 'public', 'Uploads', 'userImages');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      // ایجاد نام منحصربه‌فرد برای فایل با پسوند .webp
-      const fileName = `${userId}-${Date.now()}.webp`;
-      const filePath = path.join(uploadDir, fileName);
-
-      // ذخیره‌سازی فایل WebP
-      fs.writeFile(filePath, webpBuffer, (err) => {
-        if (err) {
-          return reject(err);
-        }
-        // برگرداندن مسیر نسبی تصویر
-        const relativePath = `/Uploads/userImages/${fileName}`;
-        resolve(relativePath);
-      });
-    } catch (error) {
-      reject(error);
     }
-  });
+
+    // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
+    const allowedUpdates = [
+      "name",
+      "userImage",
+      "email",
+      "userUniqName",
+      "phone",
+      "bio",
+      "address",
+      "dateOfBirth",
+      "twoFactorEnabled",
+      "securityQuestion",
+    ];
+
+    allowedUpdates.forEach((field) => {
+      if (profileData[field] !== undefined) {
+        if (field === "dateOfBirth") {
+          const date = new Date(profileData[field]);
+          if (isNaN(date.getTime())) {
+            throw new Error("تاریخ تولد نامعتبر است.");
+          }
+          if (date >= new Date()) {
+            throw new Error("تاریخ تولد باید در گذشته باشد.");
+          }
+          user[field] = date;
+        } else if (field === "securityQuestion") {
+          const { question, answer } = profileData.securityQuestion;
+          if (!question || !answer) {
+            throw new Error("سوال و پاسخ امنیتی نمی‌توانند خالی باشند.");
+          }
+
+          // اطمینان حاصل کنید که securityQuestion تعریف شده است
+          if (!user.securityQuestion) {
+            user.securityQuestion = {}; // مقداردهی اولیه به عنوان شیء خالی
+          }
+
+          user.securityQuestion.question = question;
+          user.securityQuestion.answer = answer; // هش شدن در مدل
+        } else {
+          user[field] = profileData[field];
+        }
+      }
+    });
+
+    // ذخیره تغییرات در پایگاه داده
+    await user.save();
+
+    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200 };
+  } catch (error) {
+    console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
+    return { error: error.message, status: 500 };
+  }
 }
 
 export async function GetAllUsersIdNameImageUniqName() {
@@ -155,103 +223,6 @@ export async function GetUserData() {
 
   } catch (error) {
     console.error("Error fetching user:", error);
-    return { error: error.message, status: 500 };
-  }
-}
-
-export async function UpdateUserProfile(profileData) {
-  console.log("Received profile data:", profileData);
-  
-  try {
-    // اتصال به پایگاه داده
-    await connectDB();
-
-    // احراز هویت کاربر
-    let userData;
-    try {
-      userData = await authenticateUser();
-    } catch (authError) {
-      userData = null;
-      console.log("Authentication failed:", authError);
-    }
-
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-  
-
-    const userId = userData.id;
-
-    // پیدا کردن کاربر در پایگاه داده
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("کاربر یافت نشد");
-    }
-
-    // اگر تصویر جدید ارسال شده است، آن را پردازش کنید
-    if (profileData.userImage) {
-      const imagePath = await saveBase64Image(profileData.userImage, userId);
-      profileData.userImage = imagePath;
-
-      // (اختیاری) حذف تصویر قبلی از سرور، اگر نیاز دارید
-      if (user.userImage) {
-        const oldImagePath = path.join(process.cwd(), 'public', user.userImage);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-    }
-
-    // به‌روزرسانی فیلدهای پروفایل با داده‌های جدید
-    const allowedUpdates = [
-      "name",
-      "userImage",
-      "email",
-      "userUniqName",
-      "phone",
-      "bio",
-      "address",
-      "dateOfBirth",
-      "twoFactorEnabled",
-      "securityQuestion",
-    ];
-
-    allowedUpdates.forEach((field) => {
-      if (profileData[field] !== undefined) {
-        if (field === "dateOfBirth") {
-          const date = new Date(profileData[field]);
-          if (isNaN(date.getTime())) {
-            throw new Error("تاریخ تولد نامعتبر است.");
-          }
-          if (date >= new Date()) {
-            throw new Error("تاریخ تولد باید در گذشته باشد.");
-          }
-          user[field] = date;
-        } else if (field === "securityQuestion") {
-          const { question, answer } = profileData.securityQuestion;
-          if (!question || !answer) {
-            throw new Error("سوال و پاسخ امنیتی نمی‌توانند خالی باشند.");
-          }
-
-          // اطمینان حاصل کنید که securityQuestion تعریف شده است
-          if (!user.securityQuestion) {
-            user.securityQuestion = {}; // مقداردهی اولیه به عنوان شیء خالی
-          }
-
-          user.securityQuestion.question = question;
-          user.securityQuestion.answer = answer; // هش شدن در مدل
-        } else {
-          user[field] = profileData[field];
-        }
-      }
-    });
-
-    // ذخیره تغییرات در پایگاه داده
-    await user.save();
-
-    return { message: "پروفایل با موفقیت به‌روزرسانی شد", status: 200 };
-  } catch (error) {
-    console.error("خطا در به‌روزرسانی پروفایل کاربر:", error.message);
     return { error: error.message, status: 500 };
   }
 }
