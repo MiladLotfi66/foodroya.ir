@@ -2,20 +2,23 @@
 
 import Image from "next/image";
 import Basketsvg from "@/module/svgs/Basketsvg";
-import calbas from "@/public/Images/jpg/Sausage.webp";
 import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
 import { useEffect, useRef, useState } from "react";
-import ShareSvg from "../svgs/ShareSvg";
-import EditSvg from "../svgs/EditSvg";
-import DeleteSvg from "../svgs/DeleteSvg";
-import Threedot from "../svgs/threedot";
+function ProductCard({ product }) {
+  console.log("product",product);
+  
+  // دریافت prop product
+  if (!product || !product.title) { // بررسی وجود پراپ و حداقل یک فیلد ضروری
+    return <div>محصول نامعتبر</div>;
+  }
 
-function ProductCard() {
+
   const containerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null); // مرجع برای منو
   const position = { top: 0, left: 0 };
+  const [quantity, setQuantity] = useState(1);
 
   const handleMenuToggle = () => {
     setIsOpen(!isOpen);
@@ -34,56 +37,25 @@ function ProductCard() {
     };
   }, []);
 
-//////////////////////// actions //////////////////////////////
+  const handleDecrease = () => {
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  };
 
+  const handleIncrease = () => {
+    setQuantity((prev) => prev + 1);
+  };
 
+  const handleAddToCart = () => {
+    onAddToCart(product?.id, quantity);
+  };
 
-
+  //////////////////////// actions //////////////////////////////
 
   return (
-    <div ref={containerRef} className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl">
-              <div className="absolute w-4 h-4 md:w-8 md:h-8 z-[46] p-2">
-              <button  
-              aria-label="product card Menu Button"
-              onClick={handleMenuToggle}>
-              <Threedot/>
-
-        </button>
-        {isOpen && (
-          <div
-            className="absolute w-[20%] h-[10%] z-[46]"
-            style={{ top: position.top +30, left: position.left +20}}
-            ref={menuRef} // اضافه کردن مرجع به منو
-          >
-            <div className="relative group flex items-center">
-            <ul className="relative top-full w-36 sm:w-40 md:w-48 lg:w-56 xl:w-64 space-y-4 text-zinc-700 bg-white text-sm md:text-base border-t-[3px] border-t-orange-300 rounded-xl tracking-normal shadow-normal transition-all dark:text-white dark:bg-zinc-700/90 p-6 pt-[21px] child:transition-colors child-hover:text-orange-300">
-            <div
-                className="cursor-pointer flex gap-2 items-center"
-                onClick={() => console.log("ویرایش")}
-              >
-                <EditSvg />
-                <p>ویرایش</p>
-              </div>
-              <div
-                className="cursor-pointer flex gap-2 items-center"
-                onClick={() => console.log("حذف")}
-              >
-                <DeleteSvg />
-                <p>حذف</p>
-              </div>
-
-              <div
-                className="cursor-pointer flex gap-2 items-center"
-                onClick={() => console.log("ارسال")}
-              >
-                <ShareSvg />
-                <p>ارسال</p>
-              </div>
-            </ul>
-            </div>
-          </div>
-        )}
-      </div>
+    <div
+      ref={containerRef}
+      className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl"
+    >
       <div className="hidden">
         <Basketsvg />
         <Chatsvg />
@@ -91,21 +63,39 @@ function ProductCard() {
       </div>
       <div className="relative z-0 mb-2 md:mb-5">
         <Image
-          className=" w-32 mx-auto md:w-auto h-auto rounded-md"
-          src={calbas}
+          className=" w-32 h-32 mx-auto md:w-44 md:h-44 rounded-md"
+          src={product?.images[0]}
           alt="signalmobile procuct"
           width={100}
           height={100}
           quality={50}
           // priority={true}
         />
-        <span className="absolute shadow-normal top-1.5 left-1.5 block h-[30px] bg-orange-400 text-white dark:text-zinc-700 px-2.5 md:px-3.5 py-[2px] rounded-full text-xs[24px] md:text-base/[32px] font-DanaDemiBold ">
-          12 %
-        </span>
       </div>
-      <h4 className="text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
-        کالباس فیله ی بوقلمون 500 گرمی با بهترین مواد و بهترین کیفیت
+      <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
+        {product?.title}{" "}
       </h4>
+       <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
+        {product?.stock}{" "}{product?.unit}
+      </h4> 
+             {/* نمایش تگ‌ها */}
+      {product.tags && product.tags.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-1 mt-1">
+          {product.tags.map((tag) => (
+            <span
+              key={tag._id}
+              className="bg-teal-100 dark:bg-teal-700 text-teal-800 dark:text-teal-200 text-xs md:text-sm px-2 py-0.5 rounded-full"
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
+        {product?.description}{" "}
+      </h4> */}
+
       <div className="flex flex-col mt-1.5 md:mt-2.5 gap-2.5 font-Dana text-xs">
         <div className="">
           <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
@@ -120,28 +110,35 @@ function ProductCard() {
           <span className="text-xs md:text-sm tracking-tighter">تومان</span>
         </div>
       </div>
-      <div className="flex justify-between items-center gap-1.5">
-        <div className="flexCenter">
-          <div className="flexCenter">
-            <span className="flexCenter block h-[26px] w-[26px] md:h-9 md:w-9 text-gray-400 bg-gray-100 dark:bg-zinc-800 rounded-full hover:text-white dark:hover:bg-emerald-600 hover:bg-teal-600 cursor-pointer transition-all">
-              <svg className="h-4 w-4 md:h-[22px] md:w-[22px]">
-                <use href="#Basketsvg"></use>
-              </svg>
-            </span>
-          </div>
-          <div className="flexCenter">
-            <span className="flexCenter block h-[26px] w-[26px] md:h-9 md:w-9 text-gray-400 bg-gray-100 dark:bg-zinc-800 rounded-full hover:text-white dark:hover:bg-emerald-600 hover:bg-teal-600 cursor-pointer transition-all">
-              <svg className="h-4 w-4 md:h-[22px] md:w-[22px]">
-                <use href="#Chatsvg"></use>
-              </svg>
-            </span>
-          </div>
+           {/* بخش انتخاب تعداد و افزودن به سبد خرید */}
+           <div className="flex flex-col gap-2 p-2 md:p-6">
+        {/* انتخاب تعداد */}
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={handleDecrease}
+            className="px-3 py-1 bg-gray-200 dark:bg-zinc-800 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
+          >
+            -
+          </button>
+          <span className="text-gray-700 dark:text-white">{quantity}{" "}{product?.unit}</span>
+          <button
+            onClick={handleIncrease}
+            className="px-3 py-1 bg-gray-200 dark:bg-zinc-800 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
+          >
+            +
+          </button>
         </div>
-        <div className="text-orange-300 md:text-[22px] leading-[0px]">
-          <svg className="h-8 md:h-10 md:w-10 w-8 ">
-            <use href="#Star"></use>
+
+        {/* دکمه افزودن به سبد خرید */}
+        <button
+          onClick={handleAddToCart}
+          className="flexCenter w-full bg-blue-500 hover:bg-blue-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-colors"
+        >
+          افزودن به سبد خرید
+          <svg className="h-4 w-4 md:h-[22px] md:w-[22px] m-2">
+            <use href="#Basketsvg"></use>
           </svg>
-        </div>
+        </button>
       </div>
     </div>
   );

@@ -9,7 +9,33 @@ import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import { createImageUploader2, deleteOldImages } from "@/utils/ImageUploader";
 import { createAccount } from '../Account/accountActions';
 import Feature from './Feature';
+import Tag from './Tag';
 import { updateAccountBySession } from '../Account/accountActions';
+import superjson from 'superjson';
+
+function simplifyData(data) {
+  if (Array.isArray(data)) {
+    return data.map(item => simplifyData(item));
+  } else if (data && typeof data === 'object') {
+    const simplified = {};
+    for (const key in data) {
+      if (!data.hasOwnProperty(key)) continue;
+      let value = data[key];
+      
+      if (mongoose.Types.ObjectId.isValid(value)) {
+        value = value.toString();
+      } else if (Buffer.isBuffer(value)) {
+        value = value.toString('base64'); // یا هر فرمت دیگری که مناسب است
+      } else if (Array.isArray(value) || (value && typeof value === 'object')) {
+        value = simplifyData(value);
+      }
+      
+      simplified[key] = value;
+    }
+    return simplified;
+  }
+  return data;
+}
 
 export async function DeleteProducts(productId,accountId) {
   
@@ -161,7 +187,86 @@ export async function DeleteProducts(productId,accountId) {
       console.error("Error fetching products:", error);
       return { status: 500, message: 'خطایی در دریافت محصولها رخ داد.' };
     }
-  }
+  } 
+  export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
+    await connectDB();
+  if (!shopId) {
+    return { status: 400, message: 'شناسه فروشگاه الزامی است.' };
+}
+
+// اعتبارسنجی پارامترهای صفحه‌بندی
+page = parseInt(page, 10);
+limit = parseInt(limit, 10);
+
+if (isNaN(page) || page < 1) {
+    page = 1;
+}
+
+if (isNaN(limit) || limit < 1) {
+    limit = 10;
+}
+
+try {
+  const skip = (page - 1) * limit;
+
+  // اجرای دو عملیات به صورت موازی برای بهره‌وری بیشتر
+  const [products, totalItems] = await Promise.all([
+      Product.find({ ShopId: shopId })
+      .populate({
+        path: 'tags', // پر کردن تگ‌ها
+        select: 'name', // فیلدهای مورد نظر را جایگزین کنید
+    })
+    .populate({
+      path: 'Features', // پر کردن ویژگی‌ها
+      select: 'featureKey value', // فیلدهای مورد نظر را جایگزین کنید
+  })
+  .populate({
+    path: 'ShopId', // پر کردن فروشگاه
+    select: 'ShopName ShopUniqueName LogoUrl', // فیلدهای مورد نظر را جایگزین کنید
+})
+.populate({
+  path: 'accountId', // پر کردن حساب کاربری
+  select: 'balance', // فیلدهای مورد نظر را جایگزین کنید
+})
+.populate({
+  path: 'pricingTemplate', // پر کردن قالب قیمت‌گذاری
+  select: 'defaultFormula pricingFormulas', // فیلدهای مورد نظر را جایگزین کنید
+})
+.sort({ createdAt: -1 }).lean() // مرتب‌سازی از جدید به قدیمی
+          .skip(skip)
+          .limit(limit).lean(),
+      Product.countDocuments({ ShopId: shopId }) // شمارش کل آیتم‌ها برای محاسبه صفحات
+  ]);
+
+  const totalPages = Math.ceil(totalItems / limit);
+
+  const responseData = {
+    products,
+    pagination: {
+      totalItems,
+      totalPages,
+      currentPage: page,
+      limit,
+    },
+  };
+
+  // ساده‌سازی داده‌ها
+  const simplifiedData = simplifyData(responseData);
+
+  // سریالیزه کردن داده‌ها با استفاده از superjson
+  const serialized = superjson.serialize(simplifiedData);
+
+  return {
+    status: 200,
+    data: serialized.json, // ارسال داده سریالیزه شده
+    meta: serialized.meta, // ارسال متا دیتا در صورت نیاز
+  };
+} catch (error) {
+  console.error("Error fetching products:", error);
+  return { status: 500, message: 'خطایی در دریافت محصول‌ها رخ داد.' };
+}
+}
+
 export async function AddProductAction(formData) {
   
   await connectDB();

@@ -7,6 +7,8 @@ import OTP from "@/models/OTP";
 import { p2e } from "@/utils/ReplaceNumber";
 
 export const authOption = {
+  secret: process.env.NEXTAUTH_SECRET, // اضافه کردن این خط
+
   session: {
     strategy: "jwt",
   },

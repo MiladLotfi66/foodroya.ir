@@ -42,14 +42,12 @@ function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState(usericone);
   const [base64Image, setBase64Image] = useState(null);
   const [userShopCounter, setUserShopCounter] = useState(0);
-
   const [editField, setEditField] = useState(null);
   const [isEditingSecurityQuestion, setIsEditingSecurityQuestion] =
     useState(false);
   const fileInputRef = useRef(null);
   const [followingShops, setFollowingShops] = useState([]);
   const [UserShops, setUserShops] = useState([]);
-
   const {
     register,
     handleSubmit,
