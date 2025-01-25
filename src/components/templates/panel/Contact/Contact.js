@@ -94,6 +94,7 @@ const ContactSchema = new mongoose.Schema(
     timestamps: true, // افزودن فیلدهای createdAt و updatedAt خودکار
   }
 );
+ContactSchema.index({ shop: 1, userAccount: 1 }, { unique: true });
 
 // جلوگیری از ایجاد مدل چندباره هنگام HMR (Hot Module Replacement) در توسعه
 export default mongoose.models.Contact || mongoose.model('Contact', ContactSchema);

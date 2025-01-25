@@ -300,6 +300,7 @@ export async function AddProductAction(formData) {
     const isMergeable = formData.get('isMergeable') === 'true';
     const description = formData.get('description');
     const price = formData.get('price');
+    
 
     // اعتبارسنجی فیلدهای الزامی
     if (!title || !unit || !ShopId) {

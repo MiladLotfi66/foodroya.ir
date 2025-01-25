@@ -3,20 +3,12 @@
 import connectDB from "@/utils/connectToDB";
 import Currency from "@/templates/panel/Currency/Currency";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-/**
- * تبدیل مستندات Mongoose به اشیاء ساده
- * @param {Array} docs - آرایه‌ای از مستندات
- * @returns {Array} - آرایه‌ای از اشیاء ساده
- */
+
 function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
 }
 
-/**
- * دریافت تمام ارزها
- * @param {string} shopId - شناسه فروشگاه
- * @returns {Object} - شامل وضعیت و آرایه‌ای از ارزها
- */
+
 export async function GetAllCurrencies(shopId) {
   await connectDB();
   let user;
@@ -40,11 +32,29 @@ export async function GetAllCurrencies(shopId) {
     return { status: 500, message: 'خطایی در دریافت ارزها رخ داد.' };
   }
 }
-/**
- * افزودن ارز جدید
- * @param {FormData} formData - داده‌های فرم
- * @returns {Object} - نتیجه عملیات
- */
+export async function GetCurrencyIdByName(name) {
+  await connectDB();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  try {
+    const currencies = await Currency.findOne({ title: name }).select('-__v')
+      .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+    return { status: 200, currencies};
+  } catch (error) {
+    console.error("Error fetching currencies:", error);
+    return { status: 500, message: 'خطایی در دریافت ارزها رخ داد.' };
+  }
+}
+
 export async function AddCurrencyAction(formData) {
   await connectDB();
   let user;
@@ -91,12 +101,7 @@ export async function AddCurrencyAction(formData) {
   }
 }
 
-/**
- * ویرایش ارز
- * @param {FormData} formData - داده‌های فرم
- * @param {string} ShopId - نام یکتا فروشگاه
- * @returns {Object} - نتیجه عملیات
- */
+
 export async function EditCurrencyAction(formData, ShopId) {
   await connectDB();
   let user;
@@ -154,11 +159,7 @@ export async function EditCurrencyAction(formData, ShopId) {
   }
 }
 
-/**
- * حذف ارز
- * @param {string} currencyId - شناسه ارز
- * @returns {Object} - نتیجه عملیات
- */
+
 export async function DeleteCurrencies(currencyId) {
   await connectDB();
   let user;
@@ -184,11 +185,7 @@ export async function DeleteCurrencies(currencyId) {
   }
 }
 
-/**
- * فعال‌سازی ارز
- * @param {string} currencyId - شناسه ارز
- * @returns {Object} - نتیجه عملیات
- */
+
 export async function EnableCurrencyAction(currencyId) {
   await connectDB();
   let user;
@@ -226,11 +223,7 @@ export async function EnableCurrencyAction(currencyId) {
   }
 }
 
-/**
- * غیرفعال‌سازی ارز
- * @param {string} currencyId - شناسه ارز
- * @returns {Object} - نتیجه عملیات
- */
+
 export async function DisableCurrencyAction(currencyId) {
   await connectDB();
   let user;

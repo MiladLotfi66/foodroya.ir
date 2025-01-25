@@ -51,11 +51,16 @@ const schema = new Schema(
     CreatedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User', // تغییر نام از 'Users' به 'User'
-    },
+    }, 
+ 
     LogoUrl: { type: String, required: true },
     TextLogoUrl: { type: String, required: true },
     BackGroundShopUrl: { type: String, required: true },
     BackGroundpanelUrl: { type: String, required: true },
+    BaseCurrency: {
+      type: Schema.Types.ObjectId,
+      ref: 'Currency',
+    },
     ShopStatus: { type: Boolean, required: true },
     is_deleted: {
       type: Boolean,

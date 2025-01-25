@@ -28,6 +28,12 @@ const ProductSchema = new Schema(
       required: true,
       min: [0, "قیمت نمی‌تواند منفی باشد"],
     },
+      lastPurchasePrice: {
+      type: Number,
+      default: 0,
+      required: true,
+      min: [0, "قیمت نمی‌تواند منفی باشد"],
+    },
     parentAccount: { type: Schema.Types.ObjectId, ref: "Account" },
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }], // Array of tags
     Features: [{ type: Schema.Types.ObjectId, ref: "Feature" }], // Array of features

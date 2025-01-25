@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 
 const CurrencySchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    shortName: { type: String, required: true },
+    title: { type: String, required: true ,unique: true, },
+    shortName: { type: String, required: true ,unique: true,},
     exchangeRate: { type: Number, required: true },
     decimalPlaces: { type: Number, required: true, min: 0, max: 6 },
     status: { type: String, enum: ['فعال', 'غیرفعال'], default: 'فعال' },

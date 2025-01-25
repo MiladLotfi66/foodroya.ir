@@ -10,6 +10,7 @@
       "@/utils/*": ["src/utils/*"],
       "@/models/*": ["src/models/*"],
       "@/providers/*": ["src/providers/*"],
+      "@/Redux/*": ["src/Redux/*"],
       "@/layout/*": ["src/components/layout/*"],
       "@/module/*": ["src/components/module/*"],
       "@/templates/*": ["src/components/templates/*"],

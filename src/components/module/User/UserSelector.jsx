@@ -14,7 +14,6 @@ function UserSelector({ isOpen, onClose, onSelect }) {
     setLoading(true);
     try {
       const response = await GetAllUsersIdNameImageUniqName(); // مسیر API را بر اساس نیاز خود تنظیم کنید
-      console.log(response);
       
       if (response.status===200) {
         const data = response.data;

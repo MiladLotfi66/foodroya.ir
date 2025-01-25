@@ -16,6 +16,7 @@ import rolePerimision from '../panel/rols/rolePerimision';
 import PriceTemplate from '../panel/PriceTemplate/PriceTemplate';
 import { processAndSaveImage } from '@/utils/ImageUploader';
 import { deleteOldImage } from '@/utils/ImageUploader';
+import { GetCurrencyIdByName } from '../panel/Currency/currenciesServerActions';
 
 export const simplifyFollowers = (followers) => {
 
@@ -74,6 +75,8 @@ export async function GetUserShops() {
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
       updatedAt: Shop.updatedAt.toISOString(),
+      BaseCurrency: Shop?.BaseCurrency?.toString(),
+
       deleted_by: Shop.deleted_by?.toString() || null, // تبدیل ObjectId به string
       deleted_at: Shop.deleted_at?.toISOString() || null, // تبدیل تاریخ به ISO string
       followers: simplifyFollowers(Shop.followers),
@@ -366,6 +369,7 @@ export async function AddShopServerAction(ShopData) {
     const TextLogoUrl = await processAndSaveImage(TextLogo,null,'Uploads/Shops');
     const BackGroundShopUrl = await processAndSaveImage(BackGroundShop,null,'Uploads/Shops');
     const BackGroundpanelUrl = await processAndSaveImage(BackGroundpanel,null,'Uploads/Shops');
+const defaultCurency= await GetCurrencyIdByName("ریال")
 
     // ایجاد فروشگاه جدید با استفاده از نشست تراکنش
     const newShop = new shops({
@@ -383,6 +387,7 @@ export async function AddShopServerAction(ShopData) {
       BackGroundpanelUrl,
       CreatedBy: userData.id,
       LastEditedBy: userData.id,
+      BaseCurrency:defaultCurency.currencies._id
     });
 
     await newShop.save({ session });
@@ -868,6 +873,7 @@ async function GetAllShops() {
       CreatedBy: Shop.CreatedBy.toString(),
       LastEditedBy: Shop.LastEditedBy.toString(),
       createdAt: Shop.createdAt.toISOString(),
+      BaseCurrency: Shop?.BaseCurrency?.toString(),
       updatedAt: Shop.updatedAt.toISOString(),
       deleted_by: Shop.deleted_by?.toString(), // تبدیل ObjectId به string
       deleted_at: Shop.deleted_at?.toISOString(), // تبدیل تاریخ به ISO string
@@ -895,6 +901,7 @@ async function GetAllEnableShops() {
         CreatedBy: Shop.CreatedBy?.toString() || null, // تبدیل ObjectId به string
         deleted_by: Shop.deleted_by?.toString() || null, // تبدیل ObjectId به string
         LastEditedBy: Shop.LastEditedBy?.toString() || null, // تبدیل ObjectId به string
+        BaseCurrency: Shop?.BaseCurrency?.toString()|| null,
         createdAt: Shop.createdAt?.toISOString() || null, // تبدیل تاریخ به ISO string
         updatedAt: Shop.updatedAt?.toISOString() || null, // تبدیل تاریخ به ISO string
         deleted_at: Shop.deleted_at?.toISOString() || null, // تبدیل تاریخ به ISO string
@@ -1030,7 +1037,7 @@ export async function GetShopLogos(shopId) {
     const shop = await shops.findById(shopId).lean();
   
     if (!shop) {
-      return NextResponse.json({ message: 'Shop not found' }, { status: 404 });
+      return { message: 'Shop not found' ,  status: 404 };
     }
 
   
@@ -1045,6 +1052,38 @@ export async function GetShopLogos(shopId) {
     return { logos , status: 200 };
   } catch (error) {
     console.error("خطا در دریافت تصاویر فروشگاه:", error);
+    return { error: error.message, status: 500 };
+  }
+
+
+}
+export async function GetShopInfo(shopId) {
+
+  // اتصال به پایگاه داده
+  await connectDB();
+  try {
+    // یافتن فروشگاه بر اساس shopId
+    const shop = await shops.findById(shopId).populate({
+      path: 'BaseCurrency',
+      select: '_id title shortName exchangeRate decimalPlaces ', // انتخاب فیلدهای مورد نیاز از مدل ارز
+    })
+    .select("_id ShopUniqueName ShopName LogoUrl TextLogoUrl BackGroundShopUrl BackGroundpanelUrl BaseCurrency" )
+    .lean();
+
+    if (!shop) {
+      return { message: 'Shop not found' ,  status: 404 };
+    }
+    const serializedShop = {
+      ...shop,
+      _id: shop._id.toString(),
+      BaseCurrency: {
+        ...shop.BaseCurrency,
+        _id: shop.BaseCurrency._id.toString(),
+      },
+    };
+      return { shop: serializedShop, status: 200 };
+      } catch (error) {
+    console.error("خطا در دریافت فروشگاه:", error);
     return { error: error.message, status: 500 };
   }
 

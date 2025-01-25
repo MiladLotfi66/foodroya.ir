@@ -136,7 +136,7 @@ function NewProduct() {
           ) : (
             <>
               {/* نمایش محصولات */}
-              <NewProductBody products={products} />
+              <NewProductBody products={products}  ShopId={ShopId}/>
 
               {/* اجزای صفحه‌بندی */}
               <div className="flex justify-between items-center mt-4">

@@ -128,7 +128,14 @@ if (!user) {
     shop: ShopId,
   };
 
-
+  if (userAccount) {
+    const existingContactByUserAndShop = await Contact.findOne({ shop: ShopId, userAccount: userAccount }).lean();
+    if (existingContactByUserAndShop) {
+      
+      return { status: 400, message: `برای این کاربر دراین غرفه قبلا مخاطبی به نام ${existingContactByUserAndShop?.name} ایجاد شده است `};
+    }
+  }
+ 
   // بررسی یکتایی نام مخاطب
   const existingContact = await Contact.findOne({ name  , shop : ShopId}).lean();
   if (existingContact) {
@@ -172,12 +179,12 @@ if (!user) {
 export async function EditContactAction(formData) {
   await connectDB();
   let user;
-    try {
-      user = await authenticateUser();
-    } catch (authError) {
-      user = null;
-      console.log("Authentication failed:", authError);
-    }
+  try {
+    user = await authenticateUser();
+  } catch (authError) {
+    user = null;
+    console.log("Authentication failed:", authError);
+  }
 
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
@@ -198,18 +205,19 @@ export async function EditContactAction(formData) {
 
   // پردازش نقش‌ها (اگر به صورت چندگانه ارسال شده‌اند)
   const rolesArray = formData.getAll('roles'); // دریافت تمام نقش‌ها به صورت آرایه
- // اعتبارسنجی نقش‌ها
-    // اعتبارسنجی شناسه‌های نقش
-    const areRoleIdsValid = rolesArray.every(id => mongoose.Types.ObjectId.isValid(id));
-    if (!areRoleIdsValid) {
-      return { status: 400, message: 'یکی یا چند شناسه نقش نامعتبر است.' };
-    }
-    // اعتبارسنجی نقش‌ها با استفاده از مدل یکسان (Role)
-    const validRoles = await RolePerimision.find({ _id: { $in: rolesArray }, ShopId });
-    if (validRoles.length !== rolesArray.length) {
-      return { status: 400, message: 'یکی یا چند نقش انتخاب شده معتبر نیستند.' };
-    }
-  
+
+  // اعتبارسنجی نقش‌ها
+  // اعتبارسنجی شناسه‌های نقش
+  const areRoleIdsValid = rolesArray.every(id => mongoose.Types.ObjectId.isValid(id));
+  if (!areRoleIdsValid) {
+    return { status: 400, message: 'یکی یا چند شناسه نقش نامعتبر است.' };
+  }
+  // اعتبارسنجی نقش‌ها با استفاده از مدل یکسان (Role)
+  const validRoles = await RolePerimision.find({ _id: { $in: rolesArray }, ShopId });
+  if (validRoles.length !== rolesArray.length) {
+    return { status: 400, message: 'یکی یا چند نقش انتخاب شده معتبر نیستند.' };
+  }
+    
   // اعتبارسنجی فیلدهای الزامی
   if (!phoneNumber || typeof phoneNumber !== 'string' || !/^\d{10,15}$/.test(phoneNumber)) {
     return { status: 400, message: 'شماره تماس الزامی است و باید بین 10 تا 15 رقم باشد.' };
@@ -245,9 +253,29 @@ export async function EditContactAction(formData) {
     return { status: 404, message: 'مخاطب پیدا نشد.' };
   }
 
+  // بررسی یکتایی ترکیب shop و userAccount (در صورت تغییر)
+  const newShopId = ShopId || existingContact.shop;
+  const newUserAccount = userAccount || existingContact.userAccount;
+
+  // اگر ترکیب shop یا userAccount تغییر کرده باشد، بررسی یکتایی کنید
+  if (
+    (ShopId && ShopId !== existingContact.shop.toString()) ||
+    (userAccount && userAccount !== existingContact.userAccount?.toString())
+  ) {
+    const duplicateContact = await Contact.findOne({ 
+      shop: newShopId, 
+      userAccount: newUserAccount,
+      _id: { $ne: id } // اطمینان از اینکه مخاطب فعلی را در نظر نمی‌گیرد
+    }).lean();
+    if (duplicateContact) {
+      
+      return { status: 400, message: `رای این کاربر در این فروشگاه قبلاً مخاطب دیگری به نام ${duplicateContact.name} ایجاد شده است.` };
+    }
+  }
+
   // بررسی یکتایی نام مخاطب اگر تغییر کرده باشد
   if (name && name !== existingContact.name) {
-    const contactWithName = await Contact.findOne({ name }).lean();
+    const contactWithName = await Contact.findOne({ name, shop: newShopId }).lean();
     if (contactWithName) {
       return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
     }
@@ -261,15 +289,6 @@ export async function EditContactAction(formData) {
     }
   }
 
-  // دریافت shopId از shopUniqueName
-  let shopId;
-  if (ShopId) {
- 
-    shopId = ShopId;
-  } else {
-    shopId = existingContact.shop;
-  }
-
   // آماده‌سازی داده‌های آپدیت
   const updateData = {
     name: name || existingContact.name,
@@ -278,9 +297,9 @@ export async function EditContactAction(formData) {
     email: email !== undefined ? email : existingContact.email,
     nationalId: nationalId !== undefined ? nationalId : existingContact.nationalId,
     economicCode: economicCode !== undefined ? economicCode : existingContact.economicCode,
-    userAccount: userAccount !== undefined ? userAccount : existingContact.userAccount,
+    userAccount: newUserAccount,
     RolesId: rolesArray, // اضافه کردن نقش‌ها
-    shop: shopId,
+    shop: newShopId,
     updatedBy: user.id,
   };
 
@@ -298,7 +317,7 @@ export async function EditContactAction(formData) {
 
     // به‌روزرسانی نقش‌ها در RoleInShop
     // ابتدا نقش‌های فعلی را پیدا کنید
-    const existingRoles = await RoleInShop.find({ ContactId: id, ShopId: shopId }).session(session).lean();
+    const existingRoles = await RoleInShop.find({ ContactId: id, ShopId: newShopId }).session(session).lean();
     const existingRoleIds = existingRoles.map(r => r.RoleId.toString());
 
     // نقش‌های جدیدی که باید اضافه شوند
@@ -311,7 +330,7 @@ export async function EditContactAction(formData) {
     if (rolesToAdd.length > 0) {
       const newRoleInShopDocs = rolesToAdd.map(roleId => ({
         ContactId: id,
-        ShopId: shopId,
+        ShopId: newShopId,
         RoleId: roleId,
         LastEditedBy: user.id,
         CreatedBy: user.id,
@@ -337,6 +356,9 @@ export async function EditContactAction(formData) {
       if (error.keyPattern.name) {
         return { status: 400, message: 'نام مخاطب باید منحصر به فرد باشد.' };
       }
+      if (error.keyPattern.userAccount && error.keyPattern.shop) {
+        return { status: 400, message: 'برای این کاربر در این فروشگاه قبلاً مخاطبی ایجاد شده است.' };
+      }
       if (error.keyPattern.nationalId) {
         return { status: 400, message: 'شماره ملی باید منحصر به فرد باشد.' };
       }
@@ -344,6 +366,7 @@ export async function EditContactAction(formData) {
     return { status: 500, message: 'خطایی در ویرایش مخاطب رخ داد.' };
   }
 }
+
 
 export async function DeleteContacts(contactId) {
   await connectDB();
@@ -389,3 +412,40 @@ export async function DeleteContacts(contactId) {
     return { status: 500, message: 'خطایی در حذف مخاطب رخ داد.' };
   }
 }
+
+export async function GetUserRolesInShop(shopId) {
+  
+  await connectDB();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
+
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  
+
+  try {
+    const contacts = await Contact.find({ shop: shopId , userAccount:user._id })
+    .populate('RolesId', 'RoleTitle') // انتخاب فقط RoleTitle
+    .select('RolesId') // انتخاب فقط فیلد RolesId
+    .lean();
+    const roles = contacts.flatMap(contact =>
+      contact.RolesId.map(role => ({
+        id: role._id,
+        title: role.RoleTitle
+      })))
+
+    // حذف تکراری‌ها (در صورت نیاز)
+
+    return { status: 200, roles: roles };
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    return { status: 500, message: 'خطایی در دریافت مخاطب‌ها رخ داد.' };
+  }
+}
+
