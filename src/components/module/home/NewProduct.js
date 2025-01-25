@@ -2,16 +2,25 @@
 import NewProductBody from "@/module/home/NewProductBody";
 import ChevronDown from "@/module/svgs/ChevronDown";
 import { useParams } from 'next/navigation';
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
 import { useCallback, useEffect, useState } from 'react';
 import { GetAllShopEnableProducts } from "@/templates/panel/Product/ProductActions";
-function NewProduct() {
-  const params = useParams();
 
-  const { ShopId } = params;
+function NewProduct() {
+ 
+  const {
+    currentShopId,
+    shopName,
+    shopLogo,
+    shopTextLogo,
+    shopPanelImage,
+    shopImage,
+    shopUniqName,
+    baseCurrency,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+  const BGImage=shopImage;
 
   // تغییر وضعیت به یک رشته خالی
-  const [BGImage, setBGImage] = useState('');
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -23,29 +32,6 @@ function NewProduct() {
   const [error, setError] = useState('');
 
 
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      // اطمینان از اینکه URL تصویر وجود دارد
-      if (response.logos && response.logos.backgroundPanelUrl) {
-        setBGImage(response.logos.backgroundShopUrl);
-      } else {
-        console.warn("URL تصویر پس‌زمینه یافت نشد.");
-      }
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [getShopPanelImage]);
 
   const GetAllShopEnableProductsHandler = useCallback(
     async (page = 1, limit = 10) => {

@@ -4,43 +4,24 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ContactCard from "./ContactCard";
 import AddContact from "./AddContact";
-import { useParams } from "next/navigation";
 import {
-  AddContactAction,
-  DeleteContacts,
-  EditContactAction,
   GetAllContacts,
 } from "./contactsServerActions";
 import { Toaster, toast } from "react-hot-toast";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function ContactManager() {
   const [contacts, setContacts] = useState([]);
   const [isOpenAddContact, setIsOpenAddContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedContactFile, setSelectedContactFile] = useState(null); // افزودن استیت جدید
-  const params = useParams();
-  const { ShopId } = params;
-  const [BGImage, setbGImage] = useState([]);
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
 
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
 
   // بهینه‌سازی refreshContacts با استفاده از useCallback
   const refreshContacts = useCallback(async () => {

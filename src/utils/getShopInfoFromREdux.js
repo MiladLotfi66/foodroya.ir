@@ -22,7 +22,6 @@ export function useShopInfoFromRedux() {
   const dispatch = useDispatch();
   
   // دسترسی به سلکتورها
-  const currentShopId = useSelector(selectShopId);
   const shopName = useSelector(selectShopName);
   const shopLogo = useSelector(selectLogoUrl);
   const shopTextLogo = useSelector(selectShopTextLogoUrl);
@@ -42,7 +41,7 @@ export function useShopInfoFromRedux() {
   
 
   return {
-      currentShopId,
+      currentShopId:ShopId,
       shopName,
       shopLogo,
       shopTextLogo,

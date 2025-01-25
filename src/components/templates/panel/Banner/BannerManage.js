@@ -4,18 +4,20 @@ import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import BannerCard from "./BannerCard";
 import { GetAllBanners } from "./BannerServerActions";
 import AddBanner from "./AddBanner";
-import { useParams } from "next/navigation";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function BannerManage() {
   const [banners, setBanners] = useState([]);
-  const [BGImage, setbGImage] = useState([]);
   const [isOpenAddBanner, setIsOpenAddBanner] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
   const [selectedBannerFile, setSelectedBannerFile] = useState(null); // افزودن استیت جدید
-  const params = useParams();
-  const { ShopId } = params;
 
+  const {
+     currentShopId,
+     shopPanelImage,
+      } = useShopInfoFromRedux();
+   const ShopId  = currentShopId;
+    const BGImage=shopPanelImage;
   // بهینه‌سازی refreshBanners با استفاده از useCallback
   const refreshBanners = useCallback(async () => {
     try {
@@ -36,24 +38,7 @@ function BannerManage() {
     refreshBanners();
   }, [refreshBanners]);
 
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
+ 
 
   const handleDeleteBanner = useCallback((bannerId) => {
     setBanners((prevBanners) =>

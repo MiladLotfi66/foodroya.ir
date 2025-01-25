@@ -4,39 +4,21 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import PriceTemplateCard from "./PriceTemplateCard";
 import AddPriceTemplate from "./AddPriceTemplate";
-import { useParams } from 'next/navigation';
 import { AddPriceTemplateAction, DeletePriceTemplates, EditPriceTemplateAction, GetAllPriceTemplates } from "./PriceTemplateActions";
 import { Toaster, toast } from "react-hot-toast";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function PriceTemplateManage() {
   const [priceTemplates, setPriceTemplates] = useState([]);
   const [isOpenAddPriceTemplate, setIsOpenAddPriceTemplate] = useState(false);
   const [selectedPriceTemplate, setSelectedPriceTemplate] = useState(null);
   const [selectedPriceTemplateFile, setSelectedPriceTemplateFile] = useState(null); // افزودن استیت جدید
-  const params = useParams();
-  const { ShopId } = params;
-  const [BGImage, setbGImage] = useState([]);
-
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
-
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
   // بهینه‌سازی refreshPriceTemplates با استفاده از useCallback
   const refreshPriceTemplates = useCallback(async () => {
     try {

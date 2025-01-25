@@ -1,42 +1,25 @@
 "use client";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
-import { useParams } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { useCallback, useEffect, useState } from "react";
 import SelectAccountModal from "./SelectAcountModal";
 import { getAccountTransactions } from "./FinancialDocumentsServerActions";
 import TransactionTable from "./TransactionTable";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function DetailedAccount() {
-  const params = useParams();
-  const { ShopId } = params;
-  const [BGImage, setbGImage] = useState([]);
 
   const [showSelectAccountModal, setShowSelectAccountModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [transactions, setTransactions] = useState();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
-  // تابع برای باز کردن مودال
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;  // تابع برای باز کردن مودال
   const handleOpenModal = useCallback(() => {
     setShowSelectAccountModal(true);
   }, []);

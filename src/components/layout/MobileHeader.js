@@ -14,36 +14,21 @@ import { useSelector } from "react-redux";
 import UserMicroCard from "@/module/home/UserMicroCard";
 // import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { GetShopLogos } from "../templates/Shop/ShopServerActions";
-import { useParams } from "next/navigation";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function MobileHeader({isLogin}) {
   // const { data: session } = useSession();
   const isBasketCartOpen = useSelector(selectIsBasketCartOpen);
   const dispatch = useDispatch();
-  const { ShopId } = useParams();
-  const [ShopLogo, setShopLogo] = useState("");
-  const [ShopTextLogo, setShopTextLogo] = useState("");
-
-  const GetLoGoAndTextLogo = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        return;
-      }
-      
-      const response = await GetShopLogos(ShopId);
-
-      setShopLogo(response.logos.logoUrl);
-      setShopTextLogo(response.logos.TextLogoUrl);
-    } catch (error) {
-      console.error("Error fetching logos:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    GetLoGoAndTextLogo();
-  }, [GetLoGoAndTextLogo]);
+  const {
+    currentShopId,
+    shopLogo,
+    shopTextLogo,
+  
+  } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+  const ShopLogo = shopLogo;
+  const ShopTextLogo=shopTextLogo;
 
 
 

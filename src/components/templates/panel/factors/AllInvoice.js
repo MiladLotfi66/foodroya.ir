@@ -1,38 +1,22 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
-import { useParams } from "next/navigation";
 import InvoiceCard from "./InvoiceCard";
 import EditSvg from "@/module/svgs/EditSvg";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import { GetShopInvocesByShopId } from "./InvoicesActions";
 import { deleteInvoiceAction } from "./invoiceItemsServerActions";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function InvoiceManage() {
   const [selectedInvioce, setSelectedInvoice] = useState(null);
-  const params = useParams();
-  const [BGImage, setbGImage] = useState([]);
-  const { ShopId } = params;
   const [invoices, setInvoices] = useState([]);
-  const getShopPanelImage = useCallback(async () => {
-      try {
-        if (!ShopId) {
-          console.error("نام یکتای فروشگاه موجود نیست.");
-          return;
-        }
-  
-        const response = await GetShopLogos(ShopId);
-  
-        setbGImage(response.logos.backgroundPanelUrl);
-      } catch (error) {
-        console.error("Error fetching banners:", error);
-      }
-    }, [ShopId]);
-  
-    useEffect(() => {
-      getShopPanelImage();
-    }, [ShopId]);
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
   
   const refreshInvioces = useCallback(async () => {
     try {

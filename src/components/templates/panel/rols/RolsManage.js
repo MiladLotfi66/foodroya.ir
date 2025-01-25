@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddRole from "./AddRole";
 import ContactsListModal from "@/module/User/ContactsListModal";
-import { useParams } from "next/navigation";
 
 // Import توابع مربوط به اکشن‌های سروری
 import {
@@ -24,7 +23,7 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import UserPlus from "@/module/svgs/UserPlus";
 import RoleCard from "./RoleCard";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function RolsManage() {
   const [isOpenAddRole, setIsOpenAddRole] = useState(false);
@@ -32,29 +31,13 @@ function RolsManage() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [userListButtonName, setUserListButtonName] = useState("");
-  const params = useParams();
-  const { ShopId } = params;
   const [rols, setRols] = useState([]);
-  const [BGImage, setbGImage] = useState([]);
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
-
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
   // مدیریت تعداد مخاطبان هر نقش
   const [contactCounts, setContactCounts] = useState({});
 

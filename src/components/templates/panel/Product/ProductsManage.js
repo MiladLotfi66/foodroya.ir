@@ -2,7 +2,6 @@
 "use client";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddProduct from "./AddProduct";
-import { useParams } from 'next/navigation';
 import { GetAllProducts } from "./ProductActions";
 import React, { useState, useEffect, useCallback } from 'react';
 import DeleteSvg from "@/module/svgs/DeleteSvg";
@@ -15,15 +14,13 @@ import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
 import { DeleteProducts } from './ProductActions';
 import Pagination from './Pagination';
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function ProductManage() {
   const [products, setProducts] = useState([]);
   const [isOpenAddProduct, setIsOpenAddProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedProductFile, setSelectedProductFile] = useState(null); // افزودن استیت جدید
-  const params = useParams();
-  const { ShopId } = params;
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [path, setPath] = useState([]); // مسیر برای Breadcrumb
@@ -36,26 +33,13 @@ function ProductManage() {
   const [totalPages, setTotalPages] = useState(0); // وضعیت کل صفحات
   const limit = 12; // تعداد آیتم‌ها در هر صفحه
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
-  const [BGImage, setbGImage] = useState([]);
 
-    const getShopPanelImage = useCallback(async () => {
-      try {
-        if (!ShopId) {
-          console.error("نام یکتای فروشگاه موجود نیست.");
-          return;
-        }
-  
-        const response = await GetShopLogos(ShopId);
-  
-        setbGImage(response.logos.backgroundPanelUrl);
-      } catch (error) {
-        console.error("Error fetching banners:", error);
-      }
-    }, [ShopId]);
-  
-    useEffect(() => {
-      getShopPanelImage();
-    }, [ShopId]);
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
   const fetchAnbarAccountId = async () => {
     try {
       const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1");

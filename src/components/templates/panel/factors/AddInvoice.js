@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import InvoiceItemCard from "./InvoiceItemCard";
 import AddInvoiceItem from "./AddInvoiceItem";
-import { useParams } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { GetAllContacts } from "../Contact/contactsServerActions";
@@ -12,43 +11,27 @@ import SubmitInvoiceModal from "./SubmitInvoiceModal";
 import { INVOICE_TYPES } from "./invoiceTypes"; // وارد کردن انواع فاکتورها
 import getProductPrice from "./getProductPrice";
 import { calculateProductCost } from "./invoiceItemsServerActions";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function AddInvoice({ invoiceType }) {
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [isOpenAddInvoiceItem, setIsOpenAddInvoiceItem] = useState(false);
   const [selectedInvoiceItem, setSelectedInvoiceItem] = useState(null);
-  const params = useParams();
-  const { ShopId } = params;
   const [contactsOptions, setContactsOptions] = useState([]);
   const [selectedContact, setSelectedContact] = useState(""); // نام عمومی‌تر
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
-  const [BGImage, setbGImage] = useState([]);
 
   // استفاده از react-hook-form
   const { register, handleSubmit,reset, watch, formState: { errors } } = useForm();
   const totalItems = invoiceItems?.reduce((acc, item) => acc + (item.quantity || 0), 0);
   const totalPrice = invoiceItems?.reduce((acc, item) => acc + (item.totalPrice || 0), 0);
   const totalRows = invoiceItems?.length;
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
-
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
 
   useEffect(() => {
     const fetchContacts = async () => {

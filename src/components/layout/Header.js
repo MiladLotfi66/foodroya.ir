@@ -1,6 +1,6 @@
 "use client";
-import { useCallback, useState } from "react";
-// import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
+import { useState } from "react";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import Image from "next/image";
 import Moonsvg from "@/module/svgs/Moonsvg.js";
 import Basketsvg from "@/module/svgs/Basketsvg";
@@ -13,35 +13,22 @@ import { useEffect } from "react";
 import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
-import { useParams, useRouter } from "next/navigation";
-import { GetShopLogos } from "../templates/Shop/ShopServerActions";
 
 function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-
   const { data: session, status } = useSession();
-  const { ShopId } = useParams();
-  const [ShopLogo, setShopLogo] = useState("");
-  const [ShopTextLogo, setShopTextLogo] = useState("");
-
-  const GetLoGoAndTextLogo = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setShopLogo(response.logos.logoUrl);
-      setShopTextLogo(response.logos.TextLogoUrl);
-    } catch (error) {
-      console.error("Error fetching logos:", error);
-    }
-  }, [ShopId]);
-  useEffect(() => {
-    GetLoGoAndTextLogo();
-  }, [GetLoGoAndTextLogo]);
+  const {
+    currentShopId,
+    shopLogo,
+    shopTextLogo,
+  
+  } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+  const ShopLogo = shopLogo;
+  const ShopTextLogo=shopTextLogo;
+ 
+ 
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);

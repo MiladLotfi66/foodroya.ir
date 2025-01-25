@@ -4,38 +4,22 @@ import { useEffect, useState, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import CurrencyCard from "./CurrencyCard";
 import AddCurrency from "./AddCurrency";
-import { useParams } from 'next/navigation';
 import { GetAllCurrencies} from "./currenciesServerActions";
 import { Toaster, toast } from "react-hot-toast";
-import { GetShopLogos } from "@/templates/Shop/ShopServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+
 
 function CurrencyManage() {
   const [currencies, setCurrencies] = useState([]);
   const [isOpenAddCurrency, setIsOpenAddCurrency] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(null);
   const [selectedCurrencyFile, setSelectedCurrencyFile] = useState(null); // افزودن استیت جدید
-  const params = useParams();
-  const { ShopId } = params;
-  const [BGImage, setbGImage] = useState([]);
-
-  const getShopPanelImage = useCallback(async () => {
-    try {
-      if (!ShopId) {
-        console.error("نام یکتای فروشگاه موجود نیست.");
-        return;
-      }
-
-      const response = await GetShopLogos(ShopId);
-
-      setbGImage(response.logos.backgroundPanelUrl);
-    } catch (error) {
-      console.error("Error fetching banners:", error);
-    }
-  }, [ShopId]);
-
-  useEffect(() => {
-    getShopPanelImage();
-  }, [ShopId]);
+  const {
+    currentShopId,
+    shopPanelImage,
+     } = useShopInfoFromRedux();
+  const ShopId  = currentShopId;
+   const BGImage=shopPanelImage;
 
   // بهینه‌سازی refreshCurrencies با استفاده از useCallback
   const refreshCurrencies = useCallback(async () => {
