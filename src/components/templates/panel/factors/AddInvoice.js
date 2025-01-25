@@ -14,6 +14,8 @@ import { calculateProductCost } from "./invoiceItemsServerActions";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function AddInvoice({ invoiceType }) {
+      const { baseCurrency } = useShopInfoFromRedux();
+  
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [isOpenAddInvoiceItem, setIsOpenAddInvoiceItem] = useState(false);
   const [selectedInvoiceItem, setSelectedInvoiceItem] = useState(null);
@@ -330,7 +332,7 @@ function AddInvoice({ invoiceType }) {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-800 dark:text-gray-200">
               <div>تعداد کل اقلام: <span className="font-bold">{totalItems}</span></div>
-              <div>جمع کل فاکتور: <span className="font-bold">{totalPrice?.toLocaleString()} تومان</span></div>
+              <div>جمع کل فاکتور: <span className="font-bold">{totalPrice?.toLocaleString()} {baseCurrency.title}</span></div>
               <div>تعداد ردیف‌ها: <span className="font-bold">{totalRows}</span></div>
             </div>
             <button

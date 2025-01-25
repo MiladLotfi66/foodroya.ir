@@ -9,19 +9,23 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import ProductsSchema from "./ProductsSchema";
 import { useState, useEffect, useRef } from "react";
 import CloseSvg from "@/module/svgs/CloseSvg";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AddProductAction, EditProductAction } from "./ProductActions";
 import { v4 as uuidv4 } from "uuid";
 import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
+  const { currentShopId, baseCurrency } = useShopInfoFromRedux();
+
+  const ShopId = currentShopId;
+
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [templateError, setTemplateError] = useState("");
-  const { ShopId } = useParams();
   const fileInputRef = useRef(null);
   const { theme } = useTheme();
   const router = useRouter();
@@ -106,8 +110,8 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
         pricingTemplate: product.pricingTemplate?._id || "",
         parentAccount: product.parentAccount,
         tags: product.tags
-        ? product.tags.map((tag) => ({ label: tag.name, value: tag._id }))
-        : [],
+          ? product.tags.map((tag) => ({ label: tag.name, value: tag._id }))
+          : [],
         storageLocation: product.storageLocation,
         isSaleable: product.isSaleable,
         isMergeable: product.isMergeable,
@@ -123,7 +127,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
           value: feature.value,
           id: feature.id,
         })),
-        });
+      });
     }
   }, [product, reset]);
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,6 +269,40 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
     </>
   );
 
+  function handleInputChangeFAToEN(event) {
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianNumbers = [
+      /۰/g,
+      /۱/g,
+      /۲/g,
+      /۳/g,
+      /۴/g,
+      /۵/g,
+      /۶/g,
+      /۷/g,
+      /۸/g,
+      /۹/g,
+    ];
+    const englishNumbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    let value = event.target.value;
+
+    for (let i = 0; i < persianNumbers.length; i++) {
+      value = value.replace(persianNumbers[i], englishNumbers[i]);
+    }
+
+    event.target.value = value; // تبدیل شده به انگلیسی
+
+    const decimalPlaces = baseCurrency.decimalPlaces; // تعداد اعشار از متغیر baseCurrency.count می‌آید
+
+    // ساخت عبارت منظم برای محدود کردن تعداد ارقام اعشاری
+    const regex = new RegExp(`^\\d*\\.?\\d{0,${decimalPlaces}}`);
+    const newValue = value.match(regex);
+
+    if (newValue) {
+      event.target.value = newValue[0]; // اعمال محدودیت به ورودی
+    }
+  }
+
   return (
     <div className="overflow-y-auto max-h-screen">
       <div className="hidden">
@@ -390,19 +428,23 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
             {errors.title && (
               <p className="text-red-500">{errors.title.message}</p>
             )}
+            <label className="block mb-1">قیمت محصول</label>
           </div>
           <div>
-  <label className="block mb-1">قیمت محصول</label>
-  <input
-    type="number"
-    step="0.01" // برای امکان وارد کردن اعداد اعشاری، در صورت نیاز
-    {...register("price")}
-    className="react-select-container w-full border rounded px-3 py-2"
-  />
-  {errors.price && (
-    <p className="text-red-500">{errors.price.message}</p>
-  )}
-</div>
+            <div className="flex gap-2 items-center text-center">
+              <input
+                type="text"
+                {...register("price")}
+                className="react-select-container w-full border rounded px-3 py-2"
+                onChange={handleInputChangeFAToEN}
+
+              />
+              <label className="block mb-1">{baseCurrency.title}</label>
+            </div>
+            {errors.price && (
+              <p className="text-red-500">{errors.price.message}</p>
+            )}
+          </div>
 
           <div>
             <label className="block mb-1">دسته بندی کالا و تگ ها</label>

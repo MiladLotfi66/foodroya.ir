@@ -6,11 +6,15 @@ import Chatsvg from "@/module/svgs/ChatSVG";
 import Star from "@/module/svgs/Star";
 import { useEffect, useRef, useState } from "react";
 import { evaluate } from 'mathjs';
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+
 function ProductCard({ product ,userRoles}) {
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [userPrice, setUserPrice] = useState(0);
   const [error, setError] = useState('');
+  const { baseCurrency } = useShopInfoFromRedux();
 
+  const decimalPlaces = baseCurrency.decimalPlaces;
 
   //////////////////////// محاسبه قیمت //////////////////////////////
 
@@ -75,15 +79,20 @@ function ProductCard({ product ,userRoles}) {
         defaultSalePrice = evaluateFormula(product.pricingTemplate.defaultFormula);
       }
 
-      // به‌روزرسانی حالت
-      setDefaultPrice(defaultSalePrice !== null ? defaultSalePrice : c);
-      setUserPrice(minRolePrice !== null ? minRolePrice : c);
+      // تابع فرمت‌بندی قیمت
+      const formatPrice = (price) => {
+        return Number(price.toFixed(decimalPlaces));
+      };
+
+      // به‌روزرسانی وضعیت با قیمت‌های فرمت‌شده
+      setDefaultPrice(defaultSalePrice !== null ? formatPrice(defaultSalePrice) : formatPrice(c));
+      setUserPrice(minRolePrice !== null ? formatPrice(minRolePrice) : formatPrice(c));
       setError("");
     } catch (err) {
       console.error("خطا در محاسبه قیمت‌ها:", err);
       setError("خطا در محاسبه قیمت‌ها");
     }
-  }, [product, userRoles]);
+  }, [product, userRoles, decimalPlaces]);
 
   //////////////////////// پایان محاسبه قیمت ////////////////////////  
   // دریافت prop product
@@ -136,6 +145,13 @@ function ProductCard({ product ,userRoles}) {
       if (text.length <= maxLength) return text;
       return text.slice(0, maxLength) + '...';
     };
+    
+  // تعریف فرمت‌کننده بین‌المللی
+  const formatter = new Intl.NumberFormat('fa-IR', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  });
+
   return (
     <div 
       ref={containerRef}
@@ -168,15 +184,15 @@ function ProductCard({ product ,userRoles}) {
       <div className="flex flex-col mt-2 md:mt-3 gap-3 font-Dana text-xs">
         <div >
           <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
-            {defaultPrice}{" "}
+            {formatter.format(defaultPrice)}{" "}
           </span>
-          <span className=" text-xs md:text-sm text-gray-400">تومان</span>
+          <span className=" text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
         </div>
         <div className="text-teal-600 dark:text-emerald-500 ">
           <span className="font-DanaDemiBold text-sm md:text-base lg:text-xl ">
-            {userPrice}{" "}
+            {formatter.format(userPrice)}{" "}
           </span>
-          <span className="text-xs md:text-sm tracking-tighter">تومان</span>
+          <span className="text-xs md:text-sm tracking-tighter">{baseCurrency.title}</span>
         </div>
       </div>
            {/* بخش انتخاب تعداد و افزودن به سبد خرید */}

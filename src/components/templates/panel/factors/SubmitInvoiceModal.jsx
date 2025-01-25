@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { GetAllAccountsByOptions } from '../Account/accountActions';
 import { AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction } from './invoiceItemsServerActions';
 import { AddWasteAction ,AddSalesReturnAction} from './invoiceItemsServerActions';
+import { useShopInfoFromRedux } from '@/utils/getShopInfoFromREdux';
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
+        const { baseCurrency } = useShopInfoFromRedux();
+  
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([
     { accountId: '', amount: 0 }
@@ -63,10 +66,22 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
   // توابع مدیریت تخصیص حساب‌ها
   const handleAccountChange = (index, field, value) => {
-    const updatedAllocatedAccounts = [...allocatedAccounts];
-    updatedAllocatedAccounts[index][field] = value;
-    setAllocatedAccounts(updatedAllocatedAccounts);
+    if (field === 'amount') {
+      const decimalPlaces = baseCurrency.decimalPlaces;
+      const regex = new RegExp(`^-?\\d*(\\.\\d{0,${decimalPlaces}})?$`);
+      
+      if (value === '' || regex.test(value)) {
+        const updatedAllocatedAccounts = [...allocatedAccounts];
+        updatedAllocatedAccounts[index][field] = value;
+        setAllocatedAccounts(updatedAllocatedAccounts);
+      }
+    } else {
+      const updatedAllocatedAccounts = [...allocatedAccounts];
+      updatedAllocatedAccounts[index][field] = value;
+      setAllocatedAccounts(updatedAllocatedAccounts);
+    }
   };
+  
 
   const handleAddAccount = () => {
     setAllocatedAccounts([...allocatedAccounts, { accountId: '', amount: 0 }]);
@@ -203,14 +218,18 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
                   <label htmlFor={`amount-${index}`} className="block mb-2">مبلغ {index + 1}:</label>
                   <input
-                    type="number"
-                    id={`amount-${index}`}
-                    min="0"
-                    value={allocation.amount}
-                    onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
-                    className="w-full mb-2 border rounded px-4 py-2"
-                    placeholder="مبلغ"
-                  />
+  type="number"
+  id={`amount-${index}`}
+  min="0"
+  value={allocation.amount}
+  onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
+  className="w-full mb-2 border rounded px-4 py-2"
+  placeholder="مبلغ"
+  step={`0.${'0'.repeat(baseCurrency.decimalPlaces - 1)}1`} // برای کنترل اعشار دقیق
+  pattern={`^-?\\d+(\\.\\d{0,${baseCurrency.decimalPlaces}})?$`}
+  title={`لطفاً حداکثر ${baseCurrency.decimalPlaces} رقم اعشار وارد کنید.`}
+/>
+
 
                   {/* دکمه حذف حساب، فقط اگر بیش از یک حساب وجود داشته باشد */}
                   {allocatedAccounts.length > 1 && (

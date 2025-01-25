@@ -11,13 +11,23 @@ import { useParams, useRouter } from "next/navigation";
 import Select, { components } from "react-select";
 import { GetAccountsByStartingCharacter } from "../Account/accountActions";
 import { XMarkIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { AddFinancialDocumentAction , EditFinancialDocumentAction} from "./FinancialDocumentsServerActions";
+import {
+  AddFinancialDocumentAction,
+  EditFinancialDocumentAction,
+} from "./FinancialDocumentsServerActions";
 // import { GetAllCurrencies } from "../Currency/currenciesServerActions";
 import { customSelectStyles } from "../Product/selectStyles";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
-function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancialDocuments }) {
+function AddFinancialDocument({
+  financialDocument = {},
+  onClose,
+  refreshFinancialDocuments,
+}) {
   const [isSubmit, setIsSubmit] = useState(false);
-  const { ShopId } = useParams();
+  const { currentShopId, baseCurrency } = useShopInfoFromRedux();
+
+  const ShopId = currentShopId;
   const router = useRouter();
   const [accountsOptions, setAccountsOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,7 +137,6 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
     }
   }, [financialDocument, reset]);
 
-
   // واکشی حساب‌ها
   const fetchAccounts = useCallback(async () => {
     try {
@@ -173,7 +182,39 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
   const handleAddNewAccount = () => {
     router.push(`/${ShopId}/panel/account`);
   };
+  function handleInputChangeFAToEN(event) {
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianNumbers = [
+      /۰/g,
+      /۱/g,
+      /۲/g,
+      /۳/g,
+      /۴/g,
+      /۵/g,
+      /۶/g,
+      /۷/g,
+      /۸/g,
+      /۹/g,
+    ];
+    const englishNumbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    let value = event.target.value;
 
+    for (let i = 0; i < persianNumbers.length; i++) {
+      value = value.replace(persianNumbers[i], englishNumbers[i]);
+    }
+
+    event.target.value = value; // تبدیل شده به انگلیسی
+
+    const decimalPlaces = baseCurrency.decimalPlaces; // تعداد اعشار از متغیر baseCurrency.count می‌آید
+
+    // ساخت عبارت منظم برای محدود کردن تعداد ارقام اعشاری
+    const regex = new RegExp(`^\\d*\\.?\\d{0,${decimalPlaces}}`);
+    const newValue = value.match(regex);
+
+    if (newValue) {
+      event.target.value = newValue[0]; // اعمال محدودیت به ورودی
+    }
+  }
   // کامپوننت سفارشی برای افزودن گزینه "افزودن حساب جدید" در لیست
   const CustomMenuList = (props) => {
     return (
@@ -200,12 +241,10 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
   };
 
   const handleFormSubmit = async (formData) => {
-    
     setIsSubmit(true);
     try {
       const formDataObj = {
         ...formData,
-
       };
 
       let result;
@@ -218,7 +257,10 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
 
       if (result.status === 201 || result.status === 200) {
         await refreshFinancialDocuments();
-        const successMessage = financialDocument && financialDocument._id ? "سند مالی با موفقیت ویرایش شد!" : "سند مالی با موفقیت ایجاد شد!";
+        const successMessage =
+          financialDocument && financialDocument._id
+            ? "سند مالی با موفقیت ویرایش شد!"
+            : "سند مالی با موفقیت ایجاد شد!";
         toast.success(successMessage);
 
         reset();
@@ -238,7 +280,6 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
     await handleFormSubmit(formData);
   };
 
-  
   return (
     <div className="overflow-y-auto max-h-screen md:p-4">
       {isLoading ? (
@@ -264,7 +305,6 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
             onSubmit={handleSubmit(formSubmitting)}
             className="max-w-lg mx-auto rounded"
           >
- 
             {/* بخش بدهکار */}
             <div
               className="border-l-4 border-red-500 p-1 md:p-4  text-xs md:text-base mb-1
@@ -321,20 +361,25 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
                       )}
                     </div>
                     <div className="mb-1 md:mb-4 ">
-                      <input
-                        type="number"
-                        step="any"
-                        {...register(`debtors.${index}.amount`, {
-                          valueAsNumber: true, // تغییر داده شده
-                        })}
-                        className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
-                          errors.debtors?.[index]?.amount
-                            ? "border-red-400"
-                            : "border-gray-300"
-                        } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                        placeholder="مبلغ"
-                        required
-                      />
+                      <div className="flex gap-2 items-center text-center">
+                        <input
+                          type="text"
+                          {...register(`debtors.${index}.amount`, {
+                            valueAsNumber: true, // تغییر داده شده
+                          })}
+                          className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
+                            errors.debtors?.[index]?.amount
+                              ? "border-red-400"
+                              : "border-gray-300"
+                          } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                          placeholder="مبلغ"
+                          onChange={handleInputChangeFAToEN}
+                          required
+                        />
+                        <label className="block mb-1">
+                          {baseCurrency.title}
+                        </label>
+                      </div>
 
                       {errors.debtors?.[index]?.amount && (
                         <p className="text-red-400 text-sm mt-1">
@@ -421,20 +466,25 @@ function AddFinancialDocument({ financialDocument = {}, onClose,refreshFinancial
                       )}
                     </div>
                     <div className="mb-1 md:mb-4 ">
-                      <input
-                        type="number"
-                        step="any"
-                        {...register(`creditors.${index}.amount`, {
-                          valueAsNumber: true, // تغییر داده شده
-                        })}
-                        className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
-                          errors.creditors?.[index]?.amount
-                            ? "border-red-400"
-                            : "border-gray-300"
-                        } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                        placeholder="مبلغ"
-                        required
-                      />
+                      <div className="flex gap-2 items-center text-center">
+                        <input
+                          type="text"
+                          {...register(`creditors.${index}.amount`, {
+                            valueAsNumber: true, // تغییر داده شده
+                          })}
+                          className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
+                            errors.creditors?.[index]?.amount
+                              ? "border-red-400"
+                              : "border-gray-300"
+                          } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                          placeholder="مبلغ"
+                          onChange={handleInputChangeFAToEN}
+                          required
+                        />
+                        <label className="block mb-1">
+                          {baseCurrency.title}
+                        </label>
+                      </div>
 
                       {errors.creditors?.[index]?.amount && (
                         <p className="text-red-400 text-sm mt-1">

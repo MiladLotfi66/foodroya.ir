@@ -3,10 +3,11 @@ import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import { getLastPurchasedPrice } from "./invoiceItemsServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
  function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate,invoiceType }) {
+    const { baseCurrency } = useShopInfoFromRedux();
   const { title, image, quantity = 1, unitPrice = 0, description = "" , productId } = invoiceItem;
-
   const totalPrice = (quantity || 0) * (unitPrice || 0);
   const [lastPrice, setLastPrice] = useState(0);
 const [priceLoading, setPriceLoading] = useState({});
@@ -27,42 +28,66 @@ const [priceLoading, setPriceLoading] = useState({});
   
     fetchPrices();
   }, [productId]);
+  const convertPersianToEnglish = (value) => {
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianNumbers = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
+    const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    
+    let processedValue = value;
+    
+    // تبدیل اعداد فارسی به انگلیسی
+    for (let i = 0; i < persianNumbers.length; i++) {
+      processedValue = processedValue.replace(persianNumbers[i], englishNumbers[i]);
+    }
+  
+    // حالا محدودیت‌های مربوط به اعشار اعمال می‌شود
+    const decimalPlaces = baseCurrency.decimalPlaces;  // تعداد ارقام اعشاری برای فرمت ارز
+    const regex = new RegExp(`^\\d*\\.?\\d{0,${decimalPlaces}}`);
+    const newValue = processedValue.match(regex) ? processedValue.match(regex)[0] : processedValue;
+  
+    return newValue;
+  };
+  
   
   // تابع تغییر مقادیر ورودی‌ها
-  const handleChange = (e, field) => {
-    const value = e.target.value;
-    let updatedValue;
+// تابع تغییر مقادیر ورودی‌ها
+const handleChange = (e, field) => {
+  const rawValue = e.target.value;
+  let updatedValue = rawValue;
 
-    if (field === "quantity") {
-      updatedValue = parseInt(value, 10);
-      if (isNaN(updatedValue) || updatedValue < 1) {
-        toast.error("تعداد باید حداقل 1 باشد.");
-        return;
-      }
-    } else if (field === "unitPrice") {
-      updatedValue = parseFloat(value);
-      if (isNaN(updatedValue) || updatedValue < 0) {
-        toast.error("قیمت واحد باید غیرمنفی باشد.");
-        return;
-      }
-    } else if (field === "description") {
-      updatedValue = value; // برای توضیحات، نیازی به تبدیل نیست
+  // برای فیلد unitPrice تبدیل و محدودیت‌ها اعمال می‌شود
+  if (field === "unitPrice") {
+    updatedValue = convertPersianToEnglish(rawValue); // تبدیل اعداد فارسی به انگلیسی
+    updatedValue = parseFloat(updatedValue); // تبدیل به عدد اعشاری
+    
+  } else if (field === "quantity") {
+    let parsedValue = parseInt(updatedValue, 10);
+    if (isNaN(parsedValue) || parsedValue < 1) {
+      toast.error("تعداد باید حداقل 1 باشد.");
+      return;
     }
+    updatedValue = parsedValue;
+  } else if (field === "description") {
+    updatedValue = rawValue; // برای توضیحات، نیازی به تبدیل نیست
+  }
 
-    const newQuantity = field === "quantity" ? updatedValue : quantity;
-    const newUnitPrice = field === "unitPrice" ? updatedValue : unitPrice;
-    const newDescription = field === "description" ? updatedValue : description;
+  const newQuantity = field === "quantity" ? updatedValue : quantity;
+  const newUnitPrice = field === "unitPrice" ? updatedValue : unitPrice;
+  const newDescription = field === "description" ? updatedValue : description;
 
-    const updatedItem = {
-      ...invoiceItem,
-      quantity: newQuantity,
-      unitPrice: newUnitPrice,
-      description: newDescription,
-      totalPrice: newQuantity * newUnitPrice,
-    };
-
-    onUpdate(updatedItem); // گزارش تغییر به والد
+  const updatedItem = {
+    ...invoiceItem,
+    quantity: newQuantity,
+    unitPrice: newUnitPrice,
+    description: newDescription,
+    totalPrice: newQuantity * newUnitPrice,
   };
+
+  onUpdate(updatedItem);
+};
+
+
+
 
   // تابع حذف آیتم که تنها به والد اطلاع می‌دهد
   const deleteFunc = () => {
@@ -114,17 +139,17 @@ const [priceLoading, setPriceLoading] = useState({});
               قیمت واحد:
             </label>
             <input
-              type="number"
-              id="unitPrice"
-              name="unitPrice"
-              value={unitPrice}
-              onChange={(e) => handleChange(e, "unitPrice")}
-              className={`mt-1 block w-full p-1 border ${
-                unitPrice < 0 ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white`}
-                min="0"
-                step="0.01"
-                />
+  type="number"
+  id="unitPrice"
+  name="unitPrice"
+  value={unitPrice}
+  onChange={(e) => handleChange(e, "unitPrice")}
+  className={`mt-1 block w-full p-1 border ${
+    unitPrice < 0 ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+  } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white`}
+  min="0"
+  step="any" // اجازه وارد کردن اعشار
+/>
           </div>
               
         </div>
@@ -148,13 +173,13 @@ const [priceLoading, setPriceLoading] = useState({});
             {/* آخرین قیمت خرید*/}
 
       <p htmlFor="LastPrice" className="block text-sm text-gray-700 dark:text-gray-300">
-          آخرین قیمت خرید: {Number(lastPrice).toLocaleString() } تومان 
+          آخرین قیمت خرید: {Number(lastPrice).toLocaleString() } {baseCurrency.title} 
 
         </p>
       {/* نمایش جمع کل و دکمه حذف */}
       <div className="mt-3 flex justify-between">
         <p className="text-sm sm:text-base">
-          جمع کل: {totalPrice.toLocaleString()} تومان
+          جمع کل: {totalPrice.toLocaleString()} {baseCurrency.title}
         </p>
         <button
           onClick={deleteFunc}

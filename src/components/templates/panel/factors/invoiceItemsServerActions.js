@@ -1056,7 +1056,7 @@ export async function calculateProductCost(productId) {
 
   return costPrice;
 }
-async function getLastPurchasedPriceInvoice(productId, currentInvoiceId = null, session = null) {
+export async function getLastPurchasedPriceInvoice(productId, currentInvoiceId = null, session = null) {
 
   try {
     // اعتبارسنجی productId
@@ -1128,4 +1128,208 @@ async function getLastPurchasedPriceInvoice(productId, currentInvoiceId = null, 
   }
 }
 
-export default getLastPurchasedPriceInvoice;
+export async function AddWasteAction(invoiceData) {
+  await connectDB();
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return { status: 401, message: "کاربر وارد نشده است." };
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    const result = await session.withTransaction(async () => {
+      const requiredFields = ["type", "invoiceItems", "storeId", "customerId"];
+
+      validateInvoiceData(invoiceData, requiredFields);
+
+      const totalItems = invoiceData.invoiceItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
+      const totalAmount = invoiceData.invoiceItems.reduce(
+        (acc, item) => acc + item.totalPrice,
+        0
+      );
+
+      const invoice = new Invoice({
+        description: invoiceData.description || "",
+        type: invoiceData.type,
+        totalPrice: totalAmount,
+        totalItems: totalItems,
+        shop: invoiceData.storeId,
+        createdBy: user.id,
+        updatedBy: user.id,
+        contact: invoiceData.customerId,
+      });
+
+      const invoiceId = invoice._id;
+
+      const { invoiceItemIds, accountIdMap, bulkProductOperations } =
+        await createInvoiceItems(
+          invoiceData.invoiceItems,
+          invoice._id,
+          session,
+          false,
+          invoiceData.type,
+
+        );
+
+      // کاهش موجودی کالا
+      await updateProductStock(bulkProductOperations, false, session);
+
+      invoice.InvoiceItems = invoiceItemIds;
+
+      // ثبت اسناد مالی برای ضایعات
+      const ledgerId = await createFinancialDocumentsForWaste(
+        invoiceId,
+        invoice.shop,
+        user.id,
+        // invoiceData.accountAllocations,
+        accountIdMap,
+        session
+      );
+      invoice.Ledger = ledgerId;
+      await invoice.save({ session });
+      return invoice;
+    });
+    return { success: true, message: "ضایعات با موفقیت ثبت شد." };
+  } catch (error) {
+    console.error("خطا در AddWasteAction:", error);
+    return {
+      success: false,
+      message: `ثبت ضایعات با مشکل مواجه شد: ${error.message}`,
+    };
+  } finally {
+    session.endSession();
+  }
+}
+
+async function createFinancialDocumentsForWaste(
+  invoiceId,
+  shopId,
+  userId,
+  accountIdMap,
+  session
+) {
+  // دریافت شماره حساب هزینه‌های ضایعات
+  const wasteExpenseAccount = await GetAccountIdBystoreIdAndAccountCode(
+    shopId,
+    "5000-4"
+  ); // فرض بر کد حساب هزینه‌های ضایعات
+  if (!wasteExpenseAccount.success) {
+    throw new Error(wasteExpenseAccount.message); // خطا در دریافت حساب هزینه‌های ضایعات
+  }
+
+  // دریافت حساب‌های موجودی کالا از map
+  const inventoryAccounts = Object.keys(accountIdMap);
+  // محاسبه مجموع مقادیر accountIdMap
+  const totalWasteAmount = Object.values(accountIdMap).reduce(
+    (acc, val) => acc + val,
+    0
+  );
+
+  const ledger = new Ledger({
+    referenceId: invoiceId,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  const generalLedgers = [];
+  const bulkAccountOperations = {};
+
+  // ثبت تراکنش بدهکار برای هزینه‌های ضایعات
+  const wasteLedger = new GeneralLedger({
+    // const allamount = accountIdMap[accountId];
+
+    ledger: ledger._id,
+    account: wasteExpenseAccount.accountId,
+    debit: totalWasteAmount, // استفاده از مجموع حساب‌های موجودی کالا
+    credit: 0,
+    referenceId: invoiceId,
+    type: "invoice",
+    shop: shopId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+
+  generalLedgers.push(wasteLedger);
+
+  // ثبت تراکنش بستانکار برای حساب‌های موجودی کالا
+  for (const accountId of inventoryAccounts) {
+    const amount = accountIdMap[accountId];
+    const inventoryLedger = new GeneralLedger({
+      ledger: ledger._id,
+      account: accountId,
+      debit: 0,
+      credit: amount,
+      referenceId: invoiceId,
+      type: "invoice",
+      shop: shopId,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    generalLedgers.push(inventoryLedger);
+
+    // به‌روزرسانی عملیات حسابداری
+    if (bulkAccountOperations[accountId.toString()]) {
+      bulkAccountOperations[accountId.toString()].credit += amount;
+    } else {
+      bulkAccountOperations[accountId.toString()] = {
+        accountId: accountId,
+        credit: amount,
+      };
+    }
+  }
+
+  // ثبت تراکنش بدهکار برای حساب هزینه‌های ضایعات
+  if (bulkAccountOperations[wasteExpenseAccount.accountId.toString()]) {
+    bulkAccountOperations[wasteExpenseAccount.accountId.toString()].debit +=
+      totalWasteAmount;
+  } else {
+    bulkAccountOperations[wasteExpenseAccount.accountId.toString()] = {
+      accountId: wasteExpenseAccount.accountId,
+      debit: totalWasteAmount,
+    };
+  }
+
+  const savedGeneralLedgers = await GeneralLedger.insertMany(generalLedgers, {
+    session,
+  });
+  // به‌روزرسانی مانده حساب‌ها به صورت فردی
+  await updateAccountsBalanceIndividually(bulkAccountOperations, session);
+  ledger.transactions = savedGeneralLedgers.map((gl) => gl._id);
+  await ledger.save({ session });
+
+  return ledger._id;
+}
+
+async function updateAccountsBalanceIndividually(
+  bulkAccountOperations,
+  session
+) {
+  for (const op of Object.values(bulkAccountOperations)) {
+    const updateFields = {};
+
+    if (op.debit) {
+      updateFields.balance = op.debit;
+    } else if (op.credit) {
+      updateFields.balance = -op.credit;
+    }
+
+    const result = await Account.updateOne(
+      { _id: op.accountId },
+      { $inc: { balance: updateFields.balance } },
+      { runValidators: true, session }
+    );
+
+    if (result.nModified !== 1 && result.modifiedCount !== 1) {
+      throw new Error(
+        `به‌روزرسانی حساب با شناسه ${op.accountId} موفقیت‌آمیز نبود.`
+      );
+    }
+  }
+}

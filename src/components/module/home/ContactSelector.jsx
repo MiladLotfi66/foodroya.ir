@@ -40,7 +40,7 @@ import { useParams } from 'next/navigation';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg w-11/12 md:w-1/2 lg:w-1/3 p-4">
+      <div className="bg-white dark:bg-zinc-600 rounded-lg w-11/12 md:w-1/2 lg:w-1/3 p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">انتخاب مخاطب</h2>
           <button onClick={onClose} aria-label="بستن" className="text-red-500">

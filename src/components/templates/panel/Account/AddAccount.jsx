@@ -7,8 +7,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import AccountSchema from "./AccountSchema";
 import { createAccount, updateAccount } from "./accountActions";
 import ContactSelector from "@/module/home/ContactSelector";
-import { useParams } from "next/navigation";
 import ContactMiniInfo from "@/module/home/ContactMiniInfo";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function AddAccount({
   account = null,
@@ -16,8 +16,9 @@ function AddAccount({
   onClose,
   refreshAccounts,
 }) {
-  const { ShopId } = useParams();
-  // const [currencies, setCurrencies] = useState([]);
+  const { currentShopId, baseCurrency } = useShopInfoFromRedux();
+
+  const ShopId = currentShopId;
   const [isSubmit, setIsSubmit] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // وضعیت بارگذاری جدید
   const [isContactSelectorOpen, setIsContactSelectorOpen] = useState(false);
@@ -40,9 +41,9 @@ function AddAccount({
       accountStatus: "فعال",
       accountContact: "",
       creditLimit: 0,
-      bankAcountNumber:"",
-      bankCardNumber:"",
-      posConected:true,
+      bankAcountNumber: "",
+      bankCardNumber: "",
+      posConected: true,
     },
     resolver: yupResolver(AccountSchema),
   });
@@ -60,14 +61,13 @@ function AddAccount({
             accountType: account.accountType || "حساب عادی",
             accountStatus: account.accountStatus || "فعال",
             accountContact: account.contact?._id || "",
-            creditLimit: account.creditLimit !== undefined ? account.creditLimit : "",
-            bankAcountNumber:account.bankAcountNumber||"",
-bankCardNumber:account.bankCardNumber||"",
-posConected:account.posConected||true,
-
+            creditLimit:
+              account.creditLimit !== undefined ? account.creditLimit : "",
+            bankAcountNumber: account.bankAcountNumber || "",
+            bankCardNumber: account.bankCardNumber || "",
+            posConected: account.posConected || true,
           });
           setSelectedContact(account.contact || null);
-          
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -77,19 +77,9 @@ posConected:account.posConected||true,
       }
     };
     fetchAndSetValues();
-    
   }, [ShopId, account, reset]);
 
-  function convertPersianToEnglishNumbers(value) {
-    return value.replace(/[۰۱۲۳۴۵۶۷۸۹]/g, function (d) {
-      return d.charCodeAt(0) - 1776;
-    });
-  }
   
-  function handleInputChange(event) {
-    const englishValue = convertPersianToEnglishNumbers(event.target.value);
-    event.target.value = englishValue;
-  }
   
   const handleFormSubmit = async (formData) => {
     try {
@@ -142,7 +132,29 @@ posConected:account.posConected||true,
     }
   };
 
-
+  function handleInputChangeFAToEN(event) {
+    // تبدیل اعداد فارسی به انگلیسی
+    const persianNumbers = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
+    const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    let value = event.target.value;
+  
+    for (let i = 0; i < persianNumbers.length; i++) {
+      value = value.replace(persianNumbers[i], englishNumbers[i]);
+    }
+  
+    
+    event.target.value = value;  // تبدیل شده به انگلیسی
+  
+    const decimalPlaces = baseCurrency.decimalPlaces; // تعداد اعشار از متغیر baseCurrency.count می‌آید
+    
+    // ساخت عبارت منظم برای محدود کردن تعداد ارقام اعشاری
+    const regex = new RegExp(`^\\d*\\.?\\d{0,${decimalPlaces}}`);
+    const newValue = value.match(regex);
+  
+    if (newValue) {
+      event.target.value = newValue[0];  // اعمال محدودیت به ورودی
+    }
+  }
 
   const handleContactSelect = (contact) => {
     setValue("accountContact", contact._id);
@@ -192,9 +204,9 @@ posConected:account.posConected||true,
         onSubmit={handleSubmit(handleFormSubmit)}
         className="flex flex-col gap-4 p-2 md:p-4"
       >
-           {/* نوع حساب */}
-           <div>
-          <label className="block mb-1 text-gray-700">نوع حساب</label>
+        {/* نوع حساب */}
+        <div>
+          <label className="block mb-1 ">نوع حساب</label>
           <select
             {...register("accountType")}
             className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
@@ -225,7 +237,7 @@ posConected:account.posConected||true,
 
         {/* عنوان حساب */}
         <div>
-          <label className="block mb-1 text-gray-700">عنوان حساب</label>
+          <label className="block mb-1 ">عنوان حساب</label>
           <input
             type="text"
             {...register("title")}
@@ -242,11 +254,9 @@ posConected:account.posConected||true,
           )}
         </div>
 
-     
-
         {/* وضعیت حساب */}
         <div>
-          <label className="block mb-1 text-gray-700">وضعیت حساب</label>
+          <label className="block mb-1 ">وضعیت حساب</label>
           <select
             {...register("accountStatus")}
             className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
@@ -268,12 +278,11 @@ posConected:account.posConected||true,
         </div>
 
         {/* فیلد مخاطب و سقف اعتبار */}
-        {(accountType === "اشخاص حقیقی" ||
-          accountType === "اشخاص حقوقی") && (
+        {(accountType === "اشخاص حقیقی" || accountType === "اشخاص حقوقی") && (
           <>
             {/* انتخاب مخاطب */}
             <div className="relative">
-              <label className="block mb-1 text-gray-700">مخاطب</label>
+              <label className="block mb-1 ">مخاطب</label>
               {selectedContact ? (
                 <div className="flex items-center gap-2">
                   <ContactMiniInfo
@@ -332,94 +341,94 @@ posConected:account.posConected||true,
             <div className="flex flex-col md:flex-row gap-4">
               {/* سقف اعتبار */}
               <div className="flex-1">
-                <label className="block mb-1 text-gray-700">سقف اعتبار</label>
-                <input
-                min={0}
-                  type="number"
-                  {...register("creditLimit")}
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                    errors.creditLimit
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:ring-teal-500"
-                  }`}
-                  placeholder="سقف اعتبار را وارد کنید"
-                  disabled={isSubmit}
-                  onInput={handleInputChange}
+                <label className="block mb-1 ">سقف اعتبار</label>
+                <div className="flex gap-2 items-center text-center">
+                  <input
+                    min={0}
+                    type="text"  // تغییر نوع به text
+                    {...register("creditLimit")}
+                    className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.creditLimit
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-teal-500"
+                    }`}
+                    placeholder="سقف اعتبار را وارد کنید"
+                    disabled={isSubmit}
+                    onChange={handleInputChangeFAToEN}
+                  />
 
-                />
+                  <label className="block mb-1">{baseCurrency.title}</label>
+                </div>
                 {errors.creditLimit && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.creditLimit.message}
                   </p>
                 )}
               </div>
-          
             </div>
           </>
         )}
 
-   {/* فیلد حساب بانکی */}
-   {(accountType === "حساب بانکی" && (
-      <div>
-    <div className="flex flex-col md:flex-row gap-4">
-      {/* شماره حساب بانکی */}
-      <div className="flex-1">
-        <label className="block mb-1 text-gray-700">شماره حساب بانکی</label>
-        <input
-          type="text"
-          {...register("bankAcountNumber")}
-          className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-            errors.bankAcountNumber
-              ? "border-red-500 focus:ring-red-500"
-              : "border-gray-300 focus:ring-teal-500"
-          }`}
-          placeholder="شماره حساب بانکی را وارد کنید"
-          disabled={isSubmit}
-          onInput={handleInputChange}
-        />
-        {errors.bankAcountNumber && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.bankAcountNumber.message}
-          </p>
+        {/* فیلد حساب بانکی */}
+        {accountType === "حساب بانکی" && (
+          <div>
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* شماره حساب بانکی */}
+              <div className="flex-1">
+                <label className="block mb-1 text-gray-700">
+                  شماره حساب بانکی
+                </label>
+                <input
+                  type="text"
+                  {...register("bankAcountNumber")}
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                    errors.bankAcountNumber
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-teal-500"
+                  }`}
+                  placeholder="شماره حساب بانکی را وارد کنید"
+                  disabled={isSubmit}
+                />
+                {errors.bankAcountNumber && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.bankAcountNumber.message}
+                  </p>
+                )}
+              </div>
+
+              {/* شماره کارت */}
+              <div className="flex-1 gap-2">
+                <label className="block mb-1 text-gray-700">شماره کارت</label>
+                <input
+                  type="text"
+                  {...register("bankCardNumber")}
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                    errors.bankCardNumber
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-teal-500"
+                  }`}
+                  placeholder="شماره کارت را وارد کنید"
+                  disabled={isSubmit}
+                />
+                {errors.bankCardNumber && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.bankCardNumber.message}
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* متصل به پوز فروشگاهی */}
+            <div className="flex-1 flex items-center">
+              <label className="block mb-1  mr-2">متصل به پوز فروشگاهی</label>
+              <input
+                type="checkbox"
+                {...register("posConected")}
+                className="h-4 w-4 text-teal-600 border-gray-300 rounded"
+                disabled={isSubmit}
+              />
+            </div>
+          </div>
         )}
-      </div>
-
-      {/* شماره کارت */}
-      <div className="flex-1 gap-2">
-        <label className="block mb-1 text-gray-700">شماره کارت</label>
-        <input
-          type="text"
-          {...register("bankCardNumber")}
-          className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-            errors.bankCardNumber
-              ? "border-red-500 focus:ring-red-500"
-              : "border-gray-300 focus:ring-teal-500"
-          }`}
-          placeholder="شماره کارت را وارد کنید"
-          disabled={isSubmit}
-          onInput={handleInputChange}
-        />
-        {errors.bankCardNumber && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.bankCardNumber.message}
-          </p>
-        )}
-      </div>
-
-   </div>
-     {/* متصل به پوز فروشگاهی */}
-     <div className="flex-1 flex items-center">
-     <label className="block mb-1 text-gray-700 mr-2">متصل به پوز فروشگاهی</label>
-     <input
-       type="checkbox"
-       {...register("posConected")}
-       className="h-4 w-4 text-teal-600 border-gray-300 rounded"
-       disabled={isSubmit}
-     />
- </div>
- </div>
-    ))}
-
 
         {/* دکمه ارسال */}
         <button

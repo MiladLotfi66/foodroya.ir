@@ -4,6 +4,7 @@ import ChevronDown from "@/module/svgs/ChevronDown";
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { GetAllShopEnableProducts } from "@/templates/panel/Product/ProductActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function NewProduct() {
  
