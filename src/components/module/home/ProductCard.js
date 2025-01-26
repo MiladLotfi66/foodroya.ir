@@ -8,7 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { evaluate } from 'mathjs';
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
-function ProductCard({ product ,userRoles}) {
+function ProductCard({ product, userRoles, onAddToCart }) { // اطمینان از دریافت onAddToCart
+  // فراخوانی Hooks در بالاترین سطح
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [userPrice, setUserPrice] = useState(0);
   const [error, setError] = useState('');
@@ -16,8 +17,7 @@ function ProductCard({ product ,userRoles}) {
 
   const decimalPlaces = baseCurrency.decimalPlaces;
 
-  //////////////////////// محاسبه قیمت //////////////////////////////
-
+  // محاسبه قیمت‌ها
   useEffect(() => {
     if (!product || !userRoles) {
       return;
@@ -25,9 +25,7 @@ function ProductCard({ product ,userRoles}) {
 
     try {
       // محاسبه میانگین قیمت (a)
-      const a =
-        Number(product.accountId.balance) /
-        (Number(product.stock) > 0 ? Number(product.stock) : 1);
+      const a = Number(product.accountId.balance) / (Number(product.stock) > 0 ? Number(product.stock) : 1);
 
       // آخرین قیمت خرید (b)
       const b = Number(product.lastPurchasePrice);
@@ -94,17 +92,10 @@ function ProductCard({ product ,userRoles}) {
     }
   }, [product, userRoles, decimalPlaces]);
 
-  //////////////////////// پایان محاسبه قیمت ////////////////////////  
-  // دریافت prop product
-  if (!product || !product.title) { // بررسی وجود پراپ و حداقل یک فیلد ضروری
-    return <div>محصول نامعتبر</div>;
-  }
-
-
+  // فراخوانی Hooks مرتبط با منو و تعداد
   const containerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null); // مرجع برای منو
-  const position = { top: 0, left: 0 };
   const [quantity, setQuantity] = useState(1);
 
   const handleMenuToggle = () => {
@@ -132,20 +123,29 @@ function ProductCard({ product ,userRoles}) {
     setQuantity((prev) => prev + 1);
   };
 
-  const handleAddToCart = () => {
-    onAddToCart(product?.id, quantity);
+  const handleAddToCartClick = () => { // تغییر نام تابع برای جلوگیری از تداخل
+    if (onAddToCart) { // بررسی تعریف بودن onAddToCart
+      onAddToCart(product?.id, quantity);
+    } else {
+      console.warn("onAddToCart prop is not provided.");
+    }
   };
 
+  // بررسی وجود پراپ و حداقل یک فیلد ضروری بعد از فراخوانی Hooks
+  if (!product || !product.title) { 
+    return <div>محصول نامعتبر</div>; 
+  }
+
   //////////////////////// actions //////////////////////////////
-    // محدود کردن تعداد تگ‌ها
-    const maxTagsToShow = 5;
-    const displayedTags = product?.tags?.slice(0, maxTagsToShow);
-    const extraTags = product?.tags?.length - maxTagsToShow;
-    const truncateText = (text, maxLength) => {
-      if (text.length <= maxLength) return text;
-      return text.slice(0, maxLength) + '...';
-    };
-    
+  // محدود کردن تعداد تگ‌ها
+  const maxTagsToShow = 5;
+  const displayedTags = product?.tags?.slice(0, maxTagsToShow);
+  const extraTags = product?.tags?.length - maxTagsToShow;
+  const truncateText = (text, maxLength) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  };
+
   // تعریف فرمت‌کننده بین‌المللی
   const formatter = new Intl.NumberFormat('fa-IR', {
     minimumFractionDigits: decimalPlaces,
@@ -164,29 +164,24 @@ function ProductCard({ product ,userRoles}) {
       </div>
       <div className="relative z-0 mb-2 md:mb-5">
         <Image
-          className=" w-36 h-32 mx-auto md:w-48 md:h-48 rounded-md"
+          className="w-36 h-32 mx-auto md:w-48 md:h-48 rounded-md"
           src={product?.images[0]}
           alt="signalmobile procuct"
           width={100}
           height={100}
           quality={50}
-          // priority={true}
         />
       </div>
       <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
         {product?.title}{" "}
       </h4>
 
-      {/* <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
-        {product?.description}{" "}
-      </h4> */}
-
       <div className="flex flex-col mt-2 md:mt-3 gap-3 font-Dana text-xs">
-        <div >
+        <div>
           <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
             {formatter.format(defaultPrice)}{" "}
           </span>
-          <span className=" text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
+          <span className="text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
         </div>
         <div className="text-teal-600 dark:text-emerald-500 ">
           <span className="font-DanaDemiBold text-sm md:text-base lg:text-xl ">
@@ -195,8 +190,9 @@ function ProductCard({ product ,userRoles}) {
           <span className="text-xs md:text-sm tracking-tighter">{baseCurrency.title}</span>
         </div>
       </div>
-           {/* بخش انتخاب تعداد و افزودن به سبد خرید */}
-           <div className="flex flex-col gap-2 p-2 md:p-6">
+
+      {/* بخش انتخاب تعداد و افزودن به سبد خرید */}
+      <div className="flex flex-col gap-2 p-2 md:p-6">
         {/* انتخاب تعداد */}
         <div className="flex items-center justify-center gap-2">
           <button
@@ -213,38 +209,38 @@ function ProductCard({ product ,userRoles}) {
             +
           </button>
         </div>
-
-
       </div>
-        {/* دکمه افزودن به سبد خرید */}
-        <button
-          onClick={handleAddToCart}
-          className="flexCenter w-full bg-blue-500 hover:bg-blue-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          افزودن به سبد خرید
-          <svg className="h-4 w-4 md:h-[22px] md:w-[22px] m-2">
-            <use href="#Basketsvg"></use>
-          </svg>
-        </button>
-        <h4 className="text-right text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm lg:text-base mt-2">
-       موجودی:  {product?.stock}{" "}{product?.unit}
-      </h4> 
-                         {/* تگ‌ها */}
-                         <div className="mt-2 flex flex-wrap  content-center line-clamp-2 text-wrap max-h-18">
-          {displayedTags?.map((tag, index) => (
-          <span
-          key={index}
-          className="text-center inline-block bg-blue-200 rounded-full px-3 py-1 text-sm font-semibold text-blue-700 mr-2 mb-2"
-        >
-          {truncateText(tag.name, 10)}
-        </span>          ))}
-          {extraTags > 0 && (
-            <span className="text-center bg-gray-200 text-gray-800 text-xs font-semibold mr-2 mb-2 px-2.5 py-0.5 rounded">
-              +{extraTags} بیشتر
-            </span>
-          )}
-        </div>
 
+      {/* دکمه افزودن به سبد خرید */}
+      <button
+        onClick={handleAddToCartClick}
+        className="flexCenter w-full bg-blue-500 hover:bg-blue-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-colors"
+      >
+        افزودن به سبد خرید
+        <svg className="h-4 w-4 md:h-[22px] md:w-[22px] m-2">
+          <use href="#Basketsvg"></use>
+        </svg>
+      </button>
+      <h4 className="text-right text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm lg:text-base mt-2">
+        موجودی: {product?.stock}{" "}{product?.unit}
+      </h4> 
+
+      {/* تگ‌ها */}
+      <div className="mt-2 flex flex-wrap content-center line-clamp-2 text-wrap max-h-18">
+        {displayedTags?.map((tag, index) => (
+          <span
+            key={index}
+            className="text-center inline-block bg-blue-200 rounded-full px-3 py-1 text-sm font-semibold text-blue-700 mr-2 mb-2"
+          >
+            {truncateText(tag.name, 10)}
+          </span>
+        ))}
+        {extraTags > 0 && (
+          <span className="text-center bg-gray-200 text-gray-800 text-xs font-semibold mr-2 mb-2 px-2.5 py-0.5 rounded">
+            +{extraTags} بیشتر
+          </span>
+        )}
+      </div>
     </div>
   );
 }

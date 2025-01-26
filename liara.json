@@ -5,6 +5,6 @@
 
     "build": {
       "location": "germany"
-   }
-   
+   },
+    "port":3000
   }
