@@ -8,7 +8,7 @@ const CurrencySchema = new mongoose.Schema(
     exchangeRate: { type: Number, required: true },
     decimalPlaces: { type: Number, required: true, min: 0, max: 6 },
     status: { type: String, enum: ['فعال', 'غیرفعال'], default: 'فعال' },
-    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },

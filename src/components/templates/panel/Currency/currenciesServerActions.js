@@ -32,7 +32,7 @@ export async function GetAllCurrencies(shopId) {
     return { status: 500, message: 'خطایی در دریافت ارزها رخ داد.' };
   }
 }
-export async function GetCurrencyIdByName(name) {
+export async function AddCurrencyActionforRial() {
   await connectDB();
   let user;
     try {
@@ -41,20 +41,31 @@ export async function GetCurrencyIdByName(name) {
       user = null;
       console.log("Authentication failed:", authError);
     }
-
-  if (!user) {
+      if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
+
+  // بررسی یکتایی shortName
+  
+  // ایجاد ارز جدید
+  const newCurrency = new Currency({
+    title:"ریال",
+    shortName:"iri",
+    exchangeRate: 1,
+    decimalPlaces: 0,
+    status:"فعال",
+    createdBy: user.id, // استفاده از _id به جای id
+    updatedBy: user.id, // استفاده از _id به جای id
+  });
   try {
-    const currencies = await Currency.findOne({ title: name }).select('-__v')
-      .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
-    return { status: 200, currencies};
+    const savedCurrency = await newCurrency.save();
+    const plainCurrency = JSON.parse(JSON.stringify(savedCurrency));
+    return { status: 201, currency: plainCurrency };
   } catch (error) {
-    console.error("Error fetching currencies:", error);
-    return { status: 500, message: 'خطایی در دریافت ارزها رخ داد.' };
+    console.error("Error adding currency:", error);
+    return { status: 500, message: 'خطایی در ایجاد ارز رخ داد.' };
   }
 }
-
 export async function AddCurrencyAction(formData) {
   await connectDB();
   let user;
@@ -100,7 +111,6 @@ export async function AddCurrencyAction(formData) {
     return { status: 500, message: 'خطایی در ایجاد ارز رخ داد.' };
   }
 }
-
 
 export async function EditCurrencyAction(formData, ShopId) {
   await connectDB();
@@ -158,8 +168,28 @@ export async function EditCurrencyAction(formData, ShopId) {
     return { status: 500, message: 'خطایی در ویرایش ارز رخ داد.' };
   }
 }
+export async function GetCurrencyIdByName(name) {
+  await connectDB();
+  let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.log("Authentication failed:", authError);
+    }
 
-
+  if (!user) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+  try {
+    const currencies = await Currency.findOne({ title: name }).select('-__v')
+      .lean(); // استفاده از lean() برای دریافت اشیاء ساده  
+    return { status: 200, currencies};
+  } catch (error) {
+    console.error("Error fetching currencies:", error);
+    return { status: 500, message: 'خطایی در دریافت ارزها رخ داد.' };
+  }
+}
 export async function DeleteCurrencies(currencyId) {
   await connectDB();
   let user;
@@ -184,7 +214,6 @@ export async function DeleteCurrencies(currencyId) {
     return { status: 500, message: 'خطایی در حذف ارز رخ داد.' };
   }
 }
-
 
 export async function EnableCurrencyAction(currencyId) {
   await connectDB();

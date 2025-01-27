@@ -81,8 +81,6 @@ export async function GetUserShops() {
       deleted_at: Shop.deleted_at?.toISOString() || null, // تبدیل تاریخ به ISO string
       followers: simplifyFollowers(Shop.followers),
       avatarUrl: Shop.LogoUrl, // اطمینان از وجود LogoUrl
-
-
     }));
 
     return { Shops: plainShops, status: 200 };
@@ -109,7 +107,7 @@ export async function GetUserShopsCount() {
   if (!userData) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-  
+
 
     // محاسبه تعداد فروشگاه‌ها با استفاده از countDocuments
     const shopCount = await shops.countDocuments({ 
