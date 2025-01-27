@@ -99,6 +99,7 @@ function AddFinancialDocument({
 
     setTotalDebtors(debtorsTotal);
     setTotalCreditors(creditorsTotal);
+
     setIsBalanced(debtorsTotal === creditorsTotal && debtorsTotal > 0);
   }, [watchDebtors, watchCreditors]);
   ///////////////////////////////////
@@ -362,20 +363,80 @@ function AddFinancialDocument({
                     </div>
                     <div className="mb-1 md:mb-4 ">
                       <div className="flex gap-2 items-center text-center">
-                        <input
-                          type="text"
-                          {...register(`debtors.${index}.amount`, {
-                            valueAsNumber: true, // تغییر داده شده
-                          })}
-                          className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
-                            errors.debtors?.[index]?.amount
-                              ? "border-red-400"
-                              : "border-gray-300"
-                          } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                          placeholder="مبلغ"
-                          onChange={handleInputChangeFAToEN}
-                          required
+                        <Controller
+                          name={`debtors.${index}.amount`}
+                          control={control}
+                          defaultValue={field.amount || ""}
+                          render={({
+                            field: { onChange, onBlur, value, ref },
+                          }) => (
+                            <div className="flex gap-2 items-center text-center">
+                              <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => {
+                                  let val = e.target.value;
+                                  // تبدیل اعداد فارسی به انگلیسی
+                                  const persianNumbers = [
+                                    /۰/g,
+                                    /۱/g,
+                                    /۲/g,
+                                    /۳/g,
+                                    /۴/g,
+                                    /۵/g,
+                                    /۶/g,
+                                    /۷/g,
+                                    /۸/g,
+                                    /۹/g,
+                                  ];
+                                  const englishNumbers = [
+                                    "0",
+                                    "1",
+                                    "2",
+                                    "3",
+                                    "4",
+                                    "5",
+                                    "6",
+                                    "7",
+                                    "8",
+                                    "9",
+                                  ];
+                                  for (
+                                    let i = 0;
+                                    i < persianNumbers.length;
+                                    i++
+                                  ) {
+                                    val = val.replace(
+                                      persianNumbers[i],
+                                      englishNumbers[i]
+                                    );
+                                  }
+
+                                  // اعمال محدودیت اعشار
+                                  const decimalPlaces =
+                                    baseCurrency.decimalPlaces;
+                                  const regex = new RegExp(
+                                    `^\\d*\\.?\\d{0,${decimalPlaces}}`
+                                  );
+                                  const newValue = val.match(regex);
+                                  if (newValue) {
+                                    onChange(newValue[0]);
+                                  }
+                                }}
+                                onBlur={onBlur}
+                                ref={ref}
+                                className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
+                                  errors.debtors?.[index]?.amount
+                                    ? "border-red-400"
+                                    : "border-gray-300"
+                                } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                                placeholder="مبلغ"
+                                required
+                              />
+                            </div>
+                          )}
                         />
+
                         <label className="block mb-1">
                           {baseCurrency.title}
                         </label>
@@ -467,20 +528,80 @@ function AddFinancialDocument({
                     </div>
                     <div className="mb-1 md:mb-4 ">
                       <div className="flex gap-2 items-center text-center">
-                        <input
-                          type="text"
-                          {...register(`creditors.${index}.amount`, {
-                            valueAsNumber: true, // تغییر داده شده
-                          })}
-                          className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
-                            errors.creditors?.[index]?.amount
-                              ? "border-red-400"
-                              : "border-gray-300"
-                          } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                          placeholder="مبلغ"
-                          onChange={handleInputChangeFAToEN}
-                          required
+                        <Controller
+                          name={`creditors.${index}.amount`}
+                          control={control}
+                          defaultValue={field.amount || ""}
+                          render={({
+                            field: { onChange, onBlur, value, ref },
+                          }) => (
+                            <div className="flex gap-2 items-center text-center">
+                              <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => {
+                                  let val = e.target.value;
+                                  // تبدیل اعداد فارسی به انگلیسی
+                                  const persianNumbers = [
+                                    /۰/g,
+                                    /۱/g,
+                                    /۲/g,
+                                    /۳/g,
+                                    /۴/g,
+                                    /۵/g,
+                                    /۶/g,
+                                    /۷/g,
+                                    /۸/g,
+                                    /۹/g,
+                                  ];
+                                  const englishNumbers = [
+                                    "0",
+                                    "1",
+                                    "2",
+                                    "3",
+                                    "4",
+                                    "5",
+                                    "6",
+                                    "7",
+                                    "8",
+                                    "9",
+                                  ];
+                                  for (
+                                    let i = 0;
+                                    i < persianNumbers.length;
+                                    i++
+                                  ) {
+                                    val = val.replace(
+                                      persianNumbers[i],
+                                      englishNumbers[i]
+                                    );
+                                  }
+
+                                  // اعمال محدودیت اعشار
+                                  const decimalPlaces =
+                                    baseCurrency.decimalPlaces;
+                                  const regex = new RegExp(
+                                    `^\\d*\\.?\\d{0,${decimalPlaces}}`
+                                  );
+                                  const newValue = val.match(regex);
+                                  if (newValue) {
+                                    onChange(newValue[0]);
+                                  }
+                                }}
+                                onBlur={onBlur}
+                                ref={ref}
+                                className={`w-full border bg-gray-300 dark:bg-zinc-600 ${
+                                  errors.creditors?.[index]?.amount
+                                    ? "border-red-400"
+                                    : "border-gray-300"
+                                } rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                                placeholder="مبلغ"
+                                required
+                              />
+                            </div>
+                          )}
                         />
+
                         <label className="block mb-1">
                           {baseCurrency.title}
                         </label>
@@ -551,6 +672,7 @@ function AddFinancialDocument({
             >
               {isSubmit ? <HashLoader color="white" size={20} /> : "ذخیره"}
             </button>
+         
           </form>
 
           <Toaster />
