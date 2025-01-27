@@ -45,7 +45,6 @@ const UserSchema = new Schema(
       maxlength: 100,    // حداکثر 100 کاراکتر
       trim: true,
       lowercase: true, // تبدیل به حروف کوچک
-      unique: true,
 
     }, 
     userUniqName: {
@@ -158,5 +157,12 @@ UserSchema.methods.toJSON = function() {
   delete obj.refreshToken;
   return obj;
 };
-
+// ایجاد ایندکس منحصر به فرد جزئی
+UserSchema.index(
+  { email: 1 },
+  { 
+    unique: true,
+    sparse: true    // فقط روی مقادیر موجود ایندکس ایجاد می‌کند
+  }
+);
 export default models.User || model("User", UserSchema);

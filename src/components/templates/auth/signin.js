@@ -61,7 +61,6 @@ function SignIn() {
       });
       if (res.status !==200) {
         toast.error(res.error)
-        console.log("res",res);
       } else {
         router.push("/");
       }

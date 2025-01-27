@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import RoleNameAndImageCart from "./RoleNameAndImageCart";
 
 function UsersListModal({ Users, AddFunc, RemoveFunc }) {
-  console.log("Users",Users);
   
   const [localUsers, setLocalUsers] = useState([]);
 

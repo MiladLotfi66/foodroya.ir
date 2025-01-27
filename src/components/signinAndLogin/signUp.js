@@ -15,8 +15,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
 import FormStep from "@/module/User/FormStep";
 import InputField from "@/module/User/InputField";
-import { checkUsernameUnique, signUpServerAction } from "./Actions/signUpServerAction";
-
+import { checkUsernameUnique, completeSignUp } from "./Actions/signUpServerAction";
 function SignUp() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -86,7 +85,7 @@ function SignUp() {
   const formsubmitting = async (data) => {
     setIsSubmit(true);
     try {
-      const res = await signUpServerAction(data);
+      const res = await completeSignUp(data);
       if (res.status === 201) {
         toast.success(
           res.message ||
