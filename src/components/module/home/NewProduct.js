@@ -49,6 +49,8 @@ function NewProduct() {
         const response = await GetAllShopEnableProducts(ShopId, page, limit);
 
         if (response.status === 200) {
+          console.log("response",response);
+          
           setProducts(response.data.products);
           setPagination(response.data.pagination);
         } else {

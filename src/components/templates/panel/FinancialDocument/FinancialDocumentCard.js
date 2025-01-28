@@ -21,7 +21,6 @@ function FinancialDocumentCard({
   const [showAllTransactions, setShowAllTransactions] = useState(false); // مدیریت نمایش تراکنش‌ها
   const [showEditFields, setShowEditFields] = useState(false); // مدیریت نمایش فیلدهای ویرایش
 
-console.log("financialDocument",financialDocument);
 
   useEffect(() => {
     // هر بار که props سند مالی تغییر می‌کند، state محلی به‌روزرسانی می‌شود

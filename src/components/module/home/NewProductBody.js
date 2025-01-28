@@ -13,6 +13,7 @@ function NewProductBody({ products ,ShopId}) {
     async function fetchRoles() {
       try {
         const roles = await GetUserRolesInShop(ShopId); // اطمینان حاصل کنید که این تابع نقش‌ها را بازمی‌گرداند
+      
         setUserRoles(roles);
       } catch (err) {
         console.error('خطا در دریافت نقش‌های کاربر:', err);

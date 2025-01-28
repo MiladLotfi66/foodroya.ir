@@ -16,6 +16,7 @@ function ProductCard({ product, userRoles, onAddToCart }) { // اطمینان ا
   const { baseCurrency } = useShopInfoFromRedux();
 
   const decimalPlaces = baseCurrency.decimalPlaces;
+console.log("product",product);
 
   // محاسبه قیمت‌ها
   useEffect(() => {
@@ -52,7 +53,7 @@ function ProductCard({ product, userRoles, onAddToCart }) { // اطمینان ا
       let rolePrices = [];
 
       product.pricingTemplate.pricingFormulas.forEach((pricingFormula) => {
-        const formulaRoles = pricingFormula.roles.map((role) => role.id);
+        const formulaRoles = pricingFormula.roles
 
         // بررسی اگر کاربر دارای نقش‌های این فرمول باشد
         const userHasRole = userRoles.roles.some((userRole) =>
@@ -60,6 +61,8 @@ function ProductCard({ product, userRoles, onAddToCart }) { // اطمینان ا
         );
 
         if (userHasRole) {
+          console.log("userHasRole",userHasRole);
+          
           // ارزیابی فرمول
           const calculatedPrice = evaluateFormula(pricingFormula.formula);
 

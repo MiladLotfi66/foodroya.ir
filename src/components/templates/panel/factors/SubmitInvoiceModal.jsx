@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { GetAllAccountsByOptions } from '../Account/accountActions';
-import { AddPurchaseInvoiceAction, AddSalesInvoiceAction, AddPurchaseReturnAction } from './invoiceItemsServerActions';
-import { AddWasteAction ,AddSalesReturnAction} from './invoiceItemsServerActions';
+import {
+  AddPurchaseInvoiceAction,
+  AddSalesInvoiceAction,
+  AddPurchaseReturnAction,
+  AddWasteAction,
+  AddSalesReturnAction
+} from './invoiceItemsServerActions';
 import { useShopInfoFromRedux } from '@/utils/getShopInfoFromREdux';
+
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
-        const { baseCurrency } = useShopInfoFromRedux();
-  
+  const { baseCurrency } = useShopInfoFromRedux();
+
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([
     { accountId: '', amount: 0 }
@@ -19,6 +25,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
     if (isOpen && ShopId && currentInvoiceCustomerId && invoiceType !== 'Waste') {
       fetchAccounts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, ShopId, currentInvoiceCustomerId, invoiceType]);
 
   // بازنشانی تخصیص حساب‌ها و حساب‌ها هنگام بستن مودال
@@ -64,6 +71,14 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
     }
   };
 
+  // تابع کمکی برای تعیین مقدار step بر اساس تعداد اعشار
+  const getStepValue = (decimalPlaces) => {
+    if (decimalPlaces > 0) {
+      return `0.${'0'.repeat(decimalPlaces - 1)}1`;
+    }
+    return '1'; // در صورتی که اعشار صفر باشد، از قدم 1 استفاده می‌شود
+  };
+
   // توابع مدیریت تخصیص حساب‌ها
   const handleAccountChange = (index, field, value) => {
     if (field === 'amount') {
@@ -81,7 +96,6 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
       setAllocatedAccounts(updatedAllocatedAccounts);
     }
   };
-  
 
   const handleAddAccount = () => {
     setAllocatedAccounts([...allocatedAccounts, { accountId: '', amount: 0 }]);
@@ -95,7 +109,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     // اگر نوع فاکتور Waste نیست، اعتبارسنجی تخصیص حساب‌ها را انجام دهید
     if (invoiceType !== 'Waste') {
       // اعتبارسنجی چند حساب انتخاب شده
@@ -103,29 +117,31 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
         alert('لطفاً حداقل یک حساب را انتخاب کنید.');
         return;
       }
-  
+
       // بررسی اینکه همه حساب‌ها انتخاب شده و مبالغ معتبر هستند
       for (let i = 0; i < allocatedAccounts.length; i++) {
         if (!allocatedAccounts[i].accountId) {
           alert(`لطفاً حساب در ردیف ${i + 1} را انتخاب کنید.`);
           return;
         }
-        if (allocatedAccounts[i].amount <= 0) {
+        if (Number(allocatedAccounts[i].amount) <= 0) {
           alert(`مبلغ در ردیف ${i + 1} باید بزرگتر از صفر باشد.`);
           return;
         }
       }
-  
+
       // محاسبه مجموع مبالغ تخصیص‌یافته و مقایسه با مبلغ کل فاکتور
       const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount), 0);
-      const invoiceTotal = invoiceData.totalPrice || 0;
-  
-      if (totalAllocated !== invoiceTotal) {
+      const invoiceTotal = Number(invoiceData.totalPrice) || 0;
+
+      // مقایسه با دقت با توجه به اعشار
+      const precision = Math.pow(10, baseCurrency.decimalPlaces);
+      if (Math.round(totalAllocated * precision) !== Math.round(invoiceTotal * precision)) {
         alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated}) با مبلغ کل فاکتور (${invoiceTotal}) مطابقت ندارد.`);
         return;
       }
     }
-  
+
     // ایجاد داده‌های ارسال شده بر اساس نوع فاکتور
     const invoiceDataToSubmit = {
       storeId: ShopId,
@@ -135,12 +151,12 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
       invoiceItems, // شامل آیتم‌های فاکتور
       // سایر اطلاعات مورد نیاز
     };
-  
+
     // اگر نوع فاکتور غیر از Waste بود، حساب‌ها را اضافه کنید
     if (invoiceType !== 'Waste') {
       invoiceDataToSubmit.accountAllocations = allocatedAccounts;
     }
-  
+
     try {
       let response;
       switch(invoiceType) {
@@ -178,8 +194,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
       alert(`یک خطای غیرمنتظره رخ داد: ${errorMessage}`);
     }
   };
-  
-  
+
   if (!isOpen) {
     return null;
   }
@@ -218,18 +233,17 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
                   <label htmlFor={`amount-${index}`} className="block mb-2">مبلغ {index + 1}:</label>
                   <input
-  type="number"
-  id={`amount-${index}`}
-  min="0"
-  value={allocation.amount}
-  onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
-  className="w-full mb-2 border rounded px-4 py-2"
-  placeholder="مبلغ"
-  step={`0.${'0'.repeat(baseCurrency.decimalPlaces - 1)}1`} // برای کنترل اعشار دقیق
-  pattern={`^-?\\d+(\\.\\d{0,${baseCurrency.decimalPlaces}})?$`}
-  title={`لطفاً حداکثر ${baseCurrency.decimalPlaces} رقم اعشار وارد کنید.`}
-/>
-
+                    type="number"
+                    id={`amount-${index}`}
+                    min="0"
+                    value={allocation.amount}
+                    onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
+                    className="w-full mb-2 border rounded px-4 py-2"
+                    placeholder="مبلغ"
+                    step={getStepValue(baseCurrency.decimalPlaces)} // اصلاح شده برای کنترل اعشار دقیق
+                    pattern={`^-?\\d+(\\.\\d{0,${baseCurrency.decimalPlaces}})?$`}
+                    title={`لطفاً حداکثر ${baseCurrency.decimalPlaces} رقم اعشار وارد کنید.`}
+                  />
 
                   {/* دکمه حذف حساب، فقط اگر بیش از یک حساب وجود داشته باشد */}
                   {allocatedAccounts.length > 1 && (
@@ -264,7 +278,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
           )}
 
           {/* سایر فیلدهای مورد نیاز */}
-
+          
           <div className="flex justify-end gap-4">
             <button
               type="button"

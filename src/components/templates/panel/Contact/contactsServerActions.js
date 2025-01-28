@@ -430,10 +430,11 @@ export async function GetUserRolesInShop(shopId) {
   
 
   try {
-    const contacts = await Contact.find({ shop: shopId , userAccount:user._id })
+    const contacts = await Contact.find({ shop: shopId , userAccount:user.id })
     .populate('RolesId', 'RoleTitle') // انتخاب فقط RoleTitle
     .select('RolesId') // انتخاب فقط فیلد RolesId
     .lean();
+    
     const roles = contacts.flatMap(contact =>
       contact.RolesId.map(role => ({
         id: role._id,
