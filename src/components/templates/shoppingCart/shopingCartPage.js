@@ -122,11 +122,13 @@ const ShopingCartPage = () => {
               <Image
                 src={item.image || '/images/default-product.jpg'} // مسیر تصویر یا تصویر پیش‌فرض
                 alt={item.title || item.productTitle}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-md"
+                width={80}
+                height={80}
+                className="object-cover w-full h-full shadow-md rounded-lg"
                 onError={(e) => { e.target.src = '/images/default-product.jpg'; }} // جایگزینی تصویر در صورت خطا
-              />
+                quality={20}
+                priority={true}
+             />
             </div>
 
             {/* اطلاعات محصول */}
