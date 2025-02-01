@@ -21,6 +21,10 @@ const schema = new Schema(
     Shop: {
       type: Schema.Types.ObjectId,
       ref: 'Shop', // تغییر نام از 'Users' به 'User'
+    },  
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User', // تغییر نام از 'Users' به 'User'
     },   
     
   },

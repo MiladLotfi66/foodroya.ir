@@ -7,16 +7,14 @@ import Star from "@/module/svgs/Star";
 import { useEffect, useRef, useState } from "react";
 import { evaluate } from 'mathjs';
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+import AddToCartButton from "@/templates/shoppingCart/addtoCardButton";
 
-function ProductCard({ product, userRoles, onAddToCart }) { // اطمینان از دریافت onAddToCart
-  // فراخوانی Hooks در بالاترین سطح
+function ProductCard({ product, userRoles }) {
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [userPrice, setUserPrice] = useState(0);
   const [error, setError] = useState('');
-  const { baseCurrency } = useShopInfoFromRedux();
-
+  const { baseCurrency,currentShopId,shopName,shopLogo,shopUniqName} = useShopInfoFromRedux();
   const decimalPlaces = baseCurrency.decimalPlaces;
-console.log("product",product);
 
   // محاسبه قیمت‌ها
   useEffect(() => {
@@ -25,69 +23,44 @@ console.log("product",product);
     }
 
     try {
-      // محاسبه میانگین قیمت (a)
       const a = Number(product.accountId.balance) / (Number(product.stock) > 0 ? Number(product.stock) : 1);
-
-      // آخرین قیمت خرید (b)
       const b = Number(product.lastPurchasePrice);
-
-      // قیمت فروش فعلی (c)
       const c = Number(product.price);
 
-      // تابع کمکی برای ارزیابی فرمول با استفاده از mathjs
       const evaluateFormula = (formula) => {
-        // ایمن‌سازی ورودی‌ها با محدود کردن به کاراکترهای مجاز
         const allowedCharacters = /^[a-zA-Z0-9+\-*/().\s]+$/;
         if (!allowedCharacters.test(formula)) {
           throw new Error("حروف غیرمجاز در فرمول موجود است");
         }
-
-        // تعریف متغیرها برای محاسبه
         const scope = { a, b, c };
-
-        // ارزیابی فرمول با mathjs
         return evaluate(formula, scope);
       };
 
-      // محاسبه قیمت‌های بر اساس نقش‌ها
       let rolePrices = [];
-
       product.pricingTemplate.pricingFormulas.forEach((pricingFormula) => {
-        const formulaRoles = pricingFormula.roles
-
-        // بررسی اگر کاربر دارای نقش‌های این فرمول باشد
+        const formulaRoles = pricingFormula.roles;
         const userHasRole = userRoles.roles.some((userRole) =>
           formulaRoles.includes(userRole.id)
         );
 
         if (userHasRole) {
-          console.log("userHasRole",userHasRole);
-          
-          // ارزیابی فرمول
           const calculatedPrice = evaluateFormula(pricingFormula.formula);
-
-          // اضافه کردن قیمت محاسبه شده به لیست
           rolePrices.push(calculatedPrice);
         }
       });
 
-      // انتخاب ارزان‌ترین قیمت از قیمت‌های نقش‌ها
       const minRolePrice = rolePrices.length > 0 ? Math.min(...rolePrices) : null;
-
-      // محاسبه قیمت فروش عمومی با استفاده از defaultFormula
       let defaultSalePrice = null;
       if (product.pricingTemplate.defaultFormula) {
         defaultSalePrice = evaluateFormula(product.pricingTemplate.defaultFormula);
       }
 
-      // تابع فرمت‌بندی قیمت
       const formatPrice = (price) => {
         return Number(price.toFixed(decimalPlaces));
       };
 
-      // به‌روزرسانی وضعیت با قیمت‌های فرمت‌شده
       setDefaultPrice(defaultSalePrice !== null ? formatPrice(defaultSalePrice) : formatPrice(c));
-      setUserPrice(minRolePrice !== null ? formatPrice(minRolePrice) : formatPrice(c));
+      setUserPrice(minRolePrice !== null ? formatPrice(minRolePrice) : formatPrice(defaultSalePrice));
       setError("");
     } catch (err) {
       console.error("خطا در محاسبه قیمت‌ها:", err);
@@ -95,10 +68,9 @@ console.log("product",product);
     }
   }, [product, userRoles, decimalPlaces]);
 
-  // فراخوانی Hooks مرتبط با منو و تعداد
   const containerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null); // مرجع برای منو
+  const menuRef = useRef(null);
   const [quantity, setQuantity] = useState(1);
 
   const handleMenuToggle = () => {
@@ -126,21 +98,10 @@ console.log("product",product);
     setQuantity((prev) => prev + 1);
   };
 
-  const handleAddToCartClick = () => { // تغییر نام تابع برای جلوگیری از تداخل
-    if (onAddToCart) { // بررسی تعریف بودن onAddToCart
-      onAddToCart(product?.id, quantity);
-    } else {
-      console.warn("onAddToCart prop is not provided.");
-    }
-  };
-
-  // بررسی وجود پراپ و حداقل یک فیلد ضروری بعد از فراخوانی Hooks
-  if (!product || !product.title) { 
-    return <div>محصول نامعتبر</div>; 
+  if (!product || !product.title) {
+    return <div>محصول نامعتبر</div>;
   }
 
-  //////////////////////// actions //////////////////////////////
-  // محدود کردن تعداد تگ‌ها
   const maxTagsToShow = 5;
   const displayedTags = product?.tags?.slice(0, maxTagsToShow);
   const extraTags = product?.tags?.length - maxTagsToShow;
@@ -149,14 +110,13 @@ console.log("product",product);
     return text.slice(0, maxLength) + '...';
   };
 
-  // تعریف فرمت‌کننده بین‌المللی
   const formatter = new Intl.NumberFormat('fa-IR', {
     minimumFractionDigits: decimalPlaces,
     maximumFractionDigits: decimalPlaces,
   });
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative bg-white p-2 md:p-5 mt-10 md:mt-12 dark:bg-zinc-700 shadow-normal rounded-2xl"
     >
@@ -180,12 +140,14 @@ console.log("product",product);
       </h4>
 
       <div className="flex flex-col mt-2 md:mt-3 gap-3 font-Dana text-xs">
-        <div>
-          <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
-            {formatter.format(defaultPrice)}{" "}
-          </span>
-          <span className="text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
-        </div>
+        {defaultPrice !== userPrice && (
+          <div>
+            <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
+              {formatter.format(defaultPrice)}{" "}
+            </span>
+            <span className="text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
+          </div>
+        )}
         <div className="text-teal-600 dark:text-emerald-500 ">
           <span className="font-DanaDemiBold text-sm md:text-base lg:text-xl ">
             {formatter.format(userPrice)}{" "}
@@ -196,7 +158,6 @@ console.log("product",product);
 
       {/* بخش انتخاب تعداد و افزودن به سبد خرید */}
       <div className="flex flex-col gap-2 p-2 md:p-6">
-        {/* انتخاب تعداد */}
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={handleDecrease}
@@ -214,19 +175,17 @@ console.log("product",product);
         </div>
       </div>
 
-      {/* دکمه افزودن به سبد خرید */}
-      <button
-        onClick={handleAddToCartClick}
-        className="flexCenter w-full bg-blue-500 hover:bg-blue-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-colors"
-      >
-        افزودن به سبد خرید
-        <svg className="h-4 w-4 md:h-[22px] md:w-[22px] m-2">
-          <use href="#Basketsvg"></use>
-        </svg>
-      </button>
+      {/* استفاده از کامپوننت AddToCartButton */}
+      <AddToCartButton
+        product={product}
+        price={userPrice}
+        shop={currentShopId} // اگر فروشگاه هم نیاز است
+        quantity={quantity}
+      />
+
       <h4 className="text-right text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm lg:text-base mt-2">
         موجودی: {product?.stock}{" "}{product?.unit}
-      </h4> 
+      </h4>
 
       {/* تگ‌ها */}
       <div className="mt-2 flex flex-wrap content-center line-clamp-2 text-wrap max-h-18">

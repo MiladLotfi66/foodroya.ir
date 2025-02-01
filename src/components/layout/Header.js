@@ -7,17 +7,21 @@ import Basketsvg from "@/module/svgs/Basketsvg";
 import Leftarrow from "@/module/svgs/Leftarrow";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
 import Sunsvg from "@/module/svgs/Sunsvg";
-import BasketShop from "@/layout/BasketShop";
+import ShopingCartPage from "@/templates/shoppingCart/shopingCartPage";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import Link from "next/link";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import { signOut, useSession } from "next-auth/react";
+import { useSelector } from "react-redux";
 
 function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
+  const cartItems = useSelector((state) => state.cart.items);
+  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
   const {
     currentShopId,
     shopLogo,
@@ -125,20 +129,27 @@ function Header() {
           {/* shopping and moon */}
           <div className="flex gap-x-4">
             {/* shopping icone hover */}
-            <div className="relative group">
-              <div className="py-3  ">
-                <svg width="34" height="34" className=" cursor-pointer">
-                  <use href="#Basketsvg"></use>
-                </svg>
-                {/* shopping box باکس سبد خرید */}
+           <div className="relative group">
+    <div className="py-3">
+      <svg width="34" height="34" className="cursor-pointer">
+        <use href="#Basketsvg"></use>
+      </svg>
+      
+      {/* بدج سبد خرید */}
+      {cartItems.length > 0 && (
+        <span className="absolute -top-0 -right-2 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+          {totalItems}
+        </span>
+      )}
+      
+      {/* shopping box باکس سبد خرید */}
+      <div className="absolute w-[400px] left-0 p-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full bg-white dark:bg-zinc-700/90 border-t-[3px] border-t-orange-300 rounded-2xl shadow-normal transition-all dark:text-white">
+        <ShopingCartPage />
+        {/* <BasketShop /> */}
+      </div>
+    </div>
+  </div>
 
-                <div className="absolute  w-[400px] left-0 p-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible top-full    bg-white dark:bg-zinc-700/90   border-t-[3px] border-t-orange-300 rounded-2xl  shadow-normal transition-all dark:text-white  ">
-                  {/* سبد خرید */}
-
-                  <BasketShop />
-                </div>
-              </div>
-            </div>
 
             <div className="py-3 cursor-pointer ">
               {/*  dark if شرط دارک مود*/}

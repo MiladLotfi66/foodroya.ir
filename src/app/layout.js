@@ -9,6 +9,7 @@ import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
+import CartInitializer from "@/templates/shoppingCart/CartInitializer";
 
 
 
@@ -77,6 +78,8 @@ export default function RootLayout({ children }) {
               <MobileHeader />
               <MobileMenu />
               <AosInit/>
+              <CartInitializer /> {/* فرض میکنیم user از context دریافت میشود */}
+
               {children}
 
             </Providers>

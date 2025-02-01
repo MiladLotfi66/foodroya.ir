@@ -648,10 +648,7 @@ const defaultCurency= await GetCurrencyIdByName("ریال")
         formula:"c"
       }],
       defaultFormula:"c",}
-      
-
     ]
-
     // ایجاد حساب‌های پیش‌فرض با استفاده از نشست تراکنش
     await Account.insertMany(defaultAccounts, { session });
     await Contact.insertMany(defaultContact, { session });

@@ -42,7 +42,7 @@ function ProductManage() {
    const BGImage=shopPanelImage;
   const fetchAnbarAccountId = async () => {
     try {
-      const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1");
+      const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1-2");
       if (response.success && response.accountId) { // فرض بر این است که پاسخ شامل شناسه حساب است
         setAnbarAccountId(response.accountId);
         setParentAccountId(response.accountId);

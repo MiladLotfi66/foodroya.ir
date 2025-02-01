@@ -107,7 +107,6 @@ export async function DeleteProducts(productId, accountId) {
         session.endSession();
         return { status: 500, message: "خطایی در حذف تصاویر رخ داد." };
       } else {
-        console.log(deleteStatus.message);
       }
     }
 
@@ -302,7 +301,6 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
       },
     };
 
-    console.log("responseData", responseData.products);
 
     return {
       status: 200,

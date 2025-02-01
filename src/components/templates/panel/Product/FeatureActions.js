@@ -36,7 +36,6 @@ if (!user) {
       }));
   
       
-console.log("serializedFeatureKeys",serializedFeatureKeys);
 
     return { status: 200, featureKeys: serializedFeatureKeys };
 
@@ -66,7 +65,6 @@ if (!user) {
   if (!name || typeof name !== 'string' || name.trim() === '') {
     return { status: 400, message: 'نام ویژگی نامعتبر است.' };
   }
-  console.log("formData",name);
 
   try {
     // بررسی یکتایی نام تگ
@@ -82,7 +80,6 @@ if (!user) {
 
     const savedFeatureKey = await newFeatureKey.save();
     const plainFeatureKey = JSON.parse(JSON.stringify(savedFeatureKey));
-    console.log("plainFeatureKey",plainFeatureKey);
 
     return { status: 201, featureKey: plainFeatureKey };
   } catch (error) {
@@ -92,7 +89,6 @@ if (!user) {
 }
 
 export async function GetAllProductFeature(productId) {
-    console.log("productId");
 
   await connectDB();
   let user;
@@ -102,7 +98,6 @@ export async function GetAllProductFeature(productId) {
     user = null;
     console.log("Authentication failed:", authError);
   }
-  console.log("productId2222222");
 
 if (!user) {
   return { status: 401, message: 'کاربر وارد نشده است.' };
@@ -118,7 +113,6 @@ if (!user) {
       }));
   
       
-console.log("serializedFeatureKeys",serializedFeatureKeys);
 
     return { status: 200, features: serializedFeatureKeys };
 
