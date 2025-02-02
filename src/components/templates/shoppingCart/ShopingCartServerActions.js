@@ -49,7 +49,6 @@ export const addToCartAction = async (userId, productData,shop) => {
     if (!cart) {
       cart = await shoppingCart.create({ user: userId, ShopingCartItems: [] });
     }
-console.log("product:Shop:user: ",productData.productId,userId,shop);
 
         // بررسی وجود محصول در سبد خرید
         const existingItem = await ShopingCartItems.findOne({
@@ -57,7 +56,6 @@ console.log("product:Shop:user: ",productData.productId,userId,shop);
           Shop: shop,
           user: userId
         });
-    console.log("existingItem",existingItem);
     
         if (existingItem) {
           existingItem.quantity += productData.quantity;
@@ -138,10 +136,9 @@ export const getCartFromDB = async (userId) => {
         path: 'ShopingCartItems',
         populate: [
           { path: 'product', select: 'title images' },
-          { path: 'Shop', select: 'name' }
+          { path: 'Shop', select: 'ShopUniqueName ShopName LogoUrl' }
         ]
       });
-      console.log("getCartFromDB>cart",cart.ShopingCartItems);
 
     return {
       items: cart?.ShopingCartItems?.map(item => ({
@@ -150,7 +147,9 @@ export const getCartFromDB = async (userId) => {
         price: item.price,
         quantity: item.quantity,
         shop: item.Shop._id.toString(),
-        shopName: item.Shop.name,
+        shopName: item.Shop.ShopName,
+        ShopUniqueName: item.Shop.ShopUniqueName,
+        LogoUrl: item.Shop.LogoUrl,
         image: item.product.images?.[0] || '/default-product.jpg'
       })) || [],
       success: true

@@ -161,14 +161,14 @@ function ProductCard({ product, userRoles }) {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={handleDecrease}
-            className="px-3 py-1 bg-gray-200 dark:bg-zinc-800 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
+            className="text-xs md:text-sm lg:text-base px-3 py-1 bg-gray-200 dark:bg-zinc-800 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
           >
             -
           </button>
-          <span className="text-gray-700 dark:text-white">{quantity}{" "}{product?.unit}</span>
+          <span className="text-xs md:text-sm lg:text-base text-gray-700 dark:text-white">{quantity}{" "}{product?.unit}</span>
           <button
             onClick={handleIncrease}
-            className="px-3 py-1 bg-gray-200 dark:bg-zinc-800 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
+            className="text-xs md:text-sm lg:text-base px-3 py-1 bg-gray-200 dark:bg-zinc-800 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
           >
             +
           </button>

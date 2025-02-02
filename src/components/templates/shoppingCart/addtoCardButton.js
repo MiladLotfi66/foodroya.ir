@@ -49,10 +49,10 @@ const AddToCartButton = ({ product, price, shop, quantity }) => {
   return (
     <button
       onClick={handleAddToCart}
-      className="flexCenter w-full bg-blue-500 hover:bg-blue-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition-colors"
+      className="flexCenter text-xs md:text-sm lg:text-base w-full bg-blue-500 hover:bg-blue-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white  py-2 px-2 rounded transition-colors"
     >
-      افزودن به سبد خرید
-      <svg className="h-4 w-4 md:h-[22px] md:w-[22px] m-2">
+      افزودن به سبد
+      <svg className="h-5 w-5 md:h-[22px] md:w-[22px] m-2">
         <use href="#Basketsvg"></use>
       </svg>
     </button>

@@ -8,13 +8,21 @@ export const fetchCart = createAsyncThunk(
       if (!response.success) {
         throw new Error('خطا در دریافت سبد خرید');
       }
+
       // تبدیل داده‌ها به فرمتی که کامپوننت نیاز دارد
       const formattedItems = response.items.map(item => ({
+        
         product: item.product,
         title: item.productTitle,     // تبدیل productTitle به title
         price: item.price,
         quantity: item.quantity,
         shop: item.shop,
+        shopInfo: { // اضافه کردن اطلاعات کامل فروشگاه
+          // id: item._id,
+          LogoUrl: item.LogoUrl,
+          ShopName: item.shopName,
+          ShopUniqueName: item.ShopUniqueName,
+        },
         image: item.image,
       }));
       return formattedItems;
