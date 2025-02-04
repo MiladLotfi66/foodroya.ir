@@ -25,6 +25,7 @@ function Page() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
       <Link className='p-3' href={`/${ShopId}/panel/banners`} >بنر ها</Link>
       <Link className='p-3' href={`/${ShopId}/panel/roles`} >نقش ها</Link>
+      <Link className='p-3' href={`/${ShopId}/panel/sendMetod`} > روش های ارسال</Link>
       <Link className='p-3' href={`/${ShopId}/panel/account`} >حساب ها</Link>
       <Link className='p-3' href={`/${ShopId}/panel/contact`} >مخاطبین</Link>
       <Link className='p-3' href={`/${ShopId}/panel/priceTemplate`} >قالب قیمت</Link>

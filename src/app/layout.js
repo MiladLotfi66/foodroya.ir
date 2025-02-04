@@ -13,10 +13,10 @@ import CartInitializer from "@/templates/shoppingCart/CartInitializer";
 
 
 
-const APP_NAME = "فود رویا";
-const APP_DEFAULT_TITLE = "محصولات خانگی فود رویا";
-const APP_TITLE_TEMPLATE = "محصولات خانگی فود رویا";
-const APP_DESCRIPTION = "فروشگاه محصولات خانگی فود رویا";
+const APP_NAME = "نیبرو";
+const APP_DEFAULT_TITLE = "شبکه تجاری نیبرو";
+const APP_TITLE_TEMPLATE = "شبکه تجاری نیبرو";
+const APP_DESCRIPTION = "شبکه ای برای مدیریت کسب و کارها و روابط تجاری اشخاص";
 
 export const metadata = {
   metadataBase: new URL('http://localhost:3000/'),
