@@ -183,14 +183,6 @@ export async function updateAccount(id, data) {
         updateFields.accountType = data.accountType;
     }
 
-    // // مدیریت فیلدهای store
-    // if (data.store && mongoose.Types.ObjectId.isValid(data.store)) {
-    //   updateFields.store = new mongoose.Types.ObjectId(data.store);
-    // } else {
-    //   unsetFields.store = "";
-    // }
-
-    // مدیریت parentAccount
     if (data.parentAccount && data.parentAccount !== existingAccount.parentAccount?.toString()) {
       const parent = await Account.findById(data.parentAccount).lean();
       if (!parent) {
@@ -409,6 +401,7 @@ export async function GetAllAccounts(storeId, parentId = null) {
     const accounts = await Account.find(filter)
       .sort({ accountCode: 1 })
       .populate("contact")
+      .populate("createdBy", "name userUniqName userImage") // فقط فیلدهای title و userimage از createdBy
       .lean(); // افزودن .lean() برای دریافت اشیاء ساده
 
     // استفاده از تابع simplifyObject برای ساده‌سازی هر حساب
@@ -674,7 +667,6 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
 
 
   export async function GetAccountIdBystoreIdAndAccountCode(storeId, accountCode) {
-console.log("--------------",storeId, accountCode);
 
     try {
       if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {

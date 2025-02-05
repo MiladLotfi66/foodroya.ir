@@ -654,21 +654,21 @@ const defaultCurency= await GetCurrencyIdByName("ریال")
     const defaultShippingMethods = [
       {
         SendMetodStatus:true,
-        title: "پست",
+        Title: "پست",
         Price: "پس کرایه",
         imageUrl:`${process.env.NEXTAUTH_URL}/Uploads/postLogo.png`,
         description: "کالا هایی که به روش پستی ارسال می شوند باید هنگام دریافت از مامور پست توسط گیرنده بازدید شوند که بسته ضربه خوردگی یا آسیب فیزیکی نداشته باشد",
         ShopId: newShop._id,
-        createdBy: userData.id,
+        CreatedBy: userData.id,
       },
       {
         SendMetodStatus:true,
-        title: "تیپاکس",
+        Title: "تیپاکس",
         Price: "پس کرایه",
         imageUrl:`${process.env.NEXTAUTH_URL}/Uploads/tipaxLogo.webp`,
         description: "کالا هایی که به روش تیپاکس ارسال می شوند باید هنگام دریافت از مامور تیپاکس توسط گیرنده بازدید شوند که بسته ضربه خوردگی یا آسیب فیزیکی نداشته باشد",
         ShopId: newShop._id,
-        createdBy: userData.id,
+        CreatedBy: userData.id,
       }
     ];
 

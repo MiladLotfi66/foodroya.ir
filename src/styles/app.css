@@ -3213,6 +3213,11 @@ video {
   color: rgb(255 255 255 / var(--tw-text-opacity));
 }
 
+.dark\:text-orange-200:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(254 215 170 / var(--tw-text-opacity));
+}
+
 .dark\:shadow-gray-900:is(.dark *) {
   --tw-shadow-color: #111827;
   --tw-shadow: var(--tw-shadow-colored);

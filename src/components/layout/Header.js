@@ -125,13 +125,13 @@ function Header() {
         </nav>
 
         {/* shopping basket and lodin moon */}
-        <div className="flex gap-x-3 xl:gap-x-10 text-orange-200 items-center ">
+        <div className="flex gap-x-3 xl:gap-x-10  items-center ">
           {/* shopping and moon */}
-          <div className="flex gap-x-4">
+          <div className="flex gap-x-4 ">
             {/* shopping icone hover */}
            <div className="relative group">
     <div className="py-3">
-      <svg width="34" height="34" className="cursor-pointer">
+      <svg width="34" height="34" className="cursor-pointer text-orange-200">
         <use href="#Basketsvg"></use>
       </svg>
       
@@ -185,7 +185,7 @@ function Header() {
           ) : (
             <Link
               href="/signin"
-              className="flex items-center gap-x-2.5 text-xl tracking-tightest"
+              className="flex items-center gap-x-2.5 text-xl tracking-tightest "
             >
               <svg width="34" height="34" className="rotate-180">
                 <use href="#login"></use>

@@ -4,7 +4,7 @@ import usericone from "@/public/Images/jpg/user.webp";
 function UserMicroCard({ user }) {
   
   return (
-    <span className="flex items-center gap-2">
+    <span className="flex items-center gap-2 text-gray-800 dark:text-orange-200">
       <Image
         className="rounded-full"
         src={user?.userImage|| usericone}
