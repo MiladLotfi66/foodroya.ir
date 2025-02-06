@@ -579,8 +579,6 @@ function simplifyObject(obj) {
   return obj;
 }
 
-
-
 export async function GetAllAccountsByOptions(storeId, parentId = null, options = {}) {
   await connectDB();
 
@@ -704,5 +702,307 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
       };
     }
   };
-    
- 
+      
+//   export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
+//     await connectDB();
+  
+//     try {
+//       // اعتبارسنجی کاربر
+//       const userData = await authenticateUser();
+//       if (!userData) {
+//         return { status: 401, message: 'کاربر وارد نشده است.' };
+//       }
+  
+//       // دریافت حساب والد
+//       const parentAccount = await Account.findById(parentAccountId).lean();
+//       if (!parentAccount) {
+//         return { success: false, message: "حساب والد پیدا نشد." };
+//       }
+  
+//       // دریافت حساب‌های مورد نظر
+//       const accounts = await Account.find({ _id: { $in: accountIds } }).lean();
+//       if (accounts.length === 0) {
+//         return { success: false, message: "حسابی برای چسباندن پیدا نشد." };
+//       }
+
+// ///////////////////////
+// let accountCode = "";
+// // let parent = "";
+// // if (parentAccount) {
+// //   parent = await Account.findById(parentAccount).lean();
+
+// //   if (!parent) {
+// //     return { success: false, message: "حساب والد پیدا نشد." };
+// //   }
+
+//   const siblingAccounts = await Account.find({
+//     parentAccount: parentAccountId,
+//   }).lean();
+  
+//   if (siblingAccounts.length > 0) {
+//     const lastNumber = siblingAccounts.reduce((max, account) => {
+//       const codeParts = account.accountCode.split("-");
+//       const num = parseInt(codeParts[codeParts.length - 1], 10);
+//       return num > max ? num : max;
+//     }, 0);
+//     accountCode = `${parent.accountCode}-${lastNumber + 1}`;
+//   } else {
+//     accountCode = `${parent.accountCode}-1`;
+//   }
+
+
+// ///////////////////
+
+//       if (actionType === 'copy') {
+//         // دریافت حساب‌های فرزند فعلی حساب والد برای تعیین شماره‌ی جدید
+//         // const siblingAccounts = await Account.find({
+//         //   parentAccount: parentAccountId
+//         // }).lean();
+  
+//         // محاسبه بالاترین شماره موجود در کد حساب‌های فرزند
+//         // let currentMax = 0;
+//         // if (siblingAccounts.length > 0) {
+//         //   currentMax = siblingAccounts.reduce((max, account) => {
+//         //     // فرض می‌شود کد حساب والد به صورت `<parentCode>-X` می‌باشد
+//         //     const codeParts = account.accountCode.split("-");
+//         //     const num = parseInt(codeParts[codeParts.length - 1], 10);
+//         //     return num > max ? num : max;
+//         //   }, 0);
+//         // }
+  
+//         // کپی کردن حساب‌ها با ساخت کد جدید
+//         const newAccounts = await Promise.all(accounts.map(async (account) => {
+//           // تولید کد حساب جدید با استفاده از کد حساب والد و افزایش شماره
+//           // currentMax++;
+//           // const newAccountCode = `${parentAccount.accountCode}-${currentMax}`;
+  
+//           const newAccountData = new Account({
+//             ...account,
+//             _id: new mongoose.Types.ObjectId(), // شناسه جدید
+//             accountCode: accountCode,          // کد حساب جدید
+//             parentAccount: parentAccountId,         // حساب والد جدید
+//             createdBy: userData.id,
+//             updatedBy: userData.id,
+//           });
+//           return await newAccountData.save();
+//         }));
+  
+//         return { success: true, newAccounts };
+//       } 
+//       else if (actionType === 'cut') {
+//         // برای برش، فقط مقدار parentAccount تغییر می‌کند.
+//         await Account.updateMany(
+//           { _id: { $in: accountIds } },
+//           { $set: { parentAccount: parentAccountId, updatedBy: userData.id } }
+//         );
+//         return { success: true };
+//       } 
+//       else {
+//         return { success: false, message: "نوع عملیات معتبر نیست." };
+//       }
+//     } catch (error) {
+//       console.error("Error pasting accounts:", error);
+//       return {
+//         success: false,
+//         message: error.message || "خطایی در چسباندن حساب‌ها رخ داده است.",
+//       };
+//     }
+//   }
+  
+// export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
+//   await connectDB();
+
+//   try {
+//     // اعتبارسنجی کاربر
+//     const userData = await authenticateUser();
+//     if (!userData) {
+//       return { status: 401, message: 'کاربر وارد نشده است.' };
+//     }
+
+//     // دریافت حساب والد
+//     const parentAccount = await Account.findById(parentAccountId).lean();
+//     if (!parentAccount) {
+//       return { success: false, message: "حساب والد پیدا نشد." };
+//     }
+
+//     // دریافت حساب‌های مورد نظر
+//     const accounts = await Account.find({ _id: { $in: accountIds } }).lean();
+//     if (accounts.length === 0) {
+//       return { success: false, message: "حسابی برای چسباندن پیدا نشد." };
+//     }
+
+//     if (actionType === 'copy') {
+//       // دریافت حساب‌های فرزند فعلی حساب والد برای تعیین شماره‌ی جدید
+//       const siblingAccounts = await Account.find({
+//         parentAccount: parentAccountId
+//       }).lean();
+
+//       // محاسبه بالاترین شماره موجود در کد حساب‌های فرزند
+//       let currentMax = 0;
+//       if (siblingAccounts.length > 0) {
+//         currentMax = siblingAccounts.reduce((max, account) => {
+//           // فرض می‌شود کد حساب والد به صورت `<parentCode>-X` می‌باشد
+//           const codeParts = account.accountCode.split("-");
+//           const num = parseInt(codeParts[codeParts.length - 1], 10);
+//           return num > max ? num : max;
+//         }, 0);
+//       }
+
+//       // کپی کردن حساب‌ها با ساخت کد جدید
+//       const newAccounts = await Promise.all(accounts.map(async (account) => {
+//         // تولید کد حساب جدید با استفاده از کد حساب والد و افزایش شماره
+//         currentMax++;
+//         const newAccountCode = `${parentAccount.accountCode}-${currentMax}`;
+
+//         const newAccountData = new Account({
+//           ...account,
+//           _id: new mongoose.Types.ObjectId(),
+//           title: `${account.title‍‍}copy`,         // شناسه جدید
+//           accountCode: newAccountCode,          // کد حساب جدید
+//           parentAccount: parentAccountId,         // حساب والد جدید
+//           createdBy: userData.id,
+//           updatedBy: userData.id,
+//         });
+//         return await newAccountData.save();
+//       }));
+
+//       return { success: true, newAccounts };
+//     } 
+//     else if (actionType === 'cut') {
+//       // برای برش، فقط مقدار parentAccount تغییر می‌کند.
+//       await Account.updateMany(
+//         { _id: { $in: accountIds } },
+//         { $set: { parentAccount: parentAccountId, updatedBy: userData.id } }
+//       );
+//       return { success: true };
+//     } 
+//     else {
+//       return { success: false, message: "نوع عملیات معتبر نیست." };
+//     }
+//   } catch (error) {
+//     console.error("Error pasting accounts:", error);
+//     return {
+//       success: false,
+//       message: error.message || "خطایی در چسباندن حساب‌ها رخ داده است.",
+//     };
+//   }
+// }
+
+export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
+  await connectDB();
+
+  try {
+    // اعتبارسنجی کاربر
+    const userData = await authenticateUser();
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // دریافت حساب والد
+    const parentAccount = await Account.findById(parentAccountId).lean();
+    if (!parentAccount) {
+      return { success: false, message: "حساب والد پیدا نشد." };
+    }
+
+    // استخراج بخش اول کدینگ حساب والد
+    const parentRootCode = parentAccount.accountCode.split("-")[0];
+
+    // دریافت حساب‌های مورد نظر
+    const accounts = await Account.find({ _id: { $in: accountIds } }).lean();
+    if (accounts.length === 0) {
+      return { success: false, message: "حسابی برای چسباندن پیدا نشد." };
+    }
+
+    // بررسی سازگاری بخش اول کدینگ
+    const incompatibleAccounts = accounts.filter(account => {
+      const accountRootCode = account.accountCode.split("-")[0];
+      return accountRootCode !== parentRootCode;
+    });
+
+    if (incompatibleAccounts.length > 0) {
+      return { 
+        success: false, 
+        message: "نمی‌توان حساب‌هایی را که از یک سرشاخه متفاوت هستند به سرشاخه مورد نظر انتقال داد." 
+      };
+    }
+
+    // دریافت حساب‌های فرزند فعلی حساب والد برای تعیین شماره‌ی جدید
+    const siblingAccounts = await Account.find({
+      parentAccount: parentAccountId
+    }).lean();
+
+    // محاسبه بالاترین شماره موجود در کد حساب‌های فرزند
+    let currentMax = 0;
+    if (siblingAccounts.length > 0) {
+      currentMax = siblingAccounts.reduce((max, account) => {
+        const codeParts = account.accountCode.split("-");
+        const num = parseInt(codeParts[codeParts.length - 1], 10);
+        return num > max ? num : max;
+      }, 0);
+    }
+
+    if (actionType === 'copy') {
+      // در حالت کپی — هر سند جدید علاوه بر داشتن accountCode یکتا، نام آن نیز با پسوند "-کپی" نشان داده می‌شود.
+      let current = currentMax;      
+      const newAccounts = await Promise.all(accounts.map(async (account) => {
+        current++;
+        // تولید کد حساب جدید به صورت ترتیبی
+        const newAccountCode = `${parentAccount.accountCode}-${current}`;
+        // برای نمایش عنوان به عنوان کپی، پسوند "-کپی" به نام حساب اضافه می‌شود.
+        const newTitle = `${account.title}-کپی`;
+
+        const newAccountData = new Account({
+          ...account,
+          _id: new mongoose.Types.ObjectId(), // شناسه جدید
+          title: newTitle,                     // تغییر عنوان به همراه پسوند "کپی"
+          accountCode: newAccountCode,         // کد حساب جدید
+          parentAccount: parentAccountId,      // حساب والد جدید
+          createdBy: userData.id,
+          updatedBy: userData.id,
+          balance: 0,
+        });
+        return await newAccountData.save();
+      }));
+
+      return { success: true, newAccounts };
+    } 
+    else if (actionType === 'cut') {
+      // در حالت کات (برش)، انتقال حساب به حساب والد جدید انجام می‌شود.
+      // توجه: در این حالت عنوان حساب دست‌نخورده باقی می‌ماند.
+      // در صورت بروز مشکل به دلیل تکراری بودن نام در پوشه مقصد، می‌توانید منطق تغییر عنوان مشابه کپی را اعمال کنید.
+      let current = currentMax;
+      
+      const updatedAccounts = await Promise.all(
+        accounts.map(async (account) => {
+          current++;
+          const newAccountCode = `${parentAccount.accountCode}-${current}`;
+
+          // به‌روزرسانی حساب با کد حساب جدید و والد جدید
+          return await Account.findByIdAndUpdate(
+            account._id,
+            {
+              $set: {
+                parentAccount: parentAccountId,
+                accountCode: newAccountCode,
+                updatedBy: userData.id,
+              }
+            },
+            { new: true }
+          );
+        })
+      );
+
+      return { success: true };
+    } 
+    else {
+      return { success: false, message: "نوع عملیات معتبر نیست." };
+    }
+  } catch (error) {
+    console.error("Error pasting accounts:", error);
+    return {
+      success: false,
+      message: error.message || "خطایی در چسباندن حساب‌ها رخ داده است.",
+    };
+  }
+}
+

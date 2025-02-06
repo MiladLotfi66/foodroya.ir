@@ -3,18 +3,25 @@
 import React, { useState, useEffect } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
-import CopySvg from "@/module/svgs/CopySvg";
-import CutSvg from "@/module/svgs/CutSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
 import { Toaster, toast } from "react-hot-toast";
 import { deleteAccount, activateAccount, deactivateAccount } from "./accountActions";
 import UserMicroCard from "@/module/home/UserMicroCard";
-// import PropTypes from 'prop-types';
+import { MdAccountBalance } from "react-icons/md";
+import { RiAccountPinBoxLine } from "react-icons/ri";
+import { FaPersonShelter } from "react-icons/fa6";
+import { TbCashRegister } from "react-icons/tb";
+import { AiFillProduct } from "react-icons/ai";
+import { MdFolderOpen } from "react-icons/md";
+import { FaBarsProgress } from "react-icons/fa6";
+import { LuWarehouse } from "react-icons/lu";
+import { FaRegNewspaper } from "react-icons/fa";
+import { SlNotebook } from "react-icons/sl";
 
-function AccountCard({ account: initialAccount, editFunction, onDelete, onAccountClick = () => {} }) {
+function AccountCard({ account: initialAccount, editFunction, onDelete, onAccountClick = () => {}, onToggleSelect, isSelected }) {
   const [account, setAccount] = useState(initialAccount);
- 
+
   useEffect(() => {
     setAccount(initialAccount);
   }, [initialAccount]);
@@ -29,6 +36,35 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
       toast.success("حساب با موفقیت حذف شد.");
     } else {
       toast.error(result.message || "خطا در حذف حساب.");
+    }
+  };
+
+  const renderAccountIcon = (accountType) => {
+    switch (accountType) {
+      case "دسته بندی کالا":
+        return <FaBarsProgress className="text-3xl"/>;
+      case "حساب انتظامی":
+        return <SlNotebook  className="text-3xl"/>
+
+        // return <LuNotebookPen className="text-3xl"/>;
+      case "حساب عادی":
+        return <FaRegNewspaper className="text-3xl"/>;
+      case "کالا":
+        return <AiFillProduct className="text-3xl"/>;
+      case "اشخاص حقیقی":
+        return <RiAccountPinBoxLine className="text-3xl"/>;
+      case "گروه حساب":
+        return <MdFolderOpen className="text-3xl"/>;
+      case "انبار":
+        return <LuWarehouse className="text-3xl"/>;
+      case "صندوق":
+        return <TbCashRegister className="text-3xl"/>;
+      case "اشخاص حقوقی":
+        return <FaPersonShelter className="text-3xl"/>;
+      case "حساب بانکی":
+        return <MdAccountBalance className="text-3xl"/>;
+      default:
+        return null;
     }
   };
 
@@ -59,35 +95,51 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
   };
 
   return (
-    <div className="relative bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl p-4">
-      
-      <div className="flex justify-between items-center">
+    <div className={`relative bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl p-4 ${account.accountStatus === "فعال" ? "border-2 border-green-500" : "border-2 border-red-500"}`}>
+      <div className="flex items-center justify-between">
         <div>
-        <div className="hidden">
-        <DeleteSvg/>
-        <EditSvg/>
-        <CopySvg/>
-        <CutSvg/>
-        <EyeslashSvg/>
-        <EyeSvg/>
-      </div>
-          {/* افزودن رویداد کلیک به عنوان حساب */}
-          <h2
-            className="text-xl font-bold text-blue-700 dark:text-teal-400 cursor-pointer"
-            onClick={handleAccountClick}
-          >
-            {account.title}
-          </h2>
-          <p className="text-sm">مانده حساب: {account.balance}</p>
-          <p className="text-sm">کد حساب: {account.accountCode}</p>
-          <p className="text-sm">نوع حساب: {account.accountType}</p>
-          <p className={`text-sm ${account.accountStatus === "فعال" ? "text-green-500" : "text-red-500"}`}>
-            وضعیت: {account.accountStatus}
+          <div className="hidden">
+            <DeleteSvg/>
+            <EditSvg/>
+            <EyeslashSvg/>
+            <EyeSvg/>
+          </div>
+            {!account.isSystem && (account.accountType!=="گروه حساب"||account.accountType!=="دسته بندی کالا"||account.accountType!=="انبار")&&(
+              <input
+                type="checkbox"
+                className="h-6 w-6"
+                checked={isSelected}
+                onChange={(e) => onToggleSelect(account._id)}
+              />
+            )}
+          <div className="flex items-center gap-4 mb-4">
+         
+
+          
+
+            <div className="flex items-center ">
+              {renderAccountIcon(account.accountType)}
+            </div>
+            <div
+              className="flex text-xl font-bold text-blue-700 dark:text-teal-400 cursor-pointer hover:underline"
+              onClick={handleAccountClick}
+            >
+              {account.title}
+            </div>
+          </div>
+
+          {/* <p className="text-sm">مانده حساب: {account.balance}</p> */}
+          {/* <p className="text-sm">کد حساب: {account.accountCode}</p> */}
+          <p className="text-sm flex">
+            نوع حساب: {account.accountType}
           </p>
-          <p className="text-sm flex items-center">
+          <p className={`text-sm ${account.accountStatus === "فعال" ? "text-green-500" : "text-red-500"}`}>
+           {account.accountStatus}
+          </p>
+          <div className="text-sm flex gap-2 items-center">
             <span>ایجاد کننده:</span>
             <UserMicroCard user={account.createdBy} />
-          </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {/* Delete Icon */}
@@ -100,7 +152,7 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
               onClick={handleDelete}
             >
               <use href="#DeleteSvg"></use>
-             </svg>
+            </svg>
           )}
           {/* Edit Icon */}
           {!account.isSystem && (
@@ -137,39 +189,12 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
                 <use href="#EyeSvg"></use>
               </svg>
             )
-            
           )}
-                    {/* copy Icon */}
-            <svg
-              width="24"
-              height="24"
-              className="cursor-pointer"
-              aria-label="Copy"
-              // onClick={CopyFunction}
-            >
-              <use href="#CopySvg"></use>
-            </svg>
-                      {/* Cut Icon */}
-          {!account.isSystem && (
-            <svg
-              width="24"
-              height="24"
-              className="cursor-pointer"
-              aria-label="Cut"
-              // onClick={CutFunction}
-            >
-              <use href="#CutSvg"></use>
-            </svg>
-          )}
-
-
         </div>
       </div>
       <Toaster />
     </div>
   );
 }
-
-
 
 export default AccountCard;

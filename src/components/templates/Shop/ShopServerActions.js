@@ -469,7 +469,7 @@ const defaultCurency= await GetCurrencyIdByName("ریال")
         title: 'حساب انتظامی',
         store: newShop._id,
         parentAccount: null,
-        accountType: 'حساب انتظامی',
+        accountType: 'گروه حساب',
         accountNature: 'بدون ماهیت',
         accountStatus: 'فعال',
         createdBy: userData.id,
