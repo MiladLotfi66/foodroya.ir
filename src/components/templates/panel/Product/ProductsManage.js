@@ -11,13 +11,22 @@ import { FaFolder, FaSearch, FaPlus } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'react-hot-toast';
 import Breadcrumb from '@/utils/Breadcrumb';
-import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '../Account/accountActions';
+import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode, pasteAccounts } from '../Account/accountActions';
 import { DeleteProducts } from './ProductActions';
 import Pagination from './Pagination';
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function ProductManage() {
-  const [products, setProducts] = useState([]);
+  const [selectedAccounts, setSelectedAccounts] = useState([]);
+
+  const [clipboard, setClipboard] = useState({
+
+    accounts: [],
+
+    action: null, // "copy" یا "cut"
+
+  });
+
   const [isOpenAddProduct, setIsOpenAddProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedProductFile, setSelectedProductFile] = useState(null); // افزودن استیت جدید
@@ -194,6 +203,65 @@ function ProductManage() {
   const handleError = useCallback((errorMessage) => { // افزودن تابع handleError
     toast.error(errorMessage);
   }, []);
+  //////////////
+  const handleToggleSelectAccount = useCallback((accountId) => {
+    setSelectedAccounts((prevSelected) => {
+      if (prevSelected.includes(accountId)) {
+        return prevSelected.filter((id) => id !== accountId);
+      } else {
+        return [...prevSelected, accountId];
+      }
+    });
+  }, []);
+
+  const handleCopySelectedAccounts = async () => {
+    try {
+      // فرض کنید یک اکشن یا API برای کپی حساب‌ها تعریف شده باشد
+      // مثلا copyAccounts(selectedAccounts) یا هر منطق دیگری
+      setClipboard({ accounts: selectedAccounts, action: "copy" });
+      setSelectedAccounts([]);
+    } catch (error) {
+      console.error("Copy error:", error);
+      toast.error("خطا در کپی حساب‌ها.");
+    }
+  };
+  
+  const handleCutSelectedAccounts = async () => {
+    try {
+      // فرض کنید یک اکشن یا API برای برش حساب‌ها تعریف شده باشد
+      setClipboard({ accounts: selectedAccounts, action: "cut" });
+      setSelectedAccounts([]);
+    } catch (error) {
+      console.error("Cut error:", error);
+      toast.error("خطا در برش حساب‌ها.");
+    }
+  };
+  
+  const handlePasteAccounts = async () => {
+    try {
+      // تعیین والد مقصد: آخرین حساب موجود در مسیر انتخاب شده
+      const parentAccountId = path[path.length - 1]?.id;
+  
+      // فرض می‌کنیم تابع pasteAccounts وجود داشته باشد
+      const result = await pasteAccounts(clipboard.accounts, parentAccountId, ShopId, clipboard.action);
+      console.log("result",result);
+      
+      if (result.success) {
+        toast.success("حساب‌ها با موفقیت درج شدند.");
+        // تازه کردن لیست حساب‌ها برای والد مقصد
+        refreshAccounts(parentAccountId);
+        // پاک کردن clipboard بعد از عملیات موفق
+        setClipboard({ accounts: [], action: null });
+      } else {
+        toast.error(result.message || "خطا در چسباندن حساب‌ها.");
+      }
+    } catch (error) {
+      console.error("Paste error:", error);
+      toast.error("خطا در چسباندن حساب‌ها.");
+    }
+  };
+  
+  ////////////////
 
   const handleOverlayClick = useCallback((e) => {
     if (e.target === e.currentTarget) {
@@ -259,6 +327,38 @@ function ProductManage() {
         <div>
       <div className="account-categories container mx-auto p-4">
         {/* نوار Breadcrumb */}
+
+  {/* //////////////////////// */}
+  <div className="flex justify-end gap-4 mb-4">
+  {/* دکمه کپی */}
+  {selectedAccounts.length > 0 && (
+    <button
+      className="h-11 md:h-14 bg-green-600 rounded-xl hover:bg-green-700 text-white p-4"
+      onClick={() => handleCopySelectedAccounts()}
+    >
+      کپی حساب‌های انتخابی
+    </button>
+  )}
+  {/* دکمه برش */}
+  {selectedAccounts.length > 0 && (
+    <button
+      className="h-11 md:h-14 bg-red-600 rounded-xl hover:bg-red-700 text-white p-4"
+      onClick={() => handleCutSelectedAccounts()}
+    >
+      برش حساب‌های انتخابی
+    </button>
+  )}
+</div>
+{clipboard.accounts.length > 0 && (
+  <button
+    className="h-11 md:h-14 bg-blue-600 rounded-xl hover:bg-blue-700 text-white p-4 mb-2"
+    onClick={handlePasteAccounts}
+  >
+    Paste حساب‌ها
+  </button>
+)}
+
+{/* //////////////////////////// */}
         <Breadcrumb
           path={path}
           onBreadcrumbClick={handleBreadcrumbClick}
@@ -291,10 +391,18 @@ function ProductManage() {
             <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {accounts.map(account => (
                 <div key={account._id}>
+                                <input
+                type="checkbox"
+                className="h-6 w-6"
+                checked={selectedAccounts.includes(account._id)}
+                onChange={(e) => handleToggleSelectAccount(account._id)}
+              />
+
                   {account.accountType === "کالا" && (
                     <div 
                       className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105"
                     >
+
                       {/* بخش عملیات (ویرایش، حذف، اشتراک گذاری) */}
                       <div className="hidden">
                         <DeleteSvg />

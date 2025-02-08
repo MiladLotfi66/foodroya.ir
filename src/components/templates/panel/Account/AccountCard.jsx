@@ -8,16 +8,16 @@ import EyeSvg from "@/module/svgs/EyeSvg";
 import { Toaster, toast } from "react-hot-toast";
 import { deleteAccount, activateAccount, deactivateAccount } from "./accountActions";
 import UserMicroCard from "@/module/home/UserMicroCard";
-import { MdAccountBalance } from "react-icons/md";
-import { RiAccountPinBoxLine } from "react-icons/ri";
-import { FaPersonShelter } from "react-icons/fa6";
-import { TbCashRegister } from "react-icons/tb";
-import { AiFillProduct } from "react-icons/ai";
-import { MdFolderOpen } from "react-icons/md";
-import { FaBarsProgress } from "react-icons/fa6";
-import { LuWarehouse } from "react-icons/lu";
-import { FaRegNewspaper } from "react-icons/fa";
-import { SlNotebook } from "react-icons/sl";
+// import { MdAccountBalance } from "react-icons/md";
+// import { RiAccountPinBoxLine } from "react-icons/ri";
+// import { FaPersonShelter } from "react-icons/fa6";
+// import { TbCashRegister } from "react-icons/tb";
+// import { MdFolderOpen } from "react-icons/md";
+// import { FaBarsProgress } from "react-icons/fa6";
+// import { LuWarehouse } from "react-icons/lu";
+// import { FaRegNewspaper } from "react-icons/fa";
+// import { SlNotebook } from "react-icons/sl";
+import Image from "next/image";
 
 function AccountCard({ account: initialAccount, editFunction, onDelete, onAccountClick = () => {}, onToggleSelect, isSelected }) {
   const [account, setAccount] = useState(initialAccount);
@@ -41,28 +41,39 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
 
   const renderAccountIcon = (accountType) => {
     switch (accountType) {
-      case "دسته بندی کالا":
-        return <FaBarsProgress className="text-3xl"/>;
-      case "حساب انتظامی":
-        return <SlNotebook  className="text-3xl"/>
+      // case "دسته بندی کالا":
+      //   return <FaBarsProgress className="text-3xl"/>;
+      // case "حساب انتظامی":
+      //   return <SlNotebook  className="text-3xl"/>
 
-        // return <LuNotebookPen className="text-3xl"/>;
-      case "حساب عادی":
-        return <FaRegNewspaper className="text-3xl"/>;
+      //   // return <LuNotebookPen className="text-3xl"/>;
+      // case "حساب عادی":
+      //   return <FaRegNewspaper className="text-3xl"/>;
       case "کالا":
-        return <AiFillProduct className="text-3xl"/>;
-      case "اشخاص حقیقی":
-        return <RiAccountPinBoxLine className="text-3xl"/>;
-      case "گروه حساب":
-        return <MdFolderOpen className="text-3xl"/>;
-      case "انبار":
-        return <LuWarehouse className="text-3xl"/>;
-      case "صندوق":
-        return <TbCashRegister className="text-3xl"/>;
-      case "اشخاص حقوقی":
-        return <FaPersonShelter className="text-3xl"/>;
-      case "حساب بانکی":
-        return <MdAccountBalance className="text-3xl"/>;
+        return  (
+          <Image
+          className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+          src={account?.productId?.images[0]}
+          alt="تصویر کالا"
+          width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+          height={32}
+          quality={60}
+        />
+
+              )
+        
+      // case "اشخاص حقیقی":
+      //   return <RiAccountPinBoxLine className="text-3xl"/>;
+      // case "گروه حساب":
+      //   return <MdFolderOpen className="text-3xl"/>;
+      // case "انبار":
+      //   return <LuWarehouse className="text-3xl"/>;
+      // case "صندوق":
+      //   return <TbCashRegister className="text-3xl"/>;
+      // case "اشخاص حقوقی":
+      //   return <FaPersonShelter className="text-3xl"/>;
+      // case "حساب بانکی":
+      //   return <MdAccountBalance className="text-3xl"/>;
       default:
         return null;
     }
@@ -112,10 +123,8 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
                 onChange={(e) => onToggleSelect(account._id)}
               />
             )}
+           
           <div className="flex items-center gap-4 mb-4">
-         
-
-          
 
             <div className="flex items-center ">
               {renderAccountIcon(account.accountType)}
