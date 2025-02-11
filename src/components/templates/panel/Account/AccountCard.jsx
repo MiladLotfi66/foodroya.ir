@@ -6,18 +6,20 @@ import EditSvg from "@/module/svgs/EditSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
 import { Toaster, toast } from "react-hot-toast";
+import product_placeholder from "@/public/Images/PNG/product-placeholder.png"
+import CashregisterIMG from "@/public/Images/PNG/cash_register.png"
+import warehouseIMG from "@/public/Images/PNG/warehouse.png"
+import personIMG from "@/public/Images/PNG/person.png"
+import companyIMG from "@/public/Images/PNG/company.png"
+import bankIMG from "@/public/Images/PNG/bank.png"
+import categoryIMG from "@/public/Images/PNG/category.png"           
+import productCategoryIMG from "@/public/Images/PNG/productCategory.png"           
+import noteIMG from "@/public/Images/PNG/note.jpeg"
+import secretAccountIMG from "@/public/Images/PNG/secretAccount.png"
 import { deleteAccount, activateAccount, deactivateAccount } from "./accountActions";
 import UserMicroCard from "@/module/home/UserMicroCard";
-// import { MdAccountBalance } from "react-icons/md";
-// import { RiAccountPinBoxLine } from "react-icons/ri";
-// import { FaPersonShelter } from "react-icons/fa6";
-// import { TbCashRegister } from "react-icons/tb";
-// import { MdFolderOpen } from "react-icons/md";
-// import { FaBarsProgress } from "react-icons/fa6";
-// import { LuWarehouse } from "react-icons/lu";
-// import { FaRegNewspaper } from "react-icons/fa";
-// import { SlNotebook } from "react-icons/sl";
 import Image from "next/image";
+import FallbackImage from "@/utils/fallbackImage";
 
 function AccountCard({ account: initialAccount, editFunction, onDelete, onAccountClick = () => {}, onToggleSelect, isSelected }) {
   const [account, setAccount] = useState(initialAccount);
@@ -41,39 +43,106 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
 
   const renderAccountIcon = (accountType) => {
     switch (accountType) {
-      // case "دسته بندی کالا":
-      //   return <FaBarsProgress className="text-3xl"/>;
-      // case "حساب انتظامی":
-      //   return <SlNotebook  className="text-3xl"/>
+      case "دسته بندی کالا":
+       
+        return  <Image
+        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+        src={productCategoryIMG}
+        alt="تصویر دسته بندی کالا"
+        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+        height={32}
+        quality={60}
+      />;
+      case "حساب انتظامی":
+        return  <Image
+        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+        src={secretAccountIMG}
+        alt="تصویر حساب انتظامی"
+        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+        height={32}
+        quality={60}
+      />;
 
-      //   // return <LuNotebookPen className="text-3xl"/>;
-      // case "حساب عادی":
-      //   return <FaRegNewspaper className="text-3xl"/>;
+      case "حساب عادی":
+        return  <Image
+        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+        src={noteIMG}
+        alt="تصویر حساب عادی"
+        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+        height={32}
+        quality={60}
+      />;
       case "کالا":
         return  (
-          <Image
+          <FallbackImage
           className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-          src={account?.productId?.images[0]}
+          src={account?.productId?.images?.[0]} // استفاده از اولین تصویر موجود
           alt="تصویر کالا"
           width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
           height={32}
           quality={60}
+          placeholder={product_placeholder}
         />
 
-              )
+     
+      )
         
-      // case "اشخاص حقیقی":
-      //   return <RiAccountPinBoxLine className="text-3xl"/>;
-      // case "گروه حساب":
-      //   return <MdFolderOpen className="text-3xl"/>;
-      // case "انبار":
-      //   return <LuWarehouse className="text-3xl"/>;
-      // case "صندوق":
-      //   return <TbCashRegister className="text-3xl"/>;
-      // case "اشخاص حقوقی":
-      //   return <FaPersonShelter className="text-3xl"/>;
-      // case "حساب بانکی":
-      //   return <MdAccountBalance className="text-3xl"/>;
+      case "اشخاص حقیقی":
+        return  <Image
+        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+        src={personIMG}
+        alt="تصویر اشخاص حقیقی"
+        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+        height={32}
+        quality={60}
+      />;
+      case "گروه حساب":
+      return  <Image
+      className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+      src={categoryIMG}
+      alt="تصویر گروه حساب"
+      width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+      height={32}
+      quality={60}
+    />;     
+     case "انبار":
+        return  (
+          <Image
+          className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+          src={warehouseIMG}
+          alt="تصویر انبار"
+          width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+          height={32}
+          quality={60}
+        />
+              )
+      case "صندوق":
+        return (<Image
+          className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+          src={CashregisterIMG}
+          alt="تصویر صندوق"
+          width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+          height={32}
+          quality={60}
+        />);
+      case "اشخاص حقوقی":
+        return  <Image
+        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+        src={companyIMG}
+        alt="تصویر اشخاص حقوقی"
+        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+        height={32}
+        quality={60}
+      />;
+            case "حساب بانکی":
+        return  <Image
+        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
+        src={bankIMG}
+        alt="تصویر حساب بانکی"
+        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+        height={32}
+        quality={60}
+      />;
       default:
         return null;
     }

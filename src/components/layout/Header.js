@@ -78,7 +78,7 @@ function Header() {
               width={59}
               height={59}
               quality={20}
-              alt="FoodRoya logo"
+              alt="shoplogo"
               priority={true}
             />
           )}

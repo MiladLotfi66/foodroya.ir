@@ -6,7 +6,7 @@ import Product from "./Product";
 import Account from "../Account/Account";
 import GeneralLedger from "../FinancialDocument/GeneralLedger";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-import { createImageUploader2, deleteOldImages } from "@/utils/ImageUploader";
+import { createImageUploader2, deleteOldImage, deleteOldImages } from "@/utils/ImageUploader";
 import { createAccount } from "../Account/accountActions";
 import Feature from "./Feature";
 import Tag from "./Tag";
@@ -500,6 +500,7 @@ export async function AddProductAction(formData) {
   }
 }
 export async function EditProductAction(formData, ShopId) {
+  
   await connectDB();
   let user;
   try {
@@ -553,7 +554,8 @@ export async function EditProductAction(formData, ShopId) {
       }
 
       // مدیریت تصاویر
-      const existingImages = existingProduct.images || [];
+      // const existingImages = existingProduct.images || [];
+      const existingImages = formData.get("existingImages")|| [];
       const newImages = formData.getAll("newImages"); // تصاویر جدید برای آپلود
       const imagesToRemove = formData.get("imagesToRemove")
         ? formData.get("imagesToRemove").split(",")
@@ -562,6 +564,7 @@ export async function EditProductAction(formData, ShopId) {
       // اعتبارسنجی تعداد تصاویر
       const MAX_FILES = 10;
       const remainingImagesCount =
+      
         existingImages.length - imagesToRemove.length + newImages.length;
       if (remainingImagesCount === 0) {
         throw new Error("حداقل یک تصویر برای محصول الزامی است.");
@@ -595,17 +598,32 @@ export async function EditProductAction(formData, ShopId) {
 
       const newImagePaths = await Promise.all(uploadPromises);
 
+
       // حذف تصاویر انتخاب شده
-      const remainingImages = existingImages.filter(
-        (img) => !imagesToRemove.includes(img)
-      );
-      for (const imagePath of imagesToRemove) {
-        await deleteImage(imagePath);
-      }
+const remainingImages = existingImages.filter(
+  (img) => !imagesToRemove.includes(img)
+);
+for (const imagePath of imagesToRemove) {
+  try {
+    await deleteOldImage(imagePath);
+  } catch (deleteError) {
+    // بررسی نوع خطا: اگر خطا به دلیل عدم وجود تصویر است، آن را نادیده بگیرید
+    if (deleteError.code === 'ENOENT') { // فرض کنید `ENOENT` کد خطا برای فایل‌های غایب است
+      console.warn(`تصویر ${imagePath} از قبل حذف شده است.`);
+    } else {
+      // در صورت بروز خطای دیگر، خطا را لاگ کرده و ادامه دهید یا تصمیم دیگری بگیرید
+      console.error(`خطا در حذف تصویر ${imagePath}:`, deleteError);
+      // اگر می‌خواهید عملیات حذف را ادامه دهید حتی با بروز خطا، از `continue` استفاده کنید
+      // continue;
+      
+      // اگر می‌خواهید تراکنش لغو شود، می‌توانید مجدداً خطا را پرتاب کنید:
+      throw deleteError;
+    }
+  }
+}
 
       // به‌روزرسانی مسیرهای تصاویر
       const updatedImagePaths = [...remainingImages, ...newImagePaths];
-
       // استخراج ویژگی‌ها از فرم دیتا به صورت آرایه
       const FeaturesInput = [];
       formData.forEach((value, key) => {

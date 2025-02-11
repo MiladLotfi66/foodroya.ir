@@ -12,6 +12,7 @@ import FeatureKey from "../Product/FeatureKey";
 // import Currency from "../Currency/Currency";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
+import { downloadAndUploadImage } from "@/utils/ImageUploader";
 // ایجاد حساب جدید
 export async function createAccount(data, session = null) {
   await connectDB();
@@ -689,7 +690,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
   
       return {
         success: true,
-        accountId: account._id,
+        accountId: account._id.toString(),
 
       };
     } catch (error) {
@@ -705,314 +706,7 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
   };
       
 
-// export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
-//   await connectDB();
-// console.log(accountIds, parentAccountId, storeId, actionType);
 
-//   try {
-//     // اعتبارسنجی کاربر
-//     const userData = await authenticateUser();
-//     if (!userData) {
-//       return { status: 401, message: 'کاربر وارد نشده است.' };
-//     }
-//     // دریافت حساب والد
-//     const parentAccount = await Account.findById(parentAccountId).lean();
-//     if (!parentAccount) {
-//       return { success: false, message: "حساب والد پیدا نشد." };
-//     }
-//     if ((accountIds.includes(parentAccountId.toString())) && actionType==="cut") {
-//       return { success: false, message: "امکان انتقال حساب به دورن خود حساب وجود ندارد" };
-//     }
-
-//     // استخراج بخش اول کدینگ حساب والد
-//     const parentRootCode = parentAccount.accountCode.split("-")[0];
-
-//     // دریافت حساب‌های مورد نظر
-//     const accounts = await Account.find({ _id: { $in: accountIds } }).lean();
-//     if (accounts.length === 0) {
-//       return { success: false, message: "حسابی برای چسباندن پیدا نشد." };
-//     }
-// const conflictingAccounts = accounts.filter(account => {
-//   const isSameCode = account.accountCode === parentAccount.accountCode;
-//   const startsWithParentCode = parentAccount.accountCode.startsWith(`${account.accountCode}-`);
-//   return isSameCode || startsWithParentCode;
-// });
-// console.log("conflictingAccounts",conflictingAccounts);
-
-// if (conflictingAccounts.length > 0 && actionType==="cut") {
-//   return { 
-//     success: false, 
-//     message: "امکان انتقال حساب به درون خودش یا حسابهای زیر مجموعه ی خودش وجود ندارد." 
-//   };
-// }
-
-//     // بررسی سازگاری بخش اول کدینگ
-//     const incompatibleAccounts = accounts.filter(account => {
-//       const accountRootCode = account.accountCode.split("-")[0];
-//       return accountRootCode !== parentRootCode;
-//     });
-
-//     if (incompatibleAccounts.length > 0 ) {
-//       return { 
-//         success: false, 
-//         message: "نمی‌توان حساب‌هایی را که از یک سرشاخه متفاوت هستند به سرشاخه مورد نظر انتقال داد." 
-//       };
-//     }
-
-//     // دریافت حساب‌های فرزند فعلی حساب والد برای تعیین شماره‌ی جدید
-//     const siblingAccounts = await Account.find({
-//       parentAccount: parentAccountId
-//     }).lean();
-
-//     // محاسبه بالاترین شماره موجود در کد حساب‌های فرزند
-//     let currentMax = 0;
-//     if (siblingAccounts.length > 0) {
-//       currentMax = siblingAccounts.reduce((max, account) => {
-//         const codeParts = account.accountCode.split("-");
-//         const num = parseInt(codeParts[codeParts.length - 1], 10);
-//         return num > max ? num : max;
-//       }, 0);
-//     }
-
-//     if (actionType === 'copy') {
-//       // در حالت کپی — هر سند جدید علاوه بر داشتن accountCode یکتا، نام آن نیز با پسوند "-کپی" نشان داده می‌شود.
-//       let current = currentMax;      
-//       const newAccounts = await Promise.all(accounts.map(async (account) => {
-//         current++;
-//         // تولید کد حساب جدید به صورت ترتیبی
-//         const newAccountCode = `${parentAccount.accountCode}-${current}`;
-//         // برای نمایش عنوان به عنوان کپی، پسوند "-کپی" به نام حساب اضافه می‌شود.
-//         const newTitle = `${account.title}-کپی`;
-
-//         const newAccountData = new Account({
-//           ...account,
-//           _id: new mongoose.Types.ObjectId(), // شناسه جدید
-//           title: newTitle,                     // تغییر عنوان به همراه پسوند "کپی"
-//           accountCode: newAccountCode,         // کد حساب جدید
-//           parentAccount: parentAccountId,      // حساب والد جدید
-//           createdBy: userData.id,
-//           updatedBy: userData.id,
-//           balance: 0,
-//         });
-//         return await newAccountData.save();
-//       }));
-
-//       return { success: true, newAccounts };
-//     } 
-//     else if (actionType === 'cut') {
-//       // در حالت کات (برش)، انتقال حساب به حساب والد جدید انجام می‌شود.
-//       // توجه: در این حالت عنوان حساب دست‌نخورده باقی می‌ماند.
-//       // در صورت بروز مشکل به دلیل تکراری بودن نام در پوشه مقصد، می‌توانید منطق تغییر عنوان مشابه کپی را اعمال کنید.
-//       let current = currentMax;
-      
-//       const updatedAccounts = await Promise.all(
-//         accounts.map(async (account) => {
-//           current++;
-//           const newAccountCode = `${parentAccount.accountCode}-${current}`;
-
-//           // به‌روزرسانی حساب با کد حساب جدید و والد جدید
-//           return await Account.findByIdAndUpdate(
-//             account._id,
-//             {
-//               $set: {
-//                 parentAccount: parentAccountId,
-//                 accountCode: newAccountCode,
-//                 updatedBy: userData.id,
-//               }
-//             },
-//             { new: true }
-//           );
-//         })
-//       );
-
-//       return { success: true };
-//     } 
-//     else {
-//       return { success: false, message: "نوع عملیات معتبر نیست." };
-//     }
-//   } catch (error) {
-//     console.error("Error pasting accounts:", error);
-//     return {
-//       success: false,
-//       message: error.message || "خطایی در چسباندن حساب‌ها رخ داده است.",
-//     };
-//   }
-// }
-
-
-// export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
-//   await connectDB();
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
-
-//   try {
-//     // اعتبارسنجی کاربر
-//     const userData = await authenticateUser();
-//     if (!userData) {
-//       return { status: 401, message: 'کاربر وارد نشده است.' };
-//     }
-
-//     // دریافت حساب والد
-//     const parentAccount = await Account.findById(parentAccountId).lean();
-//     if (!parentAccount) {
-//       return { success: false, message: "حساب والد پیدا نشد." };
-//     }
-
-//     if (accountIds.includes(parentAccountId.toString()) && actionType === "cut") {
-//       return { success: false, message: "امکان انتقال حساب به دورن خود حساب وجود ندارد" };
-//     }
-
-//     // استخراج بخش اول کدینگ حساب والد
-//     const parentRootCode = parentAccount.accountCode.split("-")[0];
-
-//     // دریافت حساب‌های مورد نظر
-//     const accounts = await Account.find({ _id: { $in: accountIds } }).lean();
-//     if (accounts.length === 0) {
-//       return { success: false, message: "حسابی برای چسباندن پیدا نشد." };
-//     }
-
-//     const conflictingAccounts = accounts.filter(account => {
-//       const isSameCode = account.accountCode === parentAccount.accountCode;
-//       const startsWithParentCode = parentAccount.accountCode.startsWith(`${account.accountCode}-`);
-//       return isSameCode || startsWithParentCode;
-//     });
-//     console.log("conflictingAccounts", conflictingAccounts);
-
-//     if (conflictingAccounts.length > 0 && actionType === "cut") {
-//       return { 
-//         success: false, 
-//         message: "امکان انتقال حساب به درون خودش یا حسابهای زیر مجموعه ی خودش وجود ندارد." 
-//       };
-//     }
-
-//     // بررسی سازگاری بخش اول کدینگ
-//     const incompatibleAccounts = accounts.filter(account => {
-//       const accountRootCode = account.accountCode.split("-")[0];
-//       return accountRootCode !== parentRootCode;
-//     });
-
-//     if (incompatibleAccounts.length > 0 ) {
-//       return { 
-//         success: false, 
-//         message: "نمی‌توان حساب‌هایی را که از یک سرشاخه متفاوت هستند به سرشاخه مورد نظر انتقال داد." 
-//       };
-//     }
-
-//     // دریافت حساب‌های فرزند فعلی حساب والد برای تعیین شماره‌ی جدید
-//     const siblingAccounts = await Account.find({
-//       parentAccount: parentAccountId
-//     }).lean();
-
-//     // محاسبه بالاترین شماره موجود در کد حساب‌های فرزند
-//     let currentMax = 0;
-//     if (siblingAccounts.length > 0) {
-//       currentMax = siblingAccounts.reduce((max, account) => {
-//         const codeParts = account.accountCode.split("-");
-//         const num = parseInt(codeParts[codeParts.length - 1], 10);
-//         return num > max ? num : max;
-//       }, 0);
-//     }
-
-//     if (actionType === 'copy') {
-//       // در حالت کپی — هر سند جدید علاوه بر داشتن accountCode یکتا، نام آن نیز با پسوند "-کپی" نشان داده می‌شود.
-//       let current = currentMax;      
-//       const newAccounts = await Promise.all(accounts.map(async (account) => {
-//         current++;
-//         // تولید کد حساب جدید به صورت ترتیبی
-//         const newAccountCode = `${parentAccount.accountCode}-${current}`;
-//         // برای نمایش عنوان به عنوان کپی، پسوند "-کپی" به نام حساب اضافه می‌شود.
-//         const newTitle = `${account.title}-کپی`;
-
-//         // ساخت داده‌های جدید حساب
-//         const newAccountData = new Account({
-//           ...account,
-//           _id: new mongoose.Types.ObjectId(), // شناسه جدید
-//           title: newTitle,                     // تغییر عنوان به همراه پسوند "کپی"
-//           accountCode: newAccountCode,         // کد حساب جدید
-//           parentAccount: parentAccountId,      // حساب والد جدید
-//           createdBy: userData.id,
-//           updatedBy: userData.id,
-//           balance: 0,
-//         });
-
-//         const savedAccount = await newAccountData.save();
-
-//         // بررسی نوع حساب و کپی اطلاعات کالا در صورت نیاز
-//         if (account.type === 'product') { // فرض بر این است که فیلد type نوع حساب را مشخص می‌کند
-//           // دریافت اطلاعات کالا مرتبط با حساب اصلی
-//           const originalProduct = await Product.findOne({ accountId: account._id }).lean();
-//           if (originalProduct) {
-//             // ایجاد رکورد جدید کالا با مشخصات مشابه
-//             const newProductData = {
-//               ...originalProduct,
-//               _id: new mongoose.Types.ObjectId(), // شناسه جدید
-//               accountId: savedAccount._id,        // ارتباط با حساب جدید
-//               // اگر فیلدهایی وجود دارند که باید تغییر کنند، آنها را اینجا به‌روزرسانی کنید
-//             };
-
-//             // حذف فیلدهایی که نباید کپی شوند (مثل تاریخ ایجاد)
-//             delete newProductData.createdAt;
-//             delete newProductData.updatedAt;
-//             // اضافه کردن سایر فیلدهای مورد نیاز
-
-//             const newProduct = new Product(newProductData);
-//             await newProduct.save();
-//           }
-//         }
-
-//         return savedAccount;
-//       }));
-  
-//       return { success: true, newAccounts };
-//     } 
-//     else if (actionType === 'cut') {
-//       // در حالت کات (برش)، انتقال حساب به حساب والد جدید انجام می‌شود.
-//       // توجه: در این حالت عنوان حساب دست‌نخورده باقی می‌ماند.
-//       // در صورت بروز مشکل به دلیل تکراری بودن نام در پوشه مقصد، می‌توانید منطق تغییر عنوان مشابه کپی را اعمال کنید.
-//       let current = currentMax;
-      
-//       const updatedAccounts = await Promise.all(
-//         accounts.map(async (account) => {
-//           current++;
-//           const newAccountCode = `${parentAccount.accountCode}-${current}`;
-
-//           // به‌روزرسانی حساب با کد حساب جدید و والد جدید
-//           const updatedAccount = await Account.findByIdAndUpdate(
-//             account._id,
-//             {
-//               $set: {
-//                 parentAccount: parentAccountId,
-//                 accountCode: newAccountCode,
-//                 updatedBy: userData.id,
-//               }
-//             },
-//             { new: true }
-//           );
-
-//           // اگر نیازی به آپدیت اطلاعات کالا نیست، می‌توانید منطق مربوط به آن را اضافه کنید.
-
-//           return updatedAccount;
-//         })
-//       );
-//       await session.commitTransaction();
-//       session.endSession();
-
-//       return { success: true };
-//     } 
-//     else {
-//       return { success: false, message: "نوع عملیات معتبر نیست." };
-//     }
-//   } catch (error) {
-//     await session.abortTransaction();
-//     session.endSession();
-
-//     console.error("Error pasting accounts:", error);
-//     return {
-//       success: false,
-//       message: error.message || "خطایی در چسباندن حساب‌ها رخ داده است.",
-//     };
-//   }
-// }
 
 export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
   await connectDB();
@@ -1134,7 +828,8 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
         if (account.accountType === 'کالا') { // فرض بر این است که فیلد type نوع حساب را مشخص می‌کند
           // دریافت اطلاعات کالا مرتبط با حساب اصلی
           const originalProduct = await Product.findOne({ accountId: account._id }).session(session).lean();
-          if (originalProduct) {
+          if (originalProduct) {   
+
             // ایجاد رکورد جدید کالا با مشخصات مشابه
             const newProductData = {
               ...originalProduct,
@@ -1146,6 +841,7 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
               parentAccount:parentAccountId,
                createdBy:userData.id,
                updatedBy:userData.id,
+
               // اگر فیلدهایی وجود دارند که باید تغییر کنند، آنها را اینجا به‌روزرسانی کنید
             };
 
@@ -1178,7 +874,6 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
       for (const account of accounts) {
         current++;
         const newAccountCode = `${parentAccount.accountCode}-${current}`;
-
         // به‌روزرسانی حساب با کد حساب جدید و والد جدید
         const updatedAccount = await Account.findByIdAndUpdate(
           account._id,
@@ -1191,9 +886,7 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
           },
           { new: true, session }
         );
-
         // اگر حساب از نوع کالا باشد و نیاز به آپدیت اطلاعات کالا دارید، می‌توانید اینجا منطق مربوطه را اضافه کنید.
-
         updatedAccounts.push(updatedAccount);
       }
 

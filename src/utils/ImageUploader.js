@@ -1,7 +1,8 @@
 // lib/imageUploader.js
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand ,CopyObjectCommand } from '@aws-sdk/client-s3';
+import path from 'path';
 
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp','image/jpg'];
@@ -183,3 +184,6 @@ export const deleteOldImages = async (oldUrls) => {
     return { status: 500, message: 'خطایی در حذف تصاویر رخ داد.' };
   }
 };
+
+
+

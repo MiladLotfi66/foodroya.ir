@@ -6,7 +6,8 @@ import {
 } from "../../Redux/features/mobileMenu/mobileMenuSlice";
 import { useSelector, useDispatch } from "react-redux";
 import Image from "next/image";
-import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
+// import me from "@/public/Images/PNG/FoodRoyaLogo.webp";
+import me from "@/public/Images/PNG/niberologo.png";
 import Xmark from "@/module/svgs/X-mark";
 import { useTheme } from "next-themes";
 import Loginlogosvg from "@/module/svgs/Loginlogosvg";
@@ -20,7 +21,6 @@ import PhoneArrow from "@/module/svgs/PhoneArrow";
 import ChevronDown from "@/module/svgs/ChevronDown";
 import {  useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-
 // import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Exitsvg from "@/module/svgs/Exitsvg";

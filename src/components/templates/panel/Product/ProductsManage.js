@@ -2,7 +2,6 @@
 "use client";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddProduct from "./AddProduct";
-import { GetAllProducts } from "./ProductActions";
 import React, { useState, useEffect, useCallback } from 'react';
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
@@ -10,11 +9,13 @@ import ShareSvg from "@/module/svgs/ShareSvg";
 import { FaFolder, FaSearch, FaPlus } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'react-hot-toast';
+import product_placeholder from "@/public/Images/PNG/product-placeholder.png"
 import Breadcrumb from '@/utils/Breadcrumb';
 import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode, pasteAccounts } from '../Account/accountActions';
 import { DeleteProducts } from './ProductActions';
 import Pagination from './Pagination';
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+import FallbackImage from "@/utils/fallbackImage";
 
 function ProductManage() {
   const [selectedAccounts, setSelectedAccounts] = useState([]);
@@ -411,12 +412,16 @@ function ProductManage() {
                       </div>
                       {/* بخش تصاویر */}
                       <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
-                        <img
-                          src={account?.productId?.images?.[0] || "https://via.placeholder.com/150"}
-                          alt={account?.productId?.title}
-                          className="w-full h-full object-cover rounded-md mt-1"
-                          loading="lazy"
-                        />
+                       
+<FallbackImage
+          className="w-full h-full object-cover rounded-md mt-1" // تعیین اندازه و رفتار
+          src={account?.productId?.images?.[0]} // استفاده از اولین تصویر موجود
+          alt={account?.productId?.title}
+          width={150} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
+          height={150}
+          quality={60}
+          placeholder={product_placeholder}
+        />
                         {account.productId?.images?.length > 1 && (
                           <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text:xs sm:text-sm px-2 py-1 rounded">
                             +{account.productId.images.length - 1}

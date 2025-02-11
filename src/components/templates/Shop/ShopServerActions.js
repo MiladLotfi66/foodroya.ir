@@ -185,8 +185,8 @@ const hasUserAccess = async (userId) => {
   
 
     // تبدیل هردو مقدار به رشته و حذف فضاهای خالی احتمالی
-    const userDataId = userData.id.trim();
-    const userIdStr = userId.toString().trim();
+    const userDataId = userData.id;
+    const userIdStr = userId.toString();
 
     if (userDataId === userIdStr) {
       return true;
