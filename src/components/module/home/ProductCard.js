@@ -22,6 +22,14 @@ function ProductCard({ product, userRoles }) {
       return;
     }
 
+    // بررسی موجودی کالا
+    if (Number(product.stock) === 0) {
+      setDefaultPrice(0);
+      setUserPrice(0);
+      return;
+    }
+
+
     try {
       const a = Number(product.accountId.balance) / (Number(product.stock) > 0 ? Number(product.stock) : 1);
       const b = Number(product.lastPurchasePrice);
@@ -140,20 +148,29 @@ function ProductCard({ product, userRoles }) {
       </h4>
 
       <div className="flex flex-col mt-2 md:mt-3 gap-3 font-Dana text-xs">
-        {defaultPrice !== userPrice && (
-          <div>
-            <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
-              {formatter.format(defaultPrice)}{" "}
-            </span>
-            <span className="text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
+      {Number(product.stock) > 0 ? (
+          <>
+            {defaultPrice !== userPrice && (
+              <div>
+                <span className="font-DanaDemiBold text-xs md:text-sm lg:text-xl offerPrice ">
+                  {formatter.format(defaultPrice)}{" "}
+                </span>
+                <span className="text-xs md:text-sm text-gray-400">{baseCurrency.title}</span>
+              </div>
+            )}
+            <div className="text-teal-600 dark:text-emerald-500 ">
+              <span className="font-DanaDemiBold text-sm md:text-base lg:text-xl ">
+                {formatter.format(userPrice)}{" "}
+              </span>
+              <span className="text-xs md:text-sm tracking-tighter">{baseCurrency.title}</span>
+            </div>
+          </>
+        ) : (
+          <div className="text-red-600 font-DanaDemiBold text-sm md:text-base lg:text-xl">
+            ناموجود
           </div>
         )}
-        <div className="text-teal-600 dark:text-emerald-500 ">
-          <span className="font-DanaDemiBold text-sm md:text-base lg:text-xl ">
-            {formatter.format(userPrice)}{" "}
-          </span>
-          <span className="text-xs md:text-sm tracking-tighter">{baseCurrency.title}</span>
-        </div>
+
       </div>
 
       {/* بخش انتخاب تعداد و افزودن به سبد خرید */}
@@ -176,15 +193,17 @@ function ProductCard({ product, userRoles }) {
       </div>
 
       {/* استفاده از کامپوننت AddToCartButton */}
-      <AddToCartButton
-        product={product}
-        price={userPrice}
-        shop={currentShopId} // اگر فروشگاه هم نیاز است
-        quantity={quantity}
-      />
+      {Number(product.stock) > 0 && (
+        <AddToCartButton
+          product={product}
+          price={userPrice}
+          shop={currentShopId} // اگر فروشگاه هم نیاز است
+          quantity={quantity}
+        />
+      )}
 
       <h4 className="text-right text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm lg:text-base mt-2">
-        موجودی: {product?.stock}{" "}{product?.unit}
+      {product?.stock}{" "}{product?.unit}
       </h4>
 
       {/* تگ‌ها */}

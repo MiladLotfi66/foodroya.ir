@@ -28,7 +28,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
 
   const fetchAnbarAccountId = async () => {
     try {
-      const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1");
+      const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1-2");
       if (response.success && response.accountId) {
         setAnbarAccountId(response.accountId);
         setParentAccountId(response.accountId);

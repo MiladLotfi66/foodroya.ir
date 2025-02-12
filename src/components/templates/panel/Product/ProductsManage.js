@@ -433,11 +433,11 @@ function ProductManage() {
                       <div className="flex gap-2 flex-col flex-1 m-2 h-15">
                         {/* عنوان محصول */}
                         <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
-                          عنوان :  {account?.productId?.title}
+                         {account?.productId?.title}
                         </h2> 
                         {/* موجودی محصول */}
                         <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
-                         موجودی :  {account?.productId?.stock}
+                           {account?.productId?.stock}{account?.product?.unit}
                         </h2> 
                        
                         {/* دکمه‌های عملیات */}
