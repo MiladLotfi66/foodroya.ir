@@ -18,6 +18,53 @@ const s3 = new S3Client({
   },
 });
 
+
+// lib/imageUploader.js
+
+// تابع کپی تصویر
+export const copyImage = async (oldUrl, uploadDir) => {
+  try {
+    const url = new URL(oldUrl);
+    let sourceKey = '';
+
+    // استخراج کلید از URL
+    if (process.env.S3_ENDPOINT) {
+      const pathParts = url.pathname.split('/');
+      sourceKey = pathParts.slice(2).join('/'); // فرض بر این است که کلید از قسمت سوم شروع می‌شود
+    } else {
+      sourceKey = url.pathname.slice(1); // حذف اولین `/`
+    }
+
+    // تولید کلید جدید برای تصویر کپی شده
+    const uniqueSuffix = `${Date.now()}-${uuidv4()}`;
+    const fileExtension = path.extname(sourceKey);
+    const newFileName = `image-${uniqueSuffix}${fileExtension}`; // می‌توانید فرمت را تغییر دهید اگر نیاز است
+    const destinationKey = `${uploadDir.replace(/\/+$/, '')}/${newFileName}`;
+
+    // پارامترهای کپی
+    const copyParams = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      CopySource: `${process.env.S3_BUCKET_NAME}/${sourceKey}`,
+      Key: destinationKey,
+      ACL: 'public-read', // دسترسی عمومی خواندنی (در صورت نیاز)
+      ContentType: 'image/webp', // یا نوع محتوای مناسب
+    };
+
+    const copyCommand = new CopyObjectCommand(copyParams);
+    await s3.send(copyCommand);
+
+    // ساخت URL جدید
+    const newImageURL = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET_NAME}/${destinationKey}`;
+    return newImageURL;
+  } catch (error) {
+    console.error('Error in copyImage:', error);
+    throw new Error(error.message || 'مشکلی در کپی تصویر پیش آمده است.');
+  }
+};
+
+// همچنین می‌توانید تابعی برای کپی چند تصویر اضافه کنید
+
+
 export async function createImageUploader2({ buffer, mimeType, size, uploadDir = 'uploads' }) {
   try {
     // اعتبارسنجی نوع فایل
@@ -63,7 +110,6 @@ export async function createImageUploader2({ buffer, mimeType, size, uploadDir =
     throw new Error(error.message || 'مشکلی در پردازش و ذخیره تصویر پیش آمده است.');
   }
 }
-
 
 export const processAndSaveImage = async (image, oldUrl, uploadDir ) => {
   if (image && typeof image !== "string") {
@@ -124,9 +170,7 @@ export const processAndSaveImage = async (image, oldUrl, uploadDir ) => {
   return image;
 };
 
-
 export const deleteOldImage = async (oldUrl) => {
-  
   try {
     // استخراج کلید از URL
     const url = new URL(oldUrl);
@@ -153,14 +197,13 @@ export const deleteOldImage = async (oldUrl) => {
 
 return{status:200}
   } catch (error) {
+    
     return { status: 500, message: 'خطایی در حذف تصویر رخ داد.' };
 
     // تصمیم بگیرید که آیا می‌خواهید خطا را پرتاب کنید یا خیر
   }
 };
 
-
-/////////////////////////////////////////
 export const deleteOldImages = async (oldUrls) => {
   
   try {

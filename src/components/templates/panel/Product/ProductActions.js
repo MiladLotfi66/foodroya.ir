@@ -37,6 +37,7 @@ function simplifyData(data) {
 }
 
 export async function DeleteProducts(productId, accountId) {
+  
   await connectDB();
 
   const session = await mongoose.startSession();
@@ -100,6 +101,8 @@ export async function DeleteProducts(productId, accountId) {
       deletedProduct.images.length > 0
     ) {
       const deleteStatus = await deleteOldImages(deletedProduct.images);
+      console.log("tttt------------>",deleteStatus);
+
       if (deleteStatus.status !== 200) {
         console.error("خطا در حذف تصاویر محصول:", deleteStatus.message);
         // تصمیم‌گیری در مورد ادامه تراکنش یا لغو آن
@@ -555,27 +558,25 @@ export async function EditProductAction(formData, ShopId) {
 
       // مدیریت تصاویر
       // const existingImages = existingProduct.images || [];
-      const existingImages = formData.get("existingImages")|| [];
-      const newImages = formData.getAll("newImages"); // تصاویر جدید برای آپلود
+      const existingImagesStr = formData.get("existingImages");
+      const existingImages = existingImagesStr ? existingImagesStr.split(",") : [];
+            const newImages = formData.getAll("newImages"); // تصاویر جدید برای آپلود
       const imagesToRemove = formData.get("imagesToRemove")
         ? formData.get("imagesToRemove").split(",")
         : []; // شناسه‌های تصاویر برای حذف
 
       // اعتبارسنجی تعداد تصاویر
-      const MAX_FILES = 10;
-      const remainingImagesCount =
-      
-        existingImages.length - imagesToRemove.length + newImages.length;
+      const MAX_FILES = 10;    
+      const remainingImagesCount =existingImages.length - imagesToRemove.length + newImages.length;
       if (remainingImagesCount === 0) {
         throw new Error("حداقل یک تصویر برای محصول الزامی است.");
-      }
+      }      
       if (remainingImagesCount > MAX_FILES) {
         throw new Error(`حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.`);
       }
 
       // آپلود تصاویر جدید
       const uploadDir = `Uploads/Shop/images/${ShopId}/Products`;
-
       const uploadPromises = newImages.map(async (file) => {
         try {
           const arrayBuffer = await file.arrayBuffer();
@@ -595,10 +596,7 @@ export async function EditProductAction(formData, ShopId) {
           );
         }
       });
-
       const newImagePaths = await Promise.all(uploadPromises);
-
-
       // حذف تصاویر انتخاب شده
 const remainingImages = existingImages.filter(
   (img) => !imagesToRemove.includes(img)

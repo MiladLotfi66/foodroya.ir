@@ -19,6 +19,7 @@ import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
   const { currentShopId, baseCurrency } = useShopInfoFromRedux();
+console.log("product------>",product);
 
   const ShopId = currentShopId;
 
@@ -157,7 +158,6 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
         URL.revokeObjectURL(imageToDelete.src);
       }
       return prev.filter((img) => img.id !== id);
-      console.log("Images to Remove:", imageToDelete);
     });
   };
   useEffect(() => {

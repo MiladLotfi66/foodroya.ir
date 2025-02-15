@@ -12,7 +12,7 @@ import FeatureKey from "../Product/FeatureKey";
 // import Currency from "../Currency/Currency";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-import { downloadAndUploadImage } from "@/utils/ImageUploader";
+import { copyImage, downloadAndUploadImage } from "@/utils/ImageUploader";
 // ایجاد حساب جدید
 export async function createAccount(data, session = null) {
   await connectDB();
@@ -705,6 +705,9 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
     }
   };
       
+  
+  
+
 
 
 
@@ -804,8 +807,11 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
         // تولید کد حساب جدید به صورت ترتیبی
         const newAccountCode = `${parentAccount.accountCode}-${current}`;
         // برای نمایش عنوان به عنوان کپی، پسوند "-کپی" به نام حساب اضافه می‌شود.
-        const newTitle = `${account.title}-کپی`;
-
+        const duplicate = siblingAccounts.find(sibling => sibling.title === account.title);
+    
+        // **تعیین نام جدید بر اساس وجود تکرار**
+        const newTitle = duplicate ? `${account.title}-کپی` : account.title;
+    
         // ساخت داده‌های جدید حساب
         const newAcountId=new mongoose.Types.ObjectId()
         const newProductId=new mongoose.Types.ObjectId()
@@ -825,30 +831,57 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
         const savedAccount = await newAccountData.save({ session });
 
         // بررسی نوع حساب و کپی اطلاعات کالا در صورت نیاز
-        if (account.accountType === 'کالا') { // فرض بر این است که فیلد type نوع حساب را مشخص می‌کند
-          // دریافت اطلاعات کالا مرتبط با حساب اصلی
-          const originalProduct = await Product.findOne({ accountId: account._id }).session(session).lean();
-          if (originalProduct) {   
+        if (account.accountType === 'کالا') {
+          const originalProduct = await Product.findOne({ accountId: account._id })
+            .populate('Features')
+            .session(session)
+            .lean();
 
-            // ایجاد رکورد جدید کالا با مشخصات مشابه
+          if (originalProduct) {
+            // کپی ویژگی‌ها (Features) مشابه قبلی
+            const newFeatureIds = [];
+            const originalFeatures = await Feature.find({ productId: originalProduct._id }).session(session).lean();
+
+            for (const feature of originalFeatures) {
+              const newFeatureId = new mongoose.Types.ObjectId();
+              const newFeature = new Feature({
+                ...feature,
+                _id: newFeatureId,
+                productId: newProductId,
+                LastEditedBy: userData.id,
+                CreatedBy: userData.id,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+              delete newFeature.__v;
+              await newFeature.save({ session });
+              newFeatureIds.push(newFeatureId);
+            }
+            const uploadDir = `Uploads/Shop/images/${account.store}/Products`;
+
+            // کپی تصاویر
+            const newImages = originalProduct.images.length > 0 
+
+              ? await copyImage(originalProduct.images, uploadDir) // جایگزین 'new-upload-directory' با دایرکتوری مناسب
+              : [];
+
+            // ایجاد محصول جدید با تصاویر جدید
             const newProductData = {
               ...originalProduct,
-              _id: newProductId, // شناسه جدید
-              accountId: newAcountId,        // ارتباط با حساب جدید
-              title:newTitle,
-               stock: 0,
-               lastPurchasePrice:0,
-              parentAccount:parentAccountId,
-               createdBy:userData.id,
-               updatedBy:userData.id,
-
-              // اگر فیلدهایی وجود دارند که باید تغییر کنند، آنها را اینجا به‌روزرسانی کنید
+              _id: newProductId,
+              accountId: newAcountId,
+              title: newTitle,
+              stock: 0,
+              lastPurchasePrice: 0,
+              parentAccount: parentAccountId,
+              Features: newFeatureIds,
+              images: newImages, // استفاده از تصاویر کپی شده
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              createdBy: userData.id,
+              updatedBy: userData.id,
             };
-
-            // حذف فیلدهایی که نباید کپی شوند (مثل تاریخ ایجاد)
-            delete newProductData.createdAt;
-            delete newProductData.updatedAt;
-            // اضافه کردن سایر فیلدهای مورد نیاز
+            delete newProductData.__v;
 
             const newProduct = new Product(newProductData);
             await newProduct.save({ session });
@@ -857,12 +890,12 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
 
         newAccounts.push(savedAccount);
       }
-    
+
       await session.commitTransaction();
       session.endSession();
 
       return { success: true };
-    } 
+    }
     else if (actionType === 'cut') {
       // در حالت کات (برش)، انتقال حساب به حساب والد جدید انجام می‌شود.
       // توجه: در این حالت عنوان حساب دست‌نخورده باقی می‌ماند.
