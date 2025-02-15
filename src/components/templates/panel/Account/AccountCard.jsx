@@ -173,6 +173,15 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
       onAccountClick(account);
     }
   };
+    const excludedAccountTypes = [
+      "اشخاص حقوقی",
+      "اشخاص حقیقی",
+      "گروه حساب",
+      "دسته بندی کالا",
+      "انبار"
+    ];
+  
+  
 
   return (
     <div className={`relative bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl p-4 ${account.accountStatus === "فعال" ? "border-2 border-green-500" : "border-2 border-red-500"}`}>
@@ -184,15 +193,14 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
             <EyeslashSvg/>
             <EyeSvg/>
           </div>
-            {!account.isSystem && (account.accountType!=="گروه حساب"||account.accountType!=="دسته بندی کالا"||account.accountType!=="انبار")&&(
-              <input
-                type="checkbox"
-                className="h-6 w-6"
-                checked={isSelected}
-                onChange={(e) => onToggleSelect(account._id)}
-              />
-            )}
-           
+          {!account.isSystem && !excludedAccountTypes.includes(account.accountType) && (
+        <input
+          type="checkbox"
+          className="h-6 w-6"
+          checked={isSelected}
+          onChange={() => onToggleSelect(account._id)}
+        />
+      )}           
           <div className="flex items-center gap-4 mb-4">
 
             <div className="flex items-center ">

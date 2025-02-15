@@ -112,6 +112,8 @@ export async function createAccount(data, session = null) {
   }
 }
 export async function updateAccount(id, data) {
+  console.log(id, data);
+  
   await connectDB();
   try {
     let userData;
@@ -158,13 +160,9 @@ export async function updateAccount(id, data) {
       case "اشخاص حقیقی":
       case "اشخاص حقوقی":
         updateFields.accountType = data.accountType;
-
         if (!data.contact) {
           return { success: false, message: "برای حساب اشخاص حقیقی و حقوقی انتخاب مخاطب الزامیست" };
         }
-
-  
-
         updateFields.contact = data.contact;
         updateFields.creditLimit = data.creditLimit;
 
@@ -176,6 +174,8 @@ export async function updateAccount(id, data) {
 
       default:
         // حذف تمامی فیلدهای غیرضروری برای سایر حساب‌ها
+        updateFields.title = data.title;
+
         unsetFields.bankAcountNumber = "";
         unsetFields.bankCardNumber = "";
         unsetFields.posConected = "";
@@ -705,12 +705,6 @@ export async function GetAllAccountsByOptions(storeId, parentId = null, options 
     }
   };
       
-  
-  
-
-
-
-
 export async function pasteAccounts(accountIds, parentAccountId, storeId, actionType) {
   await connectDB();
   const session = await mongoose.startSession();

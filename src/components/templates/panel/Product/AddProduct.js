@@ -19,7 +19,6 @@ import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
   const { currentShopId, baseCurrency } = useShopInfoFromRedux();
-console.log("product------>",product);
 
   const ShopId = currentShopId;
 

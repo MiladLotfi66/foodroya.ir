@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'react-hot-toast';
 import product_placeholder from "@/public/Images/PNG/product-placeholder.png"
 import Breadcrumb from '@/utils/Breadcrumb';
-import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode, pasteAccounts } from '../Account/accountActions';
+import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode, pasteAccounts, deleteAccount, updateAccount } from '../Account/accountActions';
 import { DeleteProducts } from './ProductActions';
 import Pagination from './Pagination';
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
@@ -19,17 +19,14 @@ import FallbackImage from "@/utils/fallbackImage";
 
 function ProductManage() {
   const [selectedAccounts, setSelectedAccounts] = useState([]);
-
   const [clipboard, setClipboard] = useState({
-
     accounts: [],
-
     action: null, // "copy" یا "cut"
-
   });
-
   const [isOpenAddProduct, setIsOpenAddProduct] = useState(false);
+  const [isOpenEditCategory, setIsOpenEditCategory] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [currentEditingAccount, setCurrentEditingAccount] = useState(null);
   const [selectedProductFile, setSelectedProductFile] = useState(null); // افزودن استیت جدید
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
@@ -149,11 +146,11 @@ function ProductManage() {
 
   // مدیریت ایجاد حساب جدید
   const onSubmitCreateAccount = async (data) => {
-    const { name } = data;
+    const { accountName } = data;
     const parentId = parentAccountId;
     try {
       const payload = {
-        title: name,
+        title: accountName,
         accountType: "دسته بندی کالا",
         parentAccount: parentId,
         store: ShopId,
@@ -171,6 +168,31 @@ function ProductManage() {
     } catch (err) {
       console.error(err);
       toast.error('خطا در ایجاد حساب جدید');
+    }
+  }; 
+   const onSubmitEditAccount = async (data) => {
+    const { accountName } = data;
+    const parentId = parentAccountId;
+    try {
+      const payload = {
+        title: accountName,
+        accountType: "دسته بندی کالا",
+        parentAccount: parentId,
+        store: ShopId,
+      };
+
+      const response = await updateAccount(currentEditingAccount,payload);
+      if (response.success) {
+        toast.success('حساب  ویرایش شد');
+        await refreshAccounts();
+        reset();
+        setIsOpenEditCategory(false);
+      } else {
+        throw new Error(response.message || "خطا در  ویرایش حساب .");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('خطا در ویرایش حساب ');
     }
   };
 
@@ -271,6 +293,20 @@ function ProductManage() {
       setSelectedProductFile(null); // ریست کردن فایل محصول
     }
   }, []);
+
+   const handleEditCategoryClick = useCallback((accountId) => {
+    setIsOpenEditCategory(true)
+    setCurrentEditingAccount(accountId)
+  }, []);
+   const deleteCategoryFunc = async(accountId) => {
+    const res=await deleteAccount(accountId) 
+    console.log("res",res);
+    if (!res.success) {
+      toast.error(res.message);
+
+    }
+       
+  };
 
    const handleEditClick = useCallback((product) => {
     setSelectedProduct(product);
@@ -381,7 +417,7 @@ function ProductManage() {
             onClick={() => setShowCreateAccountModal(true)}
             className="flex items-center bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
           >
-            <FaPlus className="mr-1" /> ایجاد حساب 
+            <FaPlus className="mr-1" /> ایجاد دسته بندی کالا 
           </button>
         </div>
         {/* لیست حساب‌ها */}
@@ -399,7 +435,7 @@ function ProductManage() {
                 onChange={(e) => handleToggleSelectAccount(account._id)}
               />
 
-                  {account.accountType === "کالا" && (
+                  { account.accountType === "کالا" &&(
                     <div 
                       className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105"
                     >
@@ -469,6 +505,33 @@ function ProductManage() {
                     >
                       <FaFolder className="text-yellow-500 text-md mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
                       <p className="flex text-center h-15 line-clamp-3 items-center">{account.title}</p>
+                      <div className="flex gap-2 mt-4 items-center text-center justify-center">
+                          {/* دکمه ویرایش */}
+                      
+
+
+                          <button
+                            aria-label="ویرایش"
+                            className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              onClick={(e) => {
+                                e.stopPropagation(); // جلوگیری از انتشار رویداد
+                              handleEditCategoryClick(account._id)}}
+                          >
+                            <EditSvg />
+                          </button>
+                          {/* دکمه حذف */}
+                          <button
+                            aria-label="حذف"
+                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                            onClick={(e) => {
+                              e.stopPropagation(); // جلوگیری از انتشار رویداد
+                              deleteCategoryFunc(account._id);
+                            }}
+                                                    >
+                            <DeleteSvg />
+                          </button>
+                          
+                        </div>
                     </div>
                   )}
                 </div>
@@ -501,10 +564,10 @@ function ProductManage() {
                   <label className="block mb-1">نام دسته بندی</label>
                   <input
                     type="text"
-                    {...register('name', { required: true })}
+                    {...register('accountName', { required: true })}
                     className="w-full border rounded px-3 py-2"
                   />
-                  {errors.name && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
+                  {errors.accountName && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
                 </div>
 
                 <div className="flex justify-end space-x-2">
@@ -525,9 +588,49 @@ function ProductManage() {
               </form>
             </div>
           </div>
+        )} 
+                {/* مدال ویرایش حساب  */}
+
+         {isOpenEditCategory && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+            onClick={() => setIsOpenEditCategory(false)}
+          >
+            <div
+              className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl mb-4">ویرایش دسته بندی کالا</h2>
+              <form onSubmit={handleSubmit(onSubmitEditAccount)} className="flex flex-col space-y-4">
+                <div>
+                  <label className="block mb-1">نام دسته بندی</label>
+                  <input
+                    type="text"
+                    {...register('accountName', { required: true })}
+                    className="w-full border rounded px-3 py-2"
+                  />
+                  {errors.accountName && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => { setIsOpenEditCategory(false); reset(); }}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+ویرایش                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
 
-        <Toaster />
       </div>
     </div>
       
