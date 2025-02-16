@@ -8,6 +8,7 @@ import * as Tooltip from "@radix-ui/react-tooltip";
 import moment from "moment-jalaali";
 import UserMiniInfo from "@/module/home/UserMiniInfo";
 import { calculateProductStock, getAccountBalance } from "./invoiceItemsServerActions";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 // نگاشت نوع فاکتور به فارسی
 const invoiceTypeMap = {
   Purchase: "خرید",
@@ -22,6 +23,17 @@ const InvoiceCard = ({ invoice, handleDeleteInvoice, handleEditClick }) => {
   // تبدیل تاریخ به فرمت شمسی قابل خواندن و ارقام فارسی
   const formattedCreatedAt = moment(invoice.createdAt).format("jYYYY/jMM/jDD HH:mm");
   const formattedUpdatedAt = moment(invoice.updatedAt).format("jYYYY/jMM/jDD HH:mm");
+  const { baseCurrency} = useShopInfoFromRedux();
+  const decimalPlaces = baseCurrency.decimalPlaces;
+
+  const formatter = new Intl.NumberFormat('fa-IR', {
+
+    minimumFractionDigits: decimalPlaces,
+
+    maximumFractionDigits: decimalPlaces,
+
+  });
+
 
   // تبدیل نوع فاکتور به فارسی
   const invoiceType = invoiceTypeMap[invoice.type] || invoice.type;
@@ -87,13 +99,16 @@ const InvoiceCard = ({ invoice, handleDeleteInvoice, handleEditClick }) => {
                           {item.product ? item.product.title : "نام محصول"}
                         </td>
                         <td className="py-2 px-4 border-b dark:border-zinc-600 text-right">
-                          {item.quantity}
+                          {formatter.format(item.quantity)}
+
                         </td>
                         <td className="py-2 px-4 border-b dark:border-zinc-600 text-right">
-                    {item.unitPrice}
+                    {formatter.format(item.unitPrice)}
+
                         </td>
                         <td className="py-2 px-4 border-b dark:border-zinc-600 text-right">
-                          {item.totalPrice}
+                          {formatter.format(item.totalPrice)}
+
                         </td>
                       </tr>
                     ))}
@@ -118,7 +133,8 @@ const InvoiceCard = ({ invoice, handleDeleteInvoice, handleEditClick }) => {
           {/* خلاصه فاکتور: تعداد اقلام و جمع کل */}
           <div className="flex flex-col sm:flex-row justify-between mt-2">
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              تعداد کل اقلام: <span className="font-medium">{invoice.totalItems}</span>
+              تعداد کل اقلام: <span className="font-medium">{formatter.format(invoice.totalItems)}
+              </span>
             </p>
             <p className="text-sm text-gray-700 dark:text-gray-300">
               جمع کل فاکتور: <span className="font-medium">{Number(invoice.totalPrice).toLocaleString()} تومان</span>

@@ -6,9 +6,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Image from "next/image";
-
-// فرض کنید که این آیکون ها و Server Actions در مسیرهای گفته شده قرار دارند.
+import Image from "next/image";// فرض کنید که این آیکون ها و Server Actions در مسیرهای گفته شده قرار دارند.
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import CloseSvg from "@/module/svgs/CloseSvg";
 import { AddSendMetodAction, EditSendMetodAction } from "./SendMetodServerActions";
@@ -39,13 +37,9 @@ function SendMetodForm({ sendMetod = {}, onClose, refreshSendMetods }) {
   const [isSubmit, setIsSubmit] = useState(false);
   const [selectedImage, setSelectedImage] = useState(sendMetod?.imageUrl || null);
   const [isMounted, setIsMounted] = useState(false);
-    const { baseCurrency } = useShopInfoFromRedux();
-console.log("sendMetod",sendMetod);
-
-  const params = useParams();
-  // دریافت ShopId از مسیر (در Next.js)
+  const { baseCurrency } = useShopInfoFromRedux();
+  const params = useParams();// دریافت ShopId از مسیر (در Next.js)
   const { ShopId } = params;
-
   const {
     register,
     handleSubmit,
@@ -63,9 +57,7 @@ console.log("sendMetod",sendMetod);
       SendMetodStatus: sendMetod?.SendMetodStatus !== undefined ? sendMetod.SendMetodStatus : true,
     },
     resolver: yupResolver(SendMetodSchema),
-  });
-
-  // تنظیم فیلد تصویر در صورت موجود بودن مقدار قبلی
+  }); // تنظیم فیلد تصویر در صورت موجود بودن مقدار قبلی
   useEffect(() => {
     if (sendMetod?.imageUrl) {
       setSelectedImage(sendMetod.imageUrl);

@@ -287,7 +287,7 @@ function AddBanner({ banner = {}, onClose, refreshBanners }) {
           </div>
 
           {/* BannerTextColor */}
-          <div className="w-1/2">
+          {/* <div className="w-1/2">
             <label
               htmlFor="BannerTextColor"
               className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
@@ -306,7 +306,7 @@ function AddBanner({ banner = {}, onClose, refreshBanners }) {
             <div className="text-xs text-red-400">
               {errors.BannerTextColor.message}
             </div>
-          )}
+          )} */}
         </div>
 
         {/* دکمه ارسال فرم */}

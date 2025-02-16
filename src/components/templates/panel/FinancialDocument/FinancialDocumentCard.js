@@ -7,6 +7,7 @@ import UserMiniInfo from "@/module/home/UserMiniInfo";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
 import ChevronDown from "@/module/svgs/ChevronDown";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
 function FinancialDocumentCard({
   financialDocument: initialFinancialDocument,
@@ -20,6 +21,9 @@ function FinancialDocumentCard({
   ); // مدیریت وضعیت سند مالی
   const [showAllTransactions, setShowAllTransactions] = useState(false); // مدیریت نمایش تراکنش‌ها
   const [showEditFields, setShowEditFields] = useState(false); // مدیریت نمایش فیلدهای ویرایش
+    const { baseCurrency} = useShopInfoFromRedux();
+  
+  const decimalPlaces = baseCurrency.decimalPlaces;
 
 
   useEffect(() => {
@@ -67,7 +71,10 @@ function FinancialDocumentCard({
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString("fa-IR", options);
   };
-
+  const formatter = new Intl.NumberFormat('fa-IR', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  });
   return (
     <div className="relative bg-white dark:bg-zinc-700 shadow-lg rounded-2xl p-6 transition-colors duration-300">
       <div className="flex justify-between items-center mb-4">
@@ -157,10 +164,12 @@ function FinancialDocumentCard({
                       {transaction?.account?.title}
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                      {transaction?.debit}
+                      {formatter.format(transaction?.debit)}
+
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                      {transaction?.credit}
+                      {formatter.format(transaction?.credit)}
+
                     </td>
                   </tr>
                 ))}

@@ -8,13 +8,14 @@ import {
   AddSalesReturnAction
 } from './invoiceItemsServerActions';
 import { useShopInfoFromRedux } from '@/utils/getShopInfoFromREdux';
+import { NumericFormat } from "react-number-format"; // افزودن ایمپورت NumericFormat
 
 const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoiceType }) => {
   const { baseCurrency } = useShopInfoFromRedux();
 
   const [accounts, setAccounts] = useState([]);
   const [allocatedAccounts, setAllocatedAccounts] = useState([
-    { accountId: '', amount: 0 }
+    { accountId: '', amount: '' } // مقدار اولیه amount به صورت رشته برای مدیریت بهتر
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,7 +32,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
   // بازنشانی تخصیص حساب‌ها و حساب‌ها هنگام بستن مودال
   useEffect(() => {
     if (!isOpen) {
-      setAllocatedAccounts([{ accountId: '', amount: 0 }]);
+      setAllocatedAccounts([{ accountId: '', amount: '' }]);
       setAccounts([]);
     }
   }, [isOpen]);
@@ -98,7 +99,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
   };
 
   const handleAddAccount = () => {
-    setAllocatedAccounts([...allocatedAccounts, { accountId: '', amount: 0 }]);
+    setAllocatedAccounts([...allocatedAccounts, { accountId: '', amount: '' }]);
   };
 
   const handleRemoveAccount = (index) => {
@@ -131,13 +132,13 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
       }
 
       // محاسبه مجموع مبالغ تخصیص‌یافته و مقایسه با مبلغ کل فاکتور
-      const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount), 0);
+      const totalAllocated = allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount || 0), 0);
       const invoiceTotal = Number(invoiceData.totalPrice) || 0;
 
       // مقایسه با دقت با توجه به اعشار
       const precision = Math.pow(10, baseCurrency.decimalPlaces);
       if (Math.round(totalAllocated * precision) !== Math.round(invoiceTotal * precision)) {
-        alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated}) با مبلغ کل فاکتور (${invoiceTotal}) مطابقت ندارد.`);
+        alert(`مجموع مبلغ تخصیص‌یافته (${totalAllocated.toLocaleString('fa-IR')}) با مبلغ کل فاکتور (${invoiceTotal.toLocaleString('fa-IR')}) مطابقت ندارد.`);
         return;
       }
     }
@@ -154,7 +155,12 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
     // اگر نوع فاکتور غیر از Waste بود، حساب‌ها را اضافه کنید
     if (invoiceType !== 'Waste') {
-      invoiceDataToSubmit.accountAllocations = allocatedAccounts;
+      // تبدیل مقادیر amount به نوع Number پیش از ارسال
+      const formattedAllocatedAccounts = allocatedAccounts.map(acc => ({
+        accountId: acc.accountId,
+        amount: Number(acc.amount)
+      }));
+      invoiceDataToSubmit.accountAllocations = formattedAllocatedAccounts;
     }
 
     try {
@@ -232,17 +238,19 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
                   </select>
 
                   <label htmlFor={`amount-${index}`} className="block mb-2">مبلغ {index + 1}:</label>
-                  <input
-                    type="number"
+                  <NumericFormat
                     id={`amount-${index}`}
-                    min="0"
+                    name={`amount-${index}`}
                     value={allocation.amount}
-                    onChange={(e) => handleAccountChange(index, 'amount', e.target.value)}
+                    onValueChange={(values) => handleAccountChange(index, 'amount', values.value)}
                     className="w-full mb-2 border rounded px-4 py-2"
                     placeholder="مبلغ"
-                    step={getStepValue(baseCurrency.decimalPlaces)} // اصلاح شده برای کنترل اعشار دقیق
-                    pattern={`^-?\\d+(\\.\\d{0,${baseCurrency.decimalPlaces}})?$`}
-                    title={`لطفاً حداکثر ${baseCurrency.decimalPlaces} رقم اعشار وارد کنید.`}
+                    thousandSeparator="٬" // جداکننده هزارگان فارسی
+                    decimalScale={baseCurrency.decimalPlaces}
+                    fixedDecimalScale={baseCurrency.decimalPlaces > 0}
+                    allowNegative={false}
+                    allowLeadingZeros={false}
+                    isNumericString
                   />
 
                   {/* دکمه حذف حساب، فقط اگر بیش از یک حساب وجود داشته باشد */}
@@ -250,7 +258,7 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
                     <button
                       type="button"
                       onClick={() => handleRemoveAccount(index)}
-                      className="bg-red-500 text-white px-3 py-1 rounded"
+                      className="bg-red-500 text-white px-3 py-1 rounded mt-2"
                     >
                       حذف
                     </button>
@@ -269,16 +277,15 @@ const SubmitInvoiceModal = ({ isOpen, onClose, invoiceData, invoiceItems, invoic
 
               {/* نمایش مجموع مبالغ تخصیص‌یافته */}
               <div className="mb-4">
-                <strong>مجموع تخصیص‌یافته:</strong> {allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount || 0), 0)}
+                <strong>مجموع تخصیص‌یافته:</strong> {allocatedAccounts.reduce((sum, acc) => sum + Number(acc.amount || 0), 0).toLocaleString('fa-IR')} {baseCurrency.title}
               </div>
               <div className="mb-4">
-                <strong>جمع کل فاکتور:</strong> {invoiceData.totalPrice}
+                <strong>جمع کل فاکتور:</strong> {Number(invoiceData.totalPrice).toLocaleString('fa-IR')} {baseCurrency.title}
               </div>
             </>
           )}
 
           {/* سایر فیلدهای مورد نیاز */}
-          
           <div className="flex justify-end gap-4">
             <button
               type="button"

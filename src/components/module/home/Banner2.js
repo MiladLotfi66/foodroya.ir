@@ -5,9 +5,7 @@ import "swiper/css";
 import "swiper/css/autoplay";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-
 import Link from "next/link";
-
 import { GetAllEnableBanners } from "@/templates/panel/Banner/BannerServerActions";
 
 function Banner2() {
@@ -39,7 +37,6 @@ function Banner2() {
 
   return (
     <div className="relative">
-  
       <Swiper
         ref={swiperRef}
         onSwiper={handleSwiper}
@@ -51,26 +48,27 @@ function Banner2() {
         {banners.map((banner, index) => (
           <SwiperSlide key={index}>
             <section
-              className="h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-center"
-              style={{ backgroundImage: `url("${banner.imageUrl}")` }}
+              className="relative h-[200px] xs:h-auto xs:aspect-[2/1] md:aspect-auto bg-no-repeat bg-cover bg-center"
+              style={{ 
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url("${banner.imageUrl}")` 
+              }}
             >
-              
-              {/* ///////////////////////////////// */}
-
+              {/* محتوای متن */}
               <Link
                 href={banner.BannerLink || "#"}
-                className="h-[100%] flex justify-end items-center md:min-h-[93vh]"
+                className="relative z-10 h-full flex justify-end items-center md:min-h-[93vh]"
                 style={{ color: banner.BannerTextColor }}
               >
-                <div>
-                  <span className="font-MorabbaBold text-2xl md:text-5xl">
+                
+                <div className="text-white p-4 md:p-8 bg-transparent">
+                  <span className="font-MorabbaBold text-2xl md:text-4xl shadow-lg">
                     {banner.BannerBigTitle}
                   </span>
-                  <p className="font-MorabbaLight text-xl md:text-5xl md:mt-2">
+                  <p className="font-MorabbaLight text-lg md:text-3xl md:mt-2 shadow-lg">
                     {banner.BannersmallDiscription}
                   </p>
                   <span className="block bg-orange-300 w-[100px] h-px md:h-0.5 my-2 md:my-8"></span>
-                  <p className="max-w-[201px] md:max-w-[460px] text-xs md:text-2xl">
+                  <p className="max-w-[201px] md:max-w-[460px] text-xs md:text-2xl shadow-lg">
                     {banner.BannerDiscription}
                   </p>
                 </div>

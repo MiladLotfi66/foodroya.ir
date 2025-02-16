@@ -303,7 +303,8 @@ function ProductManage() {
     console.log("res",res);
     if (!res.success) {
       toast.error(res.message);
-
+    }else{
+      refreshAccounts()
     }
        
   };
