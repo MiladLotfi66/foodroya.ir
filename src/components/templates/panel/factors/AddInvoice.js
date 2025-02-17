@@ -22,6 +22,8 @@ function AddInvoice({ invoiceType }) {
   const [contactsOptions, setContactsOptions] = useState([]);
   const [selectedContact, setSelectedContact] = useState(""); // نام عمومی‌تر
   const [isOpenSubmitModal, setIsOpenSubmitModal] = useState(false);
+  const [lastPath, setLastPath] = useState(['انبار']);
+  const [lastParentAccountId, setLastParentAccountId] = useState(null);
 
   // استفاده از react-hook-form
   const { register, handleSubmit,reset, watch, formState: { errors } } = useForm();
@@ -243,7 +245,7 @@ function AddInvoice({ invoiceType }) {
           onClick={handleCloseModal}
         >
           <div
-            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            className="mt-2 mb-2 relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
             onClick={(e) => e.stopPropagation()}
           >
             <AddInvoiceItem
@@ -252,6 +254,13 @@ function AddInvoice({ invoiceType }) {
               onAddNewInvoiceItem={handleAddNewInvoiceItem}
               onUpdate={handleUpdateInvoiceItem}
               invoiceType={invoiceType}
+                            // ارسال وضعیت مسیر و والد به کامپوننت AddInvoiceItem
+
+              initialPath={lastPath}
+              initialParentAccountId={lastParentAccountId}
+              onPathChange={setLastPath}
+              onParentAccountIdChange={setLastParentAccountId}
+
             />
           </div>
         </div>
@@ -265,16 +274,16 @@ function AddInvoice({ invoiceType }) {
         invoiceType={invoiceType}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
-        <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">{getPageTitle()}</h1>
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
+        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold">{getPageTitle()}</h1>
           <button
             type="button"
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add invoiceItem"
             onClick={handleAddInvoiceItemClick}
           >
-            افزودن کالا
+            افزودن 
           </button>
         </div>
         <div className="flex gap-4 px-2">
@@ -298,7 +307,7 @@ function AddInvoice({ invoiceType }) {
             {errors.contact && <span className="text-red-500">{errors.contact.message}</span>}
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16 max-h-[70vh] overflow-y-auto">
           {invoiceItems?.length > 0 ? (
             invoiceItems?.map((invoiceItem) => (
               <InvoiceItemCard

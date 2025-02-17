@@ -12,12 +12,15 @@ import ViewDocumentSvg from "@/module/svgs/ViewDocumentSvg";
 import PermissionSVG from "./PermissionSVG";
 import { useState, useEffect } from "react";
 import { AddRoleServerAction, EditRole } from "./RolesPermissionActions";
+import PermissionsSection from "./PermissionsSection";
 
 function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
   
   const [isSubmit, setIsSubmit] = useState(false);
   const [bannerPermissionState, setBannerPermissionState] = useState(role?.bannersPermissions || []);
   const [rolePermissionState, setRolePermissionState] = useState(role?.rolesPermissions || []);
+  const [sendMethodPermissionState, setSendMethodPermissionState] = useState(role?.sendMethodPermissions || []);
+  const [accountsPermissionState,setAccountsPermissionState] = useState(role?.accountsPermission || []);
 
   const { register, handleSubmit, setValue,formState: { errors } } = useForm({
     mode: "all",
@@ -27,6 +30,8 @@ function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
       RoleTitle: role?.RoleTitle || "",
       bannersPermissions: bannerPermissionState,
       rolesPermissions: rolePermissionState,
+      sendMethodPermissions: sendMethodPermissionState,
+      accountsPermission: accountsPermissionState,
       ShopId:ShopId,
     },
   });
@@ -34,18 +39,66 @@ function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
   useEffect(() => {
     setValue('bannersPermissions', bannerPermissionState);
     setValue('rolesPermissions', rolePermissionState);
+    setValue('sendMethodPermissions', sendMethodPermissionState);
+    setValue('accountsPermissionState',accountsPermissionState);
     setValue('ShopId', ShopId); // تنظیم ShopId به صورت مخفی
-  }, [bannerPermissionState, rolePermissionState, ShopId, setValue]);
+  }, [bannerPermissionState, rolePermissionState,sendMethodPermissionState,accountsPermissionState, ShopId, setValue]);
 
-  const handleTogglePermission = (permissionList, setPermissionList, name) => {
-    if (permissionList.includes(name)) {
-      setPermissionList(permissionList.filter(permission => permission !== name));
-    } else {
-      setPermissionList([...permissionList, name]);
-    }
-  };
+//////////////////////////////////////////////
+const permissionsConfig = [
+  {
+    title: "بنر ها",
+    permissions: bannerPermissionState,
+    setPermissions: setBannerPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "نقش ها",
+    permissions: rolePermissionState,
+    setPermissions: setRolePermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "روش ارسال",
+    permissions: sendMethodPermissionState,
+    setPermissions: setSendMethodPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "حسابها",
+    permissions: accountsPermissionState,
+    setPermissions: setAccountsPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  // می‌توانید بخش‌های بیشتری اضافه کنید
+];
+
+
+
 
   const formSubmitting = async (formData) => {
+    console.log("formData",formData);
+    
     setIsSubmit(true);
   
     try {
@@ -141,77 +194,19 @@ function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
         )}
         <p className="items-center text-center">تعیین سطوح دسترسی</p>
         <div className="bg-orange-300 w-full h-[2px]"></div>
+        {permissionsConfig.map((config) => (
+          <div key={config.title}>
+            <PermissionsSection
+              title={config.title}
+              permissions={config.permissions}
+              setPermissions={config.setPermissions}
+              icons={config.icons}
+            />
+            <div className="bg-orange-300 w-full h-[2px] my-4"></div>
+          </div>
+        ))}
 
-        <div className="flex gap-3 text-center">
-          <div className="rounded-full bg-gray-300 dark:bg-zinc-600 h-[6rem] w-[6rem] text-sm md:text-lg md:h-32 md:w-32 flex items-center justify-center">
-            <div className="flex items-center justify-center ">
-              <p className="text-center mb-4 pt-5">بنر ها</p>
-            </div>
-          </div>
-          <div className="flexCenter gap-2 md:gap-3 child-hover:text-orange-300">
-            <PermissionSVG
-              name="edit"
-              permissions={bannerPermissionState}
-              Icon="#EditSvg"
-              onToggle={() => handleTogglePermission(bannerPermissionState, setBannerPermissionState, "edit")}
-            />
-            <PermissionSVG
-              name="delete"
-              permissions={bannerPermissionState}
-              Icon="#DeleteSvg"
-              onToggle={() => handleTogglePermission(bannerPermissionState, setBannerPermissionState, "delete")}
-            />
-            <PermissionSVG
-              name="view"
-              permissions={bannerPermissionState}
-              Icon="#ViewDocumentSvg"
-              onToggle={() => handleTogglePermission(bannerPermissionState, setBannerPermissionState, "view")}
-            />
-            <PermissionSVG
-              name="add"
-              permissions={bannerPermissionState}
-              Icon="#CreateSvg"
-              onToggle={() => handleTogglePermission(bannerPermissionState, setBannerPermissionState, "add")}
-            /> 
-    
-          </div>
-        </div>
-        <div className="bg-orange-300 w-full h-[2px]"></div>
-
-        <div className="flex gap-3 text-center">
-          <div className="rounded-full bg-gray-300 dark:bg-zinc-600 h-[6rem] w-[6rem] text-sm md:text-lg md:h-32 md:w-32 flex items-center justify-center">
-            <div className="flex items-center justify-center ">
-              <p className="text-center mb-4 pt-5">نقش ها</p>
-            </div>
-          </div>
-          <div className="flexCenter gap-2 md:gap-3 child-hover:text-orange-300">
-            <PermissionSVG
-              name="edit"
-              permissions={rolePermissionState}
-              Icon="#EditSvg"
-              onToggle={() => handleTogglePermission(rolePermissionState, setRolePermissionState, "edit")}
-            />
-            <PermissionSVG
-              name="delete"
-              permissions={rolePermissionState}
-              Icon="#DeleteSvg"
-              onToggle={() => handleTogglePermission(rolePermissionState, setRolePermissionState, "delete")}
-            />
-            <PermissionSVG
-              name="view"
-              permissions={rolePermissionState}
-              Icon="#ViewDocumentSvg"
-              onToggle={() => handleTogglePermission(rolePermissionState, setRolePermissionState, "view")}
-            />
-            <PermissionSVG
-              name="add"
-              permissions={rolePermissionState}
-              Icon="#CreateSvg"
-              onToggle={() => handleTogglePermission(rolePermissionState, setRolePermissionState, "add")}
-            />
-          </div>
-        </div>
-        <div className="bg-orange-300 w-full h-[2px]"></div>
+       
 
         <button
           type="submit"

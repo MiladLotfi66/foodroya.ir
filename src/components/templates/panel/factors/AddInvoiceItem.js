@@ -8,17 +8,21 @@ import { GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode } from '..
 import Pagination from "../Product/Pagination";
 import { Toaster, toast } from "react-hot-toast";
 
-function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // باقی‌مانده پراپ‌ها تغییر نکرده‌اند
+function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType ,  initialPath = ['انبار'],
+  initialParentAccountId = null,
+  onPathChange,
+  onParentAccountIdChange
+}) { // باقی‌مانده پراپ‌ها تغییر نکرده‌اند
   const params = useParams();
   const { ShopId } = params;
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
-  const [path, setPath] = useState(['انبار']); // مقدار اولیه مسیر
+  const [path, setPath] = useState(initialPath);
+  const [parentAccountId, setParentAccountId] = useState(initialParentAccountId);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
   const [anbarAccountId, setAnbarAccountId] = useState(null);
-  const [parentAccountId, setParentAccountId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const limit = 12;
@@ -26,20 +30,30 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
   const allowedInvoiceTypes = ["Sale","PurchaseReturn","Waste"];
   const isAllowedInvoiceType = allowedInvoiceTypes.includes(invoiceType);
 
-  const fetchAnbarAccountId = async () => {
+  const fetchAnbarAccountId = useCallback(async () => {
     try {
       const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1-2");
       if (response.success && response.accountId) {
         setAnbarAccountId(response.accountId);
-        setParentAccountId(response.accountId);
-        setPath(['خانه', { id: response.accountId, title: "انبار" }]);
+        if (!parentAccountId) { // فقط اگر parentAccountId از والد دریافت نشده باشد
+          setParentAccountId(response.accountId);
+          setPath(['خانه', { id: response.accountId, title: "انبار" }]);
+          onPathChange(['خانه', { id: response.accountId, title: "انبار" }]);
+          onParentAccountIdChange(response.accountId);
+        }
       } else {
         throw new Error("حساب انبار یافت نشد.");
       }
     } catch (error) {
       console.error('خطا در دریافت حساب انبار:', error);
     }
-  };
+  }, [ShopId, parentAccountId, onPathChange, onParentAccountIdChange]);
+
+  useEffect(() => {
+    if (ShopId) {
+      fetchAnbarAccountId();
+    }
+  }, [ShopId, fetchAnbarAccountId]);
 
   // بهینه‌سازی refreshAccounts با استفاده از useCallback
   const refreshAccounts = useCallback(async () => {
@@ -92,11 +106,11 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
   }, [ShopId, parentAccountId, currentPage, searchQuery, limit]);
 
   // بارگذاری اولیه: دریافت حساب انبار
-  useEffect(() => {
-    if (ShopId) {
-      fetchAnbarAccountId();
-    }
-  }, [ShopId]);
+  // useEffect(() => {
+  //   if (ShopId) {
+  //     fetchAnbarAccountId();
+  //   }
+  // }, [ShopId]);
 
   // واکنش به تغییرات parentAccountId, currentPage, یا searchQuery
   useEffect(() => {
@@ -105,35 +119,43 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
     }
   }, [parentAccountId, currentPage, searchQuery, refreshAccounts]);
 
-  // تابع برای باز کردن حساب و نمایش زیرحساب‌ها
+  // توابع مدیریت باز کردن حساب و به‌روزرسانی مسیر
   const handleOpenAccount = useCallback((account) => {
-    setPath(prevPath => [...prevPath, { id: account._id, title: account.title }]);
+    const newPath = [...path, { id: account._id, title: account.title }];
+    setPath(newPath);
+    onPathChange(newPath); // اطلاع دادن به والد
     setParentAccountId(account._id);
+    onParentAccountIdChange(account._id); // اطلاع دادن به والد
     setCurrentPage(1);
-  }, []);
+  }, [path, onPathChange, onParentAccountIdChange]);
 
   // مدیریت کلیک روی بخش‌های Breadcrumb
   const handleBreadcrumbClick = useCallback((index) => {
     const selectedCrumb = path[index];
+    let newPath;
+    let newParentAccountId;
     if (typeof selectedCrumb === 'string') {
       // برچسب ابتدایی "خانه" را مدیریت می‌کنیم
-      setPath(['خانه']);
-      setParentAccountId(anbarAccountId);
+      newPath = ['خانه'];
+      newParentAccountId = anbarAccountId;
     } else {
-      const newPath = path.slice(0, index + 1);
-      setPath(newPath);
-      setParentAccountId(selectedCrumb.id);
+      newPath = path.slice(0, index + 1);
+      newParentAccountId = selectedCrumb.id;
     }
+    setPath(newPath);
+    onPathChange(newPath); // اطلاع دادن به والد
+    setParentAccountId(newParentAccountId);
+    onParentAccountIdChange(newParentAccountId); // اطلاع دادن به والد
     setCurrentPage(1);
-  }, [path, anbarAccountId]);
+  }, [path, anbarAccountId, onPathChange, onParentAccountIdChange]);
 
 
+  // سایر توابع مدیریت انتخاب حساب
   const handleSelectAccount = (account) => {
     if (account.accountType === "کالا") {
       if (!account.productId?.stock && isAllowedInvoiceType) {
-    
         toast.error("کالا با موجودی ۰ را نمی توان به فاکتور فروش ، برگشت از خرید و ضایعات اضافه کرد.");
-      }else{
+      } else {
         const invoiceItemData = {
           _id: account.productId._id,
           productId: account.productId._id,
@@ -144,7 +166,6 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
         onAddNewInvoiceItem(invoiceItemData);
         onClose();
       }
-     
     } else if (account.accountType === "دسته بندی کالا") {
       handleOpenAccount(account);
     }
@@ -152,7 +173,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
   
 
   return (
-    <div>
+    <div >
       <div className="flex justify-between p-2 md:p-5 mt-2 md:mt-4">
         <h1 className="text-3xl font-MorabbaBold">انتخاب اقلام فاکتور</h1>
       </div>
@@ -184,7 +205,7 @@ function AddInvoiceItem({ onClose, onAddNewInvoiceItem ,invoiceType}) { // با�
             <p>در حال بارگذاری...</p>
           ) : (
             <>
-              <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
                 {accounts.map(account => (
                   <div
                     key={account._id}

@@ -174,6 +174,8 @@ function ProductCard({ product, userRoles }) {
       </div>
 
       {/* بخش انتخاب تعداد و افزودن به سبد خرید */}
+
+
       <div className="flex flex-col gap-2 p-2 md:p-6">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -193,21 +195,22 @@ function ProductCard({ product, userRoles }) {
       </div>
 
       {/* استفاده از کامپوننت AddToCartButton */}
-      {Number(product.stock) > 0 && (
         <AddToCartButton
           product={product}
           price={userPrice}
           shop={currentShopId} // اگر فروشگاه هم نیاز است
           quantity={quantity}
-        />
-      )}
+          disabled={Number(product.stock) === 0} // اضافه کردن prop جدید
 
+        />
+{/* {product?.stock>0 && (
       <h4 className="text-right text-zinc-700 dark:text-white font-DanaMedium text-xs md:text-sm lg:text-base mt-2">
       {product?.stock}{" "}{product?.unit}
       </h4>
+)} */}
 
       {/* تگ‌ها */}
-      <div className="mt-2 flex flex-wrap content-center line-clamp-2 text-wrap max-h-18">
+      {/* <div className="mt-2 flex flex-wrap content-center line-clamp-2 text-wrap max-h-18">
         {displayedTags?.map((tag, index) => (
           <span
             key={index}
@@ -221,7 +224,7 @@ function ProductCard({ product, userRoles }) {
             +{extraTags} بیشتر
           </span>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

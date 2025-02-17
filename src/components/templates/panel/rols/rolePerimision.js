@@ -31,6 +31,16 @@ const schema = new Schema(
       enum: ["add", "edit", "delete", "view"],
       default: [],
     },
+    sendMethodPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+    accountsPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
     RoleStatus: { type: Boolean, required: true },
   },
   { timestamps: true }

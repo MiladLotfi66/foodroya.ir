@@ -350,53 +350,69 @@ function ProductManage() {
           </div>
         </div>
       )}
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
-        <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">مدیریت محصول</h1>
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
+        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت محصول</h1>
+        </div>
+        <div className="flex items-center gap-2 p-2">
+
           <button
-            className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
-            aria-label="add product"
+              className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              aria-label="add product"
             onClick={handleAddProductClick}
           >
-            افزودن محصول
+            افزودن 
           </button>
-        </div>
+          <button
+            onClick={() => setShowCreateAccountModal(true)}
+            className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+            >
+          ایجاد دسته بندی 
+          </button>
 
-        <div>
-      <div className="account-categories container mx-auto p-4">
-        {/* نوار Breadcrumb */}
+{clipboard.accounts.length > 0 && (
+  <button
+    className="h-8 md:h-14 text-xs md:text-base bg-blue-600 rounded-xl hover:bg-blue-700 text-white mt-2 md:mt-4 p-2 md:p-4"
 
-  {/* //////////////////////// */}
-  <div className="flex justify-end gap-4 mb-4">
+    onClick={handlePasteAccounts}
+  >
+چسباندن  </button>
+)}
   {/* دکمه کپی */}
   {selectedAccounts.length > 0 && (
     <button
-      className="h-11 md:h-14 bg-green-600 rounded-xl hover:bg-green-700 text-white p-4"
+      // className="h-8 md:h-14 bg-green-600 rounded-xl hover:bg-green-700 text-white p-2 md:p-4"
+      className="h-8 md:h-14 text-xs md:text-base bg-green-600 rounded-xl hover:bg-green-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+
       onClick={() => handleCopySelectedAccounts()}
-    >
-      کپی حساب‌های انتخابی
+    >کپی
     </button>
   )}
   {/* دکمه برش */}
   {selectedAccounts.length > 0 && (
     <button
-      className="h-11 md:h-14 bg-red-600 rounded-xl hover:bg-red-700 text-white p-4"
+      // className="h-8 md:h-14 bg-red-600 rounded-xl hover:bg-red-700 text-white p-2 md:p-4"
+      className="h-8 md:h-14 text-xs md:text-base bg-red-600 rounded-xl hover:bg-red-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+
       onClick={() => handleCutSelectedAccounts()}
     >
-      برش حساب‌های انتخابی
-    </button>
+      برش  </button>
   )}
-</div>
-{clipboard.accounts.length > 0 && (
-  <button
-    className="h-11 md:h-14 bg-blue-600 rounded-xl hover:bg-blue-700 text-white p-4 mb-2"
-    onClick={handlePasteAccounts}
-  >
-    Paste حساب‌ها
-  </button>
-)}
+        </div>
 
-{/* //////////////////////////// */}
+        <div>
+      <div className="account-categories container mx-auto p-4">
+
+
+                            {/* //////////////////////// */}
+                        {/* دکمه چسباندن */}
+
+
+{/* /////////////////////// */}
+
+ 
+        {/* نوار Breadcrumb */}
+
         <Breadcrumb
           path={path}
           onBreadcrumbClick={handleBreadcrumbClick}
@@ -414,19 +430,14 @@ function ProductManage() {
               className="w-full border rounded px-2 py-1"
             />
           </div>
-          <button
-            onClick={() => setShowCreateAccountModal(true)}
-            className="flex items-center bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-          >
-            <FaPlus className="mr-1" /> ایجاد دسته بندی کالا 
-          </button>
+          
         </div>
         {/* لیست حساب‌ها */}
         {loading ? (
           <p>در حال بارگذاری...</p>
         ) : (
           <>
-            <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto">
               {accounts.map(account => (
                 <div key={account._id}>
                                 <input

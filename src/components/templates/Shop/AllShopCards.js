@@ -31,12 +31,12 @@ function AllShopCards() {
 
   return (
     <FormTemplate>
-      <div className="bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl mt-36">
-        <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold"> فروشگاه ها</h1>
+      <div className="bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl mt-8 md:mt-36">
+        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold"> فروشگاه ها</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16 max-h-[70vh] overflow-y-auto">
           {Shops?.map((Shop) => (
             <ShopCard
               className="p-2 md:p-4"

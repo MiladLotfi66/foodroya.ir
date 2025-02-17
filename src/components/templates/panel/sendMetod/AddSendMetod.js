@@ -91,17 +91,14 @@ function SendMetodForm({ sendMetod = {}, onClose, refreshSendMetods }) {
       } else if (formData.imageUrl) {
         formDataObj.append("imageUrl", formData.imageUrl);
       }
-
       formDataObj.append("ShopId", ShopId);
       formDataObj.append("Title", formData.Title);
       formDataObj.append("Description", formData.Description);
       formDataObj.append("Price", formData.Price);
       formDataObj.append("SendMetodStatus", formData.SendMetodStatus);
-
       if (sendMetod?._id) {
         formDataObj.append("id", sendMetod._id);
       }
-
       let result;
       if (sendMetod?._id) {
         // ویرایش روش ارسال
@@ -110,7 +107,6 @@ function SendMetodForm({ sendMetod = {}, onClose, refreshSendMetods }) {
         // افزودن روش ارسال جدید
         result = await AddSendMetodAction(formDataObj);
       }
-
       if (result.status === 201 ||result.status === 200) {
         await refreshSendMetods();
         const successMessage =

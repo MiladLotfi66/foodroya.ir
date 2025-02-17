@@ -125,7 +125,7 @@ const ShopingCartPage = () => {
       </div>
 
       {/* سبد خرید فروشگاه فعلی */}
-      <div className="space-y-3">
+      <div className="space-y-2 max-h-[50vh] overflow-y-auto">
         {currentShopItems.map((item) => (
           <div
             key={`${item.product}-${item.shop}`}
@@ -182,7 +182,7 @@ const ShopingCartPage = () => {
       </div>
      {/* جمع کل و دکمه پرداخت فروشگاه فعلی */}
      {currentShopItems.length > 0 && (
-        <div className="mt-8 p-4 bg-white dark:bg-zinc-800 rounded-lg shadow-md">
+        <div className="mt-4 p-3 bg-white dark:bg-zinc-800 rounded-lg shadow-md ">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-DanaDemiBold">
               جمع کل: {formatter.format(currentShopTotal)} {baseCurrency.title}
@@ -195,13 +195,13 @@ const ShopingCartPage = () => {
       )}
       {/* سبدهای خرید سایر فروشگاه‌ها */}
       {otherShops.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-4 max-h-[30vh] overflow-y-auto">
           <h3 className="text-lg font-DanaDemiBold mb-4">سبد خرید های دیگر شما</h3>
           <div className="flex flex-wrap gap-4">
             {otherShops.map((shop) => (
               <div
                 key={shop.shopId}
-                className="bg-white dark:bg-zinc-800 p-3 rounded-lg shadow-md flex items-center gap-3"
+                className="bg-white dark:bg-zinc-800 p-3 rounded-lg shadow-md flex-row items-center gap-3"
               >
                 {shop.shopLogo && (
                   <Image

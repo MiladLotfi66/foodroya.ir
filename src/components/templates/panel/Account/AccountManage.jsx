@@ -174,14 +174,14 @@ function AccountManage() {
     <FormTemplate BGImage={BGImage}>
       {isOpenAddAccount && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 "
           onClick={handleOverlayClick}
         >
 
 
 
           <div
-            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-2 md:p-4"
             onClick={(e) => e.stopPropagation()}
           >
   
@@ -195,56 +195,56 @@ function AccountManage() {
         </div>
       )}
 
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36 p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-MorabbaBold">مدیریت حساب‌ها</h1>
+      <div className=" bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36 p-2 md:p-4 ">
+        <div className="flex justify-between items-center mb-2 md:mb-4">
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت حساب‌ها</h1>
           {path.length > 1 && (
             <button
-              className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
+              className="h-8 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
               aria-label="add account"
               onClick={handleAddAccountClick}
             >
-              افزودن حساب
+افزودن
             </button>
 
           )}
 
         </div>
                     {/* //////////////////////// */}
-                    <div className="flex justify-end gap-4 mb-4">
+                    <div className="flex justify-end gap-2 md:gap-4 mb-2 md:mb-4 text-xs md:text-base">
+                        {/* دکمه چسباندن */}
+
+{clipboard.accounts.length > 0 && (
+  <button
+    className="h-8 md:h-14 bg-blue-600 rounded-xl hover:bg-blue-700 text-white p-2 md:p-4 mb-1 md:mb-2"
+    onClick={handlePasteAccounts}
+  >
+چسباندن  </button>
+)}
   {/* دکمه کپی */}
   {selectedAccounts.length > 0 && (
     <button
-      className="h-11 md:h-14 bg-green-600 rounded-xl hover:bg-green-700 text-white p-4"
+      className="h-8 md:h-14 bg-green-600 rounded-xl hover:bg-green-700 text-white p-2 md:p-4"
       onClick={() => handleCopySelectedAccounts()}
-    >
-      کپی حساب‌های انتخابی
+    >کپی
     </button>
   )}
   {/* دکمه برش */}
   {selectedAccounts.length > 0 && (
     <button
-      className="h-11 md:h-14 bg-red-600 rounded-xl hover:bg-red-700 text-white p-4"
+      className="h-8 md:h-14 bg-red-600 rounded-xl hover:bg-red-700 text-white p-2 md:p-4"
       onClick={() => handleCutSelectedAccounts()}
     >
-      برش حساب‌های انتخابی
-    </button>
+      برش  </button>
   )}
+
 </div>
-{clipboard.accounts.length > 0 && (
-  <button
-    className="h-11 md:h-14 bg-blue-600 rounded-xl hover:bg-blue-700 text-white p-4 mb-2"
-    onClick={handlePasteAccounts}
-  >
-    Paste حساب‌ها
-  </button>
-)}
 
 {/* /////////////////////// */}
         {/* اضافه کردن کامپوننت Breadcrumb */}
         <Breadcrumb path={path} onBreadcrumbClick={handleBreadcrumbClick} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-2 gap-2 md:gap-6 p-2 md:p-4 pb-8 md:pb-16 max-h-[50vh]  overflow-y-auto">
           {accounts.map((account) => (
             <AccountCard
               className="p-2 md:p-4"

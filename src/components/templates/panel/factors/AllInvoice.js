@@ -68,22 +68,22 @@ function InvoiceManage() {
 
   return (
     <FormTemplate BGImage={BGImage}>
-         <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-36">
+         <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
         <div className="hidden">
           <EditSvg />
           <DeleteSvg />
         </div>
-        <div className="flex justify-between p-2 md:p-5 mt-10 md:mt-36">
-          <h1 className="text-3xl font-MorabbaBold">مدیریت فاکتور ها</h1>
+        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت فاکتور ها</h1>
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add Shop"
           >
-            افزودن فاکتور
+            افزودن 
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-2 p-4 pb-16 justify-items-center">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-2 p-4 pb-16 max-h-[70vh] overflow-y-auto justify-items-center">
           {invoices?.map((invoice) => (
             <InvoiceCard
               key={invoice._id}

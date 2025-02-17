@@ -305,9 +305,9 @@ function ProfilePage() {
 
       <FormTemplate >
       <main>
-          <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-16 p-8 md:p-12 max-w-4xl mx-auto">
+          <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-8 md:mt-36 p-8 md:p-12 max-w-4xl mx-auto">
             <header className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-10">
+              <h1 className="text-2xl md:text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-10">
                 نمایه کاربری
               </h1>
               <div className="hidden">
@@ -421,7 +421,7 @@ function ProfilePage() {
                 {/* غرفه های ایجاد شده */}
 
                 <Link href="/Shop/userShop" className="mt-8  gap-2 flex-col text-center items-center justify-center">
-                  <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
+                  <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4 max-h-[70vh] overflow-y-auto">
                     غرفه‌های شما
                   </h2>
                   {UserShops.length > 0 ? (

@@ -6,22 +6,29 @@ import EditSvg from "@/module/svgs/EditSvg";
 import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import EyeSvg from "@/module/svgs/EyeSvg";
 import { Toaster, toast } from "react-hot-toast";
-import product_placeholder from "@/public/Images/PNG/product-placeholder.png"
-import CashregisterIMG from "@/public/Images/PNG/cash_register.png"
-import warehouseIMG from "@/public/Images/PNG/warehouse.png"
-import personIMG from "@/public/Images/PNG/person.png"
-import companyIMG from "@/public/Images/PNG/company.png"
-import bankIMG from "@/public/Images/PNG/bank.png"
-import categoryIMG from "@/public/Images/PNG/category.png"           
-import productCategoryIMG from "@/public/Images/PNG/productCategory.png"           
-import noteIMG from "@/public/Images/PNG/note.jpeg"
-import secretAccountIMG from "@/public/Images/PNG/secretAccount.png"
+import product_placeholder from "@/public/Images/PNG/product-placeholder.png";
+import CashregisterIMG from "@/public/Images/PNG/cash_register.png";
+import warehouseIMG from "@/public/Images/PNG/warehouse.png";
+import personIMG from "@/public/Images/PNG/person.png";
+import companyIMG from "@/public/Images/PNG/company.png";
+import bankIMG from "@/public/Images/PNG/bank.png";
+import categoryIMG from "@/public/Images/PNG/category.png";
+import productCategoryIMG from "@/public/Images/PNG/productCategory.png";
+import noteIMG from "@/public/Images/PNG/note.jpeg";
+import secretAccountIMG from "@/public/Images/PNG/secretAccount.png";
 import { deleteAccount, activateAccount, deactivateAccount } from "./accountActions";
 import UserMicroCard from "@/module/home/UserMicroCard";
 import Image from "next/image";
 import FallbackImage from "@/utils/fallbackImage";
 
-function AccountCard({ account: initialAccount, editFunction, onDelete, onAccountClick = () => {}, onToggleSelect, isSelected }) {
+function AccountCard({
+  account: initialAccount,
+  editFunction,
+  onDelete,
+  onAccountClick = () => {},
+  onToggleSelect,
+  isSelected,
+}) {
   const [account, setAccount] = useState(initialAccount);
 
   useEffect(() => {
@@ -44,105 +51,116 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
   const renderAccountIcon = (accountType) => {
     switch (accountType) {
       case "دسته بندی کالا":
-       
-        return  <Image
-        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-        src={productCategoryIMG}
-        alt="تصویر دسته بندی کالا"
-        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-        height={32}
-        quality={60}
-      />;
-      case "حساب انتظامی":
-        return  <Image
-        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-        src={secretAccountIMG}
-        alt="تصویر حساب انتظامی"
-        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-        height={32}
-        quality={60}
-      />;
-
-      case "حساب عادی":
-        return  <Image
-        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-        src={noteIMG}
-        alt="تصویر حساب عادی"
-        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-        height={32}
-        quality={60}
-      />;
-      case "کالا":
-        return  (
-          <FallbackImage
-          className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-          src={account?.productId?.images?.[0]} // استفاده از اولین تصویر موجود
-          alt="تصویر کالا"
-          width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-          height={32}
-          quality={60}
-          placeholder={product_placeholder}
-        />
-
-     
-      )
-        
-      case "اشخاص حقیقی":
-        return  <Image
-        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-        src={personIMG}
-        alt="تصویر اشخاص حقیقی"
-        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-        height={32}
-        quality={60}
-      />;
-      case "گروه حساب":
-      return  <Image
-      className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-      src={categoryIMG}
-      alt="تصویر گروه حساب"
-      width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-      height={32}
-      quality={60}
-    />;     
-     case "انبار":
-        return  (
+        return (
           <Image
-          className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-          src={warehouseIMG}
-          alt="تصویر انبار"
-          width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-          height={32}
-          quality={60}
-        />
-              )
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={productCategoryIMG}
+            alt="تصویر دسته بندی کالا"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
+      case "حساب انتظامی":
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={secretAccountIMG}
+            alt="تصویر حساب انتظامی"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
+      case "حساب عادی":
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={noteIMG}
+            alt="تصویر حساب عادی"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
+      case "کالا":
+        return (
+          <FallbackImage
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={account?.productId?.images?.[0]}
+            alt="تصویر کالا"
+            width={48}
+            height={48}
+            quality={60}
+            placeholder={product_placeholder}
+          />
+        );
+      case "اشخاص حقیقی":
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={personIMG}
+            alt="تصویر اشخاص حقیقی"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
+      case "گروه حساب":
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={categoryIMG}
+            alt="تصویر گروه حساب"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
+      case "انبار":
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={warehouseIMG}
+            alt="تصویر انبار"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
       case "صندوق":
-        return (<Image
-          className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-          src={CashregisterIMG}
-          alt="تصویر صندوق"
-          width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-          height={32}
-          quality={60}
-        />);
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={CashregisterIMG}
+            alt="تصویر صندوق"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
       case "اشخاص حقوقی":
-        return  <Image
-        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-        src={companyIMG}
-        alt="تصویر اشخاص حقوقی"
-        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-        height={32}
-        quality={60}
-      />;
-            case "حساب بانکی":
-        return  <Image
-        className="rounded-md object-cover w-12 h-12" // تعیین اندازه و رفتار
-        src={bankIMG}
-        alt="تصویر حساب بانکی"
-        width={32} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-        height={32}
-        quality={60}
-      />;
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={companyIMG}
+            alt="تصویر اشخاص حقوقی"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
+      case "حساب بانکی":
+        return (
+          <Image
+            className="rounded-md object-cover w-12 h-12 flex-shrink-0"
+            src={bankIMG}
+            alt="تصویر حساب بانکی"
+            width={48}
+            height={48}
+            quality={60}
+          />
+        );
       default:
         return null;
     }
@@ -173,62 +191,82 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
       onAccountClick(account);
     }
   };
-    const excludedAccountTypes = [
-      "اشخاص حقوقی",
-      "اشخاص حقیقی",
-      "گروه حساب",
-      "دسته بندی کالا",
-      "انبار"
-    ];
-  
-  
+
+  const excludedAccountTypes = [
+    "اشخاص حقوقی",
+    "اشخاص حقیقی",
+    "گروه حساب",
+    "دسته بندی کالا",
+    "انبار",
+  ];
 
   return (
-    <div className={`relative bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl p-4 ${account.accountStatus === "فعال" ? "border-2 border-green-500" : "border-2 border-red-500"}`}>
-      <div className="flex items-center justify-between">
-        <div>
+    <div
+      className={`relative bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl p-2 md:p-4 ${
+        account.accountStatus === "فعال"
+          ? "border-2 border-green-500"
+          : "border-2 border-red-500"
+      }`}
+    >
+      <div className="flex flex-col items-start justify-between">
+        {/* بخش سمت چپ */}
+        <div className="flex-col">
           <div className="hidden">
-            <DeleteSvg/>
-            <EditSvg/>
-            <EyeslashSvg/>
-            <EyeSvg/>
+            <DeleteSvg />
+            <EditSvg />
+            <EyeslashSvg />
+            <EyeSvg />
           </div>
-          {!account.isSystem && !excludedAccountTypes.includes(account.accountType) && (
-        <input
-          type="checkbox"
-          className="h-6 w-6"
-          checked={isSelected}
-          onChange={() => onToggleSelect(account._id)}
-        />
-      )}           
-          <div className="flex items-center gap-4 mb-4">
-
-            <div className="flex items-center ">
+          <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+            {/* آیکون حساب */}
+            <div className="flex-shrink-0">
               {renderAccountIcon(account.accountType)}
             </div>
+            {/* عنوان حساب */}
             <div
-              className="flex text-xl font-bold text-blue-700 dark:text-teal-400 cursor-pointer hover:underline"
+              className="flex-1 min-w-0 text-lg md:text-xl font-bold text-blue-700 dark:text-teal-400 cursor-pointer hover:underline break-words"
               onClick={handleAccountClick}
             >
               {account.title}
             </div>
           </div>
 
-          {/* <p className="text-sm">مانده حساب: {account.balance}</p> */}
-          {/* <p className="text-sm">کد حساب: {account.accountCode}</p> */}
-          <p className="text-sm flex">
-            نوع حساب: {account.accountType}
+          {/* اطلاعات دیگر حساب */}
+          <p className="text-xs md:text-sm flex flex-wrap">
+            <span>نوع حساب: </span>
+            <span className="ml-1">{account.accountType}</span>
           </p>
-          <p className={`text-sm ${account.accountStatus === "فعال" ? "text-green-500" : "text-red-500"}`}>
-           {account.accountStatus}
+          <p
+            className={`text-xs md:text-sm ${
+              account.accountStatus === "فعال"
+                ? "text-green-500"
+                : "text-red-500"
+            }`}
+          >
+            {account.accountStatus}
           </p>
-          <div className="text-sm flex gap-2 items-center">
+          <div className="text-xs md:text-sm flex flex-wrap gap-1 md:gap-2 items-center">
             <span>ایجاد کننده:</span>
             <UserMicroCard user={account.createdBy} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Delete Icon */}
+
+      </div>
+        {/* بخش سمت راست (آیکون‌ها) */}
+          <div className="flex justify-between items-center text-center mt-4">
+          <div>
+
+{!account.isSystem && !excludedAccountTypes.includes(account.accountType) && (
+    <input
+      type="checkbox"
+      className="h-6 w-6 mb-2"
+      checked={isSelected}
+      onChange={() => onToggleSelect(account._id)}
+    />
+  )}
+  </div>
+        <div className="flex items-center gap-1 md:gap-2 mt-2 md:mt-0">
+                      {/* Delete Icon */}
           {!account.isSystem && (
             <svg
               width="24"
@@ -253,8 +291,8 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
             </svg>
           )}
           {/* Enable/Disable Icon */}
-          {!account.isSystem && (
-            account.accountStatus === "فعال" ? (
+          {!account.isSystem &&
+            (account.accountStatus === "فعال" ? (
               <svg
                 width="24"
                 height="24"
@@ -274,10 +312,12 @@ function AccountCard({ account: initialAccount, editFunction, onDelete, onAccoun
               >
                 <use href="#EyeSvg"></use>
               </svg>
-            )
-          )}
+            ))}
+          </div>
+        
+
+
         </div>
-      </div>
       <Toaster />
     </div>
   );

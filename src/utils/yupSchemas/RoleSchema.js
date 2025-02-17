@@ -34,6 +34,22 @@ const RoleSchema = yup.object().shape({
         .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
         .default([]),
 
+        sendMethodPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
+
+        accountsPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
+
 
 
 });

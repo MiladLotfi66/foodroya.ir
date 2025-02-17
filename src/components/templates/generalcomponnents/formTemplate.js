@@ -8,12 +8,12 @@ function FormTemplate({ children, BGImage }) {
   }
 
   return (
-    <div className="absolute w-full h-full overflow-auto">
+    <div className="absolute w-full h-full  max-h-[85vh] overflow-hidden">
       <div
-        className="fixed inset-0 bg-no-repeat bg-cover bg-center"
+        className="fixed inset-0 bg-no-repeat bg-cover bg-center "
         style={{ backgroundImage: `url(${BGImage})` }}
       ></div>
-      <div className="relative container">
+      <div className="relative container ">
         {children}
       </div>
     </div>

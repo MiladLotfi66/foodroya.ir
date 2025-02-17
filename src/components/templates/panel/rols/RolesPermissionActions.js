@@ -217,6 +217,9 @@ export async function EditRole(RoleData , roleId) {
         RoleStatus: RoleData.RoleStatus,
         bannersPermissions: RoleData.bannersPermissions,
         rolesPermissions: RoleData.rolesPermissions,
+        
+        sendMethodPermissions: RoleData.sendMethodPermissions,
+        accountsPermissions: RoleData.accountsPermissions,
       },
       { abortEarly: false }
     );
