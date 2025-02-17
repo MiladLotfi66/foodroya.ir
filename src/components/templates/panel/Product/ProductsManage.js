@@ -2,18 +2,25 @@
 "use client";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddProduct from "./AddProduct";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import DeleteSvg from "@/module/svgs/DeleteSvg";
 import EditSvg from "@/module/svgs/EditSvg";
 import ShareSvg from "@/module/svgs/ShareSvg";
-import { FaFolder, FaSearch, FaPlus } from 'react-icons/fa';
-import { useForm } from 'react-hook-form';
-import { toast, Toaster } from 'react-hot-toast';
-import product_placeholder from "@/public/Images/PNG/product-placeholder.png"
-import Breadcrumb from '@/utils/Breadcrumb';
-import { createAccount, GetAllAccountsByOptions, GetAccountIdBystoreIdAndAccountCode, pasteAccounts, deleteAccount, updateAccount } from '../Account/accountActions';
-import { DeleteProducts } from './ProductActions';
-import Pagination from './Pagination';
+import { FaFolder, FaSearch, FaPlus } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { toast, Toaster } from "react-hot-toast";
+import product_placeholder from "@/public/Images/PNG/product-placeholder.png";
+import Breadcrumb from "@/utils/Breadcrumb";
+import {
+  createAccount,
+  GetAllAccountsByOptions,
+  GetAccountIdBystoreIdAndAccountCode,
+  pasteAccounts,
+  deleteAccount,
+  updateAccount,
+} from "../Account/accountActions";
+import { DeleteProducts } from "./ProductActions";
+import Pagination from "./Pagination";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import FallbackImage from "@/utils/fallbackImage";
 
@@ -31,7 +38,7 @@ function ProductManage() {
   const [selectedParentAccount, setSelectedParentAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [path, setPath] = useState([]); // مسیر برای Breadcrumb
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCreateAccountModal, setShowCreateAccountModal] = useState(false);
   const [anbarAccountId, setAnbarAccountId] = useState(null); // شناسه حساب انبار
@@ -39,18 +46,24 @@ function ProductManage() {
   const [currentPage, setCurrentPage] = useState(1); // وضعیت صفحه فعلی
   const [totalPages, setTotalPages] = useState(0); // وضعیت کل صفحات
   const limit = 12; // تعداد آیتم‌ها در هر صفحه
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
-
   const {
-    currentShopId,
-    shopPanelImage,
-     } = useShopInfoFromRedux();
-  const ShopId  = currentShopId;
-   const BGImage=shopPanelImage;
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+
+  const { currentShopId, shopPanelImage } = useShopInfoFromRedux();
+  const ShopId = currentShopId;
+  const BGImage = shopPanelImage;
   const fetchAnbarAccountId = async () => {
     try {
-      const response = await GetAccountIdBystoreIdAndAccountCode(ShopId, "1000-1-2");
-      if (response.success && response.accountId) { // فرض بر این است که پاسخ شامل شناسه حساب است
+      const response = await GetAccountIdBystoreIdAndAccountCode(
+        ShopId,
+        "1000-1-2"
+      );
+      if (response.success && response.accountId) {
+        // فرض بر این است که پاسخ شامل شناسه حساب است
         setAnbarAccountId(response.accountId);
         setParentAccountId(response.accountId);
         setPath([{ id: response.accountId, title: "انبار" }]); // تنظیم مسیر اولیه
@@ -58,63 +71,75 @@ function ProductManage() {
         throw new Error("حساب انبار یافت نشد.");
       }
     } catch (error) {
-      console.error('خطا در دریافت حساب انبار:', error);
+      console.error("خطا در دریافت حساب انبار:", error);
       toast.error("خطا در دریافت حساب انبار.");
     }
   };
 
-    // از useCallback برای بهینه‌سازی عملکرد استفاده می‌کنیم
-    const refreshAccounts = useCallback(async () => {
-      
-      if (!parentAccountId) {
-        console.error("شناسه والد موجود نیست.");
-        return;
-      }
-  
-      try {
-        setLoading(true);
-        setSelectedParentAccount(parentAccountId);
-        const options = {
-          fields: ['_id', 'title', 'accountType', 'accountStatus', 'productId','Features'], // انتخاب فیلدهای مورد نیاز
-          populateFields: [
-            {
-              path: 'productId',
-              populate: [
-                { path: 'pricingTemplate' },
-                { path: 'tags' },
-                { path: 'Features' ,
-                  populate: [
-                    { path: 'featureKey' },
-                  ]
-                }
-              ]
-            },
-           
-          ],
-          limit,
-          page: currentPage, // شماره صفحه فعلی
-          sort: { accountType: 1 }, // ترتیب‌بندی بر اساس نوع حساب
-          additionalFilters: searchQuery
-            ? { title: { $regex: searchQuery, $options: 'i' } } // فیلتر جستجو
-            : {}
-        };
-        const response = await GetAllAccountsByOptions(ShopId, parentAccountId, options);
-        if (response.status === 200) {
-          setAccounts(response.Accounts);
-          setTotalPages(response.totalPages);
-          setCurrentPage(response.currentPage);
-        } else {
-          throw new Error(response.message || "خطا در دریافت حساب‌ها.");
-        }
-      } catch (error) {
-        console.error("خطا در دریافت حساب‌ها:", error);
-        toast.error("خطا در دریافت حساب‌ها.");
-      } finally {
-        setLoading(false);
-      }
-    }, [ShopId, parentAccountId, currentPage, searchQuery, limit, setSelectedParentAccount]);
+  // از useCallback برای بهینه‌سازی عملکرد استفاده می‌کنیم
+  const refreshAccounts = useCallback(async () => {
+    if (!parentAccountId) {
+      console.error("شناسه والد موجود نیست.");
+      return;
+    }
 
-     // بارگذاری اولیه: دریافت حساب انبار
+    try {
+      setLoading(true);
+      setSelectedParentAccount(parentAccountId);
+      const options = {
+        fields: [
+          "_id",
+          "title",
+          "accountType",
+          "accountStatus",
+          "productId",
+          "Features",
+        ], // انتخاب فیلدهای مورد نیاز
+        populateFields: [
+          {
+            path: "productId",
+            populate: [
+              { path: "pricingTemplate" },
+              { path: "tags" },
+              { path: "Features", populate: [{ path: "featureKey" }] },
+            ],
+          },
+        ],
+        limit,
+        page: currentPage, // شماره صفحه فعلی
+        sort: { accountType: 1 }, // ترتیب‌بندی بر اساس نوع حساب
+        additionalFilters: searchQuery
+          ? { title: { $regex: searchQuery, $options: "i" } } // فیلتر جستجو
+          : {},
+      };
+      const response = await GetAllAccountsByOptions(
+        ShopId,
+        parentAccountId,
+        options
+      );
+      if (response.status === 200) {
+        setAccounts(response.Accounts);
+        setTotalPages(response.totalPages);
+        setCurrentPage(response.currentPage);
+      } else {
+        throw new Error(response.message || "خطا در دریافت حساب‌ها.");
+      }
+    } catch (error) {
+      console.error("خطا در دریافت حساب‌ها:", error);
+      toast.error("خطا در دریافت حساب‌ها.");
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    ShopId,
+    parentAccountId,
+    currentPage,
+    searchQuery,
+    limit,
+    setSelectedParentAccount,
+  ]);
+
+  // بارگذاری اولیه: دریافت حساب انبار
   useEffect(() => {
     if (ShopId) {
       fetchAnbarAccountId();
@@ -130,19 +155,25 @@ function ProductManage() {
 
   // تابع برای باز کردن حساب و نمایش زیرحساب‌ها
   const handleOpenAccount = useCallback((account) => {
-    setPath(prevPath => [...prevPath, { id: account._id, title: account.title }]);
+    setPath((prevPath) => [
+      ...prevPath,
+      { id: account._id, title: account.title },
+    ]);
     setParentAccountId(account._id);
     setCurrentPage(1); // بازنشانی به صفحه اول هنگام باز کردن حساب جدید
   }, []);
 
   // مدیریت کلیک روی بخش‌های Breadcrumb
-  const handleBreadcrumbClick = useCallback((index) => {
-    const selectedCrumb = path[index];
-    const newPath = path.slice(0, index + 1);
-    setPath(newPath);
-    setParentAccountId(selectedCrumb.id);
-    setCurrentPage(1); // بازنشانی به صفحه اول هنگام کلیک روی Breadcrumb
-  }, [path]);
+  const handleBreadcrumbClick = useCallback(
+    (index) => {
+      const selectedCrumb = path[index];
+      const newPath = path.slice(0, index + 1);
+      setPath(newPath);
+      setParentAccountId(selectedCrumb.id);
+      setCurrentPage(1); // بازنشانی به صفحه اول هنگام کلیک روی Breadcrumb
+    },
+    [path]
+  );
 
   // مدیریت ایجاد حساب جدید
   const onSubmitCreateAccount = async (data) => {
@@ -158,7 +189,7 @@ function ProductManage() {
 
       const response = await createAccount(payload);
       if (response.success) {
-        toast.success('حساب جدید ایجاد شد');
+        toast.success("حساب جدید ایجاد شد");
         await refreshAccounts();
         reset();
         setShowCreateAccountModal(false);
@@ -167,10 +198,10 @@ function ProductManage() {
       }
     } catch (err) {
       console.error(err);
-      toast.error('خطا در ایجاد حساب جدید');
+      toast.error("خطا در ایجاد حساب جدید");
     }
-  }; 
-   const onSubmitEditAccount = async (data) => {
+  };
+  const onSubmitEditAccount = async (data) => {
     const { accountName } = data;
     const parentId = parentAccountId;
     try {
@@ -181,9 +212,9 @@ function ProductManage() {
         store: ShopId,
       };
 
-      const response = await updateAccount(currentEditingAccount,payload);
+      const response = await updateAccount(currentEditingAccount, payload);
       if (response.success) {
-        toast.success('حساب  ویرایش شد');
+        toast.success("حساب  ویرایش شد");
         await refreshAccounts();
         reset();
         setIsOpenEditCategory(false);
@@ -192,7 +223,7 @@ function ProductManage() {
       }
     } catch (err) {
       console.error(err);
-      toast.error('خطا در ویرایش حساب ');
+      toast.error("خطا در ویرایش حساب ");
     }
   };
 
@@ -203,17 +234,15 @@ function ProductManage() {
   };
 
   // تابع حذف حساب (به‌روزرسانی شده برای هماهنگی با صفحه‌بندی)
-  const deleteFunc = async (productId,accountId) => {
-    
-    
+  const deleteFunc = async (productId, accountId) => {
     try {
-      const response = await DeleteProducts(productId,accountId);
-      
+      const response = await DeleteProducts(productId, accountId);
+
       if (response.status === 200) {
-        setAccounts((prevAccounts) => 
-          prevAccounts.filter(account => account._id !== accountId)
-      );
-} else {
+        setAccounts((prevAccounts) =>
+          prevAccounts.filter((account) => account._id !== accountId)
+        );
+      } else {
         handleError(response.message || "خطا در حذف حساب.");
       }
     } catch (error) {
@@ -222,8 +251,8 @@ function ProductManage() {
     }
   };
 
-
-  const handleError = useCallback((errorMessage) => { // افزودن تابع handleError
+  const handleError = useCallback((errorMessage) => {
+    // افزودن تابع handleError
     toast.error(errorMessage);
   }, []);
   //////////////
@@ -248,7 +277,7 @@ function ProductManage() {
       toast.error("خطا در کپی حساب‌ها.");
     }
   };
-  
+
   const handleCutSelectedAccounts = async () => {
     try {
       // فرض کنید یک اکشن یا API برای برش حساب‌ها تعریف شده باشد
@@ -259,16 +288,21 @@ function ProductManage() {
       toast.error("خطا در برش حساب‌ها.");
     }
   };
-  
+
   const handlePasteAccounts = async () => {
     try {
       // تعیین والد مقصد: آخرین حساب موجود در مسیر انتخاب شده
       const parentAccountId = path[path.length - 1]?.id;
-  
+
       // فرض می‌کنیم تابع pasteAccounts وجود داشته باشد
-      const result = await pasteAccounts(clipboard.accounts, parentAccountId, ShopId, clipboard.action);
-      console.log("result",result);
-      
+      const result = await pasteAccounts(
+        clipboard.accounts,
+        parentAccountId,
+        ShopId,
+        clipboard.action
+      );
+      console.log("result", result);
+
       if (result.success) {
         toast.success("حساب‌ها با موفقیت درج شدند.");
         // تازه کردن لیست حساب‌ها برای والد مقصد
@@ -283,7 +317,7 @@ function ProductManage() {
       toast.error("خطا در چسباندن حساب‌ها.");
     }
   };
-  
+
   ////////////////
 
   const handleOverlayClick = useCallback((e) => {
@@ -294,22 +328,21 @@ function ProductManage() {
     }
   }, []);
 
-   const handleEditCategoryClick = useCallback((accountId) => {
-    setIsOpenEditCategory(true)
-    setCurrentEditingAccount(accountId)
+  const handleEditCategoryClick = useCallback((accountId) => {
+    setIsOpenEditCategory(true);
+    setCurrentEditingAccount(accountId);
   }, []);
-   const deleteCategoryFunc = async(accountId) => {
-    const res=await deleteAccount(accountId) 
-    console.log("res",res);
+  const deleteCategoryFunc = async (accountId) => {
+    const res = await deleteAccount(accountId);
+    console.log("res", res);
     if (!res.success) {
       toast.error(res.message);
-    }else{
-      refreshAccounts()
+    } else {
+      refreshAccounts();
     }
-       
   };
 
-   const handleEditClick = useCallback((product) => {
+  const handleEditClick = useCallback((product) => {
     setSelectedProduct(product);
     setSelectedProductFile(null); // ریست کردن فایل محصول در حالت ویرایش
     setIsOpenAddProduct(true);
@@ -327,11 +360,9 @@ function ProductManage() {
     setSelectedProductFile(null);
   }, []);
 
-
-
   return (
     <FormTemplate BGImage={BGImage}>
-{isOpenAddProduct && (
+      {isOpenAddProduct && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={handleOverlayClick}
@@ -340,312 +371,326 @@ function ProductManage() {
             className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
             onClick={(e) => e.stopPropagation()}
           >
-           <AddProduct
-  product={selectedProduct}
-  productFile={selectedProductFile}
-  onClose={handleCloseModal}
-  refreshProducts={refreshAccounts}
-  parentAccount={selectedParentAccount} // ارسال حساب والد
-/>
+            <AddProduct
+              product={selectedProduct}
+              productFile={selectedProductFile}
+              onClose={handleCloseModal}
+              refreshProducts={refreshAccounts}
+              parentAccount={selectedParentAccount} // ارسال حساب والد
+            />
           </div>
         </div>
       )}
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
-          <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت محصول</h1>
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold">
+            مدیریت محصول
+          </h1>
         </div>
         <div className="flex items-center gap-2 p-2">
-
           <button
-              className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-              aria-label="add product"
+            className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+            aria-label="add product"
             onClick={handleAddProductClick}
           >
-            افزودن 
+            افزودن
           </button>
           <button
             onClick={() => setShowCreateAccountModal(true)}
             className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-            >
-          ایجاد دسته بندی 
+          >
+            ایجاد دسته بندی
           </button>
 
-{clipboard.accounts.length > 0 && (
-  <button
-    className="h-8 md:h-14 text-xs md:text-base bg-blue-600 rounded-xl hover:bg-blue-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-
-    onClick={handlePasteAccounts}
-  >
-چسباندن  </button>
-)}
-  {/* دکمه کپی */}
-  {selectedAccounts.length > 0 && (
-    <button
-      // className="h-8 md:h-14 bg-green-600 rounded-xl hover:bg-green-700 text-white p-2 md:p-4"
-      className="h-8 md:h-14 text-xs md:text-base bg-green-600 rounded-xl hover:bg-green-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-
-      onClick={() => handleCopySelectedAccounts()}
-    >کپی
-    </button>
-  )}
-  {/* دکمه برش */}
-  {selectedAccounts.length > 0 && (
-    <button
-      // className="h-8 md:h-14 bg-red-600 rounded-xl hover:bg-red-700 text-white p-2 md:p-4"
-      className="h-8 md:h-14 text-xs md:text-base bg-red-600 rounded-xl hover:bg-red-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-
-      onClick={() => handleCutSelectedAccounts()}
-    >
-      برش  </button>
-  )}
+          {clipboard.accounts.length > 0 && (
+            <button
+              className="h-8 md:h-14 text-xs md:text-base bg-blue-600 rounded-xl hover:bg-blue-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              onClick={handlePasteAccounts}
+            >
+              چسباندن{" "}
+            </button>
+          )}
+          {/* دکمه کپی */}
+          {selectedAccounts.length > 0 && (
+            <button
+              className="h-8 md:h-14 text-xs md:text-base bg-green-600 rounded-xl hover:bg-green-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              onClick={() => handleCopySelectedAccounts()}
+            >
+              کپی
+            </button>
+          )}
+          {/* دکمه برش */}
+          {selectedAccounts.length > 0 && (
+            <button
+              className="h-8 md:h-14 text-xs md:text-base bg-red-600 rounded-xl hover:bg-red-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              onClick={() => handleCutSelectedAccounts()}
+            >
+              برش{" "}
+            </button>
+          )}
         </div>
 
         <div>
-      <div className="account-categories container mx-auto p-4">
+          <div className="account-categories container mx-auto p-1 md:p-4">
 
+            {/* نوار Breadcrumb */}
 
-                            {/* //////////////////////// */}
-                        {/* دکمه چسباندن */}
+            <Breadcrumb path={path} onBreadcrumbClick={handleBreadcrumbClick} />
 
-
-{/* /////////////////////// */}
-
- 
-        {/* نوار Breadcrumb */}
-
-        <Breadcrumb
-          path={path}
-          onBreadcrumbClick={handleBreadcrumbClick}
+            {/* نوار جستجو و دکمه افزودن حساب */}
+            <div className="flex justify-between items-center mb-2 md:mb-4">
+              <div className="flex gap-2 items-center w-1/2">
+                <FaSearch className="mr-2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="جستجو حساب‌ها..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full border rounded px-2 py-1"
+                />
+              </div>
+            </div>
+            {/* لیست حساب‌ها */}
+            {loading ? (
+              <p>در حال بارگذاری...</p>
+            ) : (
+              <>
+                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto">
+                {accounts.map((account) => (
+  <div key={account._id}>
+    {account.accountType === "کالا" && (
+      <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-1 md:p-4 transition-transform transform hover:scale-105">
+        
+        {/* بخش چک‌باکس */}
+        <input
+          type="checkbox"
+          className="h-6 w-6"
+          checked={selectedAccounts.includes(account._id)}
+          onChange={() => handleToggleSelectAccount(account._id)}
         />
 
-        {/* نوار جستجو و دکمه افزودن حساب */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center w-1/2">
-            <FaSearch className="mr-2 text-gray-500" />
-            <input
-              type="text"
-              placeholder="جستجو حساب‌ها..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full border rounded px-2 py-1"
-            />
-          </div>
-          
+        {/* بخش تصاویر */}
+        <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
+          <FallbackImage
+            className="w-full h-full object-cover rounded-md"
+            src={account?.productId?.images?.[0] || product_placeholder}
+            alt={account?.productId?.title}
+            width={150}
+            height={150}
+            quality={60}
+            placeholder={product_placeholder}
+          />
+          {account.productId?.images?.length > 1 && (
+            <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs sm:text-sm px-2 py-1 rounded">
+              +{account.productId.images.length - 1}
+            </div>
+          )}
         </div>
-        {/* لیست حساب‌ها */}
-        {loading ? (
-          <p>در حال بارگذاری...</p>
-        ) : (
-          <>
-            <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto">
-              {accounts.map(account => (
-                <div key={account._id}>
-                                <input
-                type="checkbox"
-                className="h-6 w-6"
-                checked={selectedAccounts.includes(account._id)}
-                onChange={(e) => handleToggleSelectAccount(account._id)}
-              />
 
-                  { account.accountType === "کالا" &&(
-                    <div 
-                      className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105"
-                    >
+        {/* بخش اطلاعات محصول و دکمه‌ها */}
+        <div className="flex flex-col flex-1 m-2 h-15 text-base">
+          {/* عنوان محصول */}
+          <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
+            {account?.productId?.title}
+          </h2>
+          {/* موجودی محصول */}
+          <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
+            {account?.productId?.stock} {account?.product?.unit}
+          </h2>
 
-                      {/* بخش عملیات (ویرایش، حذف، اشتراک گذاری) */}
-                      <div className="hidden">
-                        <DeleteSvg />
-                        <EditSvg />
-                        <ShareSvg />
-                      </div>
-                      {/* بخش تصاویر */}
-                      <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
-                       
-<FallbackImage
-          className="w-full h-full object-cover rounded-md mt-1" // تعیین اندازه و رفتار
-          src={account?.productId?.images?.[0]} // استفاده از اولین تصویر موجود
-          alt={account?.productId?.title}
-          width={150} // مطابقت با کلاس Tailwind (مثلاً w-8 = 32px)
-          height={150}
-          quality={60}
-          placeholder={product_placeholder}
-        />
-                        {account.productId?.images?.length > 1 && (
-                          <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text:xs sm:text-sm px-2 py-1 rounded">
-                            +{account.productId.images.length - 1}
-                          </div>
-                        )}
-                      </div>
-  
-                      {/* بخش اطلاعات محصول */}
-                      <div className="flex gap-2 flex-col flex-1 m-2 h-15">
-                        {/* عنوان محصول */}
-                        <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
-                         {account?.productId?.title}
-                        </h2> 
-                        {/* موجودی محصول */}
-                        <h2 className="flex text-center text-md text-gray-800 dark:text-gray-200 line-clamp-3 items-center">
-                           {account?.productId?.stock}{account?.product?.unit}
-                        </h2> 
-                       
-                        {/* دکمه‌های عملیات */}
-                        <div className="flex gap-2 mt-4 items-center text-center justify-center">
-                          {/* دکمه ویرایش */}
-                          <button
-                            aria-label="ویرایش"
-                            className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            onClick={() => handleEditClick(account?.productId)}
-                          >
-                            <EditSvg />
-                          </button>
-                          {/* دکمه حذف */}
-                          <button
-                            aria-label="حذف"
-                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                            onClick={() => deleteFunc(account.productId._id , account._id)}
-                          >
-                            <DeleteSvg />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {account.accountType === "دسته بندی کالا" && (
-                    <div
-                      className="flex items-center gap-2 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 transition-transform transform hover:scale-105 m-2"
-                      onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
-                    >
-                      <FaFolder className="text-yellow-500 text-md mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
-                      <p className="flex text-center h-15 line-clamp-3 items-center">{account.title}</p>
-                      <div className="flex gap-2 mt-4 items-center text-center justify-center">
-                          {/* دکمه ویرایش */}
-                      
-
-
-                          <button
-                            aria-label="ویرایش"
-                            className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                              onClick={(e) => {
-                                e.stopPropagation(); // جلوگیری از انتشار رویداد
-                              handleEditCategoryClick(account._id)}}
-                          >
-                            <EditSvg />
-                          </button>
-                          {/* دکمه حذف */}
-                          <button
-                            aria-label="حذف"
-                            className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                            onClick={(e) => {
-                              e.stopPropagation(); // جلوگیری از انتشار رویداد
-                              deleteCategoryFunc(account._id);
-                            }}
-                                                    >
-                            <DeleteSvg />
-                          </button>
-                          
-                        </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {accounts.length === 0 && <p>حسابی یافت نشد.</p>}
-            </div>
-
-            {/* کامپوننت Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
-          </>
-        )}
-
-        {/* مدال ایجاد حساب جدید */}
-        {showCreateAccountModal && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-            onClick={() => setShowCreateAccountModal(false)}
-          >
-            <div
-              className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
-              onClick={(e) => e.stopPropagation()}
+          {/* دکمه‌های عملیات در یک ردیف */}
+          <div className="flex gap-2 mt-4 justify-start">
+            {/* دکمه ویرایش */}
+            <button
+              aria-label="ویرایش"
+              className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onClick={() => handleEditClick(account?.productId)}
             >
-              <h2 className="text-xl mb-4">ایجاد دسته بندی کالا</h2>
-              <form onSubmit={handleSubmit(onSubmitCreateAccount)} className="flex flex-col space-y-4">
-                <div>
-                  <label className="block mb-1">نام دسته بندی</label>
-                  <input
-                    type="text"
-                    {...register('accountName', { required: true })}
-                    className="w-full border rounded px-3 py-2"
-                  />
-                  {errors.accountName && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => { setShowCreateAccountModal(false); reset(); }}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                  >
-                    انصراف
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    ایجاد
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )} 
-                {/* مدال ویرایش حساب  */}
-
-         {isOpenEditCategory && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-            onClick={() => setIsOpenEditCategory(false)}
-          >
-            <div
-              className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
-              onClick={(e) => e.stopPropagation()}
+              <EditSvg />
+            </button>
+            {/* دکمه حذف */}
+            <button
+              aria-label="حذف"
+              className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+              onClick={() => deleteFunc(account.productId._id, account._id)}
             >
-              <h2 className="text-xl mb-4">ویرایش دسته بندی کالا</h2>
-              <form onSubmit={handleSubmit(onSubmitEditAccount)} className="flex flex-col space-y-4">
-                <div>
-                  <label className="block mb-1">نام دسته بندی</label>
-                  <input
-                    type="text"
-                    {...register('accountName', { required: true })}
-                    className="w-full border rounded px-3 py-2"
-                  />
-                  {errors.accountName && <p className="text-red-500">نام دسته بندی الزامی است.</p>}
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => { setIsOpenEditCategory(false); reset(); }}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                  >
-                    انصراف
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-ویرایش                  </button>
-                </div>
-              </form>
-            </div>
+              <DeleteSvg />
+            </button>
           </div>
-        )}
-
+        </div>
       </div>
-    </div>
-      
+    )}
+
+    {account.accountType === "دسته بندی کالا" && (
+      <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 md:p-4 transition-transform transform hover:scale-105">
+        
+        {/* بخش چک‌باکس */}
+        <input
+          type="checkbox"
+          className="h-6 w-6"
+          checked={selectedAccounts.includes(account._id)}
+          onChange={() => handleToggleSelectAccount(account._id)}
+        />
+
+        {/* بخش آیکون دسته‌بندی */}
+        <FaFolder className="text-yellow-500 text-xl md:text-2xl mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
+
+        {/* بخش اطلاعات دسته‌بندی و دکمه‌ها */}
+        <div className="flex flex-col flex-1 m-2 h-15 text-base">
+          {/* عنوان دسته بندی */}
+          <p className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
+            {account.title}
+          </p>
+
+          {/* دکمه‌های عملیات در یک ردیف */}
+          <div className="flex gap-2 mt-4 justify-start">
+            {/* دکمه ویرایش */}
+            <button
+              aria-label="ویرایش"
+              className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              onClick={(e) => {
+                e.stopPropagation(); // جلوگیری از انتشار رویداد
+                handleEditCategoryClick(account._id);
+              }}
+            >
+              <EditSvg />
+            </button>
+            {/* دکمه حذف */}
+            <button
+              aria-label="حذف"
+              className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+              onClick={(e) => {
+                e.stopPropagation(); // جلوگیری از انتشار رویداد
+                deleteCategoryFunc(account._id);
+              }}
+            >
+              <DeleteSvg />
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+))}
+
+
+                  {accounts.length === 0 && <p>حسابی یافت نشد.</p>}
+                </div>
+
+                {/* کامپوننت Pagination */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
+              </>
+            )}
+
+            {/* مدال ایجاد حساب جدید */}
+            {showCreateAccountModal && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+                onClick={() => setShowCreateAccountModal(false)}
+              >
+                <div
+                  className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2 className="text-xl mb-4">ایجاد دسته بندی کالا</h2>
+                  <form
+                    onSubmit={handleSubmit(onSubmitCreateAccount)}
+                    className="flex flex-col space-y-4"
+                  >
+                    <div>
+                      <label className="block mb-1">نام دسته بندی</label>
+                      <input
+                        type="text"
+                        {...register("accountName", { required: true })}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                      {errors.accountName && (
+                        <p className="text-red-500">
+                          نام دسته بندی الزامی است.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCreateAccountModal(false);
+                          reset();
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                      >
+                        انصراف
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      >
+                        ایجاد
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+            {/* مدال ویرایش حساب  */}
+
+            {isOpenEditCategory && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+                onClick={() => setIsOpenEditCategory(false)}
+              >
+                <div
+                  className="relative bg-white rounded-lg shadow-lg w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2 className="text-xl mb-4">ویرایش دسته بندی کالا</h2>
+                  <form
+                    onSubmit={handleSubmit(onSubmitEditAccount)}
+                    className="flex flex-col space-y-4"
+                  >
+                    <div>
+                      <label className="block mb-1">نام دسته بندی</label>
+                      <input
+                        type="text"
+                        {...register("accountName", { required: true })}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                      {errors.accountName && (
+                        <p className="text-red-500">
+                          نام دسته بندی الزامی است.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpenEditCategory(false);
+                          reset();
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                      >
+                        انصراف
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      >
+                        ویرایش{" "}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       <Toaster />
     </FormTemplate>

@@ -1140,10 +1140,6 @@ video {
   margin-left: 1.25rem;
 }
 
-.mr-1 {
-  margin-right: 0.25rem;
-}
-
 .mr-10 {
   margin-right: 2.5rem;
 }
@@ -1711,6 +1707,10 @@ video {
 
 .items-center {
   align-items: center;
+}
+
+.justify-start {
+  justify-content: flex-start;
 }
 
 .justify-end {
@@ -2424,6 +2424,10 @@ video {
 
 .text-right {
   text-align: right;
+}
+
+.text-start {
+  text-align: start;
 }
 
 .font-Dana {
@@ -3587,10 +3591,6 @@ video {
 
   .md\:p-8 {
     padding: 2rem;
-  }
-
-  .md\:p-2 {
-    padding: 0.5rem;
   }
 
   .md\:px-2 {
