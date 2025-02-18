@@ -241,7 +241,7 @@ function AddInvoice({ invoiceType }) {
     <FormTemplate BGImage={BGImage}>
       {isOpenAddInvoiceItem && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 "
           onClick={handleCloseModal}
         >
           <div
@@ -254,8 +254,6 @@ function AddInvoice({ invoiceType }) {
               onAddNewInvoiceItem={handleAddNewInvoiceItem}
               onUpdate={handleUpdateInvoiceItem}
               invoiceType={invoiceType}
-                            // ارسال وضعیت مسیر و والد به کامپوننت AddInvoiceItem
-
               initialPath={lastPath}
               initialParentAccountId={lastParentAccountId}
               onPathChange={setLastPath}
@@ -274,22 +272,14 @@ function AddInvoice({ invoiceType }) {
         invoiceType={invoiceType}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36 ">
         <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
-          <h1 className="text-2xl md:text-3xl font-MorabbaBold">{getPageTitle()}</h1>
-          <button
-            type="button"
-            className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
-            aria-label="add invoiceItem"
-            onClick={handleAddInvoiceItemClick}
-          >
-            افزودن 
-          </button>
+          <h1 className="text-xl md:text-2xl font-MorabbaBold" >{getPageTitle()}</h1>
         </div>
-        <div className="flex gap-4 px-2">
+        <div className="text-xs md:text-base  flex items-center text-center gap-2 md:gap-4 px-2 mb-2 md:mb-4">
           {/* فیلد مشتری/تامین‌کننده */}
-          <div className="flex items-center gap-2 mb-4">
-            <label htmlFor="contact" className="mb-2">{getContactLabel()}:</label>
+          <div className="flex items-center gap-2 ">
+            <label htmlFor="contact" >{getContactLabel()}:</label>
             <select
               className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.contact ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
               id="contact"
@@ -306,8 +296,16 @@ function AddInvoice({ invoiceType }) {
             </select>
             {errors.contact && <span className="text-red-500">{errors.contact.message}</span>}
           </div>
+          <button
+            type="button"
+            className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white my-2 px-2 py-2"
+            aria-label="add invoiceItem"
+            onClick={handleAddInvoiceItemClick}
+          >
+            افزودن 
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16 max-h-[70vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6 p-1 md:p-4 pb-4 md:pb-16 max-h-[40vh] overflow-y-auto">
           {invoiceItems?.length > 0 ? (
             invoiceItems?.map((invoiceItem) => (
               <InvoiceItemCard
@@ -326,8 +324,8 @@ function AddInvoice({ invoiceType }) {
           )}
         </div>
         {/* فیلد توضیحات */}
-        <div className="flex flex-col md:items-center md:flex-row m-2 md:col-span-2">
-          <label htmlFor="description" className="mb-2">توضیحات:</label>
+        <div className="flex flex-col md:items-center md:flex-row m-2 md:col-span-2 text-xs md:text-base">
+          <label htmlFor="description" className="mb-1  md:mb-2">توضیحات:</label>
           <textarea
             className={`w-full border bg-gray-300 dark:bg-zinc-600 ${errors.description ? "border-red-400" : "border-gray-300"} rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500`}
             id="description"
@@ -337,8 +335,8 @@ function AddInvoice({ invoiceType }) {
           {errors.description && <span className="text-red-500">{errors.description.message}</span>}
         </div>
 
-        <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-4 mt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="bg-gray-100 dark:bg-zinc-800 shadow-md rounded-lg p-2 md:p-4 mt-2 md:mt-6 text-xs md:text-lg">
+          <div className="flex flex-row justify-between items-center">
             <div className="text-gray-800 dark:text-gray-200">
               <div>تعداد کل اقلام: <span className="font-bold">{totalItems}</span></div>
               <div>جمع کل فاکتور: <span className="font-bold">{totalPrice?.toLocaleString()} {baseCurrency.title}</span></div>

@@ -16,6 +16,7 @@ import { GetAllPriceTemplates } from "../PriceTemplate/PriceTemplateActions";
 import FeatureSelect from "./FeatureSelect";
 import { customSelectStyles } from "./selectStyles";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+import { NumericFormat } from 'react-number-format'; // وارد کردن NumericFormat
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
   const { currentShopId, baseCurrency } = useShopInfoFromRedux();
@@ -130,7 +131,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       });
     }
   }, [product, reset]);
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -207,7 +208,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       });
 
       formDataObj.append("title", formData.title);
-      formDataObj.append("price", formData.price); // اضافه کردن قیمت
+      formDataObj.append("price", formData.price); // قیمت به صورت خام ارسال می‌شود
       formDataObj.append("pricingTemplate", formData.pricingTemplate);
       formDataObj.append("parentAccount", parentAccount);
       const tags = formData.tags?.map((tag) => tag.value).join(",");
@@ -268,47 +269,13 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
     </>
   );
 
-  function handleInputChangeFAToEN(event) {
-    // تبدیل اعداد فارسی به انگلیسی
-    const persianNumbers = [
-      /۰/g,
-      /۱/g,
-      /۲/g,
-      /۳/g,
-      /۴/g,
-      /۵/g,
-      /۶/g,
-      /۷/g,
-      /۸/g,
-      /۹/g,
-    ];
-    const englishNumbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-    let value = event.target.value;
-
-    for (let i = 0; i < persianNumbers.length; i++) {
-      value = value.replace(persianNumbers[i], englishNumbers[i]);
-    }
-
-    event.target.value = value; // تبدیل شده به انگلیسی
-
-    const decimalPlaces = baseCurrency.decimalPlaces; // تعداد اعشار از متغیر baseCurrency.count می‌آید
-
-    // ساخت عبارت منظم برای محدود کردن تعداد ارقام اعشاری
-    const regex = new RegExp(`^\\d*\\.?\\d{0,${decimalPlaces}}`);
-    const newValue = value.match(regex);
-
-    if (newValue) {
-      event.target.value = newValue[0]; // اعمال محدودیت به ورودی
-    }
-  }
-
   return (
-    <div className="overflow-y-auto max-h-screen">
+    <div className=" overflow-y-auto">
       <div className="hidden">
         <CloseSvg />
       </div>
 
-      <div className="flex justify-between p-2 md:p-5 mt-4">
+      <div className="flex justify-between p-2 md:p-5 mt-2 md:mt-4">
         <button
           aria-label="close"
           className="hover:text-orange-300"
@@ -318,7 +285,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
             <use href="#CloseSvg"></use>
           </svg>
         </button>
-        <h1 className="text-3xl font-MorabbaBold">
+        <h1 className="text-xl md:text-3xl font-MorabbaBold">
           {product?._id ? "ویرایش محصول" : "افزودن محصول"}
         </h1>
       </div>
@@ -334,13 +301,14 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       >
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
-          className="flex flex-col gap-4 p-2 md:p-4"
+          className="flex flex-col gap-2 md:gap-4 p-2 md:p-4 max-h-[90vh] overflow-y-auto text-xs md:text-base"
         >
+          {/* انتخاب و نمایش تصاویر */}
           <div>
             <button
               type="button"
               onClick={() => fileInputRef.current.click()}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none transition"
+              className="px-2 md:px-4 py-1 md:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none transition"
             >
               انتخاب تصویر
             </button>
@@ -353,11 +321,10 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
               onChange={handleImageChange}
               className="hidden"
             />
-
             {images.filter((img) => img.isExisting).length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold">تصاویر موجود:</h2>
-                <div className="grid grid-cols-3 gap-4">
+                <h2 className="text-base md:text-lg font-semibold">تصاویر موجود:</h2>
+                <div className="grid grid-cols-3 gap-2 md:gap-4">
                   {images
                     .filter((img) => img.isExisting)
                     .map((img) => (
@@ -384,9 +351,9 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
             )}
 
             {images.filter((img) => !img.isExisting).length > 0 && (
-              <div className="mt-4">
-                <h2 className="text-lg font-semibold">تصاویر جدید:</h2>
-                <div className="grid grid-cols-3 gap-4">
+              <div className="mt-2 md:mt-4">
+                <h2 className="text-sm md:text-lg font-semibold">تصاویر جدید:</h2>
+                <div className="grid grid-cols-3 gap-2 md:gap-4">
                   {images
                     .filter((img) => !img.isExisting)
                     .map((img) => (
@@ -417,39 +384,61 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
             )}
           </div>
 
+          {/* عنوان محصول */}
           <div>
             <label className="block mb-1">عنوان محصول</label>
             <input
               type="text"
               {...register("title")}
-              className="react-select-container w-full border rounded px-3 py-2"
+              className={`react-select-container w-full border rounded px-1 md:px-3 py-1 md:py-2 ${
+                errors.title ? "border-red-500" : "border-gray-300"
+              }`}
             />
             {errors.title && (
               <p className="text-red-500">{errors.title.message}</p>
             )}
-            <label className="block mb-1">قیمت محصول</label>
           </div>
-          <div>
-            <div className="flex gap-2 items-center text-center">
-              <input
-                type="text"
-                {...register("price")}
-                className="react-select-container w-full border rounded px-3 py-2"
-                onChange={handleInputChangeFAToEN}
 
-              />
-              <label className="block mb-1">{baseCurrency.title}</label>
-            </div>
+
+          {/* قیمت محصول با فرمت سه رقم */}
+          <div>
+            <label className="block mb-1">قیمت محصول</label>
+            <Controller
+              name="price"
+              control={control}
+              render={({ field: { onChange, onBlur, value, ref } }) => (
+                <div className="flex gap-1 md:gap-2 items-center text-center">
+                  <NumericFormat
+                    value={value}
+                    onValueChange={(values) => {
+                      const { value: rawValue } = values;
+                      onChange(rawValue);
+                    }}
+                    thousandSeparator=","
+                    allowNegative={false}
+                    decimalScale={baseCurrency.decimalPlaces}
+                    isNumericString={true}
+                    className={`react-select-container w-full border rounded px-1 md:px-3 py-1 md:py-2 ${
+                      errors.price ? "border-red-500" : "border-gray-300"
+                    }`}
+                    placeholder="0"
+                  />
+                  <label className="block mb-1">{baseCurrency.title}</label>
+                </div>
+              )}
+            />
             {errors.price && (
               <p className="text-red-500">{errors.price.message}</p>
             )}
           </div>
 
+          {/* دسته‌بندی کالا و تگ‌ها */}
           <div>
             <label className="block mb-1">دسته بندی کالا و تگ ها</label>
             <TagSelect control={control} setValue={setValue} errors={errors} />
           </div>
 
+          {/* قالب قیمتی */}
           <div>
             <label className="block mb-1">قالب قیمتی</label>
             {loadingTemplates ? (
@@ -493,64 +482,87 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
             )}
           </div>
 
+          {/* محل قرار گیری */}
           <div>
             <label className="block mb-1">محل قرار گیری</label>
             <input
               {...register("storageLocation")}
-              className="react-select-container w-full border rounded px-3 py-2"
+              className={`react-select-container w-full border rounded px-1 md:px-3 py-1 md:py-2 ${
+                errors.storageLocation ? "border-red-500" : "border-gray-300"
+              }`}
             />
             {errors.storageLocation && (
               <p className="text-red-500">{errors.storageLocation.message}</p>
             )}
           </div>
 
+          {/* موجودیت قابل فروش و قابلیت ادغام */}
           <div className="flex items-center justify-around">
-            <div className="flex items-center gap-2 h-10">
+            <div className="flex items-center gap-1 md:gap-2 h-10">
               <label>قابل فروش</label>
               <input
                 type="checkbox"
                 {...register("isSaleable")}
-                className="border rounded h-10"
+                className={`border rounded h-6 w-6 ${
+                  errors.isSaleable ? "border-red-500" : "border-gray-300"
+                }`}
               />
             </div>
 
-            <div className="flex items-center gap-2 h-10">
+            <div className="flex items-center gap-1 md:gap-2 h-10">
               <label>قابل ادغام و تقسیم</label>
               <input
                 type="checkbox"
                 {...register("isMergeable")}
-                className="border rounded h-10"
+                className={`border rounded h-6 w-6 ${
+                  errors.isMergeable ? "border-red-500" : "border-gray-300"
+                }`}
               />
             </div>
           </div>
+          {errors.isSaleable && (
+            <p className="text-red-500">{errors.isSaleable.message}</p>
+          )}
+          {errors.isMergeable && (
+            <p className="text-red-500">{errors.isMergeable.message}</p>
+          )}
 
+          {/* نام واحد */}
           <div>
             <label className="block mb-1">نام واحد</label>
             <input
               {...register("unit")}
-              className="react-select-container w-full border rounded px-3 py-2"
+              className={`react-select-container w-full border rounded px-1 md:px-3 py-1 md:py-2 ${
+                errors.unit ? "border-red-500" : "border-gray-300"
+              }`}
             />
             {errors.unit && (
               <p className="text-red-500">{errors.unit.message}</p>
             )}
           </div>
 
+          {/* ویژگی‌ها */}
           <FeatureSelect />
 
+          {/* توضیحات محصول */}
           <div>
             <label className="block mb-1">توضیحات</label>
             <textarea
               {...register("description")}
-              className="react-select-container w-full border rounded px-3 py-2"
+              className={`react-select-container w-full border rounded px-1 md:px-3 py-1 md:py-2 h-24 resize-none ${
+                errors.description ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="توضیحات محصول را وارد کنید..."
             ></textarea>
             {errors.description && (
               <p className="text-red-500">{errors.description.message}</p>
             )}
           </div>
 
+          {/* دکمه ارسال فرم */}
           <button
             type="submit"
-            className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded"
+            className="bg-teal-600 hover:bg-teal-700 text-white py-1 md:py-2 px-2 md:px-4 rounded mt-4"
             disabled={isSubmit}
           >
             {isSubmit ? (

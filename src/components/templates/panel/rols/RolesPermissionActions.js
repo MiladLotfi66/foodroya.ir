@@ -216,10 +216,20 @@ export async function EditRole(RoleData , roleId) {
         RoleTitle: RoleData.RoleTitle ,
         RoleStatus: RoleData.RoleStatus,
         bannersPermissions: RoleData.bannersPermissions,
-        rolesPermissions: RoleData.rolesPermissions,
-        
+        rolesPermissions: RoleData.rolesPermissions,  
         sendMethodPermissions: RoleData.sendMethodPermissions,
         accountsPermissions: RoleData.accountsPermissions,
+        contactsPermissions: RoleData.contactsPermissions,
+        priceTemplatesPermissions: RoleData.priceTemplatesPermissions,
+        productsPermissions: RoleData.productsPermissions,
+        financialDocumentsPermissions: RoleData.financialDocumentsPermissions,
+        sendMethodsPermissions: RoleData.sendMethodsPermissions,
+        purchaseInvoicesPermissions: RoleData.purchaseInvoicesPermissions,
+        saleInvoicesPermissions: RoleData.saleInvoicesPermissions,
+        purchaseReturnInvoicesPermissions: RoleData.purchaseReturnInvoicesPermissions,
+        saleReturnInvoicesPermissions: RoleData.saleReturnInvoicesPermissions,
+        wasteInvoicesPermissions: RoleData.wasteInvoicesPermissions,
+        allInvoicesPermissions: RoleData.allInvoicesPermissions,
       },
       { abortEarly: false }
     );

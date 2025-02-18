@@ -20,7 +20,18 @@ function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
   const [bannerPermissionState, setBannerPermissionState] = useState(role?.bannersPermissions || []);
   const [rolePermissionState, setRolePermissionState] = useState(role?.rolesPermissions || []);
   const [sendMethodPermissionState, setSendMethodPermissionState] = useState(role?.sendMethodPermissions || []);
-  const [accountsPermissionState,setAccountsPermissionState] = useState(role?.accountsPermission || []);
+  const [accountsPermissionState,setAccountsPermissionState] = useState(role?.accountsPermissions || []);
+  const [contactsPermissionState,setContactsPermissionState] = useState(role?.contactsPermissions || []);
+  const [priceTemplatesPermissionState,setPriceTemplatesPermissionState] = useState(role?.priceTemplatesPermissions || []);
+  const [productsPermissionState,setProductsPermissionState] = useState(role?.productsPermissions || []);
+  const [financialDocumentsPermissionState,setFinancialDocumentsPermissionState] = useState(role?.financialDocumentsPermissions || []);
+  const [sendMethodsPermissionState,setSendMethodsPermissionState] = useState(role?.sendMethodsPermissions || []);
+  const [purchaseInvoicesPermissionState,setPurchaseInvoicesPermissionState] = useState(role?.purchaseInvoicesPermissions || []);
+  const [saleInvoicesPermissionState,setSaleInvoicesPermissionState] = useState(role?.saleInvoicesPermissions || []);
+  const [purchaseReturnInvoicesPermissionState,setPurchaseReturnInvoicesPermissionState] = useState(role?.purchaseReturnInvoicesPermissions || []);
+  const [saleReturnInvoicesPermissionState,setSaleReturnInvoicesPermissionState] = useState(role?.saleReturnInvoicesPermissions || []);
+  const [wasteInvoicesPermissionState,setWasteInvoicesPermissionState] = useState(role?.wasteInvoicesPermissions || []);
+  const [allInvoicesPermissionState,setAllInvoicesPermissionState] = useState(role?.allInvoicesPermissions || []);
 
   const { register, handleSubmit, setValue,formState: { errors } } = useForm({
     mode: "all",
@@ -31,7 +42,18 @@ function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
       bannersPermissions: bannerPermissionState,
       rolesPermissions: rolePermissionState,
       sendMethodPermissions: sendMethodPermissionState,
-      accountsPermission: accountsPermissionState,
+      accountsPermissions: accountsPermissionState,
+      contactsPermissions: contactsPermissionState,
+      priceTemplatesPermissions: priceTemplatesPermissionState,
+      productsPermissions: productsPermissionState,
+      financialDocumentsPermissions: financialDocumentsPermissionState,
+      sendMethodsPermissions: sendMethodsPermissionState,
+      purchaseInvoicesPermissions: purchaseInvoicesPermissionState,
+      saleInvoicesPermissions: saleInvoicesPermissionState,
+      purchaseReturnInvoicesPermissions: purchaseReturnInvoicesPermissionState,
+      saleReturnInvoicesPermissions: saleReturnInvoicesPermissionState,
+      wasteInvoicesPermissions: wasteInvoicesPermissionState,
+      allInvoicesPermissions: allInvoicesPermissionState,
       ShopId:ShopId,
     },
   });
@@ -40,9 +62,22 @@ function AddRole({ role = {}, onClose ,ShopId ,refreshRols}) {
     setValue('bannersPermissions', bannerPermissionState);
     setValue('rolesPermissions', rolePermissionState);
     setValue('sendMethodPermissions', sendMethodPermissionState);
-    setValue('accountsPermissionState',accountsPermissionState);
+    setValue('accountsPermissions',accountsPermissionState);
+    setValue('contactsPermissions',contactsPermissionState);
+    setValue('priceTemplatesPermissions',priceTemplatesPermissionState);
+    setValue('productsPermissions',productsPermissionState);
+    setValue('financialDocumentsPermissions',financialDocumentsPermissionState);
+    setValue('sendMethodsPermissions',sendMethodsPermissionState);
+    setValue('purchaseInvoicesPermissions',purchaseInvoicesPermissionState);
+    setValue('saleInvoicesPermissions',saleInvoicesPermissionState);
+    setValue('purchaseReturnInvoicesPermissions',purchaseReturnInvoicesPermissionState);
+    setValue('saleReturnInvoicesPermissions',saleReturnInvoicesPermissionState);
+    setValue('wasteInvoicesPermissions',wasteInvoicesPermissionState);
+    setValue('allInvoicesPermissions',allInvoicesPermissionState);
     setValue('ShopId', ShopId); // تنظیم ShopId به صورت مخفی
-  }, [bannerPermissionState, rolePermissionState,sendMethodPermissionState,accountsPermissionState, ShopId, setValue]);
+  }, [bannerPermissionState, rolePermissionState,sendMethodPermissionState,accountsPermissionState,contactsPermissionState,priceTemplatesPermissionState,productsPermissionState,financialDocumentsPermissionState,sendMethodsPermissionState,
+     purchaseInvoicesPermissionState,saleInvoicesPermissionState,purchaseReturnInvoicesPermissionState,saleReturnInvoicesPermissionState,
+     wasteInvoicesPermissionState,allInvoicesPermissionState,ShopId, setValue]);
 
 //////////////////////////////////////////////
 const permissionsConfig = [
@@ -83,6 +118,127 @@ const permissionsConfig = [
     title: "حسابها",
     permissions: accountsPermissionState,
     setPermissions: setAccountsPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "مخاطبین",
+    permissions: contactsPermissionState,
+    setPermissions: setContactsPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "قالب های قیمت",
+    permissions: priceTemplatesPermissionState,
+    setPermissions: setPriceTemplatesPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "محصولات",
+    permissions: productsPermissionState,
+    setPermissions: setProductsPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "اسناد مالی",
+    permissions: financialDocumentsPermissionState,
+    setPermissions: setFinancialDocumentsPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "روش های ارسال",
+    permissions: sendMethodsPermissionState,
+    setPermissions: setSendMethodsPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "فاکتور خرید",
+    permissions: purchaseInvoicesPermissionState,
+    setPermissions: setPurchaseInvoicesPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "فاکتور فروش",
+    permissions: saleInvoicesPermissionState,
+    setPermissions: setSaleInvoicesPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "فاکتور خرید",
+    permissions: purchaseReturnInvoicesPermissionState,
+    setPermissions: setPurchaseReturnInvoicesPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "فاکتور فروش",
+    permissions: saleReturnInvoicesPermissionState,
+    setPermissions: setSaleReturnInvoicesPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "فاکتور ضایعات",
+    permissions: wasteInvoicesPermissionState,
+    setPermissions: setWasteInvoicesPermissionState,
+    icons: [
+      { name: "edit", icon: "#EditSvg" },
+      { name: "delete", icon: "#DeleteSvg" },
+      { name: "view", icon: "#ViewDocumentSvg" },
+      { name: "add", icon: "#CreateSvg" },
+    ],
+  },
+  {
+    title: "فاکتور ها",
+    permissions: allInvoicesPermissionState,
+    setPermissions: setAllInvoicesPermissionState,
     icons: [
       { name: "edit", icon: "#EditSvg" },
       { name: "delete", icon: "#DeleteSvg" },

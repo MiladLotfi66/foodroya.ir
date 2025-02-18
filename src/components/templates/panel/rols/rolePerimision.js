@@ -41,6 +41,61 @@ const schema = new Schema(
       enum: ["add", "edit", "delete", "view"],
       default: [],
     },
+    contactsPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+     priceTemplatesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+    productsPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+    financialDocumentsPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+     sendMethodsPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+     purchaseInvoicesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+     saleInvoicesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+     purchaseReturnInvoicesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+     saleReturnInvoicesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+    allInvoicesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
+    wasteInvoicesPermissions: {
+      type: [String],
+      enum: ["add", "edit", "delete", "view"],
+      default: [],
+    },
     RoleStatus: { type: Boolean, required: true },
   },
   { timestamps: true }

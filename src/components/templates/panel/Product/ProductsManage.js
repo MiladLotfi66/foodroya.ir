@@ -432,7 +432,6 @@ function ProductManage() {
 
         <div>
           <div className="account-categories container mx-auto p-1 md:p-4">
-
             {/* نوار Breadcrumb */}
 
             <Breadcrumb path={path} onBreadcrumbClick={handleBreadcrumbClick} />
@@ -456,124 +455,137 @@ function ProductManage() {
             ) : (
               <>
                 <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto">
-                {accounts.map((account) => (
-  <div key={account._id}>
-    {account.accountType === "کالا" && (
-      <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-1 md:p-4 transition-transform transform hover:scale-105">
-        
-        {/* بخش چک‌باکس */}
-        <input
-          type="checkbox"
-          className="h-6 w-6"
-          checked={selectedAccounts.includes(account._id)}
-          onChange={() => handleToggleSelectAccount(account._id)}
-        />
+                  {accounts.map((account) => (
+                    <div key={account._id}>
+                      {account.accountType === "کالا" && (
+                        <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-1 md:p-4 transition-transform transform hover:scale-105">
+                          {/* بخش چک‌باکس */}
+                          <input
+                            type="checkbox"
+                            className="h-6 w-6"
+                            checked={selectedAccounts.includes(account._id)}
+                            onChange={() =>
+                              handleToggleSelectAccount(account._id)
+                            }
+                          />
 
-        {/* بخش تصاویر */}
-        <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
-          <FallbackImage
-            className="w-full h-full object-cover rounded-md"
-            src={account?.productId?.images?.[0] || product_placeholder}
-            alt={account?.productId?.title}
-            width={150}
-            height={150}
-            quality={60}
-            placeholder={product_placeholder}
-          />
-          {account.productId?.images?.length > 1 && (
-            <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs sm:text-sm px-2 py-1 rounded">
-              +{account.productId.images.length - 1}
-            </div>
-          )}
-        </div>
+                          {/* بخش تصاویر */}
+                          <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
+                            <FallbackImage
+                              className="w-full h-full object-cover rounded-md"
+                              src={
+                                account?.productId?.images?.[0] ||
+                                product_placeholder
+                              }
+                              alt={account?.productId?.title}
+                              width={150}
+                              height={150}
+                              quality={60}
+                              placeholder={product_placeholder}
+                            />
+                            {account.productId?.images?.length > 1 && (
+                              <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs sm:text-sm px-2 py-1 rounded">
+                                +{account.productId.images.length - 1}
+                              </div>
+                            )}
+                          </div>
 
-        {/* بخش اطلاعات محصول و دکمه‌ها */}
-        <div className="flex flex-col flex-1 m-2 h-15 text-base">
-          {/* عنوان محصول */}
-          <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
-            {account?.productId?.title}
-          </h2>
-          {/* موجودی محصول */}
-          <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
-            {account?.productId?.stock} {account?.product?.unit}
-          </h2>
+                          {/* بخش اطلاعات محصول و دکمه‌ها */}
+                          <div className="flex flex-col flex-1 m-2 h-15 text-base">
+                            {/* عنوان محصول */}
+                            <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
+                              {account?.productId?.title}
+                            </h2>
+                            {/* موجودی محصول */}
+                            <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
+                              {account?.productId?.stock}{" "}
+                              {account?.product?.unit}
+                            </h2>
 
-          {/* دکمه‌های عملیات در یک ردیف */}
-          <div className="flex gap-2 mt-4 justify-start">
-            {/* دکمه ویرایش */}
-            <button
-              aria-label="ویرایش"
-              className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onClick={() => handleEditClick(account?.productId)}
-            >
-              <EditSvg />
-            </button>
-            {/* دکمه حذف */}
-            <button
-              aria-label="حذف"
-              className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-              onClick={() => deleteFunc(account.productId._id, account._id)}
-            >
-              <DeleteSvg />
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+                            {/* دکمه‌های عملیات در یک ردیف */}
+                            <div className="flex gap-2 mt-4 justify-start">
+                              {/* دکمه ویرایش */}
+                              <button
+                                aria-label="ویرایش"
+                                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                onClick={() =>
+                                  handleEditClick(account?.productId)
+                                }
+                              >
+                                <EditSvg />
+                              </button>
+                              {/* دکمه حذف */}
+                              <button
+                                aria-label="حذف"
+                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                onClick={() =>
+                                  deleteFunc(account.productId._id, account._id)
+                                }
+                              >
+                                <DeleteSvg />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
-    {account.accountType === "دسته بندی کالا" && (
-      <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 md:p-4 transition-transform transform hover:scale-105">
-        
-        {/* بخش چک‌باکس */}
-        <input
-          type="checkbox"
-          className="h-6 w-6"
-          checked={selectedAccounts.includes(account._id)}
-          onChange={() => handleToggleSelectAccount(account._id)}
-        />
+                      {account.accountType === "دسته بندی کالا" && (
+                        <div
+                          onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
+                          className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 md:p-4 transition-transform transform hover:scale-105"
+                        >
+                          {/* بخش چک‌باکس */}
+                          <input
+                            type="checkbox"
+                            className="h-6 w-6"
+                            checked={selectedAccounts.includes(account._id)}
+                            onClick={(e) => e.stopPropagation()} // اضافه کردن این خط
 
-        {/* بخش آیکون دسته‌بندی */}
-        <FaFolder className="text-yellow-500 text-xl md:text-2xl mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
+                            onChange={() =>
+                              handleToggleSelectAccount(account._id)
+                            }
+                          />
 
-        {/* بخش اطلاعات دسته‌بندی و دکمه‌ها */}
-        <div className="flex flex-col flex-1 m-2 h-15 text-base">
-          {/* عنوان دسته بندی */}
-          <p className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
-            {account.title}
-          </p>
+                          {/* بخش آیکون دسته‌بندی */}
+                          <FaFolder className="text-yellow-500 text-xl md:text-2xl mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
 
-          {/* دکمه‌های عملیات در یک ردیف */}
-          <div className="flex gap-2 mt-4 justify-start">
-            {/* دکمه ویرایش */}
-            <button
-              aria-label="ویرایش"
-              className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              onClick={(e) => {
-                e.stopPropagation(); // جلوگیری از انتشار رویداد
-                handleEditCategoryClick(account._id);
-              }}
-            >
-              <EditSvg />
-            </button>
-            {/* دکمه حذف */}
-            <button
-              aria-label="حذف"
-              className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-              onClick={(e) => {
-                e.stopPropagation(); // جلوگیری از انتشار رویداد
-                deleteCategoryFunc(account._id);
-              }}
-            >
-              <DeleteSvg />
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-))}
+                          {/* بخش اطلاعات دسته‌بندی و دکمه‌ها */}
+                          <div className="flex flex-col flex-1 m-2 h-15 text-base">
+                            {/* عنوان دسته بندی */}
+                            <p className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
+                              {account.title}
+                            </p>
 
-
+                            {/* دکمه‌های عملیات در یک ردیف */}
+                            <div className="flex gap-2 mt-4 justify-start">
+                              {/* دکمه ویرایش */}
+                              <button
+                                aria-label="ویرایش"
+                                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // جلوگیری از انتشار رویداد
+                                  handleEditCategoryClick(account._id);
+                                }}
+                              >
+                                <EditSvg />
+                              </button>
+                              {/* دکمه حذف */}
+                              <button
+                                aria-label="حذف"
+                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // جلوگیری از انتشار رویداد
+                                  deleteCategoryFunc(account._id);
+                                }}
+                              >
+                                <DeleteSvg />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                   {accounts.length === 0 && <p>حسابی یافت نشد.</p>}
                 </div>
 

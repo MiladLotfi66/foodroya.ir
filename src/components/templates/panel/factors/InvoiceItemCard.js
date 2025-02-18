@@ -91,11 +91,11 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
   };
 
   return (
-    <div className="relative bg-white dark:bg-zinc-800 shadow-md rounded-2xl p-4 transition duration-300 ease-in-out">
-      <h2 className="text-sm sm:text-md lg:text-lg font-bold text-gray-900 dark:text-white line-clamp-3 h-20 items-center text-center content-center">
+    <div className="relative bg-white dark:bg-zinc-800 shadow-md rounded-2xl p-2 md:p-4 transition duration-300 ease-in-out">
+      <h2 className="text-sm sm:text-md lg:text-lg font-bold text-gray-900 dark:text-white line-clamp-3  h-12 md:h-20 items-center text-center content-center">
         {title}
       </h2>
-      <div className="flex gap-2 justify-between items-center">
+      <div className="flex gap-1 md:gap-2 justify-between items-center">
         {/* قسمت تصویر */}
         <div className="flex-shrink-0">
           <img
@@ -111,7 +111,7 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
 
           {/* فیلد قابل ویرایش تعداد */}
           <div>
-            <label htmlFor="quantity" className="block text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="quantity" className="block text-xs sm:text-sm lg:text-base text-gray-700 dark:text-gray-300">
               تعداد:
             </label>
             <NumericFormat
@@ -121,7 +121,7 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
               onValueChange={(values) => handleChange(values.value, "quantity")}
               className={`mt-1 block w-full p-1 border ${
                 quantity < 1 ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white`}
+              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm lg:text-base dark:bg-zinc-700 dark:text-white`}
               allowNegative={false}
               thousandSeparator="٬"
               decimalScale={0}
@@ -132,7 +132,7 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
 
           {/* فیلد قابل ویرایش قیمت واحد */}
           <div className={invoiceType !== "Waste" ? "mt-2" : "hidden mt-2"}>
-            <label htmlFor="unitPrice" className="block text-sm text-gray-700 dark:text-gray-300">
+            <label htmlFor="unitPrice" className="block text-xs sm:text-sm lg:text-base text-gray-700 dark:text-gray-300">
               قیمت واحد:
             </label>
             <NumericFormat
@@ -142,7 +142,7 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
               onValueChange={(values) => handleChange(values.value, "unitPrice")}
               className={`mt-1 block w-full p-1 border ${
                 unitPrice < 0 ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white`}
+              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm lg:text-base dark:bg-zinc-700 dark:text-white`}
               allowNegative={false}
               thousandSeparator="٬"
               decimalScale={baseCurrency.decimalPlaces}
@@ -157,8 +157,8 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
       </div>
 
       {/* فیلد توضیحات */}
-      <div className="mt-2">
-        <label htmlFor="description" className="block text-sm text-gray-700 dark:text-gray-300">
+      <div className="mt-1 md:mt-2 text-xs sm:text-sm lg:text-base">
+        <label htmlFor="description" className="block text-xs sm:text-sm lg:text-base text-gray-700 dark:text-gray-300">
           توضیحات:
         </label>
         <textarea
@@ -166,20 +166,20 @@ function InvoiceItemCard({ invoiceItem, editFunction, onDelete, onUpdate, invoic
           name="description"
           value={description}
           onChange={(e) => handleChange(e.target.value, "description")}
-          className="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-zinc-700 dark:text-white"
+          className="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm lg:text-base dark:bg-zinc-700 dark:text-white"
           placeholder="توضیحات کالا را وارد کنید"
           rows="3"
         />
       </div>
 
       {/* آخرین قیمت خرید */}
-      <p className="block text-sm text-gray-700 dark:text-gray-300 mt-2">
+      <p className="block text-xs sm:text-sm lg:text-base text-gray-700 dark:text-gray-300 mt-2">
         آخرین قیمت خرید: {Number(lastPrice).toLocaleString('fa-IR')} {baseCurrency.title}
       </p>
 
       {/* نمایش جمع کل و دکمه حذف */}
-      <div className="mt-3 flex justify-between items-center">
-        <p className="text-sm sm:text-base">
+      <div className="mt-1 md:mt-3 flex justify-between items-center">
+        <p className="text-xs sm:text-sm lg:text-base">
           جمع کل: {Number(totalPrice).toLocaleString('fa-IR')} {baseCurrency.title}
         </p>
         <button

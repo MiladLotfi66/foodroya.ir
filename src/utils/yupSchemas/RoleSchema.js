@@ -49,8 +49,94 @@ const RoleSchema = yup.object().shape({
         )
         .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
         .default([]),
+        
+        contactsPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]), 
+        priceTemplatesPermissions: yup
 
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
 
+        productsPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]), 
+        
+        financialDocumentsPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
+
+        sendMethodsPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
+
+        purchaseInvoicesPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]), 
+        
+        saleInvoicesPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]), 
+        
+        purchaseReturnInvoicesPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]), 
+        
+        saleReturnInvoicesPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
+
+ allInvoicesPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]), 
+        
+        wasteInvoicesPermissions: yup
+        .array()
+        .of(
+            yup.string().oneOf(["add", "edit", "delete", "view"], "مقدار باید یکی از 'add', 'edit', 'delete', 'view' باشد")
+        )
+        .max(4, "تعداد مقادیر نمی‌تواند بیشتر از 4 باشد")
+        .default([]),
 
 });
 
