@@ -9,6 +9,7 @@ import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import Contact from "../Contact/Contact";
 import mongoose from "mongoose";
 
+
 export async function AddRoleToContact(ContactId, ShopId, RoleId) {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -496,40 +497,7 @@ export async function GetShopRolesByShopId(ShopId) {
   }
 }
 
-export async function CheckRolePermissionsServerAction({ roles, action, access }) {
-  try {
-    await connectDB();
-    
-    let userData;
-    try {
-      userData = await authenticateUser();
-    } catch (authError) {
-      userData = null;
-      console.log("Authentication failed:", authError);
-    }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
- 
-
-    for (const roleId of roles) {
-      const roleData = await RolePerimision.findOne({ _id: roleId }).lean();
-      if (roleData) {
-        if (access in roleData && roleData[access].includes(action)) {
-          // دسترسی داینامیک
-          return { message: "Permission granted", status: 200, data: true };
-        }
-      }
-    }
-
-    
-    return { message: "Permission denied", status: 200, data: false };
-  } catch (error) {
-    console.error("Error in CheckRolePermissions action:", error.message);
-    return { error: error.message, status: 500 };
-  }
-}
 
 export async function GetShopIdByShopUniqueName(ShopUniqueName) {
 
@@ -600,4 +568,259 @@ export async function GetContactRolsAtShop({ contactId, shopId }) {
   }
 }
 
+export async function CheckRolePermissionsServerAction({ roles, action, access }) {
+  try {
+    await connectDB();
+    
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
 
+  if (!userData) {
+    return { status: 401, message: 'کاربر وارد نشده است.' };
+  }
+ 
+
+    for (const roleId of roles) {
+      const roleData = await RolePerimision.findOne({ _id: roleId }).lean();
+      if (roleData) {
+        if (access in roleData && roleData[access].includes(action)) {
+          // دسترسی داینامیک
+          return { message: "Permission granted", status: 200, data: true };
+        }
+      }
+    }
+
+    
+    return { message: "Permission denied", status: 200, data: false };
+  } catch (error) {
+    console.error("Error in CheckRolePermissions action:", error.message);
+    return { error: error.message, status: 500 };
+  }
+}
+
+
+export async function GetUserPermissionsInShop(shopId) {
+  await connectDB();
+
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // یافتن مخاطب‌ها (Contact) مربوط به کاربر در فروشگاه مشخص شده
+    const contacts = await Contact.find({ shop: shopId, userAccount: user.id })
+      .populate('RolesId') // پرpopulate کردن نقش‌ها
+      .lean();
+
+    if (contacts.length === 0) {
+      return { status: 403, message: 'کاربر در این فروشگاه نقشی ندارد.' };
+    }
+
+    // استخراج تمام نقش‌های کاربر در فروشگاه
+    const roles = contacts.flatMap(contact => contact.RolesId);
+
+    if (roles.length === 0) {
+      return { status: 403, message: 'کاربر هیچ نقشی در این فروشگاه ندارد.' };
+    }
+
+    // تعریف فیلدهای مرتبط با دسترسی‌ها
+    const permissionFields = [
+      'bannersPermissions',
+      'rolesPermissions',
+      'sendMethodPermissions',
+      'accountsPermissions',
+      'contactsPermissions',
+      'priceTemplatesPermissions',
+      'productsPermissions',
+      'financialDocumentsPermissions',
+      'sendMethodsPermissions',
+      'purchaseInvoicesPermissions',
+      'saleInvoicesPermissions',
+      'purchaseReturnInvoicesPermissions',
+      'saleReturnInvoicesPermissions',
+      'allInvoicesPermissions',
+      'wasteInvoicesPermissions',
+    ];
+
+    // شیء برای ذخیره دسترسی‌های ترکیبی
+    const aggregatedPermissions = {};
+
+    // مقداردهی اولیه به فیلدهای دسترسی
+    permissionFields.forEach(field => {
+      aggregatedPermissions[field] = new Set(); // استفاده از Set برای حذف دسترسی‌های تکراری
+    });
+
+    // پیمایش و جمع‌آوری دسترسی‌ها از تمامی نقش‌ها
+    roles.forEach(role => {
+      permissionFields.forEach(field => {
+        if (Array.isArray(role[field])) {
+          role[field].forEach(permission => aggregatedPermissions[field].add(permission));
+        }
+      });
+    });
+
+    // تبدیل Set به آرایه برای بازگرداندن خروجی نهایی
+    permissionFields.forEach(field => {
+      aggregatedPermissions[field] = Array.from(aggregatedPermissions[field]);
+    });
+
+    return { status: 200, permissions: aggregatedPermissions };
+  } catch (error) {
+    console.error("Error fetching user permissions:", error);
+    return { status: 500, message: "خطایی در دریافت دسترسی‌ها رخ داده است." };
+  }
+}
+
+
+export async function GetUserRolesInShop(shopId) {
+  // اتصال به دیتابیس
+  await connectDB();
+
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // یافتن مخاطب‌ها (Contacts) مربوط به کاربر در فروشگاه مشخص شده
+    const contacts = await Contact.find({ shop: shopId, userAccount: user.id })
+      .populate('RolesId', 'RoleTitle') // پرکردن فیلد RolesId با RoleTitle
+      .select('RolesId') // انتخاب فقط فیلد RolesId
+      .lean();
+
+    if (contacts.length === 0) {
+      return { status: 404, message: 'کاربر در این فروشگاه نقشی ندارد.' };
+    }
+
+    // استخراج نقش‌ها از مخاطب‌ها
+    const roles = contacts.flatMap(contact => contact.RolesId.map(role => ({
+      id: role._id,
+      title: role.RoleTitle
+    })));
+
+    // حذف تکراری‌ها (اختیاری)
+    const uniqueRoles = Array.from(new Map(roles.map(role => [role.id.toString(), role])).values());
+
+    return { status: 200, roles: uniqueRoles };
+  } catch (error) {
+    console.error("Error fetching user roles in shop:", error);
+    return { status: 500, message: 'خطایی در دریافت نقش‌های کاربر رخ داد.' };
+  }
+}
+
+
+export async function CheckUserPermissionInShop(shopId, accessName, actionName) {
+  // اتصال به دیتابیس
+  await connectDB();
+
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // یافتن مخاطب‌ها (Contacts) مربوط به کاربر در فروشگاه مشخص شده
+    const contacts = await Contact.find({ shop: shopId, userAccount: user.id })
+      .populate('RolesId') // پرpopulate کردن نقش‌ها
+      .select('RolesId') // انتخاب فقط فیلد RolesId
+      .lean();
+
+    if (contacts.length === 0) {
+      return { status: 403, message: 'کاربر در این فروشگاه نقشی ندارد.' };
+    }
+
+    // استخراج نقش‌ها از مخاطب‌ها
+    const roles = contacts.flatMap(contact => contact.RolesId);
+
+    if (roles.length === 0) {
+      return { status: 403, message: 'کاربر هیچ نقشی در این فروشگاه ندارد.' };
+    }
+
+    // یافتن دسترسی‌ها از تمامی نقش‌ها
+    let hasPermission = false;
+
+    for (const role of roles) {
+      // بررسی اینکه آیا فیلد دسترسی مورد نظر در نقش وجود دارد
+      if (role[accessName] && Array.isArray(role[accessName])) {
+        if (role[accessName].includes(actionName)) {
+          hasPermission = true;
+          break; // اگر یکی از نقش‌ها دسترسی داشته باشد، نیازی به بررسی بیشتر نیست
+        }
+      }
+    }
+
+    if (hasPermission) {
+      return { status: 200, hasPermission: true, message: 'دسترسی تأیید شده است.' };
+    } else {
+      return { status: 200, hasPermission: false, message: 'دسترسی rad نشده است.' };
+    }
+  } catch (error) {
+    console.error("Error checking user permission in shop:", error);
+    return { status: 500, message: 'خطایی در بررسی دسترسی کاربر رخ داد.' };
+  }
+}
+
+export async function getUserPermissionInShopAccessList(shopId, accessName) {
+  console.log("shopId, accessName", shopId, accessName);
+  
+  // اتصال به دیتابیس
+  await connectDB();
+
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // یافتن مخاطب‌ها (Contacts) مربوط به کاربر در فروشگاه مشخص شده
+    const contacts = await Contact.find({ shop: shopId, userAccount: user.id })
+      .populate('RolesId') // پرpopulate کردن نقش‌ها
+      .select('RolesId') // انتخاب فقط فیلد RolesId
+      .lean();
+    console.log("contacts", contacts);
+
+    if (contacts.length === 0) {
+      return { status: 403, message: 'کاربر در این فروشگاه نقشی ندارد.' };
+    }
+
+    // استخراج نقش‌ها از مخاطب‌ها
+    const roles = contacts.flatMap(contact => contact.RolesId);
+    console.log("roles", roles);
+
+    if (roles.length === 0) {
+      return { status: 403, message: 'کاربر هیچ نقشی در این فروشگاه ندارد.' };
+    }
+
+    // استفاده از Set برای جمع‌آوری دسترسی‌ها بدون تکرار
+    const permissionsSet = new Set();
+
+    for (const role of roles) {
+      // بررسی اینکه آیا فیلد دسترسی مورد نظر در نقش وجود دارد
+      if (role[accessName] && Array.isArray(role[accessName])) {
+        role[accessName].forEach(permission => permissionsSet.add(permission));
+      }
+    }
+    console.log("collectedPermissions", Array.from(permissionsSet));
+
+    const hasPermission = Array.from(permissionsSet);
+
+    if (hasPermission.length > 0) {
+      return { status: 200, hasPermission, message: 'دسترسی تأیید شده است.' };
+    } else {
+      return { status: 200, hasPermission, message: 'دسترسی رد نشده است.' };
+    }
+  } catch (error) {
+    console.error("Error checking user permission in shop:", error);
+    return { status: 500, message: 'خطایی در بررسی دسترسی کاربر رخ داد.' };
+  }
+}

@@ -23,8 +23,15 @@ import { DeleteProducts } from "./ProductActions";
 import Pagination from "./Pagination";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import FallbackImage from "@/utils/fallbackImage";
+import {  getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
 
 function ProductManage() {
+  const [hasViewPermission, setHasViewPermission] = useState(null);
+  const [hasAddPermission, setHasAddPermission] = useState(null);
+  const [hasEditPermission, setHasEditPermission] = useState(null);
+  const [hasDeletePermission, setHasDeletePermission] = useState(null);
+const [permissionLoading, setPermissionLoading] = useState(true);
+
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [clipboard, setClipboard] = useState({
     accounts: [],
@@ -58,6 +65,7 @@ function ProductManage() {
   const BGImage = shopPanelImage;
   const fetchAnbarAccountId = async () => {
     try {
+      
       const response = await GetAccountIdBystoreIdAndAccountCode(
         ShopId,
         "1000-1-2"
@@ -75,6 +83,47 @@ function ProductManage() {
       toast.error("خطا در دریافت حساب انبار.");
     }
   };
+
+  const checkViewPermission = useCallback(async () => {
+    if (!ShopId) {
+      setPermissionLoading(false);
+      return;
+    }
+
+    try {
+      const response = await getUserPermissionInShopAccessList(ShopId, "productsPermissions");
+
+      if (response.status === 200) {
+        console.log("response",response);
+        
+        // بررسی اینکه آیا دسترسی view در آرایه hasPermission وجود دارد
+        setHasViewPermission(response.hasPermission.includes("view"));
+
+        setHasAddPermission(response.hasPermission.includes("add"));
+        setHasEditPermission(response.hasPermission.includes("edit"));
+        setHasDeletePermission(response.hasPermission.includes("delete"));
+      } else {
+        console.error('خطا در بررسی دسترسی:', response.message);
+        setHasViewPermission(false);
+        setHasAddPermission(false);
+        setHasEditPermission(false);
+        setHasDeletePermission(false);
+      }
+    } catch (error) {
+      console.error('Error checking view permission:', error);
+      setHasViewPermission(false);
+      setHasAddPermission(false);
+      setHasEditPermission(false);
+      setHasDeletePermission(false);
+    toast.error("خطا در بررسی دسترسی.");
+    } finally {
+      setPermissionLoading(false);
+    }
+  }, [ShopId]);
+
+  useEffect(() => {
+    checkViewPermission(); // بررسی دسترسی هنگام بارگذاری کامپوننت
+  }, [checkViewPermission]);
 
   // از useCallback برای بهینه‌سازی عملکرد استفاده می‌کنیم
   const refreshAccounts = useCallback(async () => {
@@ -139,12 +188,13 @@ function ProductManage() {
     setSelectedParentAccount,
   ]);
 
-  // بارگذاری اولیه: دریافت حساب انبار
   useEffect(() => {
     if (ShopId) {
       fetchAnbarAccountId();
+      checkViewPermission(); // اضافه کردن این خط
     }
-  }, [ShopId]);
+  }, [ShopId, checkViewPermission]);
+  
 
   // واکنش به تغییرات parentAccountId, currentPage, یا searchQuery
   useEffect(() => {
@@ -359,7 +409,31 @@ function ProductManage() {
     setSelectedProduct(null);
     setSelectedProductFile(null);
   }, []);
+  if (permissionLoading) {
+    return (
+      <FormTemplate BGImage={BGImage}>
+        <div className="flex justify-center items-center h-screen">
+          <p>در حال بررسی دسترسی...</p>
+        </div>
+      </FormTemplate>
+    );
+  }
 
+  console.log("1",hasViewPermission);
+  console.log("2",hasAddPermission);
+  console.log("3",hasEditPermission);
+  console.log("4",hasDeletePermission);
+  
+  if (hasViewPermission === false) {
+    return (
+      <FormTemplate BGImage={BGImage}>
+        <div className="flex justify-center items-center h-screen">
+          <p>شما دسترسی لازم برای این صفحه را ندارید.</p>
+        </div>
+      </FormTemplate>
+    );
+  }
+  
   return (
     <FormTemplate BGImage={BGImage}>
       {isOpenAddProduct && (
@@ -388,19 +462,26 @@ function ProductManage() {
           </h1>
         </div>
         <div className="flex items-center gap-1 md:gap-2 p-1 md:p-2">
-          <button
-            className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-            aria-label="add product"
-            onClick={handleAddProductClick}
-          >
+          {hasAddPermission &&
+          
+            (
+<>
+              <button
+              className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              aria-label="add product"
+              onClick={handleAddProductClick}
+              >
             افزودن
           </button>
           <button
-            onClick={() => setShowCreateAccountModal(true)}
-            className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+          onClick={() => setShowCreateAccountModal(true)}
+          className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
           >
             ایجاد دسته بندی
           </button>
+            </>
+          ) 
+          }
 
           {clipboard.accounts.length > 0 && (
             <button
@@ -411,7 +492,8 @@ function ProductManage() {
             </button>
           )}
           {/* دکمه کپی */}
-          {selectedAccounts.length > 0 && (
+         
+          {selectedAccounts.length > 0 &&  hasAddPermission && (
             <button
               className="h-8 md:h-14 text-xs md:text-base bg-green-600 rounded-xl hover:bg-green-700 text-white mt-2 md:mt-4 p-2 md:p-4"
               onClick={() => handleCopySelectedAccounts()}
@@ -419,8 +501,9 @@ function ProductManage() {
               کپی
             </button>
           )}
+
           {/* دکمه برش */}
-          {selectedAccounts.length > 0 && (
+          {selectedAccounts.length > 0 &&  hasEditPermission &&  (
             <button
               className="h-8 md:h-14 text-xs md:text-base bg-red-600 rounded-xl hover:bg-red-700 text-white mt-2 md:mt-4 p-2 md:p-4"
               onClick={() => handleCutSelectedAccounts()}
@@ -505,25 +588,30 @@ function ProductManage() {
                             {/* دکمه‌های عملیات در یک ردیف */}
                             <div className="flex gap-1 md:gap-2 mt-2 md:mt-4 justify-start">
                               {/* دکمه ویرایش */}
+                             {  hasEditPermission &&
                               <button
-                                aria-label="ویرایش"
-                                className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                onClick={() =>
-                                  handleEditClick(account?.productId)
-                                }
+                              aria-label="ویرایش"
+                              className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              onClick={() =>
+                                handleEditClick(account?.productId)
+                              }
                               >
                                 <EditSvg />
                               </button>
+                              }
                               {/* دکمه حذف */}
+                              {  hasDeletePermission &&
+
                               <button
-                                aria-label="حذف"
-                                className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                onClick={() =>
-                                  deleteFunc(account.productId._id, account._id)
-                                }
+                              aria-label="حذف"
+                              className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                              onClick={() =>
+                                deleteFunc(account.productId._id, account._id)
+                              }
                               >
                                 <DeleteSvg />
                               </button>
+                              }
                             </div>
                           </div>
                         </div>
@@ -559,27 +647,31 @@ function ProductManage() {
                             {/* دکمه‌های عملیات در یک ردیف */}
                             <div className="flex gap-1 md:gap-2 mt-2 md:mt-4 justify-start">
                               {/* دکمه ویرایش */}
+                              {  hasEditPermission &&
                               <button
-                                aria-label="ویرایش"
-                                className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // جلوگیری از انتشار رویداد
-                                  handleEditCategoryClick(account._id);
-                                }}
+                              aria-label="ویرایش"
+                              className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              onClick={(e) => {
+                                e.stopPropagation(); // جلوگیری از انتشار رویداد
+                                handleEditCategoryClick(account._id);
+                              }}
                               >
                                 <EditSvg />
                               </button>
+                              }
                               {/* دکمه حذف */}
+                              {  hasDeletePermission &&
                               <button
-                                aria-label="حذف"
-                                className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // جلوگیری از انتشار رویداد
-                                  deleteCategoryFunc(account._id);
-                                }}
+                              aria-label="حذف"
+                              className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                              onClick={(e) => {
+                                e.stopPropagation(); // جلوگیری از انتشار رویداد
+                                deleteCategoryFunc(account._id);
+                              }}
                               >
                                 <DeleteSvg />
                               </button>
+                              }
                             </div>
                           </div>
                         </div>
@@ -638,12 +730,14 @@ function ProductManage() {
                       >
                         انصراف
                       </button>
+                      {  hasAddPermission &&
                       <button
-                        type="submit"
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      type="submit"
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                       >
                         ایجاد
                       </button>
+                      }
                     </div>
                   </form>
                 </div>
@@ -690,12 +784,14 @@ function ProductManage() {
                       >
                         انصراف
                       </button>
+                      {  hasEditPermission &&
                       <button
-                        type="submit"
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      type="submit"
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                       >
                         ویرایش{" "}
                       </button>
+                      }
                     </div>
                   </form>
                 </div>

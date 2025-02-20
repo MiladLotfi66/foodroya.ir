@@ -1372,6 +1372,10 @@ video {
   height: 1px;
 }
 
+.h-screen {
+  height: 100vh;
+}
+
 .max-h-60 {
   max-height: 15rem;
 }
@@ -1388,6 +1392,10 @@ video {
   max-height: 50vh;
 }
 
+.max-h-\[52vh\] {
+  max-height: 52vh;
+}
+
 .max-h-\[60vh\] {
   max-height: 60vh;
 }
@@ -1396,36 +1404,16 @@ video {
   max-height: 70vh;
 }
 
-.max-h-\[85vh\] {
-  max-height: 85vh;
-}
-
-.max-h-\[90vh\] {
-  max-height: 90vh;
-}
-
-.max-h-screen {
-  max-height: 100vh;
-}
-
 .max-h-\[80vh\] {
   max-height: 80vh;
 }
 
-.max-h-\[0vh\] {
-  max-height: 0vh;
+.max-h-\[85vh\] {
+  max-height: 85vh;
 }
 
-.max-h-\[55vh\] {
-  max-height: 55vh;
-}
-
-.max-h-\[5vh\] {
-  max-height: 5vh;
-}
-
-.max-h-\[52vh\] {
-  max-height: 52vh;
+.max-h-screen {
+  max-height: 100vh;
 }
 
 .min-h-screen {
@@ -3612,6 +3600,10 @@ video {
     padding: 3rem;
   }
 
+  .md\:p-2 {
+    padding: 0.5rem;
+  }
+
   .md\:p-4 {
     padding: 1rem;
   }
@@ -3626,10 +3618,6 @@ video {
 
   .md\:p-8 {
     padding: 2rem;
-  }
-
-  .md\:p-2 {
-    padding: 0.5rem;
   }
 
   .md\:px-2 {
