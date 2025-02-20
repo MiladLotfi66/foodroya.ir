@@ -20,9 +20,7 @@ import { NumericFormat } from 'react-number-format'; // وارد کردن Numeri
 
 function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
   const { currentShopId, baseCurrency } = useShopInfoFromRedux();
-
   const ShopId = currentShopId;
-
   const [isSubmit, setIsSubmit] = useState(false);
   const [pricingTemplates, setPricingTemplates] = useState([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -301,7 +299,7 @@ function AddProduct({ product = {}, onClose, refreshProducts, parentAccount }) {
       >
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
-          className="flex flex-col gap-2 md:gap-4 p-2 md:p-4 max-h-[90vh] overflow-y-auto text-xs md:text-base"
+          className="flex flex-col gap-2 md:gap-4 p-2 md:p-4 max-h-[80vh] overflow-y-auto text-xs md:text-base"
         >
           {/* انتخاب و نمایش تصاویر */}
           <div>

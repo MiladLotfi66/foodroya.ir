@@ -125,7 +125,6 @@ export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
   }
 }
 
-
 // بررسی دسترسی کاربر
 const hasContactAccess = async (contactId) => {
   try {
@@ -532,7 +531,6 @@ export async function CheckRolePermissionsServerAction({ roles, action, access }
   }
 }
 
-
 export async function GetShopIdByShopUniqueName(ShopUniqueName) {
 
   try {
@@ -573,8 +571,6 @@ export async function  getContactsByRoleId (roleId) {
      throw new Error("Error fetching contact names by RoleId");
   }
 };
-
-
 
 export async function GetContactRolsAtShop({ contactId, shopId }) {
   try {

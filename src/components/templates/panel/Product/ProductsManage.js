@@ -383,11 +383,11 @@ function ProductManage() {
       )}
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
         <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
-          <h1 className="text-2xl md:text-3xl font-MorabbaBold">
+          <h1 className="text-xl md:text-3xl font-MorabbaBold">
             مدیریت محصول
           </h1>
         </div>
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-center gap-1 md:gap-2 p-1 md:p-2">
           <button
             className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
             aria-label="add product"
@@ -454,11 +454,11 @@ function ProductManage() {
               <p>در حال بارگذاری...</p>
             ) : (
               <>
-                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[70vh] overflow-y-auto">
+                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 max-h-[52vh] overflow-y-auto">
                   {accounts.map((account) => (
                     <div key={account._id}>
                       {account.accountType === "کالا" && (
-                        <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-1 md:p-4 transition-transform transform hover:scale-105">
+                        <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl  transition-transform transform hover:scale-105">
                           {/* بخش چک‌باکس */}
                           <input
                             type="checkbox"
@@ -491,7 +491,7 @@ function ProductManage() {
                           </div>
 
                           {/* بخش اطلاعات محصول و دکمه‌ها */}
-                          <div className="flex flex-col flex-1 m-2 h-15 text-base">
+                          <div className="flex flex-col flex-1 m-1 md:m-2 h-15 text-xs sm:text-sm md:text-base">
                             {/* عنوان محصول */}
                             <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
                               {account?.productId?.title}
@@ -503,11 +503,11 @@ function ProductManage() {
                             </h2>
 
                             {/* دکمه‌های عملیات در یک ردیف */}
-                            <div className="flex gap-2 mt-4 justify-start">
+                            <div className="flex gap-1 md:gap-2 mt-2 md:mt-4 justify-start">
                               {/* دکمه ویرایش */}
                               <button
                                 aria-label="ویرایش"
-                                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 onClick={() =>
                                   handleEditClick(account?.productId)
                                 }
@@ -517,7 +517,7 @@ function ProductManage() {
                               {/* دکمه حذف */}
                               <button
                                 aria-label="حذف"
-                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
                                 onClick={() =>
                                   deleteFunc(account.productId._id, account._id)
                                 }
@@ -550,18 +550,18 @@ function ProductManage() {
                           <FaFolder className="text-yellow-500 text-xl md:text-2xl mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
 
                           {/* بخش اطلاعات دسته‌بندی و دکمه‌ها */}
-                          <div className="flex flex-col flex-1 m-2 h-15 text-base">
+                          <div className="flex flex-col flex-1 m-2 h-15 text-xs sm:text-sm md:text-base">
                             {/* عنوان دسته بندی */}
                             <p className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
                               {account.title}
                             </p>
 
                             {/* دکمه‌های عملیات در یک ردیف */}
-                            <div className="flex gap-2 mt-4 justify-start">
+                            <div className="flex gap-1 md:gap-2 mt-2 md:mt-4 justify-start">
                               {/* دکمه ویرایش */}
                               <button
                                 aria-label="ویرایش"
-                                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 onClick={(e) => {
                                   e.stopPropagation(); // جلوگیری از انتشار رویداد
                                   handleEditCategoryClick(account._id);
@@ -572,7 +572,7 @@ function ProductManage() {
                               {/* دکمه حذف */}
                               <button
                                 aria-label="حذف"
-                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
                                 onClick={(e) => {
                                   e.stopPropagation(); // جلوگیری از انتشار رویداد
                                   deleteCategoryFunc(account._id);
