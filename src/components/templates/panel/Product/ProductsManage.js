@@ -1,5 +1,7 @@
 // app/products/ProductManage.jsx
 "use client";
+import { signIn, useSession } from "next-auth/react";
+
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddProduct from "./AddProduct";
 import React, { useState, useEffect, useCallback } from "react";
@@ -24,8 +26,16 @@ import Pagination from "./Pagination";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import FallbackImage from "@/utils/fallbackImage";
 import {  getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
+import SignIn from "@/templates/auth/signin";
+import Link from "next/link";
+import NotAuthenticated from "../rols/NotAuthenticated";
+import PermissionLoading from "../rols/PermissionLoading";
+import NoPermission from "../rols/NoPermission";
 
 function ProductManage() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   const [hasViewPermission, setHasViewPermission] = useState(null);
   const [hasAddPermission, setHasAddPermission] = useState(null);
   const [hasEditPermission, setHasEditPermission] = useState(null);
@@ -63,18 +73,18 @@ const [permissionLoading, setPermissionLoading] = useState(true);
   const { currentShopId, shopPanelImage } = useShopInfoFromRedux();
   const ShopId = currentShopId;
   const BGImage = shopPanelImage;
-  const fetchAnbarAccountId = async () => {
+  const fetchAnbarAccountId = useCallback(async () => {
+    if (!isAuthenticated) return;
+  
     try {
-      
       const response = await GetAccountIdBystoreIdAndAccountCode(
         ShopId,
         "1000-1-2"
       );
       if (response.success && response.accountId) {
-        // فرض بر این است که پاسخ شامل شناسه حساب است
         setAnbarAccountId(response.accountId);
         setParentAccountId(response.accountId);
-        setPath([{ id: response.accountId, title: "انبار" }]); // تنظیم مسیر اولیه
+        setPath([{ id: response.accountId, title: "انبار" }]);
       } else {
         throw new Error("حساب انبار یافت نشد.");
       }
@@ -82,10 +92,11 @@ const [permissionLoading, setPermissionLoading] = useState(true);
       console.error("خطا در دریافت حساب انبار:", error);
       toast.error("خطا در دریافت حساب انبار.");
     }
-  };
+  }, [isAuthenticated, ShopId]);
+  
 
   const checkViewPermission = useCallback(async () => {
-    if (!ShopId) {
+    if (!ShopId || !isAuthenticated) {
       setPermissionLoading(false);
       return;
     }
@@ -94,7 +105,6 @@ const [permissionLoading, setPermissionLoading] = useState(true);
       const response = await getUserPermissionInShopAccessList(ShopId, "productsPermissions");
 
       if (response.status === 200) {
-        console.log("response",response);
         
         // بررسی اینکه آیا دسترسی view در آرایه hasPermission وجود دارد
         setHasViewPermission(response.hasPermission.includes("view"));
@@ -120,10 +130,6 @@ const [permissionLoading, setPermissionLoading] = useState(true);
       setPermissionLoading(false);
     }
   }, [ShopId]);
-
-  useEffect(() => {
-    checkViewPermission(); // بررسی دسترسی هنگام بارگذاری کامپوننت
-  }, [checkViewPermission]);
 
   // از useCallback برای بهینه‌سازی عملکرد استفاده می‌کنیم
   const refreshAccounts = useCallback(async () => {
@@ -189,19 +195,17 @@ const [permissionLoading, setPermissionLoading] = useState(true);
   ]);
 
   useEffect(() => {
-    if (ShopId) {
+    if (isAuthenticated) {
       fetchAnbarAccountId();
       checkViewPermission(); // اضافه کردن این خط
     }
-  }, [ShopId, checkViewPermission]);
-  
+  }, [isAuthenticated, fetchAnbarAccountId, checkViewPermission]);
 
-  // واکنش به تغییرات parentAccountId, currentPage, یا searchQuery
   useEffect(() => {
-    if (parentAccountId) {
+    if (isAuthenticated && hasViewPermission && parentAccountId) {
       refreshAccounts();
     }
-  }, [parentAccountId, currentPage, searchQuery, refreshAccounts]);
+  }, [isAuthenticated, hasViewPermission, parentAccountId, refreshAccounts]);
 
   // تابع برای باز کردن حساب و نمایش زیرحساب‌ها
   const handleOpenAccount = useCallback((account) => {
@@ -351,7 +355,6 @@ const [permissionLoading, setPermissionLoading] = useState(true);
         ShopId,
         clipboard.action
       );
-      console.log("result", result);
 
       if (result.success) {
         toast.success("حساب‌ها با موفقیت درج شدند.");
@@ -409,31 +412,24 @@ const [permissionLoading, setPermissionLoading] = useState(true);
     setSelectedProduct(null);
     setSelectedProductFile(null);
   }, []);
-  if (permissionLoading) {
-    return (
-      <FormTemplate BGImage={BGImage}>
-        <div className="flex justify-center items-center h-screen">
-          <p>در حال بررسی دسترسی...</p>
-        </div>
-      </FormTemplate>
-    );
+
+
+  if (status === "loading") {
+    return <PermissionLoading BGImage={BGImage} />;
   }
 
-  console.log("1",hasViewPermission);
-  console.log("2",hasAddPermission);
-  console.log("3",hasEditPermission);
-  console.log("4",hasDeletePermission);
-  
-  if (hasViewPermission === false) {
-    return (
-      <FormTemplate BGImage={BGImage}>
-        <div className="flex justify-center items-center h-screen">
-          <p>شما دسترسی لازم برای این صفحه را ندارید.</p>
-        </div>
-      </FormTemplate>
-    );
+  if (!isAuthenticated) {
+    return <NotAuthenticated />;
   }
-  
+
+  if (permissionLoading) {
+    return <PermissionLoading BGImage={BGImage} />;
+  }
+
+  if (!hasViewPermission) {
+    return <NoPermission />;
+  }
+
   return (
     <FormTemplate BGImage={BGImage}>
       {isOpenAddProduct && (
