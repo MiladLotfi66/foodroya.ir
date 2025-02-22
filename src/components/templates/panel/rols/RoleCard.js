@@ -17,7 +17,9 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
   handleEnableRole,
   handleDisableRole,
   handleAllContacts,
-  handleEditClick,
+  handleEditClick,hasAddPermission,
+  hasEditPermission,
+  hasDeletePermission
 }
 )
 {
@@ -60,6 +62,8 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
           <div className="flex gap-2">
             <Tooltip.Provider>
               {/* ویرایش نقش */}
+              {hasEditPermission &&
+
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <ActionButton
@@ -74,8 +78,10 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
                   <Tooltip.Arrow className="fill-gray-700" />
                 </Tooltip.Content>
               </Tooltip.Root>
-
+}
               {/* حذف نقش */}
+              {hasDeletePermission &&
+
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <ActionButton
@@ -90,9 +96,12 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
                   <Tooltip.Arrow className="fill-gray-700" />
                 </Tooltip.Content>
               </Tooltip.Root>
-
+}
               {/* فعال/غیرفعال کردن نقش */}
-              {role.RoleStatus ? (
+
+              {role.RoleStatus && hasEditPermission && (
+                              
+
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <ActionButton
@@ -107,7 +116,8 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
                     <Tooltip.Arrow className="fill-gray-700" />
                   </Tooltip.Content>
                 </Tooltip.Root>
-              ) : (
+              ) }
+              {!role.RoleStatus && hasEditPermission && (
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <ActionButton
@@ -123,8 +133,10 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
                   </Tooltip.Content>
                 </Tooltip.Root>
               )}
+
             </Tooltip.Provider>
             {/* دکمه افزودن مخاطب به نقش */}
+            {hasEditPermission &&
             <Tooltip.Provider>
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
@@ -141,6 +153,7 @@ import { CountContactsRoles, GetAllContactsWithRoles } from "./RolesPermissionAc
                 </Tooltip.Content>
               </Tooltip.Root>
             </Tooltip.Provider>
+}
           </div>
         </div>
       </div>

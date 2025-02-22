@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddRole from "./AddRole";
 import ContactsListModal from "@/module/User/ContactsListModal";
+import { Toaster, toast } from "react-hot-toast";
 
 // Import توابع مربوط به اکشن‌های سروری
 import {
@@ -24,6 +25,13 @@ import EyeslashSvg from "@/module/svgs/EyeslashSvg";
 import UserPlus from "@/module/svgs/UserPlus";
 import RoleCard from "./RoleCard";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+////////////////////accessibility//////////
+import { useSession } from "next-auth/react";
+import { getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
+import NotAuthenticated from "../rols/NotAuthenticated";
+import PermissionLoading from "../rols/PermissionLoading";
+import NoPermission from "../rols/NoPermission";
+////////////////////////////////
 
 function RolsManage() {
   const [isOpenAddRole, setIsOpenAddRole] = useState(false);
@@ -38,11 +46,83 @@ function RolsManage() {
      } = useShopInfoFromRedux();
   const ShopId  = currentShopId;
    const BGImage=shopPanelImage;
+         ////////////////accessibility///////////////////
+         const { data: session, status } = useSession();
+         const isAuthenticated = status === "authenticated";
+       
+         const [hasViewPermission, setHasViewPermission] = useState(null);
+         const [hasAddPermission, setHasAddPermission] = useState(null);
+         const [hasEditPermission, setHasEditPermission] = useState(null);
+         const [hasDeletePermission, setHasDeletePermission] = useState(null);
+         const [permissionLoading, setPermissionLoading] = useState(true);
+       
+         const checkViewPermission = useCallback(async () => {
+           if (!isAuthenticated) {
+             setPermissionLoading(false);
+             return;
+           }
+       
+           if (!ShopId) {
+             // اگر ShopId موجود نیست، منتظر بمانید تا مقداردهی شود
+             return;
+           }
+       
+           setPermissionLoading(true); // شروع بارگذاری مجدد
+       
+           try {
+             const response = await getUserPermissionInShopAccessList(
+               ShopId,
+               "rolesPermissions"
+             );
+       
+             if (response.status === 200) {
+               
+               // بررسی اینکه آیا دسترسی view در آرایه hasPermission وجود دارد
+               setHasViewPermission(response.hasPermission.includes("view"));
+               setHasAddPermission(response.hasPermission.includes("add"));
+               setHasEditPermission(response.hasPermission.includes("edit"));
+               setHasDeletePermission(response.hasPermission.includes("delete"));
+             } else {
+               console.error("خطا در بررسی دسترسی:", response.message);
+               setHasViewPermission(false);
+               setHasAddPermission(false);
+               setHasEditPermission(false);
+               setHasDeletePermission(false);
+             }
+           } catch (error) {
+             console.error("Error checking view permission:", error);
+             setHasViewPermission(false);
+             setHasAddPermission(false);
+             setHasEditPermission(false);
+             setHasDeletePermission(false);
+             toast.error("خطا در بررسی دسترسی.");
+           } finally {
+             setPermissionLoading(false);
+           }
+         }, [ShopId, isAuthenticated]);
+       
+         useEffect(() => {
+           if (isAuthenticated) {
+             // بارگذاری دسترسی‌ها زمانی که احراز هویت انجام شده
+             checkViewPermission();
+           } else {
+             // اگر احراز هویت نشده باشد، مطمئن شوید که وضعیت بارگذاری تنظیم شده است
+             setPermissionLoading(false);
+           }
+         }, [checkViewPermission, isAuthenticated]);
+       
+       
+       ///////////////////////////////
+       
+
+
   // مدیریت تعداد مخاطبان هر نقش
   const [contactCounts, setContactCounts] = useState({});
 
   // فراخوانی نقش‌ها و تنظیم تعداد مخاطبان
   const refreshRols = useCallback(async () => {
+    if (!isAuthenticated) return;
+
     try {
       const response = await GetShopRolesByShopId(ShopId);
       setRols(response.Roles);
@@ -56,11 +136,13 @@ function RolsManage() {
     } catch (error) {
       console.error("Error fetching roles:", error);
     }
-  }, [ShopId]);
+  }, [ShopId,isAuthenticated]);
 
   useEffect(() => {
+    if (isAuthenticated && hasViewPermission) {
+
     refreshRols();
-  }, [refreshRols]);
+  }}, [refreshRols,isAuthenticated,hasViewPermission]);
 
   // توابع افزودن و حذف مخاطب
   const handlerAddUserToRole = useCallback(async (UserId) => {
@@ -127,6 +209,8 @@ function RolsManage() {
 
   const handleDeleteRole = useCallback(async (RoleID) => {
     let res = await DeleteRole(RoleID);
+    console.log("res",res);
+    
     if (res.status === 200) {
       const updatedRoles = rols.filter((role) => role._id !== RoleID);
       setRols(updatedRoles);
@@ -138,7 +222,7 @@ function RolsManage() {
         return newCounts;
       });
     } else {
-      console.error("Error deleting role:", res.status);
+      toast.error(res.message);
     }
   }, [rols]);
 
@@ -188,6 +272,20 @@ function RolsManage() {
     // بعد از افزودن نقش جدید، باید تعداد مخاطبان آن نقش را نیز اضافه کنید
     await refreshRols();
   };
+    ///////////////////////////////////////
+    if (status === "loading" || permissionLoading) {
+      return <PermissionLoading BGImage={BGImage} />;
+    }
+  
+    if (!isAuthenticated) {
+      return <NotAuthenticated />;
+    }
+  
+    if (!hasViewPermission) {
+      return <NoPermission />;
+    }
+  
+    ///////////////////////////////////////////////
 
   return (
     <FormTemplate BGImage={BGImage}>
@@ -241,6 +339,8 @@ function RolsManage() {
         </div>
         <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
           <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت نقش ها</h1>
+          {hasAddPermission && 
+
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
             aria-label="add Shop"
@@ -248,6 +348,7 @@ function RolsManage() {
           >
             افزودن 
           </button>
+}
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 p-4 pb-16 justify-items-center max-h-[70vh] overflow-y-auto">
@@ -262,10 +363,18 @@ function RolsManage() {
               handleEditClick={() => handleEditClick(role)}
               handleAllContacts={handleAllContacts}
               ShopId
+              hasViewPermission={hasViewPermission}
+              hasAddPermission={hasAddPermission}
+              hasEditPermission={hasEditPermission}
+              hasDeletePermission={hasDeletePermission}
+
+
             />
           ))}
         </div>
       </div>
+      <Toaster />
+
     </FormTemplate>
   );
 }

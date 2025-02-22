@@ -1,7 +1,6 @@
 // app/products/ProductManage.jsx
 "use client";
-import { signIn, useSession } from "next-auth/react";
-
+import {  useSession } from "next-auth/react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddProduct from "./AddProduct";
 import React, { useState, useEffect, useCallback } from "react";
@@ -26,8 +25,6 @@ import Pagination from "./Pagination";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import FallbackImage from "@/utils/fallbackImage";
 import {  getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
-import SignIn from "@/templates/auth/signin";
-import Link from "next/link";
 import NotAuthenticated from "../rols/NotAuthenticated";
 import PermissionLoading from "../rols/PermissionLoading";
 import NoPermission from "../rols/NoPermission";

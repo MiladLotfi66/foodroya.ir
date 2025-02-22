@@ -12,7 +12,9 @@ import {
 } from "./SendMetodServerActions";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 
-function SendMetodCard({ sendMetod: initialSendMetod, editfunction, onDelete ,updateSendMetod }) {
+function SendMetodCard({ sendMetod: initialSendMetod, editfunction, onDelete ,updateSendMetod,hasAddPermission,
+  hasEditPermission,
+  hasDeletePermission }) {
     const { baseCurrency } = useShopInfoFromRedux();
   
   const [sendMetod, setSendMetod] = useState(initialSendMetod);
@@ -79,6 +81,8 @@ function SendMetodCard({ sendMetod: initialSendMetod, editfunction, onDelete ,up
         {/* دکمه‌های اقدام در بالای تصویر */}
         <div className="absolute top-2 left-2 right-2 flex justify-between items-center">
           <div className="flex gap-2">
+          {hasDeletePermission &&
+
             <button
               onClick={deleteFunc}
               className="p-2  bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-700 rounded-full shadow dark:shadow-gray-900"
@@ -86,7 +90,9 @@ function SendMetodCard({ sendMetod: initialSendMetod, editfunction, onDelete ,up
             >
               <DeleteSvg className="w-5 h-5 text-red-600" />
             </button>
-            
+  }
+            {hasEditPermission &&
+
             <button
               onClick={editfunction}
               className="p-2 bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-700 rounded-full shadow dark:shadow-gray-900"
@@ -94,7 +100,9 @@ function SendMetodCard({ sendMetod: initialSendMetod, editfunction, onDelete ,up
             >
               <EditSvg className="w-5 h-5 text-blue-600" />
             </button>
+  }
           </div>
+          {hasEditPermission &&
 
           <button
             onClick={sendMetod.SendMetodStatus ? disableFunc : enableFunc}
@@ -107,6 +115,7 @@ function SendMetodCard({ sendMetod: initialSendMetod, editfunction, onDelete ,up
               <EyeSvg className="w-5 h-5 text-gray-700" />
             )}
           </button>
+  }
         </div>
       </div>
 

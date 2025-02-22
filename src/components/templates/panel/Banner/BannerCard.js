@@ -11,7 +11,10 @@ import {
   DeleteBanners,
 } from "./BannerServerActions";
 
-function BannerCard({ banner: initialBanner, editfunction ,onDelete}) {
+function BannerCard({ banner: initialBanner, editfunction ,onDelete,hasAddPermission,
+  hasEditPermission,
+  hasDeletePermission
+  }) {
   const [banner, setBanner] = useState(initialBanner); // مدیریت وضعیت بنر
   
     useEffect(() => {
@@ -65,16 +68,19 @@ function BannerCard({ banner: initialBanner, editfunction ,onDelete}) {
       <div className="absolute top-2 right-2 z-20 p-2">
         <div className="flex items-center gap-2 child-hover:text-orange-300">
           {/* ///////////////////////////delete icone////////////////////////////////// */}
+          {hasDeletePermission &&
             <svg
-              width="34"
-              height="34"
-              className=" cursor-pointer "
-              aria-label="delete"
-              onClick={deleteFunc}
+            width="34"
+            height="34"
+            className=" cursor-pointer "
+            aria-label="delete"
+            onClick={deleteFunc}
             >
               <use href="#DeleteSvg"></use>
             </svg>
+            }
           {/* ///////////////////////////edit icone////////////////////////////////// */}
+          {hasEditPermission &&
 
             <svg
               width="34"
@@ -84,14 +90,15 @@ function BannerCard({ banner: initialBanner, editfunction ,onDelete}) {
               onClick={editfunction}
             >
               <use href="#EditSvg"></use>
-            </svg>
+            </svg>}
           {/* ///////////////////////////share icone////////////////////////////////// */}
             <svg width="34" height="34" className=" cursor-pointer" aria-label="share">
               <use href="#ShareSvg"></use>
             </svg>
           {/* ///////////////////////////enable disable icone////////////////////////////////// */}
 
-          {!banner.BannerStatus && (
+          {!banner.BannerStatus && hasEditPermission &&
+(
               <svg
                 width="34"
                 height="34"
@@ -102,7 +109,8 @@ function BannerCard({ banner: initialBanner, editfunction ,onDelete}) {
                 <use href="#EyeSvg"></use>
               </svg>
           )}
-          {banner.BannerStatus && (
+          {banner.BannerStatus &&  hasEditPermission &&
+(
               <svg
                 width="34"
                 height="34"

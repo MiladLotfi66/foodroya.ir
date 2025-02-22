@@ -6,7 +6,9 @@ import EditSvg from "@/module/svgs/EditSvg";
 import UserMiniInfo from "@/module/home/UserMiniInfo";
 import { DeleteContacts } from "./contactsServerActions";
 
-function ContactCard({ contact: initialContact, editFunction, onDelete, onError }) { // افزودن onError به props
+function ContactCard({ contact: initialContact, editFunction, onDelete, onError ,hasAddPermission,
+  hasEditPermission,
+  hasDeletePermission}) { // افزودن onError به props
   const [contact, setContact] = useState(initialContact);
 
   useEffect(() => {
@@ -68,6 +70,8 @@ function ContactCard({ contact: initialContact, editFunction, onDelete, onError 
         <div className="flex flex-col items-end space-y-2">
           {/* دکمه‌های عملیات */}
           <div className="flex gap-2">
+          {hasDeletePermission &&
+
             <button
               aria-label="حذف"
               className="text-red-500 hover:text-red-700"
@@ -75,6 +79,9 @@ function ContactCard({ contact: initialContact, editFunction, onDelete, onError 
             >
               <DeleteSvg />
             </button>
+  }
+            {hasEditPermission &&
+
             <button
               aria-label="ویرایش"
               className="text-blue-500 hover:text-blue-700"
@@ -82,7 +89,7 @@ function ContactCard({ contact: initialContact, editFunction, onDelete, onError 
             >
               <EditSvg />
             </button>
-           
+  }
           </div>
         </div>
       </div>

@@ -9,7 +9,9 @@ import {
 } from "./PriceTemplateActions";
 import { Toaster, toast } from "react-hot-toast";
 
-function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, onDelete }) {
+function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, onDelete ,hasAddPermission,
+  hasEditPermission,
+  hasDeletePermission}) {
   const [priceTemplate, setPriceTemplate] = useState(initialPriceTemplate); // مدیریت وضعیت قالب قیمتی
 
   useEffect(() => {
@@ -56,6 +58,8 @@ function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, 
         </div>
         <div className="flex items-center gap-2">
           {/* Delete Icon */}
+          {hasDeletePermission &&
+
           <svg
             width="24"
             height="24"
@@ -64,8 +68,10 @@ function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, 
             onClick={deleteFunc}
           >
             <use href="#DeleteSvg"></use>
-          </svg>
+          </svg>}
           {/* Edit Icon */}
+          {hasEditPermission &&
+
           <svg
             width="24"
             height="24"
@@ -75,6 +81,7 @@ function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, 
           >
             <use href="#EditSvg"></use>
           </svg>
+  }
           {/* Share Icon */}
           <svg
             width="24"

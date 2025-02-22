@@ -182,8 +182,18 @@ export async function AddRoleServerAction(RoleData) {
 }
 
 // ویرایش نقش
-export async function EditRole(RoleData , roleId) {
-  
+// تعریف ثابت برای عنوان نقش مدیر کل
+const MANAGER_ALL_ROLE_TITLE = "مدیر کل"; // اطمینان حاصل کنید که این عنوان دقیقاً با عنوان نقش مدیر کل در پایگاه داده شما مطابقت دارد
+
+// تابع مقایسه آرایه‌ها برای بررسی تغییرات در rolesPermissions
+const arraysEqual = (a, b) => {
+  if (a.length !== b.length) return false;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((value, index) => value === sortedB[index]);
+};
+
+export async function EditRole(RoleData, roleId) {
   try {
     await connectDB();
     let userData;
@@ -194,26 +204,43 @@ export async function EditRole(RoleData , roleId) {
       console.log("Authentication failed:", authError);
     }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
-   
-    if (!roleId) {
-      throw new Error("آی‌دی نقش ارسال نشده است");
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
     }
+
+    if (!roleId) {
+      return { status: 400, message: "آی‌دی نقش ارسال نشده است." };
+    }
+
     const Role = await RolePerimision.findById(roleId);
 
     if (!Role) {
-      throw new Error("نقشی با این آی‌دی یافت نشد");
+      return { status: 404, message: "نقشی با این آی‌دی یافت نشد." };
     }
 
+    // بررسی دسترسی کاربر
     if (!await hasContactAccess(Role.CreatedBy)) {
-      throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
+      return { status: 403, message: "شما دسترسی لازم برای این عملیات را ندارید." };
     }
 
+    // بررسی و جلوگیری از تغییر rolesPermissions برای نقش "مدیر کل"
+    if (Role.RoleTitle === MANAGER_ALL_ROLE_TITLE) {
+      if ('rolesPermissions' in RoleData) {
+        if (!arraysEqual(RoleData.rolesPermissions, Role.rolesPermissions)) {
+          return { 
+            status: 400, 
+            message: 'نقش مدیر کل قابل تغییر در قسمت نقش‌ها نیست.' 
+          };
+        }
+        // حذف rolesPermissions از RoleData تا از تغییرات جلوگیری شود
+        delete RoleData.rolesPermissions;
+      }
+    }
+
+    // اعتبارسنجی داده‌ها
     const validatedData = await RoleSchema.validate(
       {
-        RoleTitle: RoleData.RoleTitle ,
+        RoleTitle: RoleData.RoleTitle,
         RoleStatus: RoleData.RoleStatus,
         bannersPermissions: RoleData.bannersPermissions,
         rolesPermissions: RoleData.rolesPermissions,  
@@ -234,17 +261,24 @@ export async function EditRole(RoleData , roleId) {
       { abortEarly: false }
     );
 
+    // اگر نقش مدیر کل بود، مطمئن شوید که rolesPermissions حذف شده‌اند از داده‌های به‌روز شده
+    if (Role.RoleTitle === MANAGER_ALL_ROLE_TITLE) {
+      delete validatedData.rolesPermissions;
+    }
+
     const updatedRole = {
       ...validatedData,
       LastEditedBy: userData.id,
     };
 
     await RolePerimision.findByIdAndUpdate(roleId, updatedRole, { new: true });
-    return { message: "ویرایش نقش با موفقیت انجام شد", status: 200 };
+    return { message: "ویرایش نقش با موفقیت انجام شد.", status: 200 };
   } catch (error) {
-    return { error: error.message, status: 500 };
+    console.error("خطا در ویرایش نقش:", error);
+    return { error: error.message || "خطای سرور.", status: 500 };
   }
 }
+
 
 // حذف نقش
 export async function DeleteRole(RoleID) {
@@ -262,15 +296,18 @@ export async function DeleteRole(RoleID) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   
-    const Role = await RolePerimision.findById(RoleID);
+  const Role = await RolePerimision.findById(RoleID);
 
-    if (!Role) {
-      throw new Error("نقش مورد نظر یافت نشد");
-    }
+  if (!Role) {
+    return { status: 404, message: "نقش مورد نظر یافت نشد." };
+  }
 
-    if (!await hasContactAccess(Role.CreatedBy)) {
-      throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
-    }
+  // بررسی اینکه نقش مدیر کل نباید حذف شود
+  // فرض می‌کنیم فیلد نام نقش 'name' باشد، در صورت نیاز تغییر دهید
+  if (Role.RoleTitle === 'مدیر کل') { // یا هر نام دیگری که برای نقش مدیر کل استفاده می‌کنید
+    return { status: 400, message: 'نقش مدیر کل قابل حذف نیست.' };
+  }
+
 
     await RolePerimision.deleteOne({ _id: RoleID });
 
@@ -770,7 +807,6 @@ export async function CheckUserPermissionInShop(shopId, accessName, actionName) 
 }
 
 export async function getUserPermissionInShopAccessList(shopId, accessName) {
-  console.log("shopId, accessName", shopId, accessName);
   
   // اتصال به دیتابیس
   await connectDB();
@@ -787,7 +823,6 @@ export async function getUserPermissionInShopAccessList(shopId, accessName) {
       .populate('RolesId') // پرpopulate کردن نقش‌ها
       .select('RolesId') // انتخاب فقط فیلد RolesId
       .lean();
-    console.log("contacts", contacts);
 
     if (contacts.length === 0) {
       return { status: 403, message: 'کاربر در این فروشگاه نقشی ندارد.' };
@@ -795,7 +830,6 @@ export async function getUserPermissionInShopAccessList(shopId, accessName) {
 
     // استخراج نقش‌ها از مخاطب‌ها
     const roles = contacts.flatMap(contact => contact.RolesId);
-    console.log("roles", roles);
 
     if (roles.length === 0) {
       return { status: 403, message: 'کاربر هیچ نقشی در این فروشگاه ندارد.' };
@@ -810,7 +844,6 @@ export async function getUserPermissionInShopAccessList(shopId, accessName) {
         role[accessName].forEach(permission => permissionsSet.add(permission));
       }
     }
-    console.log("collectedPermissions", Array.from(permissionsSet));
 
     const hasPermission = Array.from(permissionsSet);
 

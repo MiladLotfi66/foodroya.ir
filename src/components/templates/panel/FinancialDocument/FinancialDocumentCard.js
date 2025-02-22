@@ -14,7 +14,10 @@ function FinancialDocumentCard({
   editFunction,
   onDelete,
   ShopId,
-  onError
+  onError,
+  hasAddPermission,
+  hasEditPermission,
+  hasDeletePermission
 }) {
   const [financialDocument, setFinancialDocument] = useState(
     initialFinancialDocument
@@ -97,6 +100,8 @@ function FinancialDocumentCard({
         </div>
         <div className="flex items-center gap-2">
           {/* Delete Icon */}
+          {hasDeletePermission &&
+
           <svg
             width="24"
             height="24"
@@ -106,7 +111,10 @@ function FinancialDocumentCard({
           >
             <use href="#DeleteSvg"></use>
           </svg>
+}
           {/* Edit Icon */}
+          {hasEditPermission &&
+
           <svg
             width="24"
             height="24"
@@ -116,6 +124,7 @@ function FinancialDocumentCard({
           >
             <use href="#EditSvg"></use>
           </svg>
+}
         </div>
       </div>
 

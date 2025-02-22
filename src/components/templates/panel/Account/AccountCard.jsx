@@ -28,6 +28,9 @@ function AccountCard({
   onAccountClick = () => {},
   onToggleSelect,
   isSelected,
+hasAddPermission,
+hasEditPermission,
+hasDeletePermission
 }) {
   const [account, setAccount] = useState(initialAccount);
 
@@ -267,7 +270,7 @@ function AccountCard({
   </div>
         <div className="flex items-center gap-1 md:gap-2 mt-2 md:mt-0">
                       {/* Delete Icon */}
-          {!account.isSystem && (
+          {!account.isSystem && hasDeletePermission &&(
             <svg
               width="24"
               height="24"
@@ -279,7 +282,7 @@ function AccountCard({
             </svg>
           )}
           {/* Edit Icon */}
-          {!account.isSystem && (
+          {!account.isSystem && hasEditPermission &&(
             <svg
               width="24"
               height="24"
@@ -291,7 +294,7 @@ function AccountCard({
             </svg>
           )}
           {/* Enable/Disable Icon */}
-          {!account.isSystem &&
+          {!account.isSystem && hasEditPermission &&
             (account.accountStatus === "فعال" ? (
               <svg
                 width="24"
@@ -314,8 +317,6 @@ function AccountCard({
               </svg>
             ))}
           </div>
-        
-
 
         </div>
       <Toaster />

@@ -203,7 +203,7 @@ const permissionsConfig = [
     ],
   },
   {
-    title: "فاکتور خرید",
+    title: "فاکتور برگشت از خرید",
     permissions: purchaseReturnInvoicesPermissionState,
     setPermissions: setPurchaseReturnInvoicesPermissionState,
     icons: [
@@ -214,7 +214,7 @@ const permissionsConfig = [
     ],
   },
   {
-    title: "فاکتور فروش",
+    title: "فاکتور برگشت از فروش",
     permissions: saleReturnInvoicesPermissionState,
     setPermissions: setSaleReturnInvoicesPermissionState,
     icons: [
@@ -253,7 +253,6 @@ const permissionsConfig = [
 
 
   const formSubmitting = async (formData) => {
-    console.log("formData",formData);
     
     setIsSubmit(true);
   
@@ -282,7 +281,7 @@ const permissionsConfig = [
       onClose();      // بستن پنجره مودال
 
       } else {
-        toast.error(res.error || "خطایی رخ داده است");
+        toast.error(res.message || "خطایی رخ داده است");
       }
     } catch (error) {
       toast.error(error.message || "خطایی در ارسال درخواست به سرور رخ داد");
