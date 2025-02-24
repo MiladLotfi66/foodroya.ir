@@ -12,10 +12,17 @@ import { INVOICE_TYPES } from "./invoiceTypes"; // وارد کردن انواع 
 import getProductPrice from "./getProductPrice";
 import { calculateProductCost } from "./invoiceItemsServerActions";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+////////////////////accessibility//////////
+import { useSession } from "next-auth/react";
+import { getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
+import NotAuthenticated from "../rols/NotAuthenticated";
+import PermissionLoading from "../rols/PermissionLoading";
+import NoPermission from "../rols/NoPermission";
+////////////////////////////////
 
 function AddInvoice({ invoiceType }) {
-      const { baseCurrency } = useShopInfoFromRedux();
-  
+ 
+  const { baseCurrency } = useShopInfoFromRedux();
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [isOpenAddInvoiceItem, setIsOpenAddInvoiceItem] = useState(false);
   const [selectedInvoiceItem, setSelectedInvoiceItem] = useState(null);
@@ -36,8 +43,82 @@ function AddInvoice({ invoiceType }) {
      } = useShopInfoFromRedux();
   const ShopId  = currentShopId;
    const BGImage=shopPanelImage;
-
+         ////////////////accessibility///////////////////
+         const { data: session, status } = useSession();
+         const isAuthenticated = status === "authenticated";
+       
+         const [hasViewPermission, setHasViewPermission] = useState(null);
+         const [hasAddPermission, setHasAddPermission] = useState(null);
+         const [hasEditPermission, setHasEditPermission] = useState(null);
+         const [hasDeletePermission, setHasDeletePermission] = useState(null);
+         const [permissionLoading, setPermissionLoading] = useState(true);
+         const getPermissionKeyByInvoiceType = (invoiceType) => {
+          switch (invoiceType) {
+            case INVOICE_TYPES.PURCHASE:
+              return "purchaseInvoicesPermissions";
+            case INVOICE_TYPES.SALE:
+              return "saleInvoicesPermissions";
+            case INVOICE_TYPES.PURCHASE_RETURN:
+              return "purchaseReturnInvoicesPermissions";
+            case INVOICE_TYPES.SALE_RETURN:
+              return "saleReturnInvoicesPermissions";
+              case INVOICE_TYPES.WASTE:
+                return "wasteInvoicesPermissions";
+          }
+        };
+         const checkViewPermission = useCallback(async () => {
+           if (!isAuthenticated) {
+             setPermissionLoading(false);
+             return;
+           }
+           if (!ShopId) {
+             // اگر ShopId موجود نیست، منتظر بمانید تا مقداردهی شود
+             return;
+           }
+           setPermissionLoading(true); // شروع بارگذاری مجدد
+           try {
+            const permissionKey = getPermissionKeyByInvoiceType(invoiceType);
+            const response = await getUserPermissionInShopAccessList(ShopId, permissionKey);
+             if (response.status === 200) {
+               // بررسی اینکه آیا دسترسی view در آرایه hasPermission وجود دارد
+              //  setHasViewPermission(response.hasPermission.includes("view"));
+               setHasAddPermission(response.hasPermission.includes("add"));
+              //  setHasEditPermission(response.hasPermission.includes("edit"));
+              //  setHasDeletePermission(response.hasPermission.includes("delete"));
+             } else {
+               console.error("خطا در بررسی دسترسی:", response.message);
+              //  setHasViewPermission(false);
+               setHasAddPermission(false);
+              //  setHasEditPermission(false);
+              //  setHasDeletePermission(false);
+             }
+           } catch (error) {
+             console.error("Error checking view permission:", error);
+            //  setHasViewPermission(false);
+             setHasAddPermission(false);
+            //  setHasEditPermission(false);
+            //  setHasDeletePermission(false);
+             toast.error("خطا در بررسی دسترسی.");
+           } finally {
+             setPermissionLoading(false);
+           }
+         }, [ShopId, isAuthenticated]);
+       
+         useEffect(() => {
+           if (isAuthenticated) {
+             // بارگذاری دسترسی‌ها زمانی که احراز هویت انجام شده
+             checkViewPermission();
+           } else {
+             // اگر احراز هویت نشده باشد، مطمئن شوید که وضعیت بارگذاری تنظیم شده است
+             setPermissionLoading(false);
+           }
+         }, [checkViewPermission, isAuthenticated]);
+       
+       ///////////////////////////////
+       
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const fetchContacts = async () => {
       try {
         const response = await GetAllContacts(ShopId);
@@ -48,10 +129,12 @@ function AddInvoice({ invoiceType }) {
     };
 
     fetchContacts();
-  }, [ShopId]);
+  }, [ShopId,isAuthenticated]);
 
   // استفاده از useEffect برای بروز رسانی قیمت‌ها هنگام تغییر مخاطب
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const updatePrices = async () => {
       if (!selectedContact || invoiceItems?.length === 0) return;
   
@@ -103,7 +186,7 @@ function AddInvoice({ invoiceType }) {
     };
   
     updatePrices();
-  }, [selectedContact, invoiceItems?.length, invoiceType]);
+  }, [isAuthenticated,selectedContact, invoiceItems?.length, invoiceType]);
     
   const handleAddNewInvoiceItem = useCallback(async (newInvoiceItem) => {
     if (!selectedContact) 
@@ -236,7 +319,20 @@ function AddInvoice({ invoiceType }) {
         return "فاکتور";
     }
   };
-
+    ///////////////////////////////////////
+    if (status === "loading" || permissionLoading) {
+      return <PermissionLoading BGImage={BGImage} />;
+    }
+  
+    if (!isAuthenticated) {
+      return <NotAuthenticated />;
+    }
+  
+    if (!hasAddPermission) {
+      return <NoPermission />;
+    }
+  
+    ///////////////////////////////////////////////
   return (
     <FormTemplate BGImage={BGImage}>
       {isOpenAddInvoiceItem && (
@@ -258,7 +354,6 @@ function AddInvoice({ invoiceType }) {
               initialParentAccountId={lastParentAccountId}
               onPathChange={setLastPath}
               onParentAccountIdChange={setLastParentAccountId}
-
             />
           </div>
         </div>
