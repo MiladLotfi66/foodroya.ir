@@ -22,6 +22,10 @@ export async function AddRoleToContact(ContactId, ShopId, RoleId) {
     if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"rolesPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی به ویرایش را ندارید' };
+     } 
 
     // احراز هویت کاربر
     let userData;
@@ -104,6 +108,11 @@ export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
     if (!result) {
       throw new Error('Record not found');
     }
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"rolesPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی به ویرایش را ندارید' };
+     } 
+
 
     // بروزرسانی Contact.RolesId
     await Contact.findByIdAndUpdate(
@@ -149,6 +158,11 @@ export async function AddRoleServerAction(RoleData) {
     if (!ShopId) {
       throw new Error("shopId is required in RoleData");
     }
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"rolesPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
+
 
     let userData;
     try {
@@ -181,7 +195,6 @@ export async function AddRoleServerAction(RoleData) {
   }
 }
 
-// ویرایش نقش
 // تعریف ثابت برای عنوان نقش مدیر کل
 const MANAGER_ALL_ROLE_TITLE = "مدیر کل"; // اطمینان حاصل کنید که این عنوان دقیقاً با عنوان نقش مدیر کل در پایگاه داده شما مطابقت دارد
 
@@ -217,6 +230,10 @@ export async function EditRole(RoleData, roleId) {
     if (!Role) {
       return { status: 404, message: "نقشی با این آی‌دی یافت نشد." };
     }
+    const hasAccess=await CheckUserPermissionInShop(Role.ShopId,"rolesPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // بررسی دسترسی کاربر
     if (!await hasContactAccess(Role.CreatedBy)) {
@@ -301,6 +318,10 @@ export async function DeleteRole(RoleID) {
   if (!Role) {
     return { status: 404, message: "نقش مورد نظر یافت نشد." };
   }
+  const hasAccess=await CheckUserPermissionInShop(Role.ShopId,"rolesPermissions","delete")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
 
   // بررسی اینکه نقش مدیر کل نباید حذف شود
   // فرض می‌کنیم فیلد نام نقش 'name' باشد، در صورت نیاز تغییر دهید
@@ -338,6 +359,10 @@ export async function EnableRole(RoleID) {
     if (!Role) {
       throw new Error("نقشی با این آی‌دی یافت نشد");
     }
+    const hasAccess=await CheckUserPermissionInShop(Role.ShopId,"rolesPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     if (!await hasContactAccess(Role.CreatedBy)) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
@@ -376,6 +401,10 @@ export async function DisableRole(RoleID) {
     if (!Role) {
       throw new Error("نقشی با این آی‌دی یافت نشد");
     }
+    const hasAccess=await CheckUserPermissionInShop(Role.ShopId,"rolesPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     if (!await hasContactAccess(Role.CreatedBy)) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
@@ -798,7 +827,7 @@ export async function CheckUserPermissionInShop(shopId, accessName, actionName) 
     if (hasPermission) {
       return { status: 200, hasPermission: true, message: 'دسترسی تأیید شده است.' };
     } else {
-      return { status: 200, hasPermission: false, message: 'دسترسی rad نشده است.' };
+      return { status: 200, hasPermission: false, message: 'دسترسی تایید نشده است.' };
     }
   } catch (error) {
     console.error("Error checking user permission in shop:", error);

@@ -8,6 +8,7 @@ import RolePerimision from "../rols/rolePerimision";
 import RoleInShop from "../rols/RoleInShop";
 import mongoose from "mongoose";
 import { p2e } from "@/utils/ReplaceNumber";
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 
 function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
@@ -74,6 +75,11 @@ if (!user) {
     roles // دریافت نقش‌ها
   } = Object.fromEntries(formData.entries());
   // پردازش نقش‌ها (اگر به صورت چندگانه ارسال شده‌اند)
+      const hasAccess=await CheckUserPermissionInShop(ShopId,"contactsPermissions","add")
+      if (!hasAccess.hasPermission) {
+         return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+       } 
+  
   const rolesArray = formData.getAll('roles'); // دریافت تمام نقش‌ها به صورت آرایه
 
   // اعتبارسنجی نقش‌ها
@@ -202,6 +208,11 @@ export async function EditContactAction(formData) {
     ShopId,
     roles // دریافت نقش‌ها
   } = Object.fromEntries(formData.entries());
+
+  const hasAccess=await CheckUserPermissionInShop(ShopId,"contactsPermissions","edit")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
 
   // پردازش نقش‌ها (اگر به صورت چندگانه ارسال شده‌اند)
   const rolesArray = formData.getAll('roles'); // دریافت تمام نقش‌ها به صورت آرایه
@@ -396,6 +407,10 @@ export async function DeleteContacts(contactId) {
     if (!result) {
       return { status: 404, message: 'مخاطب یافت نشد.' };
     }
+      const hasAccess=await CheckUserPermissionInShop(result.shop,"contactsPermissions","delete")
+      if (!hasAccess.hasPermission) {
+         return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+       } 
 
     // حذف نقش‌های مرتبط در RoleInShop
     await RoleInShop.deleteMany({ ContactId: contactId }).session(session).exec();

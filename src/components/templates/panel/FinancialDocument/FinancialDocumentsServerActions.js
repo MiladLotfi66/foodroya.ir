@@ -78,7 +78,10 @@ export async function AddFinancialDocumentAction(data) {
       message: 'کاربر وارد نشده است'
     };
   }
-
+  const hasAccess=await CheckUserPermissionInShop(data.ShopId,"financialDocumentsPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
   // شروع جلسه تراکنش
   const session = await mongoose.startSession();
   let result; // متغیری برای ذخیره نتیجه تراکنش
@@ -101,6 +104,7 @@ export async function AddFinancialDocumentAction(data) {
       }
 
       const userId = user.id;
+  
 
       // ایجاد دفتر کل درون تراکنش
       const ledger = new Ledger({
@@ -217,6 +221,10 @@ export async function EditFinancialDocumentAction(data, shopId) {
       message: 'کاربر وارد نشده است'
     };
   }
+  const hasAccess=await CheckUserPermissionInShop(shopId,"financialDocumentsPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
   const session = await mongoose.startSession();
 
@@ -384,7 +392,10 @@ export async function DeleteFinancialDocuments(financialDocumentId, shopId) {
   if (!user) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
-
+  const hasAccess=await CheckUserPermissionInShop(shopId,"financialDocumentsPermissions","delete")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
   const session = await mongoose.startSession();
   session.startTransaction();
 

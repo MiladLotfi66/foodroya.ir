@@ -11,6 +11,7 @@ import { createAccount } from "../Account/accountActions";
 import Feature from "./Feature";
 import Tag from "./Tag";
 import { updateAccountBySession } from "../Account/accountActions";
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 
 function simplifyData(data) {
   if (Array.isArray(data)) {
@@ -59,7 +60,10 @@ export async function DeleteProducts(productId, accountId) {
       session.endSession();
       return { status: 404, message: "محصول پیدا نشد." };
     }
-
+    const hasAccess=await CheckUserPermissionInShop(product.ShopId,"productsPermissions","delete")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
     // بررسی وجود تراکنش‌های مالی مرتبط با حساب محصول
     const transactions = await GeneralLedger.find({
       account: accountId,
@@ -147,6 +151,11 @@ export async function EnableProductAction(productId) {
     if (!updatedProduct) {
       return { status: 404, message: "محصول پیدا نشد." };
     }
+    const hasAccess=await CheckUserPermissionInShop(updatedProduct.ShopId,"productsPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
+
     const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
     return { status: 200, message: "محصول فعال شد.", product: plainProduct };
   } catch (error) {
@@ -175,6 +184,10 @@ export async function DisableProductAction(productId) {
     if (!updatedProduct) {
       return { status: 404, message: "محصول پیدا نشد." };
     }
+    const hasAccess=await CheckUserPermissionInShop(updatedProduct.ShopId,"productsPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
     return { status: 200, message: "محصول غیرفعال شد.", product: plainProduct };
@@ -351,6 +364,10 @@ export async function AddProductAction(formData) {
     const isMergeable = formData.get("isMergeable") === "true";
     const description = formData.get("description");
     const price = formData.get("price");
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"productsPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // اعتبارسنجی فیلدهای الزامی
     if (!title || !unit || !ShopId) {
@@ -528,6 +545,10 @@ export async function EditProductAction(formData, ShopId) {
     if (!existingProduct) {
       return { status: 404, message: "محصول یافت نشد." };
     }
+    const hasAccess=await CheckUserPermissionInShop(existingProduct.ShopId,"productsPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // شروع نشست تراکنش
     const session = await mongoose.startSession();

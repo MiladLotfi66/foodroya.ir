@@ -4,6 +4,7 @@ import connectDB from "@/utils/connectToDB";
 import PriceTemplate from "./PriceTemplate";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import mongoose from 'mongoose';
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 
 
 
@@ -62,7 +63,11 @@ export async function GetAllPriceTemplates(ShopId) {
     
     const { title, defaultFormula, status, pricingFormulas,ShopId } = formData
 
-  
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"priceTemplatesPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
+
 
     // بررسی یکتایی عنوان
     const existingTitlePriceTemplate = await PriceTemplate.findOne({ title, shop:ShopId }).lean();
@@ -114,6 +119,11 @@ if (!user) {
   if (!priceTemplate) {
       return { status: 404, message: 'قالب قیمتی پیدا نشد.' };
   }
+  const hasAccess=await CheckUserPermissionInShop(priceTemplate.shop,"priceTemplatesPermissions","edit")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
+
 
   // ساخت آبجکت برای به‌روزرسانی
   const updateData = {};
@@ -148,13 +158,22 @@ export async function DeletePriceTemplates(priceTemplateId) {
 if (!user) {
   return { status: 401, message: 'کاربر وارد نشده است.' };
 }
+const priceTemplate = await PriceTemplate.findById(priceTemplateId).lean();
+if (!priceTemplate) {
+    return { status: 404, message: 'قالب قیمتی پیدا نشد.' };
+}
 
+const hasAccess=await CheckUserPermissionInShop(priceTemplate.shop,"priceTemplatesPermissions","delete")
+if (!hasAccess.hasPermission) {
+   return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+ } 
 
   try {
       const deletedPriceTemplate = await PriceTemplate.findByIdAndDelete(priceTemplateId).lean();
       if (!deletedPriceTemplate) {
           return { status: 404, message: 'قالب قیمتی پیدا نشد.' };
       }
+
       return { status: 200, message: 'قالب قیمتی با موفقیت حذف شد.' };
   } catch (error) {
       console.error("Error deleting PriceTemplate:", error);

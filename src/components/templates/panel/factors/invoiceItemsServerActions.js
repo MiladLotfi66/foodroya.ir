@@ -9,6 +9,7 @@ import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import Product from "../Product/Product";
 import Account from "../Account/Account";
 import { GetAccountIdBystoreIdAndAccountCode } from "../Account/accountActions";
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 
 // توابع کمکی
 export async function getAuthenticatedUser() {
@@ -332,6 +333,10 @@ export async function AddSalesInvoiceAction(invoiceData) {
         (acc, item) => acc + item.quantity,
         0
       );
+      const hasAccess=await CheckUserPermissionInShop(invoiceData.storeId,"saleInvoicesPermissions","add")
+      if (!hasAccess.hasPermission) {
+         return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+       } 
 
       const invoice = new Invoice({
         description: invoiceData.description || "",
@@ -430,6 +435,11 @@ export async function AddPurchaseReturnAction(invoiceData) {
         (acc, item) => acc + item.quantity,
         0
       );
+
+      const hasAccess=await CheckUserPermissionInShop(invoiceData.storeId,"purchaseReturnInvoicesPermissions","add")
+      if (!hasAccess.hasPermission) {
+         return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+       } 
 
       const invoice = new Invoice({
         description: invoiceData.description || "",
@@ -639,6 +649,10 @@ export async function AddPurchaseInvoiceAction(invoiceData) {
   }
 
   const session = await mongoose.startSession();
+  const hasAccess=await CheckUserPermissionInShop(invoiceData.storeId,"purchaseInvoicesPermissions","add")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
 
   try {
     const result = await session.withTransaction(async () => {
@@ -876,6 +890,34 @@ export async function deleteInvoiceAction(invoiceId) {
       throw new Error("فاکتور مورد نظر یافت نشد.");
     }
 
+let hasAccess;
+    switch(invoice.type) {
+      case "Purchase":
+         hasAccess=await CheckUserPermissionInShop(invoice.shop,"purchaseInvoicesPermissions","add")
+      
+            break;
+      case  "Sale":
+         hasAccess=await CheckUserPermissionInShop(invoice.shop,"saleInvoicesPermissions","add")
+       
+        break;
+        case "PurchaseReturn":
+           hasAccess=await CheckUserPermissionInShop(invoice.shop,"purchaseReturnInvoicesPermissions","add")
+         
+          break;
+        case   "SaleReturn":
+          hasAccess=await CheckUserPermissionInShop(invoice.shop,"saleReturnInvoicesPermissions","add")
+              
+             break;
+        case   "Waste":
+          hasAccess=await CheckUserPermissionInShop(invoice.shop,"wasteInvoicesPermissions","add")
+         
+                   break;
+    }
+
+    if (!hasAccess.hasPermission) {
+      return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+    } 
+  
     // ۲. دریافت اقلام فاکتور
     const invoiceItems = await InvoiceItem.find({ invoice: invoiceId }).session(
       session
@@ -1151,6 +1193,13 @@ export async function AddWasteAction(invoiceData) {
         (acc, item) => acc + item.totalPrice,
         0
       );
+
+      const hasAccess=await CheckUserPermissionInShop(invoiceData.storeId,"wasteInvoicesPermissions","add")
+      if (!hasAccess.hasPermission) {
+         return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+       } 
+
+
 
       const invoice = new Invoice({
         description: invoiceData.description || "",

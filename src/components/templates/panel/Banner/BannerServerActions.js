@@ -5,6 +5,7 @@ import connectDB from "@/utils/connectToDB";
 import BannerSchima from "@/utils/yupSchemas/BannerSchima";
 import BannerSchema from "@/utils/yupSchemas/BannerSchima";
 import { deleteOldImage, processAndSaveImage } from "@/utils/ImageUploader";
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 
 async function BannerServerEnableActions(BannerID) {
   try {
@@ -12,10 +13,16 @@ async function BannerServerEnableActions(BannerID) {
     // یافتن بنر با استفاده از BannerID
     const banner = await Banner.findById(BannerID);
 
+    
+    
     if (!banner) {
       // اگر بنر پیدا نشد، پرتاب خطا
       throw new Error("بنر مورد نظر یافت نشد");
     }
+    const hasAccess=await CheckUserPermissionInShop(banner.ShopId,"bannersPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // تغییر وضعیت بنر به true
     banner.BannerStatus = true;
@@ -42,6 +49,10 @@ async function BannerServerDisableActions(BannerID) {
       // اگر بنر پیدا نشد، پرتاب خطا
       throw new Error("بنر مورد نظر یافت نشد");
     }
+    const hasAccess=await CheckUserPermissionInShop(banner.ShopId,"bannersPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // تغییر وضعیت بنر به true
     banner.BannerStatus = false;
@@ -117,6 +128,10 @@ async function DeleteBanners(BannerID) {
       return { message: "بنر مورد نظر یافت نشد", status: 500 };
 
     }
+    const hasAccess=await CheckUserPermissionInShop(banner.ShopId,"bannersPermissions","delete")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // مسیر فایل تصویر بنر
 
@@ -156,6 +171,10 @@ export async function AddBannerAction(data) {
 
     
     const ShopId = formDataObject.ShopId;
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"bannersPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // اعتبارسنجی داده‌های ورودی
     const validatedData = await BannerSchima.validate(formDataObject, {
@@ -216,6 +235,10 @@ export async function EditBannerAction(data,ShopId) {
       console.error("Banner not found");
       return { status: 404, message: "بنری با این آی‌دی یافت نشد" };
     }
+    const hasAccess=await CheckUserPermissionInShop(banner.ShopId,"bannersPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     const validatedData = await BannerSchema.validate(formDataObject, {
       abortEarly: false,

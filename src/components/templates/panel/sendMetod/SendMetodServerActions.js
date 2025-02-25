@@ -5,6 +5,7 @@ import connectDB from "@/utils/connectToDB";
 import SendMetodSchema from "./SendMetodSchema";
 import { deleteOldImage, processAndSaveImage } from "@/utils/ImageUploader";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 
 async function SendMetodServerEnableActions(SendMetodID) {
   try {
@@ -16,6 +17,10 @@ async function SendMetodServerEnableActions(SendMetodID) {
       // اگر روش ارسال پیدا نشد، پرتاب خطا
       throw new Error("روش ارسال مورد نظر یافت نشد");
     }
+    const hasAccess=await CheckUserPermissionInShop(sendMetod.ShopId,"sendMethodPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // تغییر وضعیت روش ارسال به true
     sendMetod.SendMetodStatus = true;
@@ -42,6 +47,10 @@ async function SendMetodServerDisableActions(SendMetodID) {
       // اگر روش ارسال پیدا نشد، پرتاب خطا
       throw new Error("روش ارسال مورد نظر یافت نشد");
     }
+    const hasAccess=await CheckUserPermissionInShop(sendMetod.ShopId,"sendMethodPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // تغییر وضعیت روش ارسال به true
     sendMetod.SendMetodStatus = false;
@@ -122,6 +131,10 @@ async function DeleteSendMetods(SendMetodID) {
       return { message: "روش ارسال مورد نظر یافت نشد", status: 500 };
 
     }
+    const hasAccess=await CheckUserPermissionInShop(sendMetod.ShopId,"sendMethodPermissions","delete")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // مسیر فایل تصویر روش ارسال
 
@@ -181,6 +194,11 @@ export async function AddSendMetodAction(formData) {
 
     const imageUrl = await processAndSaveImage(imageField,null,`/Uploads/Shop/images/${ShopId}/SendMetods`,);
     // ساخت سند جدید در مدل SendMetod
+    const hasAccess=await CheckUserPermissionInShop(ShopId,"sendMethodPermissions","add")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
+
     const newSendMetod = new SendMetod({
       ShopId,
       Title,
@@ -229,6 +247,10 @@ export async function EditSendMetodAction(formData) {
     if (!existingSendMetod) {
       return { status: 404, message: "روش ارسال مورد نظر یافت نشد." };
     }
+    const hasAccess=await CheckUserPermissionInShop(existingSendMetod.ShopId,"sendMethodPermissions","edit")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
 
     // استخراج اطلاعات جدید از formData
     // توجه کنید که فیلد ShopId معمولاً ثابت است و نباید تغییر کند؛ بنابراین نیازی به بروزرسانی آن نیست.

@@ -12,7 +12,8 @@ import FeatureKey from "../Product/FeatureKey";
 // import Currency from "../Currency/Currency";
 import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-import { copyImage, downloadAndUploadImage } from "@/utils/ImageUploader";
+import { copyImage } from "@/utils/ImageUploader";
+import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
 // ایجاد حساب جدید
 export async function createAccount(data, session = null) {
   await connectDB();
@@ -27,7 +28,13 @@ export async function createAccount(data, session = null) {
     if (!userData) {
       return { status: 401, message: 'کاربر وارد نشده است.' };
     }
+    
     const { _id, title, accountType, accountStatus, parentAccount, store, contact, creditLimit, posConected, bankAcountNumber, bankCardNumber, productId} = data;
+    const hasAccess=await CheckUserPermissionInShop(store,"accountsPermissions","add")
+if (!hasAccess.hasPermission) {
+  return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+
+}    
     let accountCode = "";
     let parent = "";
     if (parentAccount) {
@@ -112,7 +119,6 @@ export async function createAccount(data, session = null) {
   }
 }
 export async function updateAccount(id, data) {
-  console.log(id, data);
   
   await connectDB();
   try {
@@ -128,19 +134,24 @@ export async function updateAccount(id, data) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   
-
+  
     const existingAccount = await Account.findById(id).lean();
     if (!existingAccount) {
       return { success: false, message: "حساب یافت نشد." };
     }
-
+    
+    
     if (existingAccount.isSystem) {
       return {
         success: false,
         message: "امکان ویرایش حساب‌های سیستمی وجود ندارد.",
       };
     }
-
+    
+    const hasAccess=await CheckUserPermissionInShop(existingAccount.store,"accountsPermissions","edit")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
     // ایجاد آبجکت برای $set و $unset
     const updateFields = {};
     const unsetFields = {};
@@ -229,6 +240,7 @@ export async function updateAccount(id, data) {
 
 
 export async function updateAccountBySession(accountId, accountData, session) {
+  
   try {
     const updatedAccount = await Account.findByIdAndUpdate(
       accountId,
@@ -263,7 +275,11 @@ export async function deleteAccount(id) {
         message: "امکان حذف حساب‌های سیستمی وجود ندارد.",
       };
     }
-
+    const hasAccess=await CheckUserPermissionInShop(existingAccount.store,"accountsPermissions","delete")
+    if (!hasAccess.hasPermission) {
+       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+     } 
+  
     // بررسی وجود زیرحساب‌ها قبل از حذف (اختیاری)
     const childAccounts = await Account.find({ parentAccount: id });
     if (childAccounts.length > 0) {
@@ -299,7 +315,11 @@ export async function activateAccount(id) {
           message: "امکان تغییر وضعیت حساب‌های سیستمی وجود ندارد.",
         };
       }
-  
+      const hasAccess=await CheckUserPermissionInShop(existingAccount.store,"accountsPermissions","edit")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
+
       existingAccount.accountStatus = "فعال";
       await existingAccount.save();
   
@@ -348,6 +368,10 @@ export async function deactivateAccount(id) {
         message: "امکان تغییر وضعیت حساب‌های سیستمی وجود ندارد.",
       };
     }
+    const hasAccess=await CheckUserPermissionInShop(existingAccount.store,"accountsPermissions","edit")
+  if (!hasAccess.hasPermission) {
+     return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+   } 
 
     existingAccount.accountStatus = "غیر فعال";
     await existingAccount.save();
@@ -385,11 +409,17 @@ export async function deactivateAccount(id) {
 }
 // دریافت تمام حساب‌ها
 export async function GetAllAccounts(storeId, parentId = null) {
+  
   await connectDB();
-
+  
   if (!storeId) {
     throw new Error("فروشگاه مشخص نشده است.");
   }
+  
+  // const hasAccess=await CheckUserPermissionInShop(storeId,"accountsPermissions","veiw")
+  // if (!hasAccess.hasPermission) {
+  //    return { status: 401, message: 'شما دسترسی لازم را ندارید' };
+  //  } 
 
   const filter = { store: storeId };
   if (parentId) {
