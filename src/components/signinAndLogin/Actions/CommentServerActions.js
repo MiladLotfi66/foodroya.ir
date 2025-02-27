@@ -65,10 +65,11 @@ export async function GetCommentFromArray(commentIds) {
   
       // جستجوی کامنت‌ها
       const comments = await Comment.find({ referenceId, type })
-        .populate('author', 'username')
+        .populate('author', 'name')
         .populate('replies', '_id')
         .sort({ createdAt: -1 })
         .lean();
+
 
       // ساده‌سازی کامنت‌ها
       const simplifiedComments = comments.map(comment => 
@@ -78,7 +79,7 @@ export async function GetCommentFromArray(commentIds) {
         {
         _id: comment._id.toString(),
         text: comment.text,
-        author: !userData ? comment.author?.username || 'Unknown' : (comment.author?._id.toString() === userData.id ? 'شما' : comment.author?.username || 'Unknown'),
+        author: !userData ? comment.author?.name || 'Unknown' : (comment.author?._id.toString() === userData.id ? 'شما' : comment.author?.name || 'Unknown'),
         likesCount: comment.likes?.length || 0,
         dislikesCount: comment.dislikes?.length || 0,
         repliesCount: comment.replies?.length || 0,

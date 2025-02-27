@@ -2,15 +2,16 @@ import { useForm } from "react-hook-form";
 import HashLoader from "react-spinners/HashLoader";
 import { Toaster, toast } from "react-hot-toast";
 import { yupResolver } from "@hookform/resolvers/yup";
-import ShopSchema from "@/utils/yupSchemas/ShopSchema";
+import ShopSchema from "@/templates/Shop/ShopSchema";
 import { useEffect, useState, useRef } from "react";
 import PhotoSvg from "@/module/svgs/PhotoSvg";
 import Image from "next/image";
 import CloseSvg from "@/module/svgs/CloseSvg";
 // import { DevTool } from "@hookform/devtools";
-import { AddShopServerAction,EditShop } from "@/templates/Shop/ShopServerActions";
+import { AddShopServerAction, EditShop } from "@/templates/Shop/ShopServerActions";
 
-function AddShop({ Shop = {}, onClose ,refreshShops}) {
+function AddShop({ Shop = {}, onClose, refreshShops }) {
+
   const [isSubmit, setIsSubmit] = useState(false);
   const initialShopUniqueName = useRef(Shop?.ShopUniqueName || "");
 
@@ -24,20 +25,40 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
     useState(Shop?.BackGroundShopUrl || null);
   const [selectedBackGroundpanelImage, setSelectedBackGroundpanelImage] =
     useState(Shop?.BackGroundpanelUrl || null);
-  /////////////////////react hook form////////////////////////////
-  const {
-    register,
-    watch,
-    // control,
-    handleSubmit,
-    setValue,
-    setError,
-    formState: { errors },
-    reset,
-  } = useForm({
-    mode: "all",
-    defaultValues: {
 
+  /////////////////////react hook form////////////////////////////
+// در کامپوننت AddShop.js
+const {
+  register,
+  watch,
+  handleSubmit,
+  setValue,
+  setError,
+  formState: { errors },
+  reset,
+} = useForm({
+  mode: "all",
+  defaultValues: {
+    ShopUniqueName: Shop?.ShopUniqueName || "",
+    ShopName: Shop?.ShopName || "",
+    ShopSmallDiscription: Shop?.ShopSmallDiscription || "",
+    ShopAddress: Shop?.ShopAddress || "",
+    ShopDiscription: Shop?.ShopDiscription || "",
+    Logo: null,
+    TextLogo: null,
+    BackGroundShop: null,
+    BackGroundpanel: null,
+    ShopPhone: Shop?.ShopPhone || "",
+    ShopMobile: Shop?.ShopMobile || "",
+    ShopStatus: Shop?.ShopStatus !== undefined ? Shop?.ShopStatus : true,
+    currentShopId: Shop?._id || null, // اضافه کردن currentShopId
+  },
+  resolver: yupResolver(ShopSchema), // حذف context از resolver
+});
+  
+  /////////////////////useEffect////////////////////////////
+  useEffect(() => {
+    reset({
       ShopUniqueName: Shop?.ShopUniqueName || "",
       ShopName: Shop?.ShopName || "",
       ShopSmallDiscription: Shop?.ShopSmallDiscription || "",
@@ -50,34 +71,8 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
       ShopPhone: Shop?.ShopPhone || "",
       ShopMobile: Shop?.ShopMobile || "",
       ShopStatus: Shop?.ShopStatus !== undefined ? Shop?.ShopStatus : true,
-    },
-    resolver: yupResolver(ShopSchema),
-  });
-
-
-  /////////////////// Watch ShopUniqueName and validate on change   ////////////////////////////////////////////
-  const shopUniqueName = watch('ShopUniqueName');
-  useEffect(() => {
-    async function validateShopUniqueName() {
-      try {
-        // چک کردن تغییر شناسه فروشگاه
-        if (shopUniqueName !== initialShopUniqueName.current) {
-          await ShopSchema.fields.ShopUniqueName.validate(shopUniqueName);
-          setError('ShopUniqueName', {});
-        } else {
-          // اگر شناسه تغییر نکرده باشد، خطا را خالی کنید
-          setError('ShopUniqueName', {});
-        }
-      } catch (error) {
-        setError('ShopUniqueName', { type: 'manual', message: error.message });
-      }
-    }
-
-    validateShopUniqueName();
-  }, [shopUniqueName, setError]);
-
-
-  /////////////////////useEffect////////////////////////////
+    });
+  }, [Shop, reset]);
 
   useEffect(() => {
     if (Shop?.LogoUrl) {
@@ -98,28 +93,27 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
     }
   }, [Shop, setValue]);
 
-  /////////////////////hanndle logo change////////////////////////////
-
+  /////////////////////handle image changes////////////////////////////
   const handleLogoImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedLogoImage(URL.createObjectURL(e.target.files[0]));
       setValue("Logo", e.target.files[0]);
     }
-  }; /////////////////////hanndle textlogo change////////////////////////////
+  };
 
   const handleTextLogoImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedTextLogoImage(URL.createObjectURL(e.target.files[0]));
       setValue("TextLogo", e.target.files[0]);
     }
-  };/////////////////////hanndle BackGroundShop change////////////////////////////
+  };
 
   const handleBackGroundShopImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedBackGroundShopImage(URL.createObjectURL(e.target.files[0]));
       setValue("BackGroundShop", e.target.files[0]);
     }
-  };/////////////////////hanndle BackGroundpanel change////////////////////////////
+  };
 
   const handleBackGroundpanelImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -133,29 +127,32 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
   const handleFormSubmit = async (formData) => {
     setIsSubmit(true);
     try {
-      await ShopSchema.validate(formData, { abortEarly: false });
       const formDataObj = new FormData();
 
-      if (Shop?.LogoUrl && typeof formData.LogoUrl === "string") {
-        formDataObj.append("Logo", Shop.Logo);
+      if (Shop?.LogoUrl && typeof formData.Logo === "string") {
+        formDataObj.append("Logo", Shop.LogoUrl);
       } else if (formData.Logo) {
         formDataObj.append("Logo", formData.Logo);
       }
-      if (Shop?.TextLogoUrl && typeof formData.TextLogoUrl === "string") {
-        formDataObj.append("TextLogo", Shop.TextLogo);
+
+      if (Shop?.TextLogoUrl && typeof formData.TextLogo === "string") {
+        formDataObj.append("TextLogo", Shop.TextLogoUrl);
       } else if (formData.TextLogo) {
         formDataObj.append("TextLogo", formData.TextLogo);
       }
-      if (Shop?.BackGroundShopUrl && typeof formData.BackGroundShopUrl === "string") {
-        formDataObj.append("BackGroundShop", Shop.BackGroundShop);
+
+      if (Shop?.BackGroundShopUrl && typeof formData.BackGroundShop === "string") {
+        formDataObj.append("BackGroundShop", Shop.BackGroundShopUrl);
       } else if (formData.BackGroundShop) {
         formDataObj.append("BackGroundShop", formData.BackGroundShop);
       }
-      if (Shop?.BackGroundpanelUrl && typeof formData.BackGroundpanelUrl === "string") {
-        formDataObj.append("BackGroundpanel", Shop.BackGroundpanel);
+
+      if (Shop?.BackGroundpanelUrl && typeof formData.BackGroundpanel === "string") {
+        formDataObj.append("BackGroundpanel", Shop.BackGroundpanelUrl);
       } else if (formData.BackGroundpanel) {
         formDataObj.append("BackGroundpanel", formData.BackGroundpanel);
       }
+
       formDataObj.append("ShopUniqueName", formData.ShopUniqueName);
       formDataObj.append("ShopName", formData.ShopName);
       formDataObj.append("ShopSmallDiscription", formData.ShopSmallDiscription);
@@ -164,29 +161,31 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
       formDataObj.append("ShopStatus", formData.ShopStatus);
       formDataObj.append("ShopPhone", formData.ShopPhone);
       formDataObj.append("ShopMobile", formData.ShopMobile);
-   
-   
+
       let res;
       if (Shop?._id) {
         formDataObj.append("id", Shop._id);
+        formDataObj.append("currentShopId", Shop._id); // ارسال currentShopId معتبر
+
         res = await EditShop(formDataObj);
       } else {
         res = await AddShopServerAction(formDataObj);
       }
 
-
-      // const result = await res.json();
-      if (res.status === 200 || res.status === 201 ) {
+      if (res.status === 200 || res.status === 201) {
         refreshShops();
-        onClose()
-       } else {
+        onClose();
+        toast.success(Shop?._id ? "فروشگاه با موفقیت ویرایش شد" : "فروشگاه با موفقیت اضافه شد");
+      } else {
         toast.error(res.error || "خطایی رخ داده است");
       }
     } catch (error) {
+      console.error("Error in handleFormSubmit:", error);
       toast.error(error.message || "خطایی در ارسال درخواست به سرور رخ داد");
     }
     setIsSubmit(false);
   };
+
   /////////////////////formsubmitting////////////////////////////
 
   const formsubmitting = async (formData) => {
@@ -205,7 +204,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
           <svg
             width="34"
             height="34"
-            onClick={onClose} // Close the modal on click
+            onClick={onClose} // بستن مودال در کلیک
           >
             <use href="#CloseSvg"></use>
           </svg>
@@ -218,9 +217,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
       {/* /////////////////////form//////////////////////////// */}
 
       <form
-        onSubmit={handleSubmit((data) => {
-          formsubmitting(data);
-        })}
+        onSubmit={handleSubmit(formsubmitting)}
         className="flex flex-col gap-4 p-2 md:p-4"
       >
         {/* /////////////////////ShopStatus//////////////////////////// */}
@@ -236,6 +233,9 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
             {...register("ShopStatus")}
           />
         </div>
+        {/* ///////////////////////////////////// */}
+        <input type="hidden" {...register('currentShopId')} />
+
         {/* /////////////////////ShopUniqueName//////////////////////////// */}
         <div className="flex items-center">
           <label htmlFor="ShopUniqueName" className="w-1/5 text-xs md:text-sm">
@@ -251,7 +251,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
         </div>
         {errors.ShopUniqueName && (
           <div className="text-xs text-red-400">{errors.ShopUniqueName.message}</div>
-        )}       
+        )}
         {/* /////////////////////ShopName//////////////////////////// */}
         <div className="flex items-center">
           <label htmlFor="ShopName" className="w-1/5 text-xs md:text-sm">
@@ -363,7 +363,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
           <div className="w-1/2">
             {selectedLogoImage ? (
               <Image
-                onClick={() => document.getElementById("LogoUrl").click()}
+                onClick={() => document.getElementById("Logo").click()} // تغییر id به Logo
                 src={selectedLogoImage}
                 alt="Selected"
                 className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
@@ -373,7 +373,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
               />
             ) : (
               <label
-                htmlFor="LogoUrl"
+                htmlFor="Logo" // تغییر htmlFor به Logo
                 className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
               >
                 <PhotoSvg />
@@ -382,14 +382,14 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
             )}
             <input
               className="hidden"
-              id="LogoUrl"
+              id="Logo" // تغییر id به Logo
               type="file"
-              name="LogoUrl"
+              name="Logo" // تغییر name به Logo
               accept="image/*"
               onChange={handleLogoImageChange}
             />
-            {errors.LogoUrl && (
-              <div className="text-xs text-red-400">{errors.LogoUrl.message}</div>
+            {errors.Logo && (
+              <div className="text-xs text-red-400">{errors.Logo.message}</div>
             )}
           </div>
           {/* /////////////////////TextLogo//////////////////////////// */}
@@ -397,7 +397,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
           <div className="w-1/2">
             {selectedTextLogoImage ? (
               <Image
-                onClick={() => document.getElementById("TextLogoUrl").click()}
+                onClick={() => document.getElementById("TextLogo").click()} // تغییر id به TextLogo
                 src={selectedTextLogoImage}
                 alt="Selected"
                 className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
@@ -407,7 +407,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
               />
             ) : (
               <label
-                htmlFor="TextLogoUrl"
+                htmlFor="TextLogo" // تغییر htmlFor به TextLogo
                 className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
               >
                 <PhotoSvg />
@@ -416,25 +416,25 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
             )}
             <input
               className="hidden"
-              id="TextLogoUrl"
+              id="TextLogo" // تغییر id به TextLogo
               type="file"
-              name="TextLogoUrl"
+              name="TextLogo" // تغییر name به TextLogo
               accept="image/*"
               onChange={handleTextLogoImageChange}
             />
-            {errors.TextLogoUrl && (
+            {errors.TextLogo && (
               <div className="text-xs text-red-400">
-                {errors.TextLogoUrl.message}
+                {errors.TextLogo.message}
               </div>
             )}
           </div>
-        </div> 
+        </div>
         {/* /////////////////////background//////////////////////////// */}
         <div className="flex items-center">
           <div className="w-1/2">
             {selectedBackGroundShopImage ? (
               <Image
-                onClick={() => document.getElementById("BackGroundShopUrl").click()}
+                onClick={() => document.getElementById("BackGroundShop").click()} // تغییر id به BackGroundShop
                 src={selectedBackGroundShopImage}
                 alt="Selected"
                 className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
@@ -444,7 +444,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
               />
             ) : (
               <label
-                htmlFor="BackGroundShopUrl"
+                htmlFor="BackGroundShop" // تغییر htmlFor به BackGroundShop
                 className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
               >
                 <PhotoSvg />
@@ -453,14 +453,14 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
             )}
             <input
               className="hidden"
-              id="BackGroundShopUrl"
+              id="BackGroundShop" // تغییر id به BackGroundShop
               type="file"
-              name="BackGroundShopUrl"
+              name="BackGroundShop" // تغییر name به BackGroundShop
               accept="image/*"
               onChange={handleBackGroundShopImageChange}
             />
-            {errors.BackGroundShopUrl && (
-              <div className="text-xs text-red-400">{errors.BackGroundShopUrl.message}</div>
+            {errors.BackGroundShop && (
+              <div className="text-xs text-red-400">{errors.BackGroundShop.message}</div>
             )}
           </div>
           {/* /////////////////////BackGroundpanel//////////////////////////// */}
@@ -468,7 +468,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
           <div className="w-1/2">
             {selectedBackGroundpanelImage ? (
               <Image
-                onClick={() => document.getElementById("BackGroundpanelUrl").click()}
+                onClick={() => document.getElementById("BackGroundpanel").click()} // تغییر id به BackGroundpanel
                 src={selectedBackGroundpanelImage}
                 alt="Selected"
                 className="grow container flexCenter gap-3 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
@@ -478,7 +478,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
               />
             ) : (
               <label
-                htmlFor="BackGroundpanelUrl"
+                htmlFor="BackGroundpanel" // تغییر htmlFor به BackGroundpanel
                 className="text-xs md:text-sm grow container flexCenter gap-2 cursor-pointer bg-gray-200 dark:bg-gray-600 py-2 rounded-md h-20 w-20 md:w-44"
               >
                 <PhotoSvg />
@@ -487,15 +487,15 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
             )}
             <input
               className="hidden"
-              id="BackGroundpanelUrl"
+              id="BackGroundpanel" // تغییر id به BackGroundpanel
               type="file"
-              name="BackGroundpanelUrl"
+              name="BackGroundpanel" // تغییر name به BackGroundpanel
               accept="image/*"
               onChange={handleBackGroundpanelImageChange}
             />
-            {errors.BackGroundpanelUrl && (
+            {errors.BackGroundpanel && (
               <div className="text-xs text-red-400">
-                {errors.BackGroundpanelUrl.message}
+                {errors.BackGroundpanel.message}
               </div>
             )}
           </div>
@@ -506,7 +506,7 @@ function AddShop({ Shop = {}, onClose ,refreshShops}) {
           className={
             isSubmit
               ? "flexCenter gap-x-2 h-11 md:h-14 bg-gray-400 rounded-xl text-white mt-4"
-              : "h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4"
+              : "flexCenter h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4"
           }
           disabled={isSubmit}
         >

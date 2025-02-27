@@ -14,7 +14,6 @@ function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
 }
 
-
 export async function GetAllContacts(shopId) {
   
   await connectDB();

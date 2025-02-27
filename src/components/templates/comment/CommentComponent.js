@@ -35,6 +35,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
   });
   const [comments, setComments] = useState([]); // حالت برای ذخیره نظرات
   const [loading, setLoading] = useState(true); // حالت بارگذاری نظرات
+  const [isSubmit, setIsSubmit] = useState(false); // حالت بارگذاری نظرات
   const [expandedComments, setExpandedComments] = useState({}); // حالت جدید برای ذخیره باز و بسته بودن نظرات
   const [showExpandButton, setShowExpandButton] = useState({}); // حالت برای نمایش دکمه نمایش بیشتر
   const [replyText, setReplyText] = useState({}); // حالت برای ذخیره پاسخ‌ها
@@ -51,6 +52,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
         const res = await GetCommentsByReference(referenceId, type);
         if (res.status === 200) {
           setComments(res.comments);
+          
         } else {
           toast.error("خطا در دریافت نظرات");
         }
@@ -94,6 +96,7 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
   // مدیریت ارسال فرم جدید با react-hook-form
   const onSubmitHandler = async (data) => {
+    
     const { comment } = data;
     try {
       if (comment.trim() === "") {
@@ -128,7 +131,6 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
 
   async function handleReplySend(data, commentId) {
     const { reply } = data; // مقدار reply را از داده‌های فرم دریافت می‌کند
-    console.log("data----->", reply);
 
     try {
       if (!reply || reply.trim() === "") {
@@ -351,8 +353,8 @@ function CommentComponent({ isOpen, onClose, referenceId, type }) {
       <div className="bg-white dark:bg-zinc-700 w-full max-w-lg h-[80vh] rounded-t-lg shadow-lg overflow-y-auto p-2 ">
         <div className="h-full">
           <div className="hidden">
-            {/* <CloseSvg /> */}
-            {/* <ArrowUpSvg /> */}
+       ?      <CloseSvg />
+             <ArrowUpSvg /> 
           </div>
           <div className="flex justify-between p-2 md:p-5 h-[10%]">
             <button aria-label="close" className="hover:text-orange-300">

@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import ShopCard from "./ShopCard";
-import { DeleteShops, GetUserShops, ShopServerDisableActions, ShopServerEnableActions  } from "@/templates/Shop/ShopServerActions";
+import { authenticateUser, DeleteShops, GetUserShops, ShopServerDisableActions, ShopServerEnableActions  } from "@/templates/Shop/ShopServerActions";
 import AddShop from "./AddShop";
 import { Toaster, toast } from "react-hot-toast";
+import { GetUserbyUserId } from "@/components/signinAndLogin/Actions/UsersServerActions";
+import { hasUserAccessToEditAndDeleteShop } from "@/templates/Shop/ShopServerActions";
 
 
 function ShopManage() {
@@ -13,13 +15,26 @@ function ShopManage() {
   const [isOpenAddShop, setIsOpenAddShop] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
   const [selectedShopFile, setSelectedShopFile] = useState(null); // افزودن استیت جدید
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     refreshShops();
   }, []);
 
   const refreshShops = async () => {
+  
+
       try {
+               // احراز هویت کاربر
+               const userData = await authenticateUser();
+                  setUser(userData.id);
+const userHasPermissionForEditShop= hasUserAccessToEditAndDeleteShop(user);
+              //  if (userData) {
+                 
+              //    const userFullData=await GetUserbyUserId(userData.id)
+              //  }
+       
+       
         const response = await GetUserShops();
         // const response = await GetAllShops();
         setShops(response.Shops);
@@ -191,7 +206,8 @@ function ShopManage() {
               deleteFunc={() => deleteFunc(Shop._id)}
               handleEnableShop={handleEnableShop}
               handleDisableShop={handleDisableShop}
-
+              user={user?.user} // ارسال اطلاعات کاربر به ShopCard
+              userHasPermissionForEditShop
               editable={true}
               followable={false}
             />

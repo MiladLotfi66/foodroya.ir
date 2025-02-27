@@ -7,7 +7,7 @@ import Ledger from "./Ledger";
 import GeneralLedger from "./GeneralLedger";
 import Account from '../Account/Account';
 import { ledgerValidationSchema } from "./FinancialDocumentSchema";
-
+import { CheckUserPermissionInShop } from '../rols/RolesPermissionActions';
 function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
 }

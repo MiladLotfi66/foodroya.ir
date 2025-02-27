@@ -1,6 +1,6 @@
 // app/products/ProductManage.jsx
 "use client";
-import {  useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import AddProduct from "./AddProduct";
 import React, { useState, useEffect, useCallback } from "react";
@@ -24,7 +24,7 @@ import { DeleteProducts } from "./ProductActions";
 import Pagination from "./Pagination";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import FallbackImage from "@/utils/fallbackImage";
-import {  getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
+import { getUserPermissionInShopAccessList } from "../rols/RolesPermissionActions";
 import NotAuthenticated from "../rols/NotAuthenticated";
 import PermissionLoading from "../rols/PermissionLoading";
 import NoPermission from "../rols/NoPermission";
@@ -37,7 +37,7 @@ function ProductManage() {
   const [hasAddPermission, setHasAddPermission] = useState(null);
   const [hasEditPermission, setHasEditPermission] = useState(null);
   const [hasDeletePermission, setHasDeletePermission] = useState(null);
-const [permissionLoading, setPermissionLoading] = useState(true);
+  const [permissionLoading, setPermissionLoading] = useState(true);
 
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [clipboard, setClipboard] = useState({
@@ -72,7 +72,7 @@ const [permissionLoading, setPermissionLoading] = useState(true);
   const BGImage = shopPanelImage;
   const fetchAnbarAccountId = useCallback(async () => {
     if (!isAuthenticated) return;
-  
+
     try {
       const response = await GetAccountIdBystoreIdAndAccountCode(
         ShopId,
@@ -90,7 +90,6 @@ const [permissionLoading, setPermissionLoading] = useState(true);
       toast.error("خطا در دریافت حساب انبار.");
     }
   }, [isAuthenticated, ShopId]);
-  
 
   const checkViewPermission = useCallback(async () => {
     if (!ShopId || !isAuthenticated) {
@@ -99,10 +98,12 @@ const [permissionLoading, setPermissionLoading] = useState(true);
     }
 
     try {
-      const response = await getUserPermissionInShopAccessList(ShopId, "productsPermissions");
+      const response = await getUserPermissionInShopAccessList(
+        ShopId,
+        "productsPermissions"
+      );
 
       if (response.status === 200) {
-        
         // بررسی اینکه آیا دسترسی view در آرایه hasPermission وجود دارد
         setHasViewPermission(response.hasPermission.includes("view"));
 
@@ -110,23 +111,23 @@ const [permissionLoading, setPermissionLoading] = useState(true);
         setHasEditPermission(response.hasPermission.includes("edit"));
         setHasDeletePermission(response.hasPermission.includes("delete"));
       } else {
-        console.error('خطا در بررسی دسترسی:', response.message);
+        console.error("خطا در بررسی دسترسی:", response.message);
         setHasViewPermission(false);
         setHasAddPermission(false);
         setHasEditPermission(false);
         setHasDeletePermission(false);
       }
     } catch (error) {
-      console.error('Error checking view permission:', error);
+      console.error("Error checking view permission:", error);
       setHasViewPermission(false);
       setHasAddPermission(false);
       setHasEditPermission(false);
       setHasDeletePermission(false);
-    toast.error("خطا در بررسی دسترسی.");
+      toast.error("خطا در بررسی دسترسی.");
     } finally {
       setPermissionLoading(false);
     }
-  }, [ShopId]);
+  }, [ShopId, isAuthenticated]);
 
   // از useCallback برای بهینه‌سازی عملکرد استفاده می‌کنیم
   const refreshAccounts = useCallback(async () => {
@@ -410,7 +411,6 @@ const [permissionLoading, setPermissionLoading] = useState(true);
     setSelectedProductFile(null);
   }, []);
 
-
   if (status === "loading") {
     return <PermissionLoading BGImage={BGImage} />;
   }
@@ -431,11 +431,11 @@ const [permissionLoading, setPermissionLoading] = useState(true);
     <FormTemplate BGImage={BGImage}>
       {isOpenAddProduct && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 "
           onClick={handleOverlayClick}
         >
           <div
-            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%]  p-2"
             onClick={(e) => e.stopPropagation()}
           >
             <AddProduct
@@ -449,46 +449,40 @@ const [permissionLoading, setPermissionLoading] = useState(true);
         </div>
       )}
       <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
-        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
-          <h1 className="text-xl md:text-3xl font-MorabbaBold">
-            مدیریت محصول
-          </h1>
-        </div>
-        <div className="flex items-center gap-1 md:gap-2 p-1 md:p-2">
-          {hasAddPermission &&
-          
-            (
-<>
+        <div className="flex items-center justify-between  ">
+          <h1 className="text-xl  md:text-3xl font-MorabbaBold p-1">مدیریت محصول</h1>
+        <div className="flex items-center gap-1  p-1 md:p-2">
+          {hasAddPermission && (
+            <>
               <button
-              className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-              aria-label="add product"
-              onClick={handleAddProductClick}
+                className="h-8 md:h-10 text-xs text-center md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 "
+                aria-label="add product"
+                onClick={handleAddProductClick}
               >
-            افزودن
-          </button>
-          <button
-          onClick={() => setShowCreateAccountModal(true)}
-          className="h-8 md:h-14 text-xs md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 md:p-4"
-          >
-            ایجاد دسته بندی
-          </button>
+                افزودن
+              </button>
+              <button
+                onClick={() => setShowCreateAccountModal(true)}
+                className="h-8 md:h-10 text-xs items-center md:text-base bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-2 md:mt-4 p-2 "
+              >
+                ایجاد دسته بندی
+              </button>
             </>
-          ) 
-          }
+          )}
 
           {clipboard.accounts.length > 0 && (
             <button
-              className="h-8 md:h-14 text-xs md:text-base bg-blue-600 rounded-xl hover:bg-blue-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              className="h-8 md:h-10 text-xs items-center md:text-base bg-blue-600 rounded-xl hover:bg-blue-700 text-white mt-2 md:mt-4 p-2 "
               onClick={handlePasteAccounts}
             >
               چسباندن{" "}
             </button>
           )}
           {/* دکمه کپی */}
-         
-          {selectedAccounts.length > 0 &&  hasAddPermission && (
+
+          {selectedAccounts.length > 0 && hasAddPermission && (
             <button
-              className="h-8 md:h-14 text-xs md:text-base bg-green-600 rounded-xl hover:bg-green-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              className="h-8 md:h-10 text-xs items-center md:text-base bg-green-600 rounded-xl hover:bg-green-700 text-white mt-2 md:mt-4 p-2 "
               onClick={() => handleCopySelectedAccounts()}
             >
               کپی
@@ -496,18 +490,19 @@ const [permissionLoading, setPermissionLoading] = useState(true);
           )}
 
           {/* دکمه برش */}
-          {selectedAccounts.length > 0 &&  hasEditPermission &&  (
+          {selectedAccounts.length > 0 && hasEditPermission && (
             <button
-              className="h-8 md:h-14 text-xs md:text-base bg-red-600 rounded-xl hover:bg-red-700 text-white mt-2 md:mt-4 p-2 md:p-4"
+              className="h-8 md:h-10 text-xs items-center md:text-base bg-red-600 rounded-xl hover:bg-red-700 text-white mt-2 md:mt-4 p-2 "
               onClick={() => handleCutSelectedAccounts()}
             >
               برش{" "}
             </button>
           )}
         </div>
+        </div>
 
         <div>
-          <div className="account-categories container mx-auto p-1 md:p-4">
+          <div className="account-categories container mx-auto p-1 md:p-2">
             {/* نوار Breadcrumb */}
 
             <Breadcrumb path={path} onBreadcrumbClick={handleBreadcrumbClick} />
@@ -530,82 +525,87 @@ const [permissionLoading, setPermissionLoading] = useState(true);
               <p>در حال بارگذاری...</p>
             ) : (
               <>
-                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 max-h-[52vh] overflow-y-auto">
+                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[52vh] md:max-h-[38vh] overflow-y-auto p-2 ">
                   {accounts.map((account) => (
                     <div key={account._id}>
                       {account.accountType === "کالا" && (
-                        <div className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl  transition-transform transform hover:scale-105">
-                          {/* بخش چک‌باکس */}
-                          <input
-                            type="checkbox"
-                            className="h-6 w-6"
-                            checked={selectedAccounts.includes(account._id)}
-                            onChange={() =>
-                              handleToggleSelectAccount(account._id)
-                            }
-                          />
+                        <div className="flex-col items-center justify-between gap-2  max-w-full   sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl  transition-transform transform hover:scale-105 p-1">
+                          <div className="flex  justify-center items-center gap-1 mt-2">
+                            {/* بخش تصاویر */}
+                            <div className="relative items-center w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0">
+                              <FallbackImage
+                                className="w-full h-full object-cover rounded-md"
+                                src={
+                                  account?.productId?.images?.[0] ||
+                                  product_placeholder
+                                }
+                                alt={account?.productId?.title}
+                                width={100}
+                                height={100}
+                                quality={40}
+                                placeholder={product_placeholder}
+                              />
 
-                          {/* بخش تصاویر */}
-                          <div className="relative items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0">
-                            <FallbackImage
-                              className="w-full h-full object-cover rounded-md"
-                              src={
-                                account?.productId?.images?.[0] ||
-                                product_placeholder
-                              }
-                              alt={account?.productId?.title}
-                              width={150}
-                              height={150}
-                              quality={60}
-                              placeholder={product_placeholder}
-                            />
-                            {account.productId?.images?.length > 1 && (
-                              <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs sm:text-sm px-2 py-1 rounded">
-                                +{account.productId.images.length - 1}
-                              </div>
-                            )}
+                              {account.productId?.images?.length > 1 && (
+                                <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs sm:text-sm px-2 py-1 rounded">
+                                  +{account.productId.images.length - 1}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* بخش اطلاعات محصول و دکمه‌ها */}
+                            <div className="flex flex-col flex-1 m-1 md:m-2 h-15 text-xs sm:text-sm md:text-base p-1">
+                              {/* عنوان محصول */}
+                              <h2
+                                className="text-start text-gray-800 dark:text-gray-200 max-w-full truncate"
+                                title={account?.productId?.title}
+                              >
+                                {account?.productId?.title}
+                              </h2>
+                              {/* موجودی محصول */}
+                              <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-2">
+                                {account?.productId?.stock}{" "}
+                                {account?.product?.unit}
+                              </h2>
+                            </div>
                           </div>
 
-                          {/* بخش اطلاعات محصول و دکمه‌ها */}
-                          <div className="flex flex-col flex-1 m-1 md:m-2 h-15 text-xs sm:text-sm md:text-base">
-                            {/* عنوان محصول */}
-                            <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
-                              {account?.productId?.title}
-                            </h2>
-                            {/* موجودی محصول */}
-                            <h2 className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
-                              {account?.productId?.stock}{" "}
-                              {account?.product?.unit}
-                            </h2>
-
-                            {/* دکمه‌های عملیات در یک ردیف */}
-                            <div className="flex gap-1 md:gap-2 mt-2 md:mt-4 justify-start">
-                              {/* دکمه ویرایش */}
-                             {  hasEditPermission &&
-                              <button
-                              aria-label="ویرایش"
-                              className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                              onClick={() =>
-                                handleEditClick(account?.productId)
+                          {/* دکمه‌های عملیات در یک ردیف */}
+                          <div className="flex  justify-around  w-full gap-1 md:gap-2 mt-2 md:mt-4 ">
+                            {/* بخش چک‌باکس */}
+                            <input
+                              type="checkbox"
+                              className="h-6 w-6"
+                              checked={selectedAccounts.includes(account._id)}
+                              onChange={() =>
+                                handleToggleSelectAccount(account._id)
                               }
+                            />
+
+                            {/* دکمه ویرایش */}
+                            {hasEditPermission && (
+                              <button
+                                aria-label="ویرایش"
+                                className="bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                onClick={() =>
+                                  handleEditClick(account?.productId)
+                                }
                               >
                                 <EditSvg />
                               </button>
-                              }
-                              {/* دکمه حذف */}
-                              {  hasDeletePermission &&
-
+                            )}
+                            {/* دکمه حذف */}
+                            {hasDeletePermission && (
                               <button
-                              aria-label="حذف"
-                              className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                              onClick={() =>
-                                deleteFunc(account.productId._id, account._id)
-                              }
+                                aria-label="حذف"
+                                className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                onClick={() =>
+                                  deleteFunc(account.productId._id, account._id)
+                                }
                               >
                                 <DeleteSvg />
                               </button>
-                              }
-                            </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -613,59 +613,60 @@ const [permissionLoading, setPermissionLoading] = useState(true);
                       {account.accountType === "دسته بندی کالا" && (
                         <div
                           onClick={() => handleOpenAccount(account)} // استفاده از handleOpenAccount برای باز کردن حساب
-                          className="flex items-center gap-2 md:gap-4 sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl p-2 md:p-4 transition-transform transform hover:scale-105"
+                          className="flex-col items-center justify-between gap-2  sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl  transition-transform transform hover:scale-105 p-2 "
                         >
-                          {/* بخش چک‌باکس */}
-                          <input
-                            type="checkbox"
-                            className="h-6 w-6"
-                            checked={selectedAccounts.includes(account._id)}
-                            onClick={(e) => e.stopPropagation()} // اضافه کردن این خط
+                          <div className="flex justify-center items-center gap-1 mt-2">
+                            {/* بخش آیکون دسته‌بندی */}
+                            <FaFolder className="text-yellow-500 text-xl md:text-2xl  items-center w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0" />
 
-                            onChange={() =>
-                              handleToggleSelectAccount(account._id)
-                            }
-                          />
+                            {/* بخش اطلاعات دسته‌بندی و دکمه‌ها */}
+                            <div className="flex flex-col  text-center flex-1 m-1 md:m-2 h-15 text-xs sm:text-sm md:text-base mb-2">
+                              {/* عنوان دسته بندی */}
+                              <p className="text-start text-gray-800 dark:text-gray-200 line-clamp-2">
+                                {account.title}
+                              </p>
+                            </div>
+                          </div>
 
-                          {/* بخش آیکون دسته‌بندی */}
-                          <FaFolder className="text-yellow-500 text-xl md:text-2xl mb-2 items-center w-24 h-24 sm:w-32 sm:h-32 lg:h-40 lg:w-40 flex-shrink-0" />
+                          {/* دکمه‌های عملیات در یک ردیف */}
+                          <div className="flex gap-1 justify-around  w-full md:gap-2 mt-2 md:mt-4 ">
+                            {/* بخش چک‌باکس */}
+                            <input
+                              type="checkbox"
+                              className="h-6 w-6"
+                              checked={selectedAccounts.includes(account._id)}
+                              onClick={(e) => e.stopPropagation()} // اضافه کردن این خط
+                              onChange={() =>
+                                handleToggleSelectAccount(account._id)
+                              }
+                            />
 
-                          {/* بخش اطلاعات دسته‌بندی و دکمه‌ها */}
-                          <div className="flex flex-col flex-1 m-2 h-15 text-xs sm:text-sm md:text-base">
-                            {/* عنوان دسته بندی */}
-                            <p className="text-start text-gray-800 dark:text-gray-200 line-clamp-3">
-                              {account.title}
-                            </p>
-
-                            {/* دکمه‌های عملیات در یک ردیف */}
-                            <div className="flex gap-1 md:gap-2 mt-2 md:mt-4 justify-start">
-                              {/* دکمه ویرایش */}
-                              {  hasEditPermission &&
+                            {/* دکمه ویرایش */}
+                            {hasEditPermission && (
                               <button
-                              aria-label="ویرایش"
-                              className="bg-blue-500 text-white p-1 md:p-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                              onClick={(e) => {
-                                e.stopPropagation(); // جلوگیری از انتشار رویداد
-                                handleEditCategoryClick(account._id);
-                              }}
+                                aria-label="ویرایش"
+                                className="bg-blue-500 text-white p-1  rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // جلوگیری از انتشار رویداد
+                                  handleEditCategoryClick(account._id);
+                                }}
                               >
                                 <EditSvg />
                               </button>
-                              }
-                              {/* دکمه حذف */}
-                              {  hasDeletePermission &&
+                            )}
+                            {/* دکمه حذف */}
+                            {hasDeletePermission && (
                               <button
-                              aria-label="حذف"
-                              className="bg-red-500 text-white p-1 md:p-2 rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                              onClick={(e) => {
-                                e.stopPropagation(); // جلوگیری از انتشار رویداد
-                                deleteCategoryFunc(account._id);
-                              }}
+                                aria-label="حذف"
+                                className="bg-red-500 text-white p-1  rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // جلوگیری از انتشار رویداد
+                                  deleteCategoryFunc(account._id);
+                                }}
                               >
                                 <DeleteSvg />
                               </button>
-                              }
-                            </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -723,14 +724,14 @@ const [permissionLoading, setPermissionLoading] = useState(true);
                       >
                         انصراف
                       </button>
-                      {  hasAddPermission &&
-                      <button
-                      type="submit"
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                      >
-                        ایجاد
-                      </button>
-                      }
+                      {hasAddPermission && (
+                        <button
+                          type="submit"
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                          ایجاد
+                        </button>
+                      )}
                     </div>
                   </form>
                 </div>
@@ -777,14 +778,14 @@ const [permissionLoading, setPermissionLoading] = useState(true);
                       >
                         انصراف
                       </button>
-                      {  hasEditPermission &&
-                      <button
-                      type="submit"
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                      >
-                        ویرایش{" "}
-                      </button>
-                      }
+                      {hasEditPermission && (
+                        <button
+                          type="submit"
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                          ویرایش{" "}
+                        </button>
+                      )}
                     </div>
                   </form>
                 </div>

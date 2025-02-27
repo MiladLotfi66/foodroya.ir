@@ -4,7 +4,7 @@ import shops from "@/templates/Shop/shops";
 import Comment from "@/models/Comment";
 import Account from "@/templates/panel/Account/Account";
 import connectDB from "@/utils/connectToDB";
-import ShopSchema from "@/utils/yupSchemas/ShopSchema";
+import ShopSchema from "@/templates/Shop/ShopSchema";
 import Users from "@/models/Users";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from 'next-auth/next';
@@ -36,21 +36,33 @@ export const simplifyFollowers = (followers) => {
   }).filter(follower => follower !== null); // حذف مقادیر null در صورت وجود
 };
 
-export async function isUniqShop(uniqueIdentifier) {
+
+export async function isUniqShop(uniqueIdentifier, currentShopId = null) {
+  console.log(uniqueIdentifier, currentShopId);
   
   await connectDB();
+  
   try {
-    const shop = await shops.findOne({ ShopUniqueName: uniqueIdentifier });
+    const query = { ShopUniqueName: uniqueIdentifier };
+    
+    // اگر currentShopId ارائه شده باشد، فروشگاه فعلی را از جستجو حذف می‌کنیم
+    if (currentShopId) {
+      query._id = { $ne: currentShopId };
+    }
+
+    const shop = await shops.findOne(query);
     const isUnique = !shop;
+
     if (isUnique) {
       return { message: "این نام فروشگاه تکراری نمی باشد", status: 200 };
     } else {
-      return { error: "این نام فروشگاه تکراری نمی باشد", status: 400 };
+      return { error: "این نام فروشگاه تکراری می باشد", status: 400 };
     }
   } catch (error) {
     return { error: error.message, status: 500 };
   }
 }
+
 export async function GetUserShops() {
   try {
     await connectDB();
@@ -169,7 +181,8 @@ export async function GetShopCommentsArray(shopId) {
     return { error: error.message, status: 500 };
   }
 }
-const hasUserAccess = async (userId) => {
+export const hasUserAccessToEditAndDeleteShop = async (userId) => {
+  
   try {
     await connectDB();
     let userData;
@@ -179,8 +192,9 @@ const hasUserAccess = async (userId) => {
       userData = null;
       console.log("Authentication failed:", authError);
     }
-
-  if (!userData) {
+    
+ 
+  if (!userData||!userId) {
     return { status: 401, message: 'کاربر وارد نشده است.' };
   }
   
@@ -189,13 +203,13 @@ const hasUserAccess = async (userId) => {
     const userDataId = userData.id;
     const userIdStr = userId.toString();
 
-    if (userDataId === userIdStr) {
+    if (userDataId.toString() === userIdStr.toString()) {
       return true;
     } else {
       return false;
     }
   } catch (error) {
-    console.error("Error in hasUserAccess function:", error);
+    console.error("Error in hasUserAccessToEditAndDeleteShop function:", error);
     return false; // در صورت وقوع خطا، false را برگردانید
   }
 };
@@ -216,6 +230,8 @@ export async function authenticateUser() {
 }
 
 export async function EditShop(ShopData) {
+  console.log("111111111111111-------------1111111111111111111");
+  
   try {
     await connectDB();
     let userData;
@@ -241,8 +257,9 @@ export async function EditShop(ShopData) {
       console.error("Shop not found");
       throw new Error("فروشگاهی با این آی‌دی یافت نشد");
     }
+console.log("Shop",Shop);
 
-    if (!(await hasUserAccess(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
     const validatedData = await ShopSchema.validate(
@@ -259,6 +276,8 @@ export async function EditShop(ShopData) {
         TextLogo: ShopData.get("TextLogo"),
         BackGroundShop: ShopData.get("BackGroundShop"),
         BackGroundpanel: ShopData.get("BackGroundpanel"),
+        currentShopId: ShopID, // افزودن currentShopId
+
       },
       {
         abortEarly: false,
@@ -826,7 +845,7 @@ async function ShopServerEnableActions(ShopID) {
       throw new Error("فروشگاهی با این آی‌دی یافت نشد");
     }
 
-    if (!(await hasUserAccess(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -866,7 +885,7 @@ async function ShopServerDisableActions(ShopID) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    if (!(await hasUserAccess(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -939,6 +958,74 @@ async function GetAllEnableShops() {
   }
 }
 
+// async function DeleteShops(ShopID) {
+//   try {
+//     await connectDB();
+//     let userData;
+//     try {
+//       userData = await authenticateUser();
+//     } catch (authError) {
+//       userData = null;
+//       console.log("Authentication failed:", authError);
+//     }
+//   if (!userData) {
+//     return { status: 401, message: 'کاربر وارد نشده است.' };
+//   }
+//     const Shop = await shops.findById(ShopID);
+
+//     if (!Shop) {
+//       throw new Error("فروشگاه مورد نظر یافت نشد");
+//     }
+
+//     if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
+//       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
+//     }
+
+//       // به‌روزرسانی حذف امن
+//       const result = await shops.updateOne(
+//         { _id: ShopID },
+//         {
+//           $set: {
+//             is_deleted: true,
+//             deleted_by: userData.id, // شناسه کاربر حذف‌کننده
+//             deleted_at: new Date(), // زمان حذف
+//           },
+//         }
+//       );
+  
+//       if (result.nModified === 0) {
+//         throw new Error("فروشگاه مورد نظر حذف نشد");
+//       }
+
+//     const deleteStatus=deleteOldImage(Shop.LogoUrl)
+//     if (deleteStatus.status!==200) {
+//       console.error("خطا در حذف فایل تصویر:");
+//       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+//      }
+ 
+//      const deleteStatus2=deleteOldImage(Shop.TextLogoUrl)
+//      if (deleteStatus2.status!==200) {
+//        console.error("خطا در حذف فایل تصویر:");
+//        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+//       }  
+//          const deleteStatus3=deleteOldImage(Shop.BackGroundShopUrl)
+//      if (deleteStatus3.status!==200) {
+//        console.error("خطا در حذف فایل تصویر:");
+//        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+//       }  
+//              const deleteStatus4=deleteOldImage(Shop.BackGroundpanelUrl)
+//      if (deleteStatus4.status!==200) {
+//        console.error("خطا در حذف فایل تصویر:");
+//        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+//       }
+ 
+
+//     return { message: "فروشگاه و فایل تصویر با موفقیت حذف شدند", status: 200 };
+//   } catch (error) {
+//     console.error("خطا در حذف فروشگاه:", error);
+//     return { error: error.message, status: 500 };
+//   }
+// }
 async function DeleteShops(ShopID) {
   try {
     await connectDB();
@@ -949,59 +1036,75 @@ async function DeleteShops(ShopID) {
       userData = null;
       console.log("Authentication failed:", authError);
     }
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
+
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
     const Shop = await shops.findById(ShopID);
 
     if (!Shop) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    if (!(await hasUserAccess(Shop.CreatedBy))) {
-      throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
+    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
+            throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
-      // به‌روزرسانی حذف امن
-      const result = await shops.updateOne(
-        { _id: ShopID },
-        {
-          $set: {
-            is_deleted: true,
-            deleted_by: userData.id, // شناسه کاربر حذف‌کننده
-            deleted_at: new Date(), // زمان حذف
-          },
-        }
-      );
-  
-      if (result.nModified === 0) {
-        throw new Error("فروشگاه مورد نظر حذف نشد");
+    // به‌روزرسانی حذف امن
+    const result = await shops.updateOne(
+      { _id: ShopID },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_by: userData.id, // شناسه کاربر حذف‌کننده
+          deleted_at: new Date(), // زمان حذف
+        },
       }
+    );
 
-    const deleteStatus=deleteOldImage(Shop.LogoUrl)
-    if (deleteStatus.status!==200) {
-      console.error("خطا در حذف فایل تصویر:", err);
-      throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-     }
- 
-     const deleteStatus2=deleteOldImage(Shop.TextLogoUrl)
-     if (deleteStatus2.status!==200) {
-       console.error("خطا در حذف فایل تصویر:", err);
-       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-      }  
-         const deleteStatus3=deleteOldImage(Shop.BackGroundShopUrl)
-     if (deleteStatus3.status!==200) {
-       console.error("خطا در حذف فایل تصویر:", err);
-       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-      }  
-             const deleteStatus4=deleteOldImage(Shop.BackGroundpanelUrl)
-     if (deleteStatus4.status!==200) {
-       console.error("خطا در حذف فایل تصویر:", err);
-       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
+    if (result.nModified === 0) {
+      throw new Error("فروشگاه مورد نظر حذف نشد");
+    }
+
+    // لیست URL‌های تصاویر برای حذف
+    const imageUrls = [
+      Shop.LogoUrl,
+      Shop.TextLogoUrl,
+      Shop.BackGroundShopUrl,
+      Shop.BackGroundpanelUrl,
+    ].filter(url => !!url); // فیلتر کردن URL های null یا undefined
+
+    console.log("Image URLs to delete:", imageUrls);
+
+    // حذف موازی تصاویر
+    const deletePromises = imageUrls.map(async (url) => {
+      console.log(`Deleting image: ${url}`);
+      const deleteStatus = await deleteOldImage(url);
+      if (deleteStatus.status !== 200) {
+        console.error(`خطا در حذف فایل تصویر برای URL: ${url} - ${deleteStatus.message}`);
+        // به جای پرتاب خطا، می‌توانید پیام خطا را ذخیره کنید
+        return { url, success: false, message: deleteStatus.message };
+      } else {
+        console.log(`حذف فایل تصویر موفق: ${url}`);
+        return { url, success: true };
       }
- 
+    });
 
-    return { message: "فروشگاه و فایل تصویر با موفقیت حذف شدند", status: 200 };
+    // اجرای همه حذف‌ها
+    const deleteResults = await Promise.all(deletePromises);
+
+    // بررسی نتایج حذف
+    const failedDeletes = deleteResults.filter(result => !result.success);
+    if (failedDeletes.length > 0) {
+      return { 
+        message: "فروشگاه حذف شد، ولی برخی تصاویر حذف نشدند.",
+        status: 207, // Multi-Status
+        details: failedDeletes
+      };
+    }
+
+    return { message: "فروشگاه و تمام فایل‌های تصویر با موفقیت حذف شدند", status: 200 };
   } catch (error) {
     console.error("خطا در حذف فروشگاه:", error);
     return { error: error.message, status: 500 };

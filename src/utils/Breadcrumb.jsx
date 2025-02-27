@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 function Breadcrumb({ path, onBreadcrumbClick }) {
   return (
-    <nav className="bg-gray-100 dark:bg-zinc-800 p-2 md:p-4 rounded-md mb-2 md:mb-4 text-xs md:text-base">
+    <nav className="bg-gray-100 dark:bg-zinc-800 p-2  rounded-md mb-2  text-xs md:text-base">
       <ol className="list-none flex flex-wrap text-grey-dark">
         {path?.map((crumb, index) => (
           <li

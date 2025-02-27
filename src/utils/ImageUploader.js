@@ -170,7 +170,49 @@ export const processAndSaveImage = async (image, oldUrl, uploadDir ) => {
   return image;
 };
 
+// export const deleteOldImage = async (oldUrl) => {
+//   try {
+//     // استخراج کلید از URL
+//     const url = new URL(oldUrl);
+//     let key = '';
+
+//     // بررسی و استخراج کلید بسته به ساختار URL
+//     if (process.env.S3_ENDPOINT) {
+//       // اگر از S3 سازگار دیگری استفاده می‌کنید مانند DigitalOcean Spaces
+//       const pathParts = url.pathname.split('/');
+//       // فرض می‌شود که پس از نام باکت، کلید شروع می‌شود
+//       key = pathParts.slice(2).join('/');
+//     } else {
+//       // ساختار URL پیش‌فرض S3
+//       key = url.pathname.slice(1); // حذف اولین `/`
+//     }
+
+//     const deleteParams = {
+//       Bucket: process.env.S3_BUCKET_NAME,
+//       Key: key,
+//     };
+
+//     const deleteCommand = new DeleteObjectCommand(deleteParams);
+//     await s3.send(deleteCommand);
+
+// return{status:200}
+//   } catch (error) {
+    
+//     return { status: 500, message: 'خطایی در حذف تصویر رخ داد.' };
+
+//     // تصمیم بگیرید که آیا می‌خواهید خطا را پرتاب کنید یا خیر
+//   }
+// };
+
+
 export const deleteOldImage = async (oldUrl) => {
+  console.log(`Attempting to delete image: ${oldUrl}`);
+  
+  if (!oldUrl) {
+    console.warn("No URL provided for deletion.");
+    return { status: 400, message: "URL provided is invalid." };
+  }
+
   try {
     // استخراج کلید از URL
     const url = new URL(oldUrl);
@@ -187,22 +229,25 @@ export const deleteOldImage = async (oldUrl) => {
       key = url.pathname.slice(1); // حذف اولین `/`
     }
 
+    console.log(`Extracted key for deletion: ${key}`);
+
     const deleteParams = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
     };
 
     const deleteCommand = new DeleteObjectCommand(deleteParams);
-    await s3.send(deleteCommand);
-
-return{status:200}
-  } catch (error) {
     
+     await s3.send(deleteCommand);
+    
+    return { status: 200 };
+  } catch (error) {
+    console.error("Error in deleteOldImage:", error);
     return { status: 500, message: 'خطایی در حذف تصویر رخ داد.' };
-
-    // تصمیم بگیرید که آیا می‌خواهید خطا را پرتاب کنید یا خیر
   }
 };
+
+
 
 export const deleteOldImages = async (oldUrls) => {
   
