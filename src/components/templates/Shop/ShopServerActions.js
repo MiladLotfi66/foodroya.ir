@@ -38,7 +38,6 @@ export const simplifyFollowers = (followers) => {
 
 
 export async function isUniqShop(uniqueIdentifier, currentShopId = null) {
-  console.log(uniqueIdentifier, currentShopId);
   
   await connectDB();
   
@@ -230,7 +229,6 @@ export async function authenticateUser() {
 }
 
 export async function EditShop(ShopData) {
-  console.log("111111111111111-------------1111111111111111111");
   
   try {
     await connectDB();
@@ -259,7 +257,7 @@ export async function EditShop(ShopData) {
     }
 console.log("Shop",Shop);
 
-    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(userData.id))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
     const validatedData = await ShopSchema.validate(
@@ -779,6 +777,7 @@ export async function unfollowShopServerAction(ShopID) {
     } catch (authError) {
       userData = null;
       console.log("Authentication failed:", authError);
+
     }
 
   if (!userData) {
@@ -845,7 +844,7 @@ async function ShopServerEnableActions(ShopID) {
       throw new Error("فروشگاهی با این آی‌دی یافت نشد");
     }
 
-    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(userData.id))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -885,7 +884,7 @@ async function ShopServerDisableActions(ShopID) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(userData.id))) {
       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
@@ -1047,7 +1046,7 @@ async function DeleteShops(ShopID) {
       throw new Error("فروشگاه مورد نظر یافت نشد");
     }
 
-    if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
+    if (!(await hasUserAccessToEditAndDeleteShop(userData.id))) {
             throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
     }
 
