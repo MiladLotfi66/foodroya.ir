@@ -6,35 +6,32 @@ import axios from "axios";
 
 export async function SendSMSServerAction(data) {
   await connectDB();
-  const phone  = data;
+  const phone = data;
   const code = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
   const date = new Date();
   const expTime = date.getTime() + 180000;
   const currentTime = date.getTime();
-  const otpRecord = await OTP.findOne({ phone });
-
+  
+  // جستجوی رکورد OTP موجود
+  const otpRecord = await OTP.findOne({  identifier: phone });
 
   if (otpRecord) {
-    // Check if the last failed attempt was less than 10 minutes ago
+    // بررسی تعداد تلاش‌های ناموفق
     if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
       return { error: "تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.", status: 428 };
     }
+    
+    // بررسی اعتبار کد قبلی
+    if (otpRecord.expTime > currentTime) {
+      return {
+        error: "کد قبلی هنوز معتبر است، لطفاً بعد از اتمام اعتبار کد فعلی دوباره تلاش کنید.",
+        status: 429
+      };
+    }
   }
 
-
-
-   // Check if an OTP was sent within the last 3 minutes
-
-   const recentOTP = await OTP.findOne({ phone, expTime: { $gt: currentTime } });
-
-   if (recentOTP) {
-     return {
-       error: "کد قبلی هنوز معتبر است، لطفاً بعد از اتمام اعتبار کد فعلی دوباره تلاش کنید.",
-       status: 429
-     };
-   }
-
   try {
+    // ارسال کد از طریق API
     const response = await axios.post("http://ippanel.com/api/select", {
       op: "pattern",
       user: process.env.IPPANEL_USER,
@@ -46,13 +43,28 @@ export async function SendSMSServerAction(data) {
     });
 
     if (response.status === 200) {
-      await OTP.create({
-        phone,
-        otp: code,
-        expTime,
-        useStep: 0,
-        tryStep:0,
-      });
+      if (otpRecord) {
+        // به‌روزرسانی رکورد موجود
+        await OTP.updateOne(
+          {  identifier: phone },
+          {
+            otp: code,
+            expTime,
+            useStep: 0,
+            tryStep: 0,
+          }
+        );
+      } else {
+        // ایجاد رکورد جدید اگر وجود نداشت
+        await OTP.create({
+          otp: code,
+          expTime,
+          useStep: 0,
+          tryStep: 0,
+          identifier: phone // استفاده از شماره تلفن به عنوان شناسه
+        });
+      }
+      
       return { message: "کد ارسال شد", status: 200 };
     } else {
       console.log("Error response: ", response.data);
@@ -63,3 +75,4 @@ export async function SendSMSServerAction(data) {
     return { error: "کد ارسال نشد ‍، با پشتیبانی تماس بگیرید", status: 407 };
   }
 }
+

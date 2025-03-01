@@ -53,7 +53,7 @@ CredentialsProvider({
       throw new Error("شماره تماس و کد یکبار مصرف الزامی است");
     }
   
-    const otpRecord = await OTP.findOne({ phone });
+    const otpRecord = await OTP.findOne({ identifier: phone });
     
     
     // const otpRecord = await OTP.findOne({ phone, expTime: { $gt: currentTime } });
@@ -67,7 +67,7 @@ CredentialsProvider({
     if (otpRecord.useStep >= 5 && otpRecord.lastFailedAttempt && (currentTime - otpRecord.lastFailedAttempt < 10 * 60 * 1000)) {
       throw new Error("تعداد تلاش‌های شما به حداکثر رسیده است. لطفاً بعد از ۱۰ دقیقه دوباره سعی کنید.");
     }
-    const recentOTP = await OTP.findOne({ phone, expTime: { $gt: currentTime } });
+    const recentOTP = await OTP.findOne({ identifier: phone, expTime: { $gt: currentTime } });
 
     if (recentOTP.otp !== p2e(otp)){
 

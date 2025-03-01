@@ -56,10 +56,9 @@ function ForgetPassword() {
         toast.error(res.error);
       }
     } else {
-      console.log(data.phone,data.OTP);
       const res = await signIn("OTPProvider", {
         redirect: false,
-        phone: data.phone, // شماره تلفنی که کاربر وارد می‌کند
+        phone: phoneState, // شماره تلفنی که کاربر وارد می‌کند
         otp: data.OTP, // کد OTP که کاربر وارد می‌کند
         callbackUrl: "/", // آدرس صفحه‌ای که بعد از ورود موفقیت‌آمیز می‌خواهید کاربر به آن هدایت شود
       });

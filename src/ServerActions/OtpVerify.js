@@ -5,14 +5,17 @@ import OTP from "@/models/OTP";
 import {  p2e } from "@/utils/ReplaceNumber";
 
 export async function verifyOTP(phone, otp) {
+  console.log("phone, otp",phone, otp);
+  
   await connectDB();
 
   if (!phone || !otp) {
     return { error: "شماره تماس و کد یکبار مصرف الزامی است", status: 400 };
   }
 
-  const otpRecord = await OTP.findOne({ phone });
+  const otpRecord = await OTP.findOne({ identifier:phone });
 
+console.log("otpRecord",otpRecord);
 
   if (!otpRecord) {
     return { error: "کد یکبار مصرف را اشتباه وارد کرده‌اید", status: 401 };

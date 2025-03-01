@@ -94,7 +94,15 @@ const ContactSchema = new mongoose.Schema(
     timestamps: true, // افزودن فیلدهای createdAt و updatedAt خودکار
   }
 );
-ContactSchema.index({ shop: 1, userAccount: 1 }, { unique: true });
+
+// تعریف ایندکس یکتا به صورت Partial
+ContactSchema.index(
+  { shop: 1, userAccount: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { userAccount: { $exists: true } }
+  }
+);
 
 // جلوگیری از ایجاد مدل چندباره هنگام HMR (Hot Module Replacement) در توسعه
 export default mongoose.models.Contact || mongoose.model('Contact', ContactSchema);

@@ -7,12 +7,9 @@ import mongoose from "mongoose"; // اطمینان از وارد کردن mongoo
 export async function POST(request) {
   try {
     const body = await request.json();
-    console.log("Received body:", body); // لاگ کردن داده‌های دریافتی
 
     const { ShopUniqueName, currentShopId } = body;
 
-    console.log("ShopUniqueName:", ShopUniqueName);
-    console.log("currentShopId:", currentShopId);
 
     if (!ShopUniqueName) {
       console.error("ShopUniqueName is missing");

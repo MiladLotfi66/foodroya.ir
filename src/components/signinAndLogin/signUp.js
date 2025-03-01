@@ -16,6 +16,9 @@ import RegisterSchema from "@/utils/yupSchemas/RegisterSchema";
 import FormStep from "@/module/User/FormStep";
 import InputField from "@/module/User/InputField";
 import { checkUsernameUnique, completeSignUp } from "./Actions/signUpServerAction";
+import { SendSMSServerAction } from "src/ServerActions/SendSMSServerAction";
+import { verifyOTP } from "src/ServerActions/OtpVerify";
+
 function SignUp() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -23,6 +26,12 @@ function SignUp() {
   const [showPassword, setShowPassword] = useState(false); // وضعیت نمایش رمز عبور
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(null);
+
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [formData, setFormData] = useState(null); // برای ذخیره اطلاعات فرم قبل از تأیید OTP
 
   // *******************hook use form********************
   const {
@@ -85,19 +94,73 @@ function SignUp() {
   const formsubmitting = async (data) => {
     setIsSubmit(true);
     try {
-      const res = await completeSignUp(data);
-      if (res.status === 201) {
-        toast.success(
-          res.message ||
-            "ثبت‌نام موفقیت‌آمیز بود. لطفاً وارد حساب کاربری خود شوید."
-        );
-        router.push("/signin");
+      // به جای ثبت نام مستقیم، ابتدا OTP ارسال می‌کنیم
+      setFormData(data); // ذخیره اطلاعات فرم
+      const res = await SendSMSServerAction(data.phone);
+      console.log("res",res);
+      
+      if (res.status === 200) {
+        setIsOtpSent(true);
+        toast.success("کد تأیید به شماره موبایل شما ارسال شد");
+        setStep(5); // رفتن به مرحله تأیید OTP
       } else {
-        toast.error(res.error || "خطا در ثبت نام.");
+        toast.error(res.error || "خطا در ارسال کد تأیید");
       }
     } catch (error) {
-      console.error("خطا در ثبت نام:", error);
-      toast.error("خطا در ثبت نام. لطفاً دوباره تلاش کنید.");
+      console.error("خطا در ارسال کد تأیید:", error);
+      toast.error("خطا در ارسال کد تأیید. لطفاً دوباره تلاش کنید.");
+    }
+    setIsSubmit(false);
+  };
+
+  // تابع جدید برای تأیید OTP و تکمیل ثبت نام
+  const verifyAndCompleteSignUp = async () => {
+    if (!otp || otp.length < 5) {
+      setOtpError("لطفاً کد تأیید را وارد کنید");
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      const verifyResult = await verifyOTP(formData.phone, otp);
+      console.log("verifyResult",verifyResult);
+      
+      if (verifyResult.status === 200) {
+        // OTP تأیید شد، حالا ثبت نام را تکمیل می‌کنیم
+        const signUpResult = await completeSignUp(formData);
+        
+        if (signUpResult.status === 201) {
+          toast.success(
+            signUpResult.message ||
+              "ثبت‌نام موفقیت‌آمیز بود. لطفاً وارد حساب کاربری خود شوید."
+          );
+          router.push("/signin");
+        } else {
+          toast.error(signUpResult.error || "خطا در ثبت نام.");
+        }
+      } else {
+        setOtpError(verifyResult.error || "کد تأیید نامعتبر است");
+      }
+    } catch (error) {
+      console.error("خطا در تأیید کد:", error);
+      setOtpError("خطا در تأیید کد. لطفاً دوباره تلاش کنید.");
+    }
+    setIsVerifyingOtp(false);
+  };
+
+  // ارسال مجدد کد OTP
+  const resendOTP = async () => {
+    setIsSubmit(true);
+    try {
+      const res = await SendSMSServerAction(formData.phone);
+      
+      if (res.status === 200) {
+        toast.success("کد تأیید مجدداً ارسال شد");
+      } else {
+        toast.error(res.error || "خطا در ارسال مجدد کد تأیید");
+      }
+    } catch (error) {
+      console.error("خطا در ارسال مجدد کد تأیید:", error);
+      toast.error("خطا در ارسال مجدد کد تأیید. لطفاً دوباره تلاش کنید.");
     }
     setIsSubmit(false);
   };
@@ -134,8 +197,10 @@ function SignUp() {
       e.preventDefault();
       if (step < 4) {
         await nextStep();
-      } else {
+      } else if (step === 4) {
         handleSubmit(formsubmitting)();
+      } else if (step === 5) {
+        verifyAndCompleteSignUp();
       }
     }
   };
@@ -154,7 +219,7 @@ function SignUp() {
           <div>
             <h4 className="text-sm">
               خوش آمدید به
-              <Link href="/" className="text-orange-300 font-MorabbaMedium ml-1">
+              <Link href="/" className="text-orange-300 font-MorabbaMedium mr-1">
                 {" فود رویا"}
               </Link>
             </h4>
@@ -173,14 +238,14 @@ function SignUp() {
 
         {/* *******************progress bar******************** */}
         <div className="flex justify-between mb-6">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <div key={s} className="flex-1 flex items-center">
               <div
                 className={`w-full h-2 rounded-full ${
                   step >= s ? "bg-teal-500" : "bg-gray-300"
                 }`}
               ></div>
-              {s < 4 && (
+              {s < 5 && (
                 <div className="w-4 h-4 bg-teal-500 rounded-full -ml-2 border-2 border-white"></div>
               )}
             </div>
@@ -197,12 +262,12 @@ function SignUp() {
           {/* *******************مرحله 1: نام ******************** */}
           <FormStep isActive={step === 1}>
             <InputField
-              label="نام"
+              label="نام و نام خانوادگی"
               Icon={Usersvg}
               register={register}
               name="name"
               type="text"
-              placeholder="نام"
+              placeholder="نام و نام خانوادگی"
               error={errors.name}
               iconSize="w-4 h-4" // کاهش اندازه آیکون
             />
@@ -340,7 +405,59 @@ function SignUp() {
                     : "bg-teal-600 hover:bg-teal-700"
                 }`}
               >
-                {isSubmit ? <HashLoader size={20} color="#fff" /> : "ثبت نام"}
+                {isSubmit ? <HashLoader size={20} color="#fff" /> : "ارسال کد تأیید"}
+              </button>
+            </div>
+          </FormStep>
+
+          {/* *******************مرحله 5: تأیید OTP ******************** */}
+          <FormStep isActive={step === 5}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                کد تأیید ارسال شده به شماره {formData?.phone}
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => {
+                    setOtp(e.target.value);
+                    setOtpError("");
+                  }}
+                  placeholder="کد تأیید را وارد کنید"
+                  className="w-full py-2 px-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  maxLength={5}
+                />
+              </div>
+              {otpError && <p className="text-sm text-red-500 mt-1">{otpError}</p>}
+              <button
+                type="button"
+                onClick={resendOTP}
+                className="text-teal-600 text-sm mt-2 hover:underline"
+                disabled={isSubmit}
+              >
+                ارسال مجدد کد
+              </button>
+            </div>
+            <div className="flex justify-between mt-4 items-center">
+              <button
+                type="button"
+                onClick={prevStep}
+                className="w-full py-2 px-4 rounded-xl text-white bg-gray-400 hover:bg-gray-500 mr-2"
+              >
+                قبلی
+              </button>
+              <button
+                type="button"
+                onClick={verifyAndCompleteSignUp}
+                disabled={isVerifyingOtp}
+                className={`w-full py-2 px-4 rounded-xl text-white flex items-center justify-center ${
+                  isVerifyingOtp
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
+              >
+                {isVerifyingOtp ? <HashLoader size={20} color="#fff" /> : "تأیید و ثبت نام"}
               </button>
             </div>
           </FormStep>
@@ -352,3 +469,4 @@ function SignUp() {
 }
 
 export default SignUp;
+
