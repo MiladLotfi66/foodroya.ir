@@ -15,8 +15,10 @@ export const fetchCart = createAsyncThunk(
         product: item.product,
         title: item.productTitle,     // تبدیل productTitle به title
         price: item.price,
+
         quantity: item.quantity,
         shop: item.shop,
+
         shopInfo: { // اضافه کردن اطلاعات کامل فروشگاه
           // id: item._id,
           LogoUrl: item.LogoUrl,

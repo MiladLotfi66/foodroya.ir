@@ -3,8 +3,8 @@ import React from 'react'
 function Sunsvg() {
   return (
     <svg
-    className="w-1 h-1"
     id="Sunsvg"
+    className="w-5 h-5"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"

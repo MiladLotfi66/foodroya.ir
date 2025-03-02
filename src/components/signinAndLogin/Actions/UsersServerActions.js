@@ -38,32 +38,49 @@ export async function UpdateUserProfile(profileData) {
     }
 
     // اگر تصویر جدید ارسال شده است، آن را پردازش و ذخیره کنید
-    if (profileData.userImage) {
+    if (profileData.userImage && profileData.userImage !== user.userImage) {
       const base64String = profileData.userImage;
 
-      // بررسی و استخراج داده‌های base64
-      const matches = base64String.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        const mimeType = matches[1];
-        const data = matches[2];
-        const buffer = Buffer.from(data, 'base64');
-
-        // ایجاد یک شیء مشابه فایل برای ارسال به تابع processAndSaveImage
-        const mockImage = {
-          type: mimeType,
-          size: buffer.length,
-          async arrayBuffer() {
-            return buffer;
-          }
-        };
-
-        const uploadDir = 'Uploads/userImages';
-
-        // آپلود تصویر به S3 و دریافت URL جدید
-        const imageURL = await processAndSaveImage(mockImage, user.userImage, uploadDir);
-        profileData.userImage = imageURL;
+      // بررسی اینکه آیا تصویر یک URL است یا داده base64
+      if (base64String.startsWith('http')) {
+        // اگر تصویر یک URL است، آن را بدون تغییر نگه دارید
+        // این حالت زمانی اتفاق می‌افتد که کاربر تصویر را تغییر نداده است
+        profileData.userImage = base64String;
       } else {
-        throw new Error("فرمت تصویر ارسال شده نامعتبر است.");
+        // بررسی و استخراج داده‌های base64
+        const matches = base64String.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+        
+        if (matches && matches.length === 3) {
+          const mimeType = matches[1];
+          const data = matches[2];
+          const buffer = Buffer.from(data, 'base64');
+
+          // ایجاد یک شیء مشابه فایل برای ارسال به تابع processAndSaveImage
+          const mockImage = {
+            type: mimeType,
+            size: buffer.length,
+            async arrayBuffer() {
+              return buffer;
+            }
+          };
+
+          const uploadDir = 'Uploads/userImages';
+
+          try {
+            // آپلود تصویر به S3 و دریافت URL جدید
+            const imageURL = await processAndSaveImage(mockImage, user.userImage, uploadDir);
+            profileData.userImage = imageURL;
+          } catch (uploadError) {
+            console.error("خطا در آپلود تصویر:", uploadError);
+            throw new Error("خطا در آپلود تصویر: " + uploadError.message);
+          }
+        } else if (base64String === "") {
+          // اگر تصویر خالی است، از تصویر قبلی استفاده کنید
+          profileData.userImage = user.userImage;
+        } else {
+          console.error("فرمت تصویر نامعتبر:", base64String.substring(0, 100) + "...");
+          throw new Error("فرمت تصویر ارسال شده نامعتبر است.");
+        }
       }
     }
 

@@ -10,6 +10,9 @@ import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
 import CartInitializer from "@/templates/shoppingCart/CartInitializer";
+import BottomNavigation from "@/templates/bottomNav/BottomNavigation";
+import ShoppingCart from "@/templates/shoppingCart/shoppingCart";
+import BasketCartModal from "@/templates/shoppingCart/BasketCartModal";
 
 
 
@@ -74,9 +77,13 @@ export default function RootLayout({ children }) {
           <ThemeProviders>
             <Providers>
               <ScrollToTop/>
-              <Header />
+              {/* <Header />
               <MobileHeader />
-              <MobileMenu />
+              <MobileMenu /> */}
+        <BasketCartModal />
+
+                    <BottomNavigation />
+
               <AosInit/>
               <CartInitializer /> {/* فرض میکنیم user از context دریافت میشود */}
 

@@ -3,7 +3,7 @@ import React from 'react'
 function Moonsvg() {
   return (
     <svg
-    className="w-1 h-1"
+    className="w-5 h-5"
     id="Moonsvg"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"

@@ -2,7 +2,7 @@
 function Loginlogosvg() {
   return (
     <svg
-    className="w-1 h-1"
+    className="w-5 h-5"
     id="login"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"

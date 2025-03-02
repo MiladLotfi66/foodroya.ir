@@ -21,7 +21,7 @@ import usericone from "@/public/Images/jpg/user.webp";
 
 import PencilIcon from "@/module/svgs/PencilIcon";
 import Emailsvg from "@/module/svgs/Emailsvg";
-import keySvg from "@/module/svgs/keySvg";
+import KeySvg from "@/module/svgs/KeySvg";
 import Locksvg from "@/module/svgs/Locksvg";
 import Modal from "./Modal";
 import LocationSvg from "@/module/svgs/location";
@@ -32,9 +32,16 @@ import Link from "next/link";
 import { GetUserShopsCount } from "@/templates/Shop/ShopServerActions";
 import { GetUserFollowingShops,GetUserShops } from "@/templates/Shop/ShopServerActions";
 import AvatarGroupTailwind from "@/module/User/AvatarGroupTailwind.js";
+import { useTheme } from "next-themes";
+import { signOut } from "next-auth/react";
+import Moonsvg from "@/module/svgs/Moonsvg.js";
+import Sunsvg from "@/module/svgs/Sunsvg";
+import Exitsvg from "@/module/svgs/Exitsvg";
+import Loginlogosvg from "@/module/svgs/Loginlogosvg";
 
 function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const { theme, setTheme } = useTheme();
   const [isSubmit, setIsSubmit] = useState(false);
   const [user, setUser] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -98,7 +105,6 @@ function ProfilePage() {
 
       if (res.status === 200) {
         setUser(res.user);
-        console.log(res.user);
 
         let dateOfBirth = res.user.dateOfBirth
           ? new Date(res.user.dateOfBirth)
@@ -121,7 +127,6 @@ function ProfilePage() {
 
         // دریافت لیست غرفه‌های دنبال‌شده
         const resFollowingShops = await GetUserFollowingShops();
-        console.log("resFollowingShops", resFollowingShops);
 
         if (resFollowingShops.status === 200) {
           setFollowingShops(resFollowingShops.shops); // فرض می‌کنیم API لیست غرفه‌ها را در کلید "shops" برمی‌گرداند
@@ -132,7 +137,6 @@ function ProfilePage() {
         } 
         // دریافت لیست غرفه‌های دنبال‌شده
         const resGetUserShops = await GetUserShops();
-        console.log("resGetUserShops", resGetUserShops);
 
         if (resGetUserShops.status === 200) {
           setUserShops(resGetUserShops.Shops); // فرض می‌کنیم API لیست غرفه‌ها را در کلید "shops" برمی‌گرداند
@@ -157,20 +161,7 @@ function ProfilePage() {
           profileData.dateOfBirth
         ).toISOString();
       }
-
-      // پردازش userImage مشابه قبل
-      // if (
-      //   profileData.userImage &&
-      //   profileData.userImage.startsWith("data:image/")
-      // ) {
-      //   profileData.userImage = profileData.userImage.replace(
-      //     /^data:image\/\w+;base64,/,
-      //     ""
-      //   );
-      // } else {
-      //   delete profileData.userImage;
-      // }
-
+      
       // حذف securityQuestion اگر تنظیم شده است
       if (user?.securityQuestion?.question && user?.securityQuestion?.answer) {
         delete profileData.securityQuestion;
@@ -180,7 +171,6 @@ function ProfilePage() {
           answer: profileData.securityQuestion.answer.trim(),
         };
       }
-      console.log("Profile Data:", profileData); // دیباگ کردن داده‌های پروفایل
 
       const result = await UpdateUserProfile(profileData);
 
@@ -264,6 +254,68 @@ function ProfilePage() {
     }
   };
 
+  // اضافه کردن تابع برای تغییر تم
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  // اضافه کردن تابع برای خروج از حساب کاربری
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
+  if (status === "unauthenticated") {
+    return (
+      <FormTemplate>
+        <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-2 md:mt-12 p-4 md:p-8 max-w-4xl mx-auto">
+          <header className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl md:text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-5">
+              نمایه کاربری
+            </h1>
+            
+            {/* دکمه‌های تغییر تم و ورود - با سایز بزرگتر و مرتب‌سازی شده */}
+            <div className="flex items-center gap-2">
+            <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
+                  title={theme === "dark" ? "حالت روشن" : "حالت تاریک"}
+                >
+                  {theme === "dark" ? (
+                    <Sunsvg className="w-5 h-5 rounded-full dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-100 " />
+
+                  ) : (
+                    <Moonsvg className="w-5 h-5 rounded-full dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-100 " />
+
+                  )}
+                </button>
+              
+              <Link
+                href="/signin"
+                className="flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
+                title="ورود به حساب کاربری"
+              >
+                  <Loginlogosvg className="w-5 h-5 " />
+
+              </Link>
+            </div>
+          </header>
+          
+          <div className="text-center py-10">
+            <h2 className="text-xl font-DanaDemiBold mb-4 text-gray-800 dark:text-gray-200">
+              برای مشاهده و ویرایش پروفایل خود، لطفا وارد حساب کاربری شوید
+            </h2>
+            <Link
+              href="/signin"
+              className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-DanaMedium transition-colors duration-200"
+            >
+              ورود به حساب کاربری
+            </Link>
+          </div>
+        </div>
+      </FormTemplate>
+    );
+  }
+
   return (
     <>
       {/* Head برای SEO */}
@@ -305,19 +357,48 @@ function ProfilePage() {
 
       <FormTemplate >
       <main>
-          <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-8 md:mt-36 p-8 md:p-12 max-w-4xl mx-auto">
-            <header className="flex justify-between items-center mb-8">
-              <h1 className="text-2xl md:text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-10">
+          <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-2 md:mt-12 p-4 md:p-8 max-w-4xl mx-auto max-h-[88vh] overflow-y-auto">
+            <header className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl md:text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-5">
                 نمایه کاربری
               </h1>
-              <div className="hidden">
-                <LocationSvg />
-                <PhoneSvg />
-                <TextPage />
-                <BirtdaySvg />
-                <Emailsvg />
-                <Locksvg />
-                <keySvg />
+              
+              {/* اضافه کردن دکمه‌های تغییر تم و ورود/خروج - با سایز بزرگتر و مرتب‌سازی شده */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
+                  title={theme === "dark" ? "حالت روشن" : "حالت تاریک"}
+                >
+                  {theme === "dark" ? (
+                    <Sunsvg className="w-5 h-5 rounded-full dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-100 " />
+
+                  ) : (
+                    <Moonsvg className="w-5 h-5 rounded-full dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-100 " />
+
+                  )}
+                </button>
+                
+                {session ? (
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
+                    title="خروج از حساب کاربری"
+                  >
+                                        <Exitsvg className="w-5 h-5 " />
+
+                  </button>
+                ) : (
+                  <Link
+                    href="/signin"
+                    className="flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
+                    title="ورود به حساب کاربری"
+                  >
+                   
+                    <Loginlogosvg className="w-5 h-5 " />
+
+                  </Link>
+                )}
               </div>
             </header>
 
@@ -401,18 +482,18 @@ function ProfilePage() {
               <div className="flex justify-between items-center">
 
                 <Link href="/Shop/allShop" className="mt-8 gap-2 first-line:flex-col text-center items-center justify-center">
-                  <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
+                  <h2 className="text-sm font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
                     غرفه‌هایی که دنبال می‌کنید
                   </h2>
                   {followingShops.length > 0 ? (
                     <AvatarGroupTailwind
                       avatars={followingShops.map((shop) => shop.avatarUrl)}
                       max={4}
-                      size={50} // اندازه آواتارها به پیکسل
+                      size={35} // اندازه آواتارها به پیکسل
                       overlap={25} // میزان همپوشانی به پیکسل
                     />
                   ) : (
-                    <p className="text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
                       شما هنوز هیچ غرفه‌ای را دنبال نکرده‌اید.
                     </p>
                   )}
@@ -428,7 +509,7 @@ function ProfilePage() {
                     <AvatarGroupTailwind
                       avatars={UserShops.map((shop) => shop.avatarUrl)}
                       max={4}
-                      size={50} // اندازه آواتارها به پیکسل
+                      size={35} // اندازه آواتارها به پیکسل
                       overlap={25} // میزان همپوشانی به پیکسل
                     />
                   ) : (

@@ -1,8 +1,8 @@
 
-function keySvg() {
+function KeySvg() {
   return (
     <svg
-    id='keySvg'
+    id='KeySvg'
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
@@ -19,5 +19,5 @@ function keySvg() {
   )
 }
 
-export default keySvg
+export default KeySvg
 

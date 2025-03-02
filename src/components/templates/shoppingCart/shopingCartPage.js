@@ -89,17 +89,49 @@ const ShopingCartPage = () => {
   };
 
   if (cartStatus === 'loading') {
-    return <div className="min-h-screen p-8 text-center">در حال بارگذاری سبد خرید...</div>;
+    return (
+      <div className="p-8 text-center">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">سبد خرید</h2>
+          <button onClick={handleToggleBasketMenu} className="text-gray-500">
+            <svg width="24" height="24">
+              <use href="#CloseSvg"></use>
+            </svg>
+          </button>
+        </div>
+        <div>در حال بارگذاری سبد خرید...</div>
+      </div>
+    );
   }
 
   if (cartStatus === 'failed') {
-    return <div className="min-h-screen p-8 text-center text-red-500">خطا: {cartError}</div>;
+    return (
+      <div className="p-8 text-center">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">سبد خرید</h2>
+          <button onClick={handleToggleBasketMenu} className="text-gray-500">
+            <svg width="24" height="24">
+              <use href="#CloseSvg"></use>
+            </svg>
+          </button>
+        </div>
+        <div className="text-red-500">خطا: {cartError}</div>
+      </div>
+    );
   }
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">سبد خرید شما خالی است</h2>
+      <div className="p-8 text-center">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">سبد خرید</h2>
+          <button onClick={handleToggleBasketMenu} className="text-gray-500">
+            <svg width="24" height="24">
+              <use href="#CloseSvg"></use>
+            </svg>
+          </button>
+        </div>
+        <h2 className="text-lg font-bold mb-4">سبد خرید شما خالی است</h2>
         <Link href="#" className="text-blue-500 hover:underline">
           بازگشت به فروشگاه
         </Link>
@@ -108,17 +140,14 @@ const ShopingCartPage = () => {
   }
 
   return (
-    <div className="min-h-screen p-1 max-w-4xl mx-auto">
+    <div className="p-4">
       <div className="hidden">
         <CloseSvg />
       </div>
-      <div className="flex text-center">
-        <button
-          aria-label="close"
-          className="hover:text-orange-300 md:hidden"
-          onClick={handleToggleBasketMenu}
-        >
-          <svg width="34" height="34">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">سبد خرید</h2>
+        <button onClick={handleToggleBasketMenu} className="text-gray-500">
+          <svg width="24" height="24">
             <use href="#CloseSvg"></use>
           </svg>
         </button>

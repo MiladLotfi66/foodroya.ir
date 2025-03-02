@@ -25,7 +25,7 @@ export async function POST(req, res) {
         pass: process.env.IPPANEL_PASS, // استفاده از متغیرهای محیطی
         fromNum: "3000505",
         toNum: phone,
-        patternCode: "l4p0h3h0vdznka5",
+        patternCode: "zilhxudr6dcz4m8",
         inputData: [{ "verification-code": code }],
       },
     },
