@@ -47,6 +47,7 @@ function ShopCard({
   const followFunc = async () => {
     try {
       const res = await followShopServerAction(Shop._id);
+      console.log("res", res);
       if (res.status === 200 || res.status === 201) {
         toast.success("فروشگاه با موفقیت دنبال شد");
         setIsFollowing(true);
@@ -61,6 +62,8 @@ function ShopCard({
   const unfollowFunc = async () => {
     try {
       const res = await unfollowShopServerAction(Shop._id);
+      console.log("res", res);
+      
       if (res.status === 200 || res.status === 201) {
         toast.success("فروشگاه با موفقیت از دنبال‌شدگان حذف شد");
         setIsFollowing(false);
@@ -198,9 +201,14 @@ function ShopCard({
             {Shop.ShopDiscription}
           </p>
         </div>
-        <div className="mt-4">
+        <div className=" flex justify-between mt-4">
           <h3 className="text-sm font-medium text-blue-500 hover:underline">
             <Link href={`/${Shop._id}`}>@{Shop.ShopUniqueName}</Link>
+          </h3>
+
+           <h3 className="text-sm font-medium text-blue-500 hover:underline">
+            <Link href={`/${Shop._id}/panel`}>پنل مدیریتی</Link>
+
           </h3>
         </div>
       </div>

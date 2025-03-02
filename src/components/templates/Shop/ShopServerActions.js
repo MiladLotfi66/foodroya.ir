@@ -728,7 +728,7 @@ export async function followShopServerAction(ShopID) {
       userData = null;
       console.log("Authentication failed:", authError);
     }  
-      if (!userData) {
+    if (!userData) {
       throw new Error("User data not found");
     }
 
@@ -739,7 +739,11 @@ export async function followShopServerAction(ShopID) {
     }
 
     // بررسی اینکه آیا کاربر قبلاً فروشگاه را دنبال کرده است یا خیر
-    const userAlreadyFollows = Shop.followers.includes(userData.id);
+    // تبدیل آیدی‌ها به رشته برای مقایسه دقیق
+    const userAlreadyFollows = Shop.followers.some(
+      followerId => followerId.toString() === userData.id.toString()
+    );
+    
     if (userAlreadyFollows) {
       return {
         message: "شما قبلاً این فروشگاه را دنبال کرده‌اید",
@@ -755,8 +759,7 @@ export async function followShopServerAction(ShopID) {
     const user = await Users.findById(userData.id);
     user.following.push(ShopID);
     await user.save();
-    revalidatePath("/Shop/allShop")
-
+    revalidatePath("/Shop/allShop");
 
     return { message: "فروشگاه با موفقیت دنبال شد", status: 200 };
   } catch (error) {
@@ -777,14 +780,12 @@ export async function unfollowShopServerAction(ShopID) {
     } catch (authError) {
       userData = null;
       console.log("Authentication failed:", authError);
-
     }
 
-  if (!userData) {
-    return { status: 401, message: 'کاربر وارد نشده است.' };
-  }
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
   
-
     // پیدا کردن فروشگاه
     const Shop = await shops.findById(ShopID);
     if (!Shop) {
@@ -792,25 +793,31 @@ export async function unfollowShopServerAction(ShopID) {
     }
 
     // بررسی اینکه آیا کاربر فروشگاه را دنبال کرده است یا خیر
-    const userFollowsShop = Shop.followers.includes(userData.id);
+    // تبدیل آیدی‌ها به رشته برای مقایسه دقیق
+    const userFollowsShop = Shop.followers.some(
+      followerId => followerId.toString() === userData.id.toString()
+    );
+    
     if (!userFollowsShop) {
       return { message: "شما این فروشگاه را دنبال نکرده‌اید", status: 400 };
     }
 
     // حذف کاربر از لیست فالوورهای فروشگاه
     Shop.followers = Shop.followers.filter(
-      (followerId) => followerId.toString() !== userData.id
+      (followerId) => followerId.toString() !== userData.id.toString()
     );
     await Shop.save();
 
     // حذف فروشگاه از لیست فروشگاه‌های دنبال‌شده کاربر
     const user = await Users.findById(userData.id);
     user.following = user.following.filter(
-      (followingShopId) => followingShopId.toString() !== ShopID
+      (followingShopId) => followingShopId.toString() !== ShopID.toString()
     );
     await user.save();
-    revalidatePath("/Shop/allShop")
-
+    
+    // اضافه کردن revalidatePath برای صفحه پروفایل کاربر
+    revalidatePath("/Shop/allShop");
+    revalidatePath("/profile");
 
     return {
       message: "شما با موفقیت این فروشگاه را آنفالو کردید",
