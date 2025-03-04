@@ -287,7 +287,7 @@ function AccountManage() {
         </div>
       )}
 
-      <div className=" bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36 p-2 md:p-4 ">
+      <div className=" bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6 p-2 md:p-4 ">
         <div className="flex justify-between items-center mb-2 md:mb-4">
           <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت حساب‌ها</h1>
           {path.length > 1 && hasAddPermission && (
@@ -335,7 +335,7 @@ function AccountManage() {
         {/* اضافه کردن کامپوننت Breadcrumb */}
         <Breadcrumb path={path} onBreadcrumbClick={handleBreadcrumbClick} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-2 gap-2 md:gap-6 p-2 md:p-4 pb-8 md:pb-16 max-h-[50vh]  overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-2 gap-2 md:gap-6 p-2 md:p-4 pb-8 md:pb-16 max-h-[65vh]  overflow-y-auto">
           {accounts.map((account) => (
             <AccountCard
               className="p-2 md:p-4"

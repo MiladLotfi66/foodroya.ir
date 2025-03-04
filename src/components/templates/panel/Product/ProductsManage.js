@@ -448,7 +448,7 @@ function ProductManage() {
           </div>
         </div>
       )}
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6">
         <div className="flex items-center justify-between  ">
           <h1 className="text-xl  md:text-3xl font-MorabbaBold p-1">مدیریت محصول</h1>
         <div className="flex items-center gap-1  p-1 md:p-2">
@@ -525,7 +525,7 @@ function ProductManage() {
               <p>در حال بارگذاری...</p>
             ) : (
               <>
-                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[52vh] md:max-h-[38vh] overflow-y-auto p-2 ">
+                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[65vh]  overflow-y-auto p-2 ">
                   {accounts.map((account) => (
                     <div key={account._id}>
                       {account.accountType === "کالا" && (

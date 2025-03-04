@@ -367,8 +367,8 @@ function AddInvoice({ invoiceType }) {
         invoiceType={invoiceType}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36 ">
-        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6 ">
+        <div className="flex justify-between p-2 md:p-5 mt-6">
           <h1 className="text-xl md:text-2xl font-MorabbaBold" >{getPageTitle()}</h1>
         </div>
         <div className="text-xs md:text-base  flex items-center text-center gap-2 md:gap-4 px-2 mb-2 md:mb-4">
@@ -400,7 +400,7 @@ function AddInvoice({ invoiceType }) {
             افزودن 
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6 p-1 md:p-4 pb-4 md:pb-16 max-h-[40vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6 p-1 md:p-4 pb-4 md:pb-16 max-h-[60vh] overflow-y-auto">
           {invoiceItems?.length > 0 ? (
             invoiceItems?.map((invoiceItem) => (
               <InvoiceItemCard

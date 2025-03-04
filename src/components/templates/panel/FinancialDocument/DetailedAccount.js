@@ -76,7 +76,7 @@ function DetailedAccount() {
 
   return (
     <FormTemplate BGImage={BGImage}>
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6">
         
         {/* مودال SelectAccountModal */}
         {showSelectAccountModal && (
@@ -98,7 +98,7 @@ function DetailedAccount() {
           </div>
         )}
 
-        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+        <div className="flex justify-between p-2 md:p-5 mt-6">
           <h1 className="text-2xl md:text-3xl font-MorabbaBold">حساب معین</h1>
           <button
             className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"

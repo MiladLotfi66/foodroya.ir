@@ -329,7 +329,7 @@ function RolsManage() {
         </div>
       )}
 
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-8 md:mt-36">
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6">
         <div className="hidden">
           <EditSvg />
           <DeleteSvg />
@@ -337,7 +337,7 @@ function RolsManage() {
           <EyeslashSvg />
           <UserPlus />
         </div>
-        <div className="flex justify-between p-2 md:p-5 mt-8 md:mt-36">
+        <div className="flex justify-between p-2 md:p-5 mt-6">
           <h1 className="text-2xl md:text-3xl font-MorabbaBold">مدیریت نقش ها</h1>
           {hasAddPermission && 
 
@@ -351,7 +351,7 @@ function RolsManage() {
 }
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 p-4 pb-16 justify-items-center max-h-[70vh] overflow-y-auto">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 p-4 pb-16 justify-items-center max-h-[78vh] overflow-y-auto">
           {rols?.map((role) => (
             <RoleCard
               key={role._id}

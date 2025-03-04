@@ -267,7 +267,7 @@ function ProfilePage() {
   if (status === "unauthenticated") {
     return (
       <FormTemplate>
-        <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-2 md:mt-12 p-4 md:p-8 max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl  mt-6 max-h-[78vh]  overflow-y-auto">
           <header className="flex justify-between items-center mb-4">
             <h1 className="text-2xl md:text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-5">
               نمایه کاربری
@@ -357,7 +357,7 @@ function ProfilePage() {
 
       <FormTemplate >
       <main>
-          <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl mt-2 md:mt-12 p-4 md:p-8 max-w-4xl mx-auto max-h-[88vh] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-700 shadow-lg rounded-2xl  mt-6 p-4 md:p-6 max-h-[78vh]  overflow-y-auto">
             <header className="flex justify-between items-center mb-4">
               <h1 className="text-2xl md:text-3xl font-MorabbaBold text-gray-800 dark:text-gray-200 pt-5">
                 نمایه کاربری
@@ -502,11 +502,12 @@ function ProfilePage() {
                 {/* غرفه های ایجاد شده */}
 
                 <Link href="/Shop/userShop" className="mt-8  gap-2 flex-col text-center items-center justify-center">
-                  <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4 max-h-[70vh] overflow-y-auto">
+                  <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4 max-h-[78vh] overflow-y-auto">
                     غرفه‌های شما
                   </h2>
                   {UserShops.length > 0 ? (
                     <AvatarGroupTailwind
+                    
                       avatars={UserShops.map((shop) => shop.avatarUrl)}
                       max={4}
                       size={35} // اندازه آواتارها به پیکسل

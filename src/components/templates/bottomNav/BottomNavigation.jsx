@@ -21,7 +21,7 @@ export default function BottomNavigation() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50  shadow-lg">
       <div className="flex justify-between items-center h-16 px-4">
         <Link href="/profile" className="flex flex-col items-center justify-center w-full">
           <FaUser className={`text-xl ${isActive('/profile') ? 'text-green-600' : 'text-gray-600'}`} />
