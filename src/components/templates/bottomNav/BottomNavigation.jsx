@@ -3,22 +3,14 @@
 import Link from 'next/link';
 import { FaUser, FaShoppingCart, FaCompass, FaBell, FaStore } from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
-import { toggleBasketCart } from '@/Redux/features/mobileMenu/mobileMenuSlice';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
-  const dispatch = useDispatch();
   
   const isActive = (path) => {
     return pathname === path;
   };
 
-  const handleCartClick = (e) => {
-    e.preventDefault();
-    console.log('Cart button clicked');
-    dispatch(toggleBasketCart());
-  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50  shadow-lg">
@@ -29,11 +21,14 @@ export default function BottomNavigation() {
         </Link>
         
         <button 
-          onClick={handleCartClick}
+
           className="flex flex-col items-center justify-center w-full bg-transparent border-none cursor-pointer"
         >
+                <Link href="/ShopingCart" className="flex flex-col items-center justify-center w-full">
           <FaShoppingCart className={`text-xl ${isActive('/cart') ? 'text-green-600' : 'text-gray-600'}`} />
           <span className={`text-xs mt-1 ${isActive('/cart') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>سبد خرید</span>
+          </Link>
+
         </button>
         
         <Link href="/browse" className="flex flex-col items-center justify-center w-full">

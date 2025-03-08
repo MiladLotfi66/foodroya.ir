@@ -2,18 +2,12 @@
 import { dana } from "@/utils/fonts";
 import "@/styles/app.css";
 import { ThemeProviders } from "@/providers/ThemeProviders";
-import Header from "@/layout/Header";
-import MobileHeader from "@/layout/MobileHeader";
-import MobileMenu from "@/layout/MobileMenu";
 import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
 import ScrollToTop from "@/utils/ScrollToTop";
 import CartInitializer from "@/templates/shoppingCart/CartInitializer";
 import BottomNavigation from "@/templates/bottomNav/BottomNavigation";
-import ShoppingCart from "@/templates/shoppingCart/shoppingCart";
-import BasketCartModal from "@/templates/shoppingCart/BasketCartModal";
-
 
 
 const APP_NAME = "نیبرو";
@@ -77,11 +71,6 @@ export default function RootLayout({ children }) {
           <ThemeProviders>
             <Providers>
               <ScrollToTop/>
-              {/* <Header />
-              <MobileHeader />
-              <MobileMenu /> */}
-        <BasketCartModal />
-
                     <BottomNavigation />
 
               <AosInit/>

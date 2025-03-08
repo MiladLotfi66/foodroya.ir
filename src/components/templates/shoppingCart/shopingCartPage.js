@@ -8,8 +8,6 @@ import { useShopInfoFromRedux } from '@/utils/getShopInfoFromREdux';
 import { useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import Image from 'next/image';
-import CloseSvg from "@/module/svgs/CloseSvg";
-import { toggleBasketCart } from '@/Redux/features/mobileMenu/mobileMenuSlice';
 
 const ShopingCartPage = () => {
   const { data: session, status } = useSession();
@@ -27,9 +25,7 @@ const ShopingCartPage = () => {
     }
   }, [dispatch, userId]);
 
-  const handleToggleBasketMenu = () => {
-    dispatch(toggleBasketCart());
-  };
+ 
 
   // گروه‌بندی آیتم‌ها بر اساس فروشگاه
   const groupedCart = cartItems.reduce((acc, item) => {
@@ -93,11 +89,7 @@ const ShopingCartPage = () => {
       <div className="p-8 text-center">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">سبد خرید</h2>
-          <button onClick={handleToggleBasketMenu} className="text-gray-500">
-            <svg width="24" height="24">
-              <use href="#CloseSvg"></use>
-            </svg>
-          </button>
+          
         </div>
         <div>در حال بارگذاری سبد خرید...</div>
       </div>
@@ -109,11 +101,7 @@ const ShopingCartPage = () => {
       <div className="p-8 text-center">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">سبد خرید</h2>
-          <button onClick={handleToggleBasketMenu} className="text-gray-500">
-            <svg width="24" height="24">
-              <use href="#CloseSvg"></use>
-            </svg>
-          </button>
+          
         </div>
         <div className="text-red-500">خطا: {cartError}</div>
       </div>
@@ -125,11 +113,7 @@ const ShopingCartPage = () => {
       <div className="p-8 text-center">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">سبد خرید</h2>
-          <button onClick={handleToggleBasketMenu} className="text-gray-500">
-            <svg width="24" height="24">
-              <use href="#CloseSvg"></use>
-            </svg>
-          </button>
+         
         </div>
         <h2 className="text-lg font-bold mb-4">سبد خرید شما خالی است</h2>
         <Link href="#" className="text-blue-500 hover:underline">
@@ -141,16 +125,10 @@ const ShopingCartPage = () => {
 
   return (
     <div className="p-4">
-      <div className="hidden">
-        <CloseSvg />
-      </div>
+      
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">سبد خرید</h2>
-        <button onClick={handleToggleBasketMenu} className="text-gray-500">
-          <svg width="24" height="24">
-            <use href="#CloseSvg"></use>
-          </svg>
-        </button>
+        
       </div>
 
       {/* سبد خرید فروشگاه فعلی */}
