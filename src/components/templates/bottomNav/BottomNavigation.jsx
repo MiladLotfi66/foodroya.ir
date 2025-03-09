@@ -25,15 +25,15 @@ export default function BottomNavigation() {
           className="flex flex-col items-center justify-center w-full bg-transparent border-none cursor-pointer"
         >
                 <Link href="/ShopingCart" className="flex flex-col items-center justify-center w-full">
-          <FaShoppingCart className={`text-xl ${isActive('/cart') ? 'text-green-600' : 'text-gray-600'}`} />
-          <span className={`text-xs mt-1 ${isActive('/cart') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>سبد خرید</span>
+          <FaShoppingCart className={`text-xl ${isActive('/ShopingCart') ? 'text-green-600' : 'text-gray-600'}`} />
+          <span className={`text-xs mt-1 ${isActive('/ShopingCart') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>سبد خرید</span>
           </Link>
 
         </button>
         
         <Link href="/allProducts" className="flex flex-col items-center justify-center w-full">
-          <FaCompass className={`text-xl ${isActive('/browse') ? 'text-green-600' : 'text-gray-600'}`} />
-          <span className={`text-xs mt-1 ${isActive('/browse') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>نیبرو</span>
+          <FaCompass className={`text-xl ${isActive('/allProducts') ? 'text-green-600' : 'text-gray-600'}`} />
+          <span className={`text-xs mt-1 ${isActive('/allProducts') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>محصولات</span>
         </Link>
         
         <Link href="/notifications" className="flex flex-col items-center justify-center w-full">
@@ -41,9 +41,9 @@ export default function BottomNavigation() {
           <span className={`text-xs mt-1 ${isActive('/notifications') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>اعلانات</span>
         </Link>
         
-        <Link href="/store" className="flex flex-col items-center justify-center w-full">
-          <FaStore className={`text-xl ${isActive('/store') ? 'text-green-600' : 'text-gray-600'}`} />
-          <span className={`text-xs mt-1 ${isActive('/store') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>غرفه</span>
+        <Link href="/Shop/allShop" className="flex flex-col items-center justify-center w-full">
+          <FaStore className={`text-xl ${isActive('/Shop/allShop') ? 'text-green-600' : 'text-gray-600'}`} />
+          <span className={`text-xs mt-1 ${isActive('/Shop/allShop') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>غرفه ها</span>
         </Link>
       </div>
     </div>

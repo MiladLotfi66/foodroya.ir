@@ -421,7 +421,6 @@ export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
         limit,
       },
     };
-console.log("111222333444",responseData);
 
 
     return {
@@ -888,5 +887,50 @@ for (const imagePath of imagesToRemove) {
   } catch (error) {
     console.error("Error in EditProductAction:", error);
     return { status: 500, message: "خطایی در پردازش درخواست رخ داد." };
+  }
+}
+
+
+export async function getProductById(productId) {
+  try {
+    await connectDB();
+    
+    // دریافت اطلاعات محصول با استفاده از ID
+    const product = await Product.findById(productId)
+      .populate("ShopId") // اطلاعات فروشگاه
+      .populate("accountId") // اطلاعات حساب مرتبط
+      .populate("parentAccount") // حساب والد
+      .populate("tags") // تگ‌ها
+      .populate("Features") // ویژگی‌ها
+      .populate({
+        path: "createdBy",
+        select: "name email" // فقط نام و ایمیل کاربر ایجاد کننده
+      })
+      .lean();
+    
+    if (!product) {
+      return { success: false, message: "محصول مورد نظر یافت نشد" };
+    }
+    
+    // در صورت نیاز، می‌توان اطلاعات بیشتری را از حساب محصول استخراج کرد
+    // const accountDetails = await Account.findById(product.accountId)
+    //   .select("accountCode title balance accountType")
+    //   .lean();
+    
+    // ترکیب اطلاعات محصول و حساب
+    // const productWithAccountDetails = {
+    //   ...product,
+    //   accountDetails: accountDetails || {}
+    // };
+    
+    return { success: true, product: product };
+    
+  } catch (error) {
+    console.error("خطا در دریافت اطلاعات محصول:", error);
+    return { 
+      success: false, 
+      message: "خطا در دریافت اطلاعات محصول", 
+      error: error.message 
+    };
   }
 }

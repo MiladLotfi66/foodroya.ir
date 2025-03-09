@@ -5,6 +5,7 @@ import { GetAllShopsEnableProducts } from "@/templates/panel/Product/ProductActi
 import Image from "next/image";
 import { useInView } from "react-intersection-observer";
 import ShopMicroInfo from "@/templates/Shop/ShopMicroInfo";
+import Link from "next/link";
 
 
 
@@ -19,24 +20,31 @@ const ProductCard = memo(({ product }) => {
         <ShopMicroInfo shop={product.ShopId} size="small" className="mt-1 mb-1" />
       </div>
 
-      <div className="relative w-full h-48">
-      <Image
-  className="object-cover w-full h-full"
-  src={product.images[0] || "/placeholder.png"}
-  alt={`${product.title} محصول`}
-  quality={50}
-  fill
-  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-  placeholder="blur"
-  blurDataURL="/placeholder.png"
-/>
+      <div className="relative w-full h-48"> {/* فاصله از لبه‌ها با p-4 */}
+  <div className="relative w-full h-full rounded-sm overflow-hidden">
+    <Image
+      src={product.images[0] || "/placeholder.png"}
+      alt={`${product.title} محصول`}
+      quality={50}
+      fill
+      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+      className="object-cover"
+      placeholder="blur"
+      blurDataURL="/placeholder.png"
+    />
+  </div>
+</div>
 
-      </div>
+
+
+
       <div className="p-4 flex flex-col flex-1">
-        
+      <Link href={`/product/${product._id}`}>
+
         <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-lg lg:text-xl mb-2 flex-1">
           {product.title || "محصول بدون عنوان"}
         </h4>
+      </Link>
       </div>
     </div>
   );

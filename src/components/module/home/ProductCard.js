@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { evaluate } from 'mathjs';
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
 import AddToCartButton from "@/templates/shoppingCart/addtoCardButton";
+import Link from "next/link";
 
 function ProductCard({ product, userRoles }) {
   const [defaultPrice, setDefaultPrice] = useState(0);
@@ -143,9 +144,11 @@ function ProductCard({ product, userRoles }) {
           quality={50}
         />
       </div>
+      <Link href={`/product/${product._id}`}>
       <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-sm md:text-base lg:text-xl line-clamp-2 text-wrap h-10 md:h-[51px]">
         {product?.title}{" "}
       </h4>
+      </Link>
 
       <div className="flex flex-col mt-2 md:mt-3 gap-3 font-Dana text-xs">
       {Number(product.stock) > 0 ? (
