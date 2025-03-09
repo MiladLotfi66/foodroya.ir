@@ -327,6 +327,112 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
     return { status: 500, message: "خطایی در دریافت محصول‌ها رخ داد." };
   }
 }
+export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
+  await connectDB();
+ 
+
+  // اعتبارسنجی پارامترهای صفحه‌بندی
+  page = parseInt(page, 10);
+  limit = parseInt(limit, 10);
+
+  if (isNaN(page) || page < 1) {
+    page = 1;
+  }
+
+  if (isNaN(limit) || limit < 1) {
+    limit = 10;
+  }
+
+  try {
+    const skip = (page - 1) * limit;
+
+    // اجرای دو عملیات به صورت موازی برای بهره‌وری بیشتر
+    const [products, totalItems] = await Promise.all([
+      Product.find()
+        .populate({
+          path: "tags",
+          select: "name",
+        })
+        .populate({
+          path: "Features",
+          select: "featureKey value",
+        })
+        .populate({
+          path: "ShopId",
+          select: "ShopName ShopUniqueName LogoUrl",
+        })
+        .populate({
+          path: "accountId",
+          select: "balance",
+        })
+        .populate({
+          path: "pricingTemplate",
+          select: "defaultFormula pricingFormulas",
+        })
+        .select('-createdBy -updatedBy -updatedAt -__v')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // تبدیل فیلدهای پیچیده به رشته
+    const plainProducts = products?.map(product => ({
+      ...product,
+      _id: product?._id?.toString(),
+      ShopId: {
+        ...product?.ShopId,
+        _id: product?.ShopId?._id?.toString(),
+      },
+      accountId: {
+        ...product?.accountId,
+        _id: product?.accountId?._id?.toString(),
+      },
+      pricingTemplate: {
+        ...product?.pricingTemplate,
+        _id: product?.pricingTemplate?._id?.toString(),
+        pricingFormulas: product?.pricingTemplate?.pricingFormulas?.map(formula => ({
+          ...formula,
+          _id: formula?._id?.toString(),
+        })),
+      },
+      parentAccount: product?.parentAccount?.toString(),
+      // createdBy: product?.createdBy?.toString(),
+      // updatedBy: product?.updatedBy?.toString(),
+      tags: product?.tags?.map(tag => ({
+        ...tag,
+        _id: tag?._id?.toString(),
+      })),
+      Features: product?.Features?.map(feature => ({
+        ...feature,
+        _id: feature?._id?.toString(),
+      })),
+    }));
+
+    const responseData = {
+      products: plainProducts,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+      },
+    };
+console.log("111222333444",responseData);
+
+
+    return {
+      status: 200,
+      data: responseData,
+    };
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return { status: 500, message: "خطایی در دریافت محصول‌ها رخ داد." };
+  }
+}
 
 
 export async function AddProductAction(formData) {

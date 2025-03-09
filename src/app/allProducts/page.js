@@ -1,9 +1,9 @@
-import NewProductAllShops from '@/components/allShopsProducts/AllShopsProducts'
+import NewProductAllShops from "@/components/AllShopsProducts/AllShopsProducts"
 
 function page() {
   return (
     <div>
-      <NewProductAllShops/>
+<NewProductAllShops/>
     </div>
   )
 }

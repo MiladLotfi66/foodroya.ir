@@ -31,7 +31,7 @@ export default function BottomNavigation() {
 
         </button>
         
-        <Link href="/browse" className="flex flex-col items-center justify-center w-full">
+        <Link href="/allProducts" className="flex flex-col items-center justify-center w-full">
           <FaCompass className={`text-xl ${isActive('/browse') ? 'text-green-600' : 'text-gray-600'}`} />
           <span className={`text-xs mt-1 ${isActive('/browse') ? 'text-green-600 font-medium' : 'text-gray-600'}`}>نیبرو</span>
         </Link>
