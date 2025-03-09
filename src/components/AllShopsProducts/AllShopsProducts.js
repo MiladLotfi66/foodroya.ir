@@ -1,17 +1,50 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { GetAllShopsEnableProducts } from "@/templates/panel/Product/ProductActions";
 import Image from "next/image";
-import AddToCartButton from "@/templates/shoppingCart/addtoCardButton";
 import { useInView } from "react-intersection-observer";
-import Basketsvg from "@/module/svgs/Basketsvg";
-import Chatsvg from "@/module/svgs/ChatSVG";
-import Star from "@/module/svgs/Star";
+import ShopMicroInfo from "@/templates/Shop/ShopMicroInfo";
+
+
+
+// کامپوننت ProductCard به صورت memo شده
+const ProductCard = memo(({ product }) => {
+  return (
+    <div
+      className="bg-white dark:bg-zinc-800 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col"
+    >
+              {/* نمایش اطلاعات فروشگاه */}
+              <div className="p-2">
+        <ShopMicroInfo shop={product.ShopId} size="small" className="mt-1 mb-1" />
+      </div>
+
+      <div className="relative w-full h-48">
+      <Image
+  className="object-cover w-full h-full"
+  src={product.images[0] || "/placeholder.png"}
+  alt={`${product.title} محصول`}
+  quality={50}
+  fill
+  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+  placeholder="blur"
+  blurDataURL="/placeholder.png"
+/>
+
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        
+        <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-lg lg:text-xl mb-2 flex-1">
+          {product.title || "محصول بدون عنوان"}
+        </h4>
+      </div>
+    </div>
+  );
+});
+
+ProductCard.displayName = 'ProductCard';
 
 function AllShopsProducts() {
-  console.log("111111111aaaaaaaaaaaaaaaaaa22222222222222222222");
-  
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -20,78 +53,88 @@ function AllShopsProducts() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [quantities, setQuantities] = useState({});
 
   // استفاده از useInView برای بررسی مشاهده شدن المنت
   const { ref, inView } = useInView({
     threshold: 0,
+    triggerOnce: false,
   });
+  
+  // استفاده از useRef برای کنترل درخواست‌های همزمان
+  const isLoadingRef = React.useRef(false);
+  const currentPageRef = React.useRef(1);
+  
+  // بهینه‌سازی fetchProducts با استفاده از useCallback
+  const fetchProducts = useCallback(async (page, limit) => {
+    // جلوگیری از درخواست‌های همزمان
+    if (isLoadingRef.current) return;
+    
+    try {
+      isLoadingRef.current = true;
+      setLoading(true);
+      setError("");
 
-  const GetAllShopsEnableProductsHandler = useCallback(
-    async (page = 1, limit = 15) => {
-      try {
-        setLoading(true);
-        setError("");
+      const response = await GetAllShopsEnableProducts(page, limit);
+      console.log("response", response);
 
-        const response = await GetAllShopsEnableProducts(page, limit);
-
-        if (response.status === 200) {
-          setProducts((prevProducts) => [
-            ...prevProducts,
-            ...response.data.products,
-          ]);
-          setPagination(response.data.pagination);
-
-          // تنظیم تعداد اولیه برای هر محصول در صورت لود صفحه اول
-          if (page === 1) {
-            const initialQuantities = {};
-            response.data.products.forEach((product) => {
-              initialQuantities[product.id] = 1; // مقدار پیش‌فرض
-            });
-            setQuantities(initialQuantities);
-          }
+      if (response.status === 200) {
+        if (page === 1) {
+          // برای صفحه اول، داده‌ها را جایگزین کنید
+          // اطمینان از اینکه هر محصول یک شناسه منحصر به فرد داشته باشد
+          const productsWithIds = response.data.products.map((product, index) => ({
+            ...product,
+            // اگر id وجود نداشت، یک id یکتا ایجاد می‌کنیم
+            uniqueId: product._id || `generated-${Date.now()}-${index}`
+          }));
+          setProducts(productsWithIds);
         } else {
-          setError(
-            response.message || "خطایی در دریافت محصولات رخ داده است."
-          );
+          // برای صفحات بعدی، داده‌ها را اضافه کنید با جلوگیری از تکرار
+          setProducts(prevProducts => {
+            // بررسی وجود محصولات تکراری با توجه به ID واقعی یا ID تولید شده
+            const existingIds = new Set(prevProducts.map(p => p._id || p.uniqueId));
+            const newProducts = response.data.products
+              .filter(p => !existingIds.has(p._id))
+              .map((product, index) => ({
+                ...product,
+                uniqueId: product._id || `generated-${Date.now()}-${index + prevProducts.length}`
+              }));
+            return [...prevProducts, ...newProducts];
+          });
         }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setError("خطایی در دریافت محصولات رخ داده است.");
-      } finally {
-        setLoading(false);
+        
+        // به‌روزرسانی پاگینیشن و مرجع صفحه فعلی
+        setPagination(response.data.pagination);
+        currentPageRef.current = page;
+      } else {
+        setError(
+          response.message || "خطایی در دریافت محصولات رخ داده است."
+        );
       }
-    },
-    []
-  );
-
-  useEffect(() => {
-    GetAllShopsEnableProductsHandler(pagination.currentPage, pagination.limit);
-  }, [GetAllShopsEnableProductsHandler, pagination.currentPage, pagination.limit]);
-
-  // لود صفحه جدید هنگام مشاهده شدن المنت
-  useEffect(() => {
-    if (inView && !loading && pagination.currentPage < pagination.totalPages) {
-      setPagination((prev) => ({
-        ...prev,
-        currentPage: prev.currentPage + 1,
-      }));
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("خطایی در دریافت محصولات رخ داده است.");
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [inView, loading, pagination.currentPage, pagination.totalPages]);
+  }, []);
 
-  const handleIncrease = (productId) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: prev[productId] + 1,
-    }));
-  };
+  // لود داده‌های اولیه فقط یک بار
+  useEffect(() => {
+    fetchProducts(1, pagination.limit);
+  }, [fetchProducts, pagination.limit]);
 
-  const handleDecrease = (productId) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: prev[productId] > 1 ? prev[productId] - 1 : 1,
-    }));
-  };
+  // جدا کردن useEffect برای افزودن صفحه با کنترل دقیق‌تر
+  useEffect(() => {
+    if (
+      inView && 
+      !isLoadingRef.current && 
+      currentPageRef.current < pagination.totalPages
+    ) {
+      const nextPage = currentPageRef.current + 1;
+      fetchProducts(nextPage, pagination.limit);
+    }
+  }, [inView, pagination.totalPages, pagination.limit, fetchProducts]);
 
   if (loading && products.length === 0) {
     return <div className="text-center">در حال بارگذاری...</div>;
@@ -102,108 +145,23 @@ function AllShopsProducts() {
   }
 
   return (
-    <div className="relative bg-white p-4 md:p-6 lg:p-8 mt-10 md:mt-12 dark:bg-zinc-700 shadow-lg rounded-2xl">
-      <div className="hidden">
-        <Basketsvg />
-        <Chatsvg />
-        <Star />
-      </div>
-
+    <div className="relative bg-white p-4 md:p-6 lg:p-8 mt-5 md:mt-10 dark:bg-zinc-700 shadow-lg rounded-2xl max-h-[87vh] overflow-y-auto">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => {
-          const currentShopId = product.shopId;
-
-          return (
-            <div
-              key={product.id}
-              className="bg-white dark:bg-zinc-800 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col"
-            >
-              <div className="relative w-full h-48">
-                <Image
-                  className="object-cover w-full h-full"
-                  src={product.images[0]}
-                  alt={`${product.title} محصول`}
-                  // width={100}
-                  // height={100}
-                  quality={50}
-                  fill // استفاده از پراپ fill به جای layout
-                  placeholder="blur"
-                  blurDataURL="/placeholder.png" // یک تصویر placeholder کوچک
-
-                  // className="w-36 h-32 mx-auto md:w-48 md:h-48 rounded-md"
-                  // src={product?.images[0]}
-                  // alt="signalmobile procuct"
-                 
-                />
-              </div>
-              <div className="p-4 flex flex-col flex-1">
-                <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-lg lg:text-xl mb-2 flex-1">
-                  {product.title}
-                </h4>
-
-                {/* <div className="mb-4">
-                  {Number(product.stock) > 0 ? (
-                    <div className="text-teal-600 dark:text-emerald-500 text-xl font-DanaDemiBold">
-                      {new Intl.NumberFormat("fa-IR", {
-                        style: "currency",
-                        currency: "IRT",
-                      }).format(userPrice)}{" "}
-                      <span className="text-sm">{baseCurrency.title}</span>
-                    </div>
-                  ) : (
-                    <div className="text-red-600 font-DanaDemiBold text-xl">
-                      ناموجود
-                    </div>
-                  )}
-                </div> */}
-
-                {/* {Number(product.stock) > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => handleDecrease(product.id)}
-                        className="text-lg md:text-xl px-3 py-1 bg-gray-200 dark:bg-zinc-700 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
-                      >
-                        -
-                      </button>
-                      <span className="text-lg md:text-xl text-gray-700 dark:text-white">
-                        {quantities[product.id]} {product.unit}
-                      </span>
-                      <button
-                        onClick={() => handleIncrease(product.id)}
-                        className="text-lg md:text-xl px-3 py-1 bg-gray-200 dark:bg-zinc-700 rounded-full hover:bg-teal-600 dark:hover:bg-emerald-600 text-gray-700 dark:text-white transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                )} */}
-
-                {/* <div className="mt-auto">
-                  <AddToCartButton
-                    product={product}
-                    price={userPrice}
-                    shop={currentShopId}
-                    quantity={quantities[product.id]}
-                    disabled={Number(product.stock) === 0}
-                    className="w-full"
-                  />
-                </div> */}
-              </div>
-            </div>
-          );
-        })}
+        {products.map((product) => (
+          <ProductCard
+            key={`product-${product._id || product.uniqueId}`}
+            product={product}
+          />
+        ))}
       </div>
 
-      {/* Loader برای بارگذاری صفحات جدید */}
       {loading && (
         <div className="text-center mt-4">
           <span className="text-gray-600 dark:text-gray-300">در حال بارگذاری...</span>
         </div>
       )}
 
-      {/* المنت مشاهده برای Trigger لود صفحه جدید */}
-      {pagination.currentPage < pagination.totalPages && (
+      {!loading && pagination.currentPage < pagination.totalPages && (
         <div ref={ref} className="h-10"></div>
       )}
     </div>
@@ -211,3 +169,4 @@ function AllShopsProducts() {
 }
 
 export default AllShopsProducts;
+

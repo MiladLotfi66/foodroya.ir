@@ -5,7 +5,7 @@ import { ThemeProviders } from "@/providers/ThemeProviders";
 import Providers from "../Redux/Providers";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import AosInit from "@/utils/Aos";
-import ScrollToTop from "@/utils/ScrollToTop";
+
 import CartInitializer from "@/templates/shoppingCart/CartInitializer";
 import BottomNavigation from "@/templates/bottomNav/BottomNavigation";
 
@@ -70,7 +70,6 @@ export default function RootLayout({ children }) {
         <NextAuthProvider>
           <ThemeProviders>
             <Providers>
-              <ScrollToTop/>
                     <BottomNavigation />
 
               <AosInit/>
