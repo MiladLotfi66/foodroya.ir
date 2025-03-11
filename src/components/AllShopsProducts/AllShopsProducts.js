@@ -2,49 +2,166 @@
 
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { GetAllShopsEnableProducts } from "@/templates/panel/Product/ProductActions";
+import { LikeProduct, DislikeProduct }  from "@/templates/panel/Product/ProductActions";
 import Image from "next/image";
 import { useInView } from "react-intersection-observer";
 import ShopMicroInfo from "@/templates/Shop/ShopMicroInfo";
 import Link from "next/link";
-
+import HeartSvg from "@/module/svgs/HeartSvg";
+import DislikeSvg from "@/module/svgs/DislikeSvg";
+import {  useSession } from "next-auth/react";
 
 
 // کامپوننت ProductCard به صورت memo شده
-const ProductCard = memo(({ product }) => {
+const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
+  const [likes, setLikes] = useState(Array.isArray(product.likes) ? product.likes : []);
+  const [dislikes, setDislikes] = useState(Array.isArray(product.dislikes) ? product.dislikes : []);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // بررسی وضعیت لایک و دیسلایک برای کاربر فعلی
+  useEffect(() => {
+    if (currentUser && currentUser._id && Array.isArray(likes) && Array.isArray(dislikes)) {
+      setIsLiked(likes.includes(currentUser._id));
+      setIsDisliked(dislikes.includes(currentUser._id));
+    } else {
+      setIsLiked(false);
+      setIsDisliked(false);
+    }
+  }, [currentUser, likes, dislikes]);
+  
+  const handleLike = async () => {
+    if (!currentUser || isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      // استفاده از سرور اکشن به جای API
+      const response = await LikeProduct(product._id);
+      
+      if (response.status === 200) {
+        // به‌روزرسانی وضعیت لایک و دیسلایک با اطلاعات دریافتی از سرور
+        setLikes(response.likes);
+        setDislikes(response.dislikes);
+        // تنظیم وضعیت لایک کاربر
+        setIsLiked(response.likes.includes(currentUser._id));
+        setIsDisliked(response.dislikes.includes(currentUser._id));
+        
+        // به‌روزرسانی پدر با اطلاعات جدید
+        if (onLikeUpdate) {
+          onLikeUpdate(product._id, response.likes, response.dislikes);
+        }
+      } else {
+        console.error("خطا:", response.message);
+      }
+    } catch (error) {
+      console.error("خطا در عملیات لایک:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDislike = async () => {
+    console.log("kkk");
+    
+    // بررسی وجود کاربر و عدم لودینگ
+    if (!currentUser || isLoading) return;
+    
+    
+    setIsLoading(true);
+    try {
+      
+      // استفاده از سرور اکشن
+      const response = await DislikeProduct(product._id);
+      
+      if (response && response.status === 200) {
+        // اطمینان از ساختار صحیح پاسخ
+        const newLikes = Array.isArray(response.likes) ? response.likes : [];
+        const newDislikes = Array.isArray(response.dislikes) ? response.dislikes : [];
+        
+        // به‌روزرسانی وضعیت لایک و دیسلایک
+        setLikes(newLikes);
+        setDislikes(newDislikes);
+        
+        // بررسی وضعیت جدید کاربر
+        setIsLiked(newLikes.includes(currentUser._id));
+        setIsDisliked(newDislikes.includes(currentUser._id));
+        
+        // به‌روزرسانی پدر با اطلاعات جدید
+        if (onLikeUpdate) {
+          onLikeUpdate(product._id, newLikes, newDislikes);
+        }
+      } else {
+        console.error("خطا در دیسلایک:", response?.message || "خطای نامشخص");
+        alert(response?.message || "خطا در انجام عملیات دیسلایک");
+      }
+    } catch (error) {
+      console.error("خطا در عملیات دیسلایک:", error);
+      alert("خطا در ارتباط با سرور هنگام دیسلایک");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+
   return (
-    <div
-      className="bg-white dark:bg-zinc-800 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col"
-    >
-              {/* نمایش اطلاعات فروشگاه */}
-              <div className="p-2">
+    <div className="bg-white dark:bg-zinc-800 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col">
+      {/* نمایش اطلاعات فروشگاه */}
+      <div className="p-2">
         <ShopMicroInfo shop={product.ShopId} size="small" className="mt-1 mb-1" />
       </div>
 
-      <div className="relative w-full h-48"> {/* فاصله از لبه‌ها با p-4 */}
-  <div className="relative w-full h-full rounded-sm overflow-hidden">
-    <Image
-      src={product.images[0] || "/placeholder.png"}
-      alt={`${product.title} محصول`}
-      quality={50}
-      fill
-      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-      className="object-cover"
-      placeholder="blur"
-      blurDataURL="/placeholder.png"
-    />
-  </div>
-</div>
-
-
-
+      <div className="relative w-full h-48">
+        <div className="relative w-full h-full rounded-sm overflow-hidden">
+          <Image
+            src={product.images[0] || "/placeholder.png"}
+            alt={`${product.title} محصول`}
+            quality={50}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover"
+            placeholder="blur"
+            blurDataURL="/placeholder.png"
+          />
+        </div>
+      </div>
 
       <div className="p-4 flex flex-col flex-1">
-      <Link href={`/product/${product._id}`}>
+        <Link href={`/product/${product._id}`}>
+          <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-lg lg:text-xl mb-2 flex-1">
+            {product.title || "محصول بدون عنوان"}
+          </h4>
+        </Link>
+        
+        {/* دکمه‌های لایک و دیسلایک */}
+        <div className="flex justify-between items-center mt-4">
+  <button 
+    onClick={handleLike}
+    // disabled={isLoading || !currentUser || !currentUser._id}
+    className={`flex items-center gap-1 px-3 py-1 rounded-md transition-colors ${
+      isLiked 
+        ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-200' 
+        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900'
+    }`}
+  >
+    <HeartSvg width={18} height={18} />
+    <span>{Array.isArray(likes) ? likes.length : 0}</span>
+  </button>
+  
+  <button 
+    onClick={handleDislike}
+    // disabled={isLoading || !currentUser || !currentUser._id}
+    className={`flex items-center gap-1 px-3 py-1 rounded-md transition-colors ${
+      isDisliked 
+        ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-200' 
+        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900'
+    }`}
+  >
+    <DislikeSvg width={18} height={18} />
+    <span>{Array.isArray(dislikes) ? dislikes.length : 0}</span>
+  </button>
+        </div>
 
-        <h4 className="text-center text-zinc-700 dark:text-white font-DanaMedium text-lg lg:text-xl mb-2 flex-1">
-          {product.title || "محصول بدون عنوان"}
-        </h4>
-      </Link>
       </div>
     </div>
   );
@@ -61,6 +178,16 @@ function AllShopsProducts() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { data: session, status } = useSession();
+  const [currentUser, setCurrentUser] = useState(null); // ابتدا با مقدار null شروع کنید
+  
+  useEffect(() => {
+    if (session && session.user) {
+      setCurrentUser(session.user);
+    }
+  }, [session]);
+  
+  
 
   // استفاده از useInView برای بررسی مشاهده شدن المنت
   const { ref, inView } = useInView({
@@ -71,6 +198,8 @@ function AllShopsProducts() {
   // استفاده از useRef برای کنترل درخواست‌های همزمان
   const isLoadingRef = React.useRef(false);
   const currentPageRef = React.useRef(1);
+  
+
   
   // بهینه‌سازی fetchProducts با استفاده از useCallback
   const fetchProducts = useCallback(async (page, limit) => {
@@ -83,7 +212,6 @@ function AllShopsProducts() {
       setError("");
 
       const response = await GetAllShopsEnableProducts(page, limit);
-      console.log("response", response);
 
       if (response.status === 200) {
         if (page === 1) {
@@ -144,6 +272,17 @@ function AllShopsProducts() {
     }
   }, [inView, pagination.totalPages, pagination.limit, fetchProducts]);
 
+  // تابع به‌روزرسانی وضعیت لایک/دیسلایک محصول در لیست محصولات
+  const handleLikeUpdate = useCallback((productId, newLikes, newDislikes) => {
+    setProducts(prevProducts => 
+      prevProducts.map(product => 
+        product._id === productId 
+          ? { ...product, likes: newLikes, dislikes: newDislikes } 
+          : product
+      )
+    );
+  }, []);
+
   if (loading && products.length === 0) {
     return <div className="text-center">در حال بارگذاری...</div>;
   }
@@ -159,6 +298,8 @@ function AllShopsProducts() {
           <ProductCard
             key={`product-${product._id || product.uniqueId}`}
             product={product}
+            currentUser={currentUser}
+            onLikeUpdate={handleLikeUpdate}
           />
         ))}
       </div>

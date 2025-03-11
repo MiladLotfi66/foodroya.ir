@@ -6,17 +6,34 @@ import ShopMicroInfo from "@/templates/Shop/ShopMicroInfo";
 import { useParams, useRouter } from "next/navigation";
 import { getProductById } from "../panel/Product/ProductActions";
 import Link from "next/link";
-import { toast } from "react-hot-toast"; // اضافه کردن toast برای نمایش پیام‌ها
+import AddToCartButton from "../shoppingCart/addtoCardButton";
+import { usePriceCalculator } from "./usePriceCalculator";
+import { useSession } from "next-auth/react";
+import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+import { GetUserRolesInShop } from "../panel/Contact/contactsServerActions";
 
 function ProductPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [quantity, setQuantity] = useState(1); // مقدار پیش‌فرض برای تعداد محصول
-  const [addingToCart, setAddingToCart] = useState(false); // وضعیت اضافه کردن به سبد خرید
+  const [quantity, setQuantity] = useState(1);
   const params = useParams();
   const { ProductId } = params;
   const router = useRouter();
+  const { data: session } = useSession();
+  const [baseCurrency, setBaseCurrency] = useState(null);
+  const [shopId, setShopId] = useState(null);
+
+  // یک آبجکت پیش‌فرض برای نقش‌های کاربر
+  const [userRoles, setUserRoles] = useState([]);
+
+  
+  // استفاده از هوک محاسبه قیمت - همیشه فراخوانی می‌شود
+  const { defaultPrice, userPrice, error: priceError, formatPrice } = usePriceCalculator(
+    product || null, 
+    userRoles, 
+    baseCurrency
+  );
 
   useEffect(() => {
     if (ProductId) {
@@ -24,14 +41,19 @@ function ProductPage() {
     }
   }, [ProductId]);
 
-  const fetchProductDetails = async (productId) => {
+  const fetchProductDetails = async (ProductId) => {
     try {
       setLoading(true);
       const res = await getProductById(ProductId);
-      console.log(res);
       
       if (res && res.product) {
         setProduct(res.product);
+        setShopId(res.product.ShopId._id)
+                // تنظیم baseCurrency از اطلاعات محصول
+                if (res.product.ShopId && res.product.ShopId.BaseCurrency) {
+                  setBaseCurrency(res.product.ShopId.BaseCurrency);
+                }
+        
         setError("");
       } else {
         setError("اطلاعات محصول یافت نشد");
@@ -43,40 +65,22 @@ function ProductPage() {
       setLoading(false);
     }
   };
+ // تغییر useEffect برای دریافت نقش‌های کاربر
+useEffect(() => {
+  async function fetchRoles() {
+    // فقط زمانی که shopId مقدار معتبری دارد، درخواست را ارسال کن
+    if (shopId) {
+      try {
+        const roles = await GetUserRolesInShop(shopId);
+        setUserRoles(roles);
+      } catch (err) {
+        console.error('خطا در دریافت نقش‌های کاربر:', err);
+      }
+    } 
+  }
 
-  const handleAddToCart = async () => {
-    // بررسی موجودی محصول
-    if (!product.isSaleable) {
-      toast.error("این محصول قابل فروش نیست");
-      return;
-    }
-
-    if (product.stock < quantity) {
-      toast.error(`موجودی محصول کافی نیست. موجودی فعلی: ${product.stock} ${product.unit}`);
-      return;
-    }
-
-    try {
-      setAddingToCart(true);
-      
-      // اینجا باید API اضافه کردن به سبد خرید را فراخوانی کنید
-      // به عنوان مثال:
-      // await addToCart(product._id, quantity);
-      
-      // شبیه‌سازی API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      toast.success("محصول با موفقیت به سبد خرید اضافه شد");
-      
-      // در صورت نیاز، کاربر را به صفحه سبد خرید هدایت کنید
-      // router.push('/cart');
-    } catch (error) {
-      console.error("خطا در افزودن به سبد خرید:", error);
-      toast.error("متأسفانه خطایی در افزودن محصول به سبد خرید رخ داده است");
-    } finally {
-      setAddingToCart(false);
-    }
-  };
+  fetchRoles();
+}, [shopId]); // اضافه کردن shopId به عنوان وابستگی
 
   if (loading) {
     return (
@@ -187,19 +191,31 @@ function ProductPage() {
               </h2>
               
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <span className="block text-sm text-gray-500 dark:text-gray-400">قیمت فروش:</span>
-                  <span className="text-xl font-DanaBold text-primary">
-                    {product.price?.toLocaleString() || 0} تومان
-                  </span>
+                {/* نمایش قیمت‌های محاسبه شده */}
+                <div className="col-span-2">
+                  {priceError ? (
+                    <div className="text-red-500">{priceError}</div>
+                  ) : (
+                    <>
+                      {defaultPrice !== userPrice && defaultPrice > 0 && (
+                        <div>
+                          <span className="block text-sm text-gray-500 dark:text-gray-400">قیمت اصلی:</span>
+                          <span className="text-lg font-DanaMedium text-gray-700 dark:text-gray-300 line-through">
+                            {formatPrice(defaultPrice)}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="block text-sm text-gray-500 dark:text-gray-400">قیمت برای شما:</span>
+                        <span className="text-xl font-DanaBold text-primary">
+                          {formatPrice(userPrice)}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
-                <div>
-                  <span className="block text-sm text-gray-500 dark:text-gray-400">آخرین قیمت خرید:</span>
-                  <span className="text-lg font-DanaMedium text-gray-700 dark:text-gray-300">
-                    {product.lastPurchasePrice?.toLocaleString() || 0} تومان
-                  </span>
-                </div>
+              
                 
                 <div>
                   <span className="block text-sm text-gray-500 dark:text-gray-400">موجودی:</span>
@@ -208,15 +224,9 @@ function ProductPage() {
                   </span>
                 </div>
                 
-                <div>
-                  <span className="block text-sm text-gray-500 dark:text-gray-400">حداقل موجودی:</span>
-                  <span className="text-lg font-DanaMedium text-gray-700 dark:text-gray-300">
-                    {product.minStock} {product.unit}
-                  </span>
-                </div>
               </div>
               
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+              {/* <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                 <div className="flex flex-wrap gap-2">
                   <span className={`px-3 py-1 rounded-full text-sm ${product.isSaleable ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}>
                     {product.isSaleable ? 'قابل فروش' : 'غیرقابل فروش'}
@@ -225,7 +235,7 @@ function ProductPage() {
                     {product.isMergeable ? 'قابل ادغام' : 'غیرقابل ادغام'}
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               {/* قسمت انتخاب تعداد محصول */}
               <div className="mt-4 flex items-center">
@@ -256,30 +266,16 @@ function ProductPage() {
                 <span className="mr-2 text-gray-500 dark:text-gray-400">{product.unit}</span>
               </div>
 
-              {/* دکمه افزودن به سبد خرید */}
-              <button 
-                onClick={handleAddToCart}
-                disabled={addingToCart || !product.isSaleable || product.stock < 1}
-                className={`w-full mt-4 py-3 px-6 rounded-lg transition-colors flex items-center justify-center ${
-                  product.isSaleable && product.stock > 0
-                    ? 'bg-primary hover:bg-primary-dark text-white'
-                    : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {addingToCart ? (
-                  <>
-                    <span className="w-5 h-5 border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin ml-2"></span>
-                    در حال افزودن...
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 ml-2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                    </svg>
-                    افزودن به سبد خرید
-                  </>
-                )}
-              </button>
+              {/* دکمه افزودن به سبد خرید با استفاده از کامپوننت AddToCartButton */}
+              <div className="mt-4">
+                <AddToCartButton 
+                  product={product}
+                  price={userPrice} // استفاده از قیمت محاسبه شده برای کاربر
+                  shop={product.ShopId?._id || product.ShopId}
+                  quantity={quantity}
+                  disabled={!product.isSaleable || product.stock < 1}
+                />
+              </div>
             </div>
             
             {/* محل نگهداری */}
@@ -325,7 +321,7 @@ function ProductPage() {
                       }`}
                     >
                       <span className="font-DanaMedium text-gray-700 dark:text-gray-300 w-1/3">
-                        {feature.featureKey?.title || feature.featureKey}
+                        {feature.featureKey?.name || feature.featureKey}
                       </span>
                       <span className="text-gray-600 dark:text-gray-400 w-2/3">
                         {feature.value}

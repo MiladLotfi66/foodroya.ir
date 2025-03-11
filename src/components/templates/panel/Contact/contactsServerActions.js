@@ -428,7 +428,8 @@ export async function DeleteContacts(contactId) {
 }
 
 export async function GetUserRolesInShop(shopId) {
-  
+  console.log("shopId---------------->",shopId);
+
   await connectDB();
   let user;
     try {
@@ -449,6 +450,8 @@ export async function GetUserRolesInShop(shopId) {
     .select('RolesId') // انتخاب فقط فیلد RolesId
     .lean();
     
+    console.log("contacts---------------->",contacts);
+
     const roles = contacts.flatMap(contact =>
       contact.RolesId.map(role => ({
         id: role._id,
@@ -456,6 +459,7 @@ export async function GetUserRolesInShop(shopId) {
       })))
 
     // حذف تکراری‌ها (در صورت نیاز)
+console.log("roles---------------->",roles);
 
     return { status: 200, roles: roles };
   } catch (error) {

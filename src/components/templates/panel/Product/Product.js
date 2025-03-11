@@ -23,6 +23,18 @@ const ProductSchema = new Schema(
       required: true,
       min: [0, "تعداد نمی‌تواند منفی باشد"],
     },
+    likes: [
+      {
+        type: Schema.Types.ObjectId, // ارجاع به کاربرانی که لایک کردند
+        ref: "User",
+      },
+    ],
+    dislikes: [
+      {
+        type: Schema.Types.ObjectId, // ارجاع به کاربرانی که دیسلایک کردند
+        ref: "User",
+      },
+    ],
     price: {
       type: Number,
       required: true,

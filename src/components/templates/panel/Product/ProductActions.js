@@ -6,12 +6,17 @@ import Product from "./Product";
 import Account from "../Account/Account";
 import GeneralLedger from "../FinancialDocument/GeneralLedger";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
-import { createImageUploader2, deleteOldImage, deleteOldImages } from "@/utils/ImageUploader";
+import {
+  createImageUploader2,
+  deleteOldImage,
+  deleteOldImages,
+} from "@/utils/ImageUploader";
 import { createAccount } from "../Account/accountActions";
 import Feature from "./Feature";
 import Tag from "./Tag";
 import { updateAccountBySession } from "../Account/accountActions";
 import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
+import { getServerSession } from "next-auth";
 
 function simplifyData(data) {
   if (Array.isArray(data)) {
@@ -38,7 +43,6 @@ function simplifyData(data) {
 }
 
 export async function DeleteProducts(productId, accountId) {
-  
   await connectDB();
 
   const session = await mongoose.startSession();
@@ -60,10 +64,14 @@ export async function DeleteProducts(productId, accountId) {
       session.endSession();
       return { status: 404, message: "محصول پیدا نشد." };
     }
-    const hasAccess=await CheckUserPermissionInShop(product.ShopId,"productsPermissions","delete")
+    const hasAccess = await CheckUserPermissionInShop(
+      product.ShopId,
+      "productsPermissions",
+      "delete"
+    );
     if (!hasAccess.hasPermission) {
-       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
-     } 
+      return { status: 401, message: "شما دسترسی لازم را ندارید" };
+    }
     // بررسی وجود تراکنش‌های مالی مرتبط با حساب محصول
     const transactions = await GeneralLedger.find({
       account: accountId,
@@ -105,7 +113,7 @@ export async function DeleteProducts(productId, accountId) {
       deletedProduct.images.length > 0
     ) {
       const deleteStatus = await deleteOldImages(deletedProduct.images);
-      console.log("tttt------------>",deleteStatus);
+      console.log("tttt------------>", deleteStatus);
 
       if (deleteStatus.status !== 200) {
         console.error("خطا در حذف تصاویر محصول:", deleteStatus.message);
@@ -151,10 +159,14 @@ export async function EnableProductAction(productId) {
     if (!updatedProduct) {
       return { status: 404, message: "محصول پیدا نشد." };
     }
-    const hasAccess=await CheckUserPermissionInShop(updatedProduct.ShopId,"productsPermissions","edit")
+    const hasAccess = await CheckUserPermissionInShop(
+      updatedProduct.ShopId,
+      "productsPermissions",
+      "edit"
+    );
     if (!hasAccess.hasPermission) {
-       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
-     } 
+      return { status: 401, message: "شما دسترسی لازم را ندارید" };
+    }
 
     const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
     return { status: 200, message: "محصول فعال شد.", product: plainProduct };
@@ -184,10 +196,14 @@ export async function DisableProductAction(productId) {
     if (!updatedProduct) {
       return { status: 404, message: "محصول پیدا نشد." };
     }
-    const hasAccess=await CheckUserPermissionInShop(updatedProduct.ShopId,"productsPermissions","edit")
+    const hasAccess = await CheckUserPermissionInShop(
+      updatedProduct.ShopId,
+      "productsPermissions",
+      "edit"
+    );
     if (!hasAccess.hasPermission) {
-       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
-     } 
+      return { status: 401, message: "شما دسترسی لازم را ندارید" };
+    }
 
     const plainProduct = JSON.parse(JSON.stringify(updatedProduct));
     return { status: 200, message: "محصول غیرفعال شد.", product: plainProduct };
@@ -264,7 +280,7 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
           path: "pricingTemplate",
           select: "defaultFormula pricingFormulas",
         })
-        .select('-createdBy -updatedBy -updatedAt -__v')
+        .select("-createdBy -updatedBy -updatedAt -__v")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -275,7 +291,7 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
     const totalPages = Math.ceil(totalItems / limit);
 
     // تبدیل فیلدهای پیچیده به رشته
-    const plainProducts = products?.map(product => ({
+    const plainProducts = products?.map((product) => ({
       ...product,
       _id: product?._id?.toString(),
       ShopId: {
@@ -289,19 +305,21 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
       pricingTemplate: {
         ...product?.pricingTemplate,
         _id: product?.pricingTemplate?._id?.toString(),
-        pricingFormulas: product?.pricingTemplate?.pricingFormulas?.map(formula => ({
-          ...formula,
-          _id: formula?._id?.toString(),
-        })),
+        pricingFormulas: product?.pricingTemplate?.pricingFormulas?.map(
+          (formula) => ({
+            ...formula,
+            _id: formula?._id?.toString(),
+          })
+        ),
       },
       parentAccount: product?.parentAccount?.toString(),
       // createdBy: product?.createdBy?.toString(),
       // updatedBy: product?.updatedBy?.toString(),
-      tags: product?.tags?.map(tag => ({
+      tags: product?.tags?.map((tag) => ({
         ...tag,
         _id: tag?._id?.toString(),
       })),
-      Features: product?.Features?.map(feature => ({
+      Features: product?.Features?.map((feature) => ({
         ...feature,
         _id: feature?._id?.toString(),
       })),
@@ -317,7 +335,6 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
       },
     };
 
-
     return {
       status: 200,
       data: responseData,
@@ -327,9 +344,8 @@ export async function GetAllShopEnableProducts(shopId, page = 1, limit = 10) {
     return { status: 500, message: "خطایی در دریافت محصول‌ها رخ داد." };
   }
 }
-export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
+export async function GetAllShopsEnableProducts(page = 1, limit = 10) {
   await connectDB();
- 
 
   // اعتبارسنجی پارامترهای صفحه‌بندی
   page = parseInt(page, 10);
@@ -369,7 +385,7 @@ export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
           path: "pricingTemplate",
           select: "defaultFormula pricingFormulas",
         })
-        .select('-createdBy -updatedBy -updatedAt -__v')
+        .select("-createdBy -updatedBy -updatedAt -__v")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -380,7 +396,7 @@ export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
     const totalPages = Math.ceil(totalItems / limit);
 
     // تبدیل فیلدهای پیچیده به رشته
-    const plainProducts = products?.map(product => ({
+    const plainProducts = products?.map((product) => ({
       ...product,
       _id: product?._id?.toString(),
       ShopId: {
@@ -394,19 +410,21 @@ export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
       pricingTemplate: {
         ...product?.pricingTemplate,
         _id: product?.pricingTemplate?._id?.toString(),
-        pricingFormulas: product?.pricingTemplate?.pricingFormulas?.map(formula => ({
-          ...formula,
-          _id: formula?._id?.toString(),
-        })),
+        pricingFormulas: product?.pricingTemplate?.pricingFormulas?.map(
+          (formula) => ({
+            ...formula,
+            _id: formula?._id?.toString(),
+          })
+        ),
       },
       parentAccount: product?.parentAccount?.toString(),
       // createdBy: product?.createdBy?.toString(),
       // updatedBy: product?.updatedBy?.toString(),
-      tags: product?.tags?.map(tag => ({
+      tags: product?.tags?.map((tag) => ({
         ...tag,
         _id: tag?._id?.toString(),
       })),
-      Features: product?.Features?.map(feature => ({
+      Features: product?.Features?.map((feature) => ({
         ...feature,
         _id: feature?._id?.toString(),
       })),
@@ -422,7 +440,6 @@ export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
       },
     };
 
-
     return {
       status: 200,
       data: responseData,
@@ -432,7 +449,6 @@ export async function GetAllShopsEnableProducts( page = 1, limit = 10) {
     return { status: 500, message: "خطایی در دریافت محصول‌ها رخ داد." };
   }
 }
-
 
 export async function AddProductAction(formData) {
   await connectDB();
@@ -469,10 +485,14 @@ export async function AddProductAction(formData) {
     const isMergeable = formData.get("isMergeable") === "true";
     const description = formData.get("description");
     const price = formData.get("price");
-    const hasAccess=await CheckUserPermissionInShop(ShopId,"productsPermissions","add")
+    const hasAccess = await CheckUserPermissionInShop(
+      ShopId,
+      "productsPermissions",
+      "add"
+    );
     if (!hasAccess.hasPermission) {
-       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
-     } 
+      return { status: 401, message: "شما دسترسی لازم را ندارید" };
+    }
 
     // اعتبارسنجی فیلدهای الزامی
     if (!title || !unit || !ShopId) {
@@ -625,7 +645,6 @@ export async function AddProductAction(formData) {
   }
 }
 export async function EditProductAction(formData, ShopId) {
-  
   await connectDB();
   let user;
   try {
@@ -650,10 +669,14 @@ export async function EditProductAction(formData, ShopId) {
     if (!existingProduct) {
       return { status: 404, message: "محصول یافت نشد." };
     }
-    const hasAccess=await CheckUserPermissionInShop(existingProduct.ShopId,"productsPermissions","add")
+    const hasAccess = await CheckUserPermissionInShop(
+      existingProduct.ShopId,
+      "productsPermissions",
+      "add"
+    );
     if (!hasAccess.hasPermission) {
-       return { status: 401, message: 'شما دسترسی لازم را ندارید' };
-     } 
+      return { status: 401, message: "شما دسترسی لازم را ندارید" };
+    }
 
     // شروع نشست تراکنش
     const session = await mongoose.startSession();
@@ -685,18 +708,21 @@ export async function EditProductAction(formData, ShopId) {
       // مدیریت تصاویر
       // const existingImages = existingProduct.images || [];
       const existingImagesStr = formData.get("existingImages");
-      const existingImages = existingImagesStr ? existingImagesStr.split(",") : [];
-            const newImages = formData.getAll("newImages"); // تصاویر جدید برای آپلود
+      const existingImages = existingImagesStr
+        ? existingImagesStr.split(",")
+        : [];
+      const newImages = formData.getAll("newImages"); // تصاویر جدید برای آپلود
       const imagesToRemove = formData.get("imagesToRemove")
         ? formData.get("imagesToRemove").split(",")
         : []; // شناسه‌های تصاویر برای حذف
 
       // اعتبارسنجی تعداد تصاویر
-      const MAX_FILES = 10;    
-      const remainingImagesCount =existingImages.length - imagesToRemove.length + newImages.length;
+      const MAX_FILES = 10;
+      const remainingImagesCount =
+        existingImages.length - imagesToRemove.length + newImages.length;
       if (remainingImagesCount === 0) {
         throw new Error("حداقل یک تصویر برای محصول الزامی است.");
-      }      
+      }
       if (remainingImagesCount > MAX_FILES) {
         throw new Error(`حداکثر تعداد تصاویر مجاز ${MAX_FILES} است.`);
       }
@@ -724,27 +750,28 @@ export async function EditProductAction(formData, ShopId) {
       });
       const newImagePaths = await Promise.all(uploadPromises);
       // حذف تصاویر انتخاب شده
-const remainingImages = existingImages.filter(
-  (img) => !imagesToRemove.includes(img)
-);
-for (const imagePath of imagesToRemove) {
-  try {
-    await deleteOldImage(imagePath);
-  } catch (deleteError) {
-    // بررسی نوع خطا: اگر خطا به دلیل عدم وجود تصویر است، آن را نادیده بگیرید
-    if (deleteError.code === 'ENOENT') { // فرض کنید `ENOENT` کد خطا برای فایل‌های غایب است
-      console.warn(`تصویر ${imagePath} از قبل حذف شده است.`);
-    } else {
-      // در صورت بروز خطای دیگر، خطا را لاگ کرده و ادامه دهید یا تصمیم دیگری بگیرید
-      console.error(`خطا در حذف تصویر ${imagePath}:`, deleteError);
-      // اگر می‌خواهید عملیات حذف را ادامه دهید حتی با بروز خطا، از `continue` استفاده کنید
-      // continue;
-      
-      // اگر می‌خواهید تراکنش لغو شود، می‌توانید مجدداً خطا را پرتاب کنید:
-      throw deleteError;
-    }
-  }
-}
+      const remainingImages = existingImages.filter(
+        (img) => !imagesToRemove.includes(img)
+      );
+      for (const imagePath of imagesToRemove) {
+        try {
+          await deleteOldImage(imagePath);
+        } catch (deleteError) {
+          // بررسی نوع خطا: اگر خطا به دلیل عدم وجود تصویر است، آن را نادیده بگیرید
+          if (deleteError.code === "ENOENT") {
+            // فرض کنید `ENOENT` کد خطا برای فایل‌های غایب است
+            console.warn(`تصویر ${imagePath} از قبل حذف شده است.`);
+          } else {
+            // در صورت بروز خطای دیگر، خطا را لاگ کرده و ادامه دهید یا تصمیم دیگری بگیرید
+            console.error(`خطا در حذف تصویر ${imagePath}:`, deleteError);
+            // اگر می‌خواهید عملیات حذف را ادامه دهید حتی با بروز خطا، از `continue` استفاده کنید
+            // continue;
+
+            // اگر می‌خواهید تراکنش لغو شود، می‌توانید مجدداً خطا را پرتاب کنید:
+            throw deleteError;
+          }
+        }
+      }
 
       // به‌روزرسانی مسیرهای تصاویر
       const updatedImagePaths = [...remainingImages, ...newImagePaths];
@@ -890,47 +917,194 @@ for (const imagePath of imagesToRemove) {
   }
 }
 
-
 export async function getProductById(productId) {
   try {
     await connectDB();
-    
+
     // دریافت اطلاعات محصول با استفاده از ID
     const product = await Product.findById(productId)
-      .populate("ShopId") // اطلاعات فروشگاه
+      .populate({
+        path: "ShopId",
+        populate: {
+          path: "BaseCurrency", // پاپیولیت فیلد BaseCurrency داخل ShopId
+        },
+      })
       .populate("accountId") // اطلاعات حساب مرتبط
       .populate("parentAccount") // حساب والد
       .populate("tags") // تگ‌ها
-      .populate("Features") // ویژگی‌ها
+      .populate({
+        path: "Features",
+        populate: {
+          path: "featureKey", // پاپیولیت فیلد BaseCurrency داخل ShopId
+        },
+      })
+      .populate("pricingTemplate") // ویژگی‌ها
       .populate({
         path: "createdBy",
-        select: "name email" // فقط نام و ایمیل کاربر ایجاد کننده
+        select: "name email", // فقط نام و ایمیل کاربر ایجاد کننده
       })
       .lean();
-    
+
     if (!product) {
       return { success: false, message: "محصول مورد نظر یافت نشد" };
     }
-    
+
     // در صورت نیاز، می‌توان اطلاعات بیشتری را از حساب محصول استخراج کرد
     // const accountDetails = await Account.findById(product.accountId)
     //   .select("accountCode title balance accountType")
     //   .lean();
-    
+
     // ترکیب اطلاعات محصول و حساب
     // const productWithAccountDetails = {
     //   ...product,
     //   accountDetails: accountDetails || {}
     // };
-    
+
     return { success: true, product: product };
-    
   } catch (error) {
     console.error("خطا در دریافت اطلاعات محصول:", error);
-    return { 
-      success: false, 
-      message: "خطا در دریافت اطلاعات محصول", 
-      error: error.message 
+    return {
+      success: false,
+      message: "خطا در دریافت اطلاعات محصول",
+      error: error.message,
+    };
+  }
+}
+
+export async function LikeProduct(productId) {
+  try {
+    console.log("productId", productId);
+    
+    // بررسی وجود کاربر
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.error("Authentication failed:", authError);
+    }
+    if (!user) {
+      return { status: 401, message: "کاربر وارد نشده است." };
+    }
+    console.log("user-------->",user);
+    
+      // دریافت محصول از دیتابیس
+    const product = await Product.findById(productId);
+    if (!product) {
+      return {
+        status: 404,
+        message: "محصول مورد نظر یافت نشد",
+      };
+    }
+    
+    // اطمینان از اینکه آرایه‌های likes و dislikes وجود دارند
+    if (!Array.isArray(product.likes)) {
+      product.likes = [];
+    }
+    
+    if (!Array.isArray(product.dislikes)) {
+      product.dislikes = [];
+    }
+    
+    // بررسی وضعیت فعلی لایک و دیسلایک
+    const isLiked = product.likes.includes(user.id);
+    const isDisliked = product.dislikes.includes(user.id);
+    
+    // اگر قبلاً دیسلایک کرده، آن را حذف کنیم
+    if (isDisliked) {
+      product.dislikes = product.dislikes.filter(id => id.toString() !== user.id.toString());
+    }
+    
+    // اگر قبلاً لایک کرده، لایک را حذف کنیم، در غیر این صورت اضافه کنیم
+    if (isLiked) {
+      product.likes = product.likes.filter(id => id.toString() !== user.id.toString());
+    } else {
+      product.likes.push(user.id);
+    }
+    
+    // ذخیره تغییرات در دیتابیس
+    await product.save();
+    
+    return {
+      status: 200,
+      message: "عملیات با موفقیت انجام شد",
+      likes: product.likes,
+      dislikes: product.dislikes,
+    };
+  } catch (error) {
+    console.error("خطا در لایک محصول:", error);
+    return {
+      status: 500,
+      message: "خطا در انجام عملیات",
+    };
+  }
+}
+
+export async function DislikeProduct(productId) {
+  try {
+    console.log("productId", productId);
+    
+    
+    let user;
+    try {
+      user = await authenticateUser();
+    } catch (authError) {
+      user = null;
+      console.error("Authentication failed:", authError);
+    }
+    if (!user) {
+      return { status: 401, message: "کاربر وارد نشده است." };
+    }
+    console.log("user-------->",user);
+    
+    // دریافت محصول از دیتابیس
+    const product = await Product.findById(productId);
+    if (!product) {
+      return {
+        status: 404,
+        message: "محصول مورد نظر یافت نشد",
+      };
+    }
+    
+    // اطمینان از اینکه آرایه‌های likes و dislikes وجود دارند
+    if (!Array.isArray(product.likes)) {
+      product.likes = [];
+    }
+    
+    if (!Array.isArray(product.dislikes)) {
+      product.dislikes = [];
+    }
+    
+    // بررسی وضعیت فعلی لایک و دیسلایک
+    const isLiked = product.likes.includes(user.id);
+    const isDisliked = product.dislikes.includes(user.id);
+    
+    // اگر قبلاً لایک کرده، آن را حذف کنیم
+    if (isLiked) {
+      product.likes = product.likes.filter(id => id.toString() !== user.id.toString());
+    }
+    
+    // اگر قبلاً دیسلایک کرده، دیسلایک را حذف کنیم، در غیر این صورت اضافه کنیم
+    if (isDisliked) {
+      product.dislikes = product.dislikes.filter(id => id.toString() !== user.id.toString());
+    } else {
+      product.dislikes.push(user.id);
+    }
+    
+    // ذخیره تغییرات در دیتابیس
+    await product.save();
+    
+    return {
+      status: 200,
+      message: "عملیات با موفقیت انجام شد",
+      likes: product.likes,
+      dislikes: product.dislikes,
+    };
+  } catch (error) {
+    console.error("خطا در دیسلایک محصول:", error);
+    return {
+      status: 500,
+      message: "خطا در انجام عملیات",
     };
   }
 }
