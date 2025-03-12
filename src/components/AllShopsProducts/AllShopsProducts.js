@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { GetAllShopsEnableProducts } from "@/templates/panel/Product/ProductActions";
 import { LikeProduct, DislikeProduct }  from "@/templates/panel/Product/ProductActions";
@@ -9,8 +8,12 @@ import ShopMicroInfo from "@/templates/Shop/ShopMicroInfo";
 import Link from "next/link";
 import HeartSvg from "@/module/svgs/HeartSvg";
 import DislikeSvg from "@/module/svgs/DislikeSvg";
-import {  useSession } from "next-auth/react";
+import CommentSvg from "@/module/svgs/CommentSvg";
+import { useSession } from "next-auth/react";
+import ShareSvg from "@/module/svgs/ShareSvg";
 
+// کامپوننت CommentComponent را وارد می‌کنیم
+import CommentComponent from "@/templates/comment/CommentComponent";
 
 // کامپوننت ProductCard به صورت memo شده
 const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
@@ -19,6 +22,10 @@ const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // اضافه کردن state برای نمایش کامپوننت چت
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+  const [showShareMessage, setShowShareMessage] = useState(false);
 
   // بررسی وضعیت لایک و دیسلایک برای کاربر فعلی
   useEffect(() => {
@@ -30,6 +37,17 @@ const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
       setIsDisliked(false);
     }
   }, [currentUser, likes, dislikes]);
+  
+    // effect برای پنهان کردن پیام اشتراک گذاری
+    useEffect(() => {
+      if (showShareMessage) {
+        const timer = setTimeout(() => {
+          setShowShareMessage(false);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+    }, [showShareMessage]);
   
   const handleLike = async () => {
     if (!currentUser || isLoading) return;
@@ -67,10 +85,8 @@ const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
     // بررسی وجود کاربر و عدم لودینگ
     if (!currentUser || isLoading) return;
     
-    
     setIsLoading(true);
     try {
-      
       // استفاده از سرور اکشن
       const response = await DislikeProduct(product._id);
       
@@ -102,10 +118,59 @@ const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
       setIsLoading(false);
     }
   };
+  // تابع برای اشتراک‌گذاری محصول
+const handleShare = async () => {
+  const productUrl = `${window.location.origin}/product/${product._id}`;
   
+  try {
+    // بررسی پشتیبانی از Web Share API
+    if (navigator.share) {
+      await navigator.share({
+        title: product.title || "محصول",
+        text: `نگاهی به این محصول بیندازید: ${product.title || "محصول"}`,
+        url: productUrl
+      });
+      console.log("محصول با موفقیت به اشتراک گذاشته شد");
+    } else {
+      // اگر Web Share API پشتیبانی نشود، لینک را در کلیپ‌بورد کپی می‌کنیم
+      await navigator.clipboard.writeText(productUrl);
+      alert("لینک محصول کپی شد!");
+      console.log("لینک محصول در کلیپ‌بورد کپی شد");
+    }
+  } catch (error) {
+    console.error("خطا در اشتراک‌گذاری:", error);
+    
+    // تلاش برای کپی کردن در کلیپ‌بورد در صورت خطا در اشتراک‌گذاری
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      alert("لینک محصول کپی شد!");
+    } catch (clipboardError) {
+      console.error("خطا در کپی کردن لینک:", clipboardError);
+      alert("مشکلی در اشتراک‌گذاری پیش آمد. لطفاً دوباره تلاش کنید.");
+    }
+  }
+};
+
+  // تابع برای باز کردن کامپوننت چت
+  const handleOpenComment = () => {
+    setIsCommentOpen(true);
+    console.log("باز کردن چت برای محصول:", product._id);
+  };
+
+  // تابع برای بستن کامپوننت چت
+  const handleCloseComment = () => {
+    setIsCommentOpen(false);
+  };
 
   return (
-    <div className="bg-white dark:bg-zinc-800 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col">
+    <div className="bg-white dark:bg-zinc-800 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col relative">
+      {/* نمایش پیام اشتراک‌گذاری */}
+      {showShareMessage && (
+        <div className="absolute top-2 left-0 right-0 mx-auto w-max bg-green-500 text-white px-3 py-1 rounded-md shadow-md z-10">
+          {shareMessage}
+        </div>
+      )}
+      
       {/* نمایش اطلاعات فروشگاه */}
       <div className="p-2">
         <ShopMicroInfo shop={product.ShopId} size="small" className="mt-1 mb-1" />
@@ -133,36 +198,61 @@ const ProductCard = memo(({ product, currentUser, onLikeUpdate }) => {
           </h4>
         </Link>
         
-        {/* دکمه‌های لایک و دیسلایک */}
+        {/* دکمه‌های تعاملی */}
         <div className="flex justify-between items-center mt-4">
-  <button 
-    onClick={handleLike}
-    // disabled={isLoading || !currentUser || !currentUser._id}
-    className={`flex items-center gap-1 px-3 py-1 rounded-md transition-colors ${
-      isLiked 
-        ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-200' 
-        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900'
-    }`}
-  >
-    <HeartSvg width={18} height={18} />
-    <span>{Array.isArray(likes) ? likes.length : 0}</span>
-  </button>
-  
-  <button 
-    onClick={handleDislike}
-    // disabled={isLoading || !currentUser || !currentUser._id}
-    className={`flex items-center gap-1 px-3 py-1 rounded-md transition-colors ${
-      isDisliked 
-        ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-200' 
-        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900'
-    }`}
-  >
-    <DislikeSvg width={18} height={18} />
-    <span>{Array.isArray(dislikes) ? dislikes.length : 0}</span>
-  </button>
+          <button 
+            onClick={handleLike}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${
+              isLiked 
+                ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-200' 
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900'
+            }`}
+          >
+            <HeartSvg width={18} height={18} />
+            <span>{Array.isArray(likes) ? likes.length : 0}</span>
+          </button>
+          
+          <button 
+            onClick={handleOpenComment} 
+            className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900"
+          >
+            <CommentSvg width={18} height={18} />
+            <span>نظرات</span>
+          </button>
+          
+          {/* دکمه اشتراک‌گذاری */}
+          <button 
+            onClick={handleShare} 
+            className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900"
+          >
+            <ShareSvg width={18} height={18} />
+            <span>اشتراک</span>
+          </button>
+          
+          <button 
+            onClick={handleDislike}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${
+              isDisliked 
+                ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-200' 
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900'
+            }`}
+          >
+            <DislikeSvg width={18} height={18} />
+            <span>{Array.isArray(dislikes) ? dislikes.length : 0}</span>
+          </button>
         </div>
 
       </div>
+      
+      {/* کامپوننت چت */}
+      {isCommentOpen && (
+        <CommentComponent
+          isOpen={isCommentOpen}
+          onClose={handleCloseComment}
+          referenceId={product._id}
+          type={"product"}
+        />
+      )}
     </div>
   );
 });
@@ -187,8 +277,6 @@ function AllShopsProducts() {
     }
   }, [session]);
   
-  
-
   // استفاده از useInView برای بررسی مشاهده شدن المنت
   const { ref, inView } = useInView({
     threshold: 0,
@@ -198,8 +286,6 @@ function AllShopsProducts() {
   // استفاده از useRef برای کنترل درخواست‌های همزمان
   const isLoadingRef = React.useRef(false);
   const currentPageRef = React.useRef(1);
-  
-
   
   // بهینه‌سازی fetchProducts با استفاده از useCallback
   const fetchProducts = useCallback(async (page, limit) => {
