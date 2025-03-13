@@ -3,8 +3,6 @@
 import { useSession } from "next-auth/react";
 import FormTemplate from "@/templates/generalcomponnents/formTemplate";
 import React, { useState, useEffect, useCallback } from "react";
-import DeleteSvg from "@/module/svgs/DeleteSvg";
-import EditSvg from "@/module/svgs/EditSvg";
 import ShareSvg from "@/module/svgs/ShareSvg";
 import { FaFolder, FaSearch, FaPlus } from "react-icons/fa";
 import { useForm } from "react-hook-form";
@@ -109,7 +107,6 @@ function Warehouse() {
         options
       );
       if (response.status === 200) {
-        console.log("response",response);
         
         setAccounts(response.Accounts);
         setTotalPages(response.totalPages);
@@ -193,7 +190,7 @@ function Warehouse() {
   return (
     <FormTemplate BGImage={BGImage}>
      
-      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6">
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-4">
         <div className="flex items-center justify-between  ">
           <h1 className="text-xl  md:text-3xl font-MorabbaBold p-1">مدیریت محصول</h1>
        
@@ -223,9 +220,9 @@ function Warehouse() {
               <p>در حال بارگذاری...</p>
             ) : (
               <>
-                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[65vh]  overflow-y-auto p-2 ">
+                <div className="accounts-list grid grid-cols-1 sm:grid-cols-2  xl:grid-cols-3 gap-3 max-h-[60vh] overflow-x-hidden overflow-y-auto p-2 ">
                   {accounts.map((account) => (
-                    <div key={account._id}>
+                    <div key={account._id} >
                       {account.accountType === "کالا" && (
                         <div className="flex-col items-center justify-between gap-2  max-w-full   sm:flex-col relative bg-white dark:bg-zinc-700 shadow-md rounded-2xl  transition-transform transform hover:scale-105 p-1">
                           <div className="flex  justify-center items-center gap-1 mt-2">
@@ -252,7 +249,7 @@ function Warehouse() {
                             </div>
 
                             {/* بخش اطلاعات محصول و دکمه‌ها */}
-                            <div className="flex flex-col flex-1 m-1 md:m-2 h-15 text-xs sm:text-sm md:text-base p-1">
+                            <div className="flex flex-col flex-1 m-1 md:m-2 h-15 text-xs sm:text-sm md:text-base p-1 max-w-[60%]">
                               {/* عنوان محصول */}
                               <h2
                                 className="text-start text-gray-800 dark:text-gray-200 max-w-full truncate"
@@ -266,6 +263,13 @@ function Warehouse() {
                                 {account?.product?.unit}
                               </h2>
                             </div>
+                                      {/* دکمه اشتراک‌گذاری */}
+          <button 
+            className="flex items-center  rounded-md transition-colors bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900"
+          >
+            <ShareSvg width={18} height={18} />
+          </button>
+
                           </div>
 
                         
@@ -288,6 +292,14 @@ function Warehouse() {
                                 {account.title}
                               </p>
                             </div>
+                                      {/* دکمه اشتراک‌گذاری */}
+          <button 
+            // onClick={handleShare} 
+            className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900"
+          >
+            <ShareSvg width={18} height={18} />
+          </button>
+
                           </div>
 
                        
