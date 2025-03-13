@@ -4,8 +4,13 @@ import ChevronDown from "@/module/svgs/ChevronDown";
 import { useCallback, useEffect, useState } from 'react';
 import { GetAllShopEnableProducts } from "@/templates/panel/Product/ProductActions";
 import { useShopInfoFromRedux } from "@/utils/getShopInfoFromREdux";
+import { useParams } from "next/navigation";
+import { GetAccountIdBystoreIdAndAccountCode } from "@/templates/panel/Account/accountActions";
 
 function NewProduct() {
+  const params = useParams();
+    const { ShopId } = params;
+  
  
   const {
     currentShopId,
@@ -17,11 +22,12 @@ function NewProduct() {
     shopUniqName,
     baseCurrency,
      } = useShopInfoFromRedux();
-  const ShopId  = currentShopId;
   const BGImage=shopImage;
 
   // تغییر وضعیت به یک رشته خالی
   const [products, setProducts] = useState([]);
+    const [anbarAccountId, setAnbarAccountId] = useState(null); // شناسه حساب انبار
+  
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -30,8 +36,30 @@ function NewProduct() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const fetchAnbarAccountId = useCallback(async () => {
 
+    try {
+      const response = await GetAccountIdBystoreIdAndAccountCode(
+        ShopId,
+        "1000-1-2"
+      );
+      if (response.success && response.accountId) {
+        setAnbarAccountId(response.accountId);
+        console.log("anbarAccountId",anbarAccountId);
+        
+      } else {
+        throw new Error("حساب انبار یافت نشد.");
+      }
+    } catch (error) {
+      console.error("خطا در دریافت حساب انبار:", error);
+    }
+  }, [ ShopId]);
 
+  useEffect(() => {
+    if (ShopId) {
+      fetchAnbarAccountId() ;     
+    }
+  }, [ ShopId]);
 
   const GetAllShopEnableProductsHandler = useCallback(
     async (page = 1, limit = 10) => {
@@ -67,6 +95,7 @@ function NewProduct() {
   useEffect(() => {
     if (ShopId) {
       GetAllShopEnableProductsHandler(pagination.currentPage, pagination.limit);
+      
     }
   }, [GetAllShopEnableProductsHandler, ShopId]);
 
@@ -104,7 +133,7 @@ function NewProduct() {
             <h3 className="section_title">جدید ترین محصولات</h3>
             <h3 className="section_Sub_title">آماده ارسال</h3>
           </div>
-          <a href={`/${ShopId}/Warehouse`} className="section_showmore">
+          <a href={`/${ShopId}/Warehouse/${anbarAccountId}`} className="section_showmore">
             <span className="hidden md:inline-block"> مشاهده همه محصولات</span>
             <span className="inline-block md:hidden "> مشاهده همه </span>
 
