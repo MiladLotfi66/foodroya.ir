@@ -104,7 +104,7 @@ function NewProduct() {
             <h3 className="section_title">جدید ترین محصولات</h3>
             <h3 className="section_Sub_title">آماده ارسال</h3>
           </div>
-          <a href="#" className="section_showmore">
+          <a href={`/${ShopId}/Warehouse`} className="section_showmore">
             <span className="hidden md:inline-block"> مشاهده همه محصولات</span>
             <span className="inline-block md:hidden "> مشاهده همه </span>
 
