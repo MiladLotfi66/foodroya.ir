@@ -19,6 +19,8 @@ import { deleteOldImage } from '@/utils/ImageUploader';
 import { GetCurrencyIdByName } from '../panel/Currency/currenciesServerActions';
 import SendMetod from '../panel/sendMetod/SendMetod';
 import { getContactsByRoleId } from '../panel/rols/RolesPermissionActions';
+
+
 export const simplifyFollowers = (followers) => {
 
   // چک کردن اگر followers یک آرایه خالی باشد یا undefined باشد
@@ -35,8 +37,6 @@ export const simplifyFollowers = (followers) => {
     }
   }).filter(follower => follower !== null); // حذف مقادیر null در صورت وجود
 };
-
-
 export async function isUniqShop(uniqueIdentifier, currentShopId = null) {
   
   await connectDB();
@@ -829,7 +829,7 @@ export async function unfollowShopServerAction(ShopID) {
   }
 }
 
-async function ShopServerEnableActions(ShopID) {
+export async function ShopServerEnableActions(ShopID) {
   try {
     await connectDB();
     let userData;
@@ -869,7 +869,7 @@ async function ShopServerEnableActions(ShopID) {
   }
 }
 
-async function ShopServerDisableActions(ShopID) {
+export async function ShopServerDisableActions(ShopID) {
   try {
     await connectDB();
     let userData;
@@ -909,7 +909,7 @@ async function ShopServerDisableActions(ShopID) {
   }
 }
 
-async function GetAllShops() {
+export async function GetAllShops() {
   try {
     await connectDB();
 
@@ -935,7 +935,7 @@ async function GetAllShops() {
   }
 }
 
-async function GetAllEnableShops() {
+export async function GetAllEnableShops() {
   try {
     await connectDB();
 
@@ -964,75 +964,7 @@ async function GetAllEnableShops() {
   }
 }
 
-// async function DeleteShops(ShopID) {
-//   try {
-//     await connectDB();
-//     let userData;
-//     try {
-//       userData = await authenticateUser();
-//     } catch (authError) {
-//       userData = null;
-//       console.log("Authentication failed:", authError);
-//     }
-//   if (!userData) {
-//     return { status: 401, message: 'کاربر وارد نشده است.' };
-//   }
-//     const Shop = await shops.findById(ShopID);
-
-//     if (!Shop) {
-//       throw new Error("فروشگاه مورد نظر یافت نشد");
-//     }
-
-//     if (!(await hasUserAccessToEditAndDeleteShop(Shop.CreatedBy))) {
-//       throw new Error("شما دسترسی لازم برای این عملیات را ندارید");
-//     }
-
-//       // به‌روزرسانی حذف امن
-//       const result = await shops.updateOne(
-//         { _id: ShopID },
-//         {
-//           $set: {
-//             is_deleted: true,
-//             deleted_by: userData.id, // شناسه کاربر حذف‌کننده
-//             deleted_at: new Date(), // زمان حذف
-//           },
-//         }
-//       );
-  
-//       if (result.nModified === 0) {
-//         throw new Error("فروشگاه مورد نظر حذف نشد");
-//       }
-
-//     const deleteStatus=deleteOldImage(Shop.LogoUrl)
-//     if (deleteStatus.status!==200) {
-//       console.error("خطا در حذف فایل تصویر:");
-//       throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-//      }
- 
-//      const deleteStatus2=deleteOldImage(Shop.TextLogoUrl)
-//      if (deleteStatus2.status!==200) {
-//        console.error("خطا در حذف فایل تصویر:");
-//        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-//       }  
-//          const deleteStatus3=deleteOldImage(Shop.BackGroundShopUrl)
-//      if (deleteStatus3.status!==200) {
-//        console.error("خطا در حذف فایل تصویر:");
-//        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-//       }  
-//              const deleteStatus4=deleteOldImage(Shop.BackGroundpanelUrl)
-//      if (deleteStatus4.status!==200) {
-//        console.error("خطا در حذف فایل تصویر:");
-//        throw new Error("خطای سرور، حذف فایل تصویر انجام نشد");
-//       }
- 
-
-//     return { message: "فروشگاه و فایل تصویر با موفقیت حذف شدند", status: 200 };
-//   } catch (error) {
-//     console.error("خطا در حذف فروشگاه:", error);
-//     return { error: error.message, status: 500 };
-//   }
-// }
-async function DeleteShops(ShopID) {
+export async function DeleteShops(ShopID) {
   try {
     await connectDB();
     let userData;
@@ -1222,10 +1154,145 @@ export async function GetShopInfo(shopId) {
 
 }
 
-export {
-  DeleteShops,
-  ShopServerEnableActions,
-  ShopServerDisableActions,
-  GetAllShops,
-  GetAllEnableShops,
-};
+
+async function getUserContactIds(userId) {
+  await connectDB();
+  const contacts = await Contact.find({ userAccount: userId });
+  return contacts.map(contact => contact._id);
+}
+
+
+export async function GetFilteredShops(filter = "all", searchTerm = "", additionalFilters = {}) {
+  try {
+    await connectDB();
+    
+    // احراز هویت کاربر
+    let userData;
+    try {
+      userData = await authenticateUser();
+    } catch (authError) {
+      userData = null;
+      console.log("Authentication failed:", authError);
+    }
+
+    if (!userData) {
+      return { status: 401, message: 'کاربر وارد نشده است.' };
+    }
+
+    // شرط‌های اولیه جستجو
+    let query = { ShopStatus: true, is_deleted: false };
+    
+    // اضافه کردن شرط جستجو بر اساس متن وارد شده
+    if (searchTerm && searchTerm.trim() !== '') {
+      query.$or = [
+        { ShopName: { $regex: searchTerm, $options: 'i' } },
+        { ShopUniqueName: { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+    
+    // اعمال فیلترهای اضافی
+    if (additionalFilters.city) {
+      query.ShopAddress = { $regex: additionalFilters.city, $options: 'i' };
+    }
+    
+    if (additionalFilters.currencyName) {
+      // برای این فیلتر نیاز به populate کردن فیلد BaseCurrency داریم
+      // این بخش در پایین‌تر در populate هندل می‌شود
+    }
+    
+    if (additionalFilters.ownerUserId) {
+      query.CreatedBy = additionalFilters.ownerUserId;
+    }
+    
+    // پیاده‌سازی فیلترهای خاص کاربر
+    switch (filter) {
+      case "yourRoles":
+        // دریافت شناسه‌های مخاطب کاربر
+        const contactIds = await getUserContactIds(userData.id);
+        
+        // دریافت نقش‌های کاربر در غرفه‌ها
+        const roles = await RoleInShop.find({ ContactId: { $in: contactIds } });
+        
+        // فیلتر غرفه‌ها بر اساس نقش‌های کاربر
+        query._id = { $in: roles.map(role => role.ShopId) };
+        break;
+        
+      case "yourAccounts":
+        // دریافت شناسه‌های مخاطب کاربر
+        const contactIdsForAccounts = await getUserContactIds(userData.id);
+        
+        // دریافت حساب‌های مرتبط با مخاطب‌های کاربر
+        const accounts = await Account.find({ contact: { $in: contactIdsForAccounts } });
+        
+        // فیلتر غرفه‌ها بر اساس حساب‌های کاربر
+        query._id = { $in: accounts.map(account => account.store) };
+        break;
+        
+      case "yourContacts":
+        // دریافت شناسه‌های مخاطب کاربر
+        const userContactIds = await getUserContactIds(userData.id);
+        
+        // دریافت غرفه‌هایی که کاربر در آنها مخاطب است
+        const contactsWithShops = await Contact.find({ _id: { $in: userContactIds } });
+        
+        // فیلتر غرفه‌ها بر اساس مخاطب‌های کاربر
+        query._id = { $in: contactsWithShops.map(contact => contact.shop) };
+        break;
+        
+      case "yourShops":
+        // غرفه‌هایی که توسط کاربر ایجاد شده‌اند
+        query.CreatedBy = userData.id;
+        break;
+        
+      case "following":
+        // غرفه‌هایی که کاربر دنبال می‌کند
+        query.followers = { $elemMatch: { $eq: new mongoose.Types.ObjectId(userData.id) } };
+        break;
+        
+      case "all":
+      default:
+        // تمام غرفه‌های فعال (فیلتر پیش‌فرض)
+        break;
+    }
+    
+    // اجرای کوئری برای دریافت غرفه‌ها
+    let shopsQuery = shops.find(query);
+    
+    // اگر فیلتر بر اساس نام ارز است
+    if (additionalFilters.currencyName) {
+      shopsQuery = shopsQuery.populate({
+        path: 'BaseCurrency',
+        match: { CurrencyName: { $regex: additionalFilters.currencyName, $options: 'i' } }
+      });
+    }
+    
+    // دریافت غرفه‌ها
+    const filteredShops = await shopsQuery.lean();
+    
+    // فیلتر کردن غرفه‌هایی که BaseCurrency آنها با شرط ارز مطابقت دارد
+    const finalShops = additionalFilters.currencyName 
+      ? filteredShops.filter(shop => shop.BaseCurrency !== null)
+      : filteredShops;
+    
+    // تبدیل به فرمت مناسب برای ارسال
+    const plainShops = finalShops.map((shop) => ({
+      ...shop,
+      _id: shop._id.toString(),
+      CreatedBy: shop.CreatedBy ? shop.CreatedBy.toString() : null,
+      LastEditedBy: shop.LastEditedBy ? shop.LastEditedBy.toString() : null,
+      createdAt: shop.createdAt ? shop.createdAt.toISOString() : null,
+      updatedAt: shop.updatedAt ? shop.updatedAt.toISOString() : null,
+      BaseCurrency: shop.BaseCurrency ? (typeof shop.BaseCurrency === 'object' ? shop.BaseCurrency._id.toString() : shop.BaseCurrency.toString()) : null,
+      deleted_by: shop.deleted_by ? shop.deleted_by.toString() : null,
+      deleted_at: shop.deleted_at ? shop.deleted_at.toISOString() : null,
+      followers: shop.followers ? shop.followers.map(id => id.toString()) : [],
+      avatarUrl: shop.LogoUrl,
+    }));
+    
+    return { shops: plainShops, status: 200 };
+  } catch (error) {
+    console.error("خطا در دریافت غرفه‌های فیلتر شده:", error);
+    return { error: error.message, status: 500 };
+  }
+}
+
