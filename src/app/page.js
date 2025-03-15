@@ -1,14 +1,11 @@
-import NewProduct from "@/module/home/NewProduct";
-import CategoryBanner from "@/module/home/CategoryBanner";
+import AllShopsProducts from "@/components/AllShopsProducts/AllShopsProducts";
 // import BottomNavigation from "@/templates/bottomNav/BottomNavigation";
 // import ProductCategori from "@/module/home/ProductCategori";
 
 export default function Home() {
   return (
     <>
-      {/* <BottomNavigation /> */}
-      {/* <CategoryBanner /> */}
-      {/* <ProductCategori /> */}
+      <AllShopsProducts/>
     </>
   );
 }

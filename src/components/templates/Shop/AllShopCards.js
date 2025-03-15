@@ -14,6 +14,15 @@ function AllShopCards() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [additionalFilters, setAdditionalFilters] = useState({});
 
+  const filterOptions = [
+    { value: "all", label: "همه غرفه‌ها" },
+    { value: "yourRoles", label: "غرفه‌هایی که در آنها نقش دارید" },
+    { value: "yourAccounts", label: "غرفه‌هایی که در آنها حساب دارید" },
+    { value: "yourContacts", label: "غرفه‌هایی که در آنها مخاطب هستید" },
+    { value: "yourShops", label: "غرفه‌های شما" },
+    { value: "following", label: "غرفه‌هایی که دنبال می‌کنید" },
+  ];
+
   // دریافت داده‌ها با استفاده از سرور اکشن
   const fetchFilteredShops = async () => {
     setLoading(true);
@@ -61,34 +70,34 @@ function AllShopCards() {
     }, 500); // تاخیر 500 میلی‌ثانیه‌ای برای جلوگیری از درخواست‌های مکرر هنگام تایپ
 
     return () => clearTimeout(timer);
-  }, [activeFilter, searchTerm ,additionalFilters]);
+  }, [activeFilter, searchTerm, additionalFilters]);
 
   // تغییر فیلتر فعال
-  const handleFilterChange = (filter) => {
-    setActiveFilter(filter);
+  const handleFilterChange = (e) => {
+    setActiveFilter(e.target.value);
   };
 
   // تغییر عبارت جستجو
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
-    // اضافه کردن یا به روزرسانی فیلترهای اضافی
-    const updateAdditionalFilter = (key, value) => {
-      setAdditionalFilters(prev => ({
-        ...prev,
-        [key]: value
-      }));
-    };
-  
+
+  // اضافه کردن یا به روزرسانی فیلترهای اضافی
+  const updateAdditionalFilter = (key, value) => {
+    setAdditionalFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
   return (
     <FormTemplate>
       <div className="bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl mt-6">
-        <div className="flex flex-col md:flex-row justify-between p-2 md:p-5 mt-6">
-          <h1 className="text-2xl md:text-3xl font-MorabbaBold mb-4 md:mb-0">فروشگاه‌ها</h1>
+        {/* هدر و بخش فیلترها برای نمایش دسکتاپ */}
+        <div className="hidden md:flex flex-row justify-between p-5 mt-6">
+          <h1 className="text-3xl font-MorabbaBold">فروشگاه‌ها</h1>
           
-          {/* بخش فیلترها */}
-          <div className="flex flex-col w-full md:w-auto space-y-4">
+          <div className="flex flex-row space-x-4 space-x-reverse">
             {/* نوار جستجو */}
             <div className="relative">
               <input
@@ -96,7 +105,7 @@ function AllShopCards() {
                 placeholder="جستجو در غرفه‌ها..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-full md:w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white dark:bg-zinc-800"
+                className="w-64 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white dark:bg-zinc-800"
                 dir="rtl"
               />
               <svg
@@ -115,68 +124,101 @@ function AllShopCards() {
               </svg>
             </div>
             
-            {/* دکمه‌های فیلتر */}
-            <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-              <button
-                onClick={() => handleFilterChange("all")}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  activeFilter === "all"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-gray-200"
-                }`}
+            {/* سلکت باکس فیلتر */}
+            <div className="relative">
+              <select
+                value={activeFilter}
+                onChange={handleFilterChange}
+                className="w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white dark:bg-zinc-800 appearance-none"
+                dir="rtl"
               >
-                همه غرفه‌ها
-              </button>
-              <button
-                onClick={() => handleFilterChange("yourRoles")}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  activeFilter === "yourRoles"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-gray-200"
-                }`}
+                {filterOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute left-3 top-2.5 pointer-events-none">
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* استیکی هدر و بخش فیلترها برای نمایش موبایل */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-zinc-700 shadow-sm p-3 md:hidden">
+          <h1 className="text-2xl font-MorabbaBold mb-3">فروشگاه‌ها</h1>
+          
+          <div className="flex flex-col space-y-3">
+            {/* نوار جستجو */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="جستجو در غرفه‌ها..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white dark:bg-zinc-800"
+                dir="rtl"
+              />
+              <svg
+                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                غرفه‌هایی که در آنها نقش دارید
-              </button>
-              <button
-                onClick={() => handleFilterChange("yourAccounts")}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  activeFilter === "yourAccounts"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-gray-200"
-                }`}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            
+            {/* سلکت باکس فیلتر */}
+            <div className="relative">
+              <select
+                value={activeFilter}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white dark:bg-zinc-800 appearance-none"
+                dir="rtl"
               >
-                غرفه‌هایی که در آنها حساب دارید
-              </button>
-              <button
-                onClick={() => handleFilterChange("yourContacts")}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  activeFilter === "yourContacts"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-gray-200"
-                }`}
-              >
-                غرفه‌هایی که در آنها مخاطب هستید
-              </button>
-              <button
-                onClick={() => handleFilterChange("yourShops")}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  activeFilter === "yourShops"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-gray-200"
-                }`}
-              >
-                غرفه‌های شما
-              </button>
-              <button
-                onClick={() => handleFilterChange("following")}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  activeFilter === "following"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 dark:bg-zinc-600 text-gray-700 dark:text-gray-200"
-                }`}
-              >
-                غرفه‌هایی که دنبال می‌کنید
-              </button>
+                {filterOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute left-3 top-2.5 pointer-events-none">
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
