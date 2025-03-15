@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { removeFromCart, updateQuantity, fetchCart } from '@/Redux/features/mobileMenu/cartSlice';
 import { updateCartItemAction, removeCartItemAction } from './ShopingCartServerActions';
 import Link from 'next/link';
-import { useShopInfoFromRedux } from '@/utils/getShopInfoFromREdux';
 import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
 import Image from 'next/image';
@@ -17,10 +16,9 @@ const ShopingCartPage = () => {
   const cartStatus = useSelector((state) => state.cart.status);
   const cartError = useSelector((state) => state.cart.error);
   const userId = session?.user?.id;
-  const { currentShopId, shopLogo, shopTextLogo, baseCurrency } = useShopInfoFromRedux();
   
   // برای نگهداری آیدی سبد انتخاب شده
-  const [selectedCartId, setSelectedCartId] = useState(currentShopId);
+  const [selectedCartId, setSelectedCartId] = useState(null);
 
   useEffect(() => {
     if (userId) {
@@ -38,6 +36,7 @@ const ShopingCartPage = () => {
         totalAmount: 0,
         shopLogo: item?.shopInfo?.LogoUrl,
         ShopName: item?.shopInfo?.ShopName,
+        baseCurrency: { title: 'تومان', decimalPlaces: 0 }, // مقدار پیش‌فرض برای ارز پایه
         lastUpdated: item.lastUpdated || new Date().toISOString(), // برای مرتب‌سازی سبدها
       };
     }
@@ -59,7 +58,7 @@ const ShopingCartPage = () => {
     .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
 
   // جدیدترین سبد خرید (اولین آیتم در لیست مرتب‌شده)
-  const newestShopId = sortedShops.length > 0 ? sortedShops[0].shopId : currentShopId;
+  const newestShopId = sortedShops.length > 0 ? sortedShops[0].shopId : null;
   
   // تنظیم سبد فعلی به جدیدترین سبد اگر هنوز انتخاب نشده باشد
   useEffect(() => {
@@ -70,11 +69,15 @@ const ShopingCartPage = () => {
 
   const selectedShopItems = groupedCart[selectedCartId]?.items || [];
   const otherShops = sortedShops.filter(shop => shop.shopId !== selectedCartId);
+  
+  // اطلاعات فروشگاه انتخاب شده
+  const selectedShopInfo = groupedCart[selectedCartId] || {};
+  const { ShopName = 'فروشگاه', shopLogo: currentLogo = '/images/default-shop.jpg', baseCurrency } = selectedShopInfo;
 
   // فرمت‌کننده قیمت
   const formatter = new Intl.NumberFormat('fa-IR', {
-    minimumFractionDigits: baseCurrency.decimalPlaces,
-    maximumFractionDigits: baseCurrency.decimalPlaces,
+    minimumFractionDigits: baseCurrency?.decimalPlaces || 0,
+    maximumFractionDigits: baseCurrency?.decimalPlaces || 0,
   });
 
   // محاسبه جمع کل سبد انتخاب‌شده
@@ -85,6 +88,8 @@ const ShopingCartPage = () => {
 
   // تغییر تعداد محصول
   const handleQuantityChange = async (productId, shopId, newQuantity) => {
+    if (newQuantity < 1) return;
+    
     try {
       dispatch(updateQuantity({ product: productId, quantity: newQuantity, shop: shopId }));
       await updateCartItemAction(userId, productId, newQuantity);
@@ -162,10 +167,6 @@ const ShopingCartPage = () => {
     );
   }
 
-  // اطلاعات فروشگاه فعلی
-  const selectedShopInfo = groupedCart[selectedCartId] || {};
-  const { ShopName = 'فروشگاه', shopLogo: currentLogo = '/images/default-shop.jpg' } = selectedShopInfo;
-
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -205,7 +206,7 @@ const ShopingCartPage = () => {
               <div className="w-24 h-24 relative flex-shrink-0">
                 <Image
                   src={item.image || '/images/default-product.jpg'}
-                  alt={item.title}
+                  alt={item.title || item.product}
                   width={80}
                   height={80}
                   className="object-cover w-full h-full shadow-md rounded-lg"
@@ -216,9 +217,9 @@ const ShopingCartPage = () => {
               </div>
 
               <div className="flex-1 mr-4">
-                <h3 className="font-DanaMedium text-lg mb-2">{item.title}</h3>
+                <h3 className="font-DanaMedium text-lg mb-2">{item.title || item.product}</h3>
                 <p className="text-gray-500 mb-1">
-                  قیمت واحد: {formatter.format(item.price)} {baseCurrency.title}
+                  قیمت واحد: {formatter.format(item.price)} {baseCurrency?.title || 'تومان'}
                 </p>
                 <div className="flex items-center gap-3 mb-1">
                   <button
@@ -238,7 +239,7 @@ const ShopingCartPage = () => {
                 </div>
                 <div className="flex items-center gap-4 mb-1">
                   <p className="font-DanaDemiBold">
-                    {formatter.format(item.price * item.quantity)} {baseCurrency.title}
+                    {formatter.format(item.price * item.quantity)} {baseCurrency?.title || 'تومان'}
                   </p>
                   <button
                     onClick={() => handleRemoveItem(item.product, item.shop)}
@@ -262,7 +263,7 @@ const ShopingCartPage = () => {
         <div className="mt-4 p-3 bg-white dark:bg-zinc-800 rounded-lg shadow-md mb-6">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-DanaDemiBold">
-              جمع کل: {formatter.format(selectedCartTotal)} {baseCurrency.title}
+              جمع کل: {formatter.format(selectedCartTotal)} {baseCurrency?.title || 'تومان'}
             </h3>
             <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
               پرداخت
@@ -302,7 +303,7 @@ const ShopingCartPage = () => {
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-gray-500">{shop.totalQuantity} محصول</p>
                   <p className="font-DanaMedium text-blue-500">
-                    {formatter.format(shop.totalAmount)} {baseCurrency.title}
+                    {formatter.format(shop.totalAmount)} {shop.baseCurrency?.title || 'تومان'}
                   </p>
                 </div>
                 <div className="mt-2 w-full text-center">
@@ -315,25 +316,9 @@ const ShopingCartPage = () => {
           </div>
         </div>
       )}
-      
-      {/* اطلاعات تاریخ به‌روزرسانی */}
-      {selectedShopItems.length > 0 && (
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>
-            آخرین به‌روزرسانی: {
-              new Date(groupedCart[selectedCartId]?.lastUpdated).toLocaleDateString('fa-IR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })
-            }
-          </p>
-        </div>
-      )}
     </div>
   );
 };
 
 export default ShopingCartPage;
+
