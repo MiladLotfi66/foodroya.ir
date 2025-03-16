@@ -8,24 +8,24 @@ import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
 import Image from 'next/image';
 
+
 const ShopingCartPage = () => {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
-  
   const cartStatus = useSelector((state) => state.cart.status);
   const cartError = useSelector((state) => state.cart.error);
   const userId = session?.user?.id;
   
   // برای نگهداری آیدی سبد انتخاب شده
   const [selectedCartId, setSelectedCartId] = useState(null);
-
   useEffect(() => {
     if (userId) {
       dispatch(fetchCart(userId));
     }
   }, [dispatch, userId]);
 
+  
   // گروه‌بندی آیتم‌ها بر اساس فروشگاه
   const groupedCart = cartItems.reduce((acc, item) => {
     const shopId = item.shop;

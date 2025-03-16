@@ -2,7 +2,7 @@
 import shoppingCart from "./shoppingCart";
 import ShopingCartItems from "./ShopingCartItems";
 import connectDB from "@/utils/connectToDB";
-
+import Product from "../panel/Product/Product";
 
 export async function GetUserShopingCartInfo() {
 
@@ -127,6 +127,7 @@ export const removeCartItemAction = async (userId, productId) => {
 
 // actions/cartActions.js
 export const getCartFromDB = async (userId) => {
+  console.log("userId",userId);
   
   try {
     await connectDB();
