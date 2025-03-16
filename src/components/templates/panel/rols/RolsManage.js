@@ -177,8 +177,7 @@ function RolsManage() {
         }));
         return { success: true };
       } else {
-        console.error("خطایی در حذف نقش کاربر رخ داد:", res.error);
-        return { success: false };
+        return { success: false ,message:res?.message  };
       }
     } catch (error) {
       console.error("خطایی در حین حذف نقش:", error);

@@ -72,7 +72,9 @@ export async function AddRoleToContact(ContactId, ShopId, RoleId) {
   }
 }
 
+
 export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
+  
   const session = await mongoose.startSession();
   session.startTransaction();
   
@@ -82,7 +84,7 @@ export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
     
     // اعتبارسنجی ShopId
     if (!ShopId) {
-      throw new Error("shopId is required in RoleData");
+      return { success: false, message: 'shopId is required in RoleData' };
     }
 
     // احراز هویت کاربر
@@ -95,7 +97,44 @@ export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
     }
 
     if (!userData) {
-      return { status: 401, message: 'کاربر وارد نشده است.' };
+      return { success: false, message: 'کاربر وارد نشده است.' };
+    }
+
+    // بازیابی نقش برای بررسی عنوان آن
+    const role = await RolePerimision.findById(RoleId).lean();
+    if (!role) {
+      return { success: false, message: 'نقش مورد نظر یافت نشد.' };
+    }
+
+    // بررسی اینکه آیا نقش "مدیر کل" حذف می‌شود یا خیر
+    const isManagerAllRole = role.RoleTitle === 'مدیر کل'; // اطمینان از تطابق با عنوان نقش
+
+    if (isManagerAllRole) {
+      // یافتن ContactId فعلی کاربر در فروشگاه مورد نظر
+      const currentUserContact = await Contact.findOne({ 
+        userAccount: userData.id, 
+        shop: ShopId 
+      }).lean();
+
+      if (!currentUserContact) {
+        return { success: false, message: 'مخاطب کاربر در این فروشگاه یافت نشد.' };
+      }
+
+      // بررسی اینکه آیا کاربر قصد حذف نقش "مدیر کل" خود را دارد
+      if (currentUserContact._id.toString() === ContactId.toString()) {
+       return { success: false, message: 'شما نمی‌توانید نقش مدیر کل خود را حذف کنید ، نقش مدیر کل را باید یک مدیر کل غیر از خودتان حذف کند .' };
+      }
+
+      // بررسی اینکه آیا کاربر دارای نقش "مدیر کل" در فروشگاه است
+      const userHasManagerRole = await RoleInShop.findOne({
+        ContactId: currentUserContact._id,
+        ShopId: ShopId,
+        RoleId: role._id,
+      });
+
+      if (!userHasManagerRole) {
+        return { success: false, message: 'شما مجاز به حذف نقش مدیر کل از دیگران نیستید.' };
+      }
     }
 
     // پیدا کردن و حذف رکورد در RoleInShop
@@ -106,18 +145,20 @@ export async function RemoveContactFromRole(ContactId, ShopId, RoleId) {
     }, { session });
 
     if (!result) {
-      throw new Error('Record not found');
-    }
-    const hasAccess=await CheckUserPermissionInShop(ShopId,"rolesPermissions","edit")
-    if (!hasAccess.hasPermission) {
-       return { status: 401, message: 'شما دسترسی به ویرایش را ندارید' };
-     } 
+      return { success: false, message: 'Record not found' };
 
+    }
+
+    // بررسی دسترسی کاربر برای ویرایش نقش‌ها
+    const hasAccess = await CheckUserPermissionInShop(ShopId, "rolesPermissions", "edit");
+    if (!hasAccess.hasPermission) {
+      return { success: false, message: 'شما دسترسی به ویرایش را ندارید' };
+    }
 
     // بروزرسانی Contact.RolesId
     await Contact.findByIdAndUpdate(
       ContactId,
-      { $pull: { RolesId: RoleId } }, // از $pull برای حذف نقش استفاده می‌کنیم
+      { $pull: { RolesId: RoleId } },
       { new: true, session }
     );
 
@@ -448,7 +489,6 @@ export async function GetAllFollowedUsers(ShopId){
 export async function GetAllFollowedUsersWithRoles(ShopId, roleId) {
   try {
     await connectDB();
-console.log("ShopId",ShopId);
 
     // دریافت فالورهای فروشگاه
     const shop = await Shop.findOne({ _id: ShopId })
@@ -490,7 +530,6 @@ export async function GetAllContactsWithRoles(ShopId, roleId) {
 
     // دریافت تمامی مخاطبین مربوط به غرفه
     const ShopContacts = await Contact.find({ shop: ShopId }).lean();
-    console.log("ShopContacts", ShopContacts);
 
     // اگر هیچ مخاطبی پیدا نشود
     if (!ShopContacts || ShopContacts.length === 0) {

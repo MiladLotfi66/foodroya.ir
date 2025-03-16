@@ -127,7 +127,6 @@ export const removeCartItemAction = async (userId, productId) => {
 
 // actions/cartActions.js
 export const getCartFromDB = async (userId) => {
-  console.log("userId",userId);
   
   try {
     await connectDB();

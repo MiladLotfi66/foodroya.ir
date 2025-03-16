@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import RoleNameAndImageCart from "./RoleNameAndImageCart";
+import { Toaster, toast } from "react-hot-toast";
 
 function ContactsListModal({ Contacts, AddFunc, RemoveFunc }) {
   
@@ -27,6 +28,7 @@ function ContactsListModal({ Contacts, AddFunc, RemoveFunc }) {
 
   const handleRemoveRole = async (userId) => {
     const result = await RemoveFunc(userId);
+
     if (result?.success) {
       setLocalContacts((prevContacts) =>
         prevContacts?.map((user) =>
@@ -34,7 +36,8 @@ function ContactsListModal({ Contacts, AddFunc, RemoveFunc }) {
         )
       );
     } else {
-      console.error("خطا در حذف نقش");
+      toast.error(result?.message);
+
     }
   };
 
