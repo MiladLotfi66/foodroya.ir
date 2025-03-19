@@ -14,6 +14,10 @@ import { revalidatePath } from "next/cache";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import { copyImage } from "@/utils/ImageUploader";
 import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
+
+//FinancialDocumentsServerActions.js
+
+
 // ایجاد حساب جدید
 export async function createAccount(data, session = null) {
   await connectDB();
@@ -968,3 +972,82 @@ export async function pasteAccounts(accountIds, parentAccountId, storeId, action
     };
   }
 } 
+
+
+
+export async function getUserAccounts() {
+  await connectDB();
+  
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'لطفا وارد حساب کاربری خود شوید' };
+    }
+
+    // ابتدا مخاطب‌های مرتبط با کاربر را پیدا می‌کنیم
+    const userContacts = await Contact.find({ 
+      userAccount: user.id 
+    }).select('_id');
+console.log("userContacts",userContacts);
+
+    if (!userContacts || userContacts.length === 0) {
+      return { 
+        status: 200, 
+        accounts: [],
+        message: 'هیچ حسابی یافت نشد'
+      };
+    }
+
+    const contactIds = userContacts.map(contact => contact._id);
+
+    // حساب‌های مرتبط با مخاطب‌های کاربر را پیدا می‌کنیم
+    const accounts = await Account.find({ 
+      contact: { $in: contactIds },
+      accountStatus: 'فعال'
+    }).populate('store', 'name logo')  // اطلاعات فروشگاه
+    .populate('contact', 'name')// نام مخاطب
+    .select('_id title accountType accountCode store accountNature balance contact')
+    .sort({ accountCode: 1 })
+    .lean();
+
+    if (!accounts || accounts.length === 0) {
+      return { 
+        status: 200, 
+        accounts: [],
+        message: 'هیچ حسابی یافت نشد'
+      };
+    }
+
+    // تبدیل داده‌ها به فرمت مناسب
+    const formattedAccounts = accounts.map(account => ({
+      id: account._id.toString(),
+      title: account.title,
+      type: account.accountType,
+      code: account.accountCode,
+      nature: account.accountNature,
+      balance: account.balance || 0,
+      store: {
+        id: account.store._id.toString(),
+        name: account.store.name,
+        logo: account.store.logo
+      },
+      contact: {
+        id: account.contact._id.toString(),
+        name: account.contact.name
+      }
+    }));
+
+    return { 
+      status: 200, 
+      accounts: formattedAccounts 
+    };
+
+  } catch (error) {
+    console.error('خطا در دریافت حساب‌های کاربر:', error);
+    return { 
+      status: 500, 
+      message: 'خطا در دریافت حساب‌های کاربر' 
+    };
+  }
+}

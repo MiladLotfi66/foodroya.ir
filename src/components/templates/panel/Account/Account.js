@@ -22,7 +22,7 @@ const accountSchema = new Schema(
     // فروشگاه: ارجاع به مدل Store
     store: {
       type: Schema.Types.ObjectId,
-      ref: "Store",
+      ref: "Shop",
       required: true,
     },
     // حساب والد: ارجاع به مدل Account (خود مدل)

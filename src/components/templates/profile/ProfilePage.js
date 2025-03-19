@@ -479,48 +479,53 @@ function ProfilePage() {
                   )}
                 </div>
               </section>
-              <div className="flex justify-between items-center">
+<div className="flex justify-between items-center">
+  <Link href="/financial/documents" className="mt-8 gap-2 flex-col text-center items-center justify-center">
+    <h2 className="text-xs font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
+      اسناد مالی شما
+    </h2>
+    <div className="flex justify-center">
+      <TextPage className="w-8 h-8 text-blue-500" />
+    </div>
+    <p className="text-xs text-gray-700 dark:text-gray-300 mt-2">
+      مشاهده تمام اسناد مالی
+    </p>
+  </Link>
 
-                <Link href="/Shop/allShop" className="mt-8 gap-2 first-line:flex-col text-center items-center justify-center">
-                  <h2 className="text-sm font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
-                    غرفه‌هایی که دنبال می‌کنید
-                  </h2>
-                  {followingShops.length > 0 ? (
-                    <AvatarGroupTailwind
-                      avatars={followingShops.map((shop) => shop.avatarUrl)}
-                      max={4}
-                      size={35} // اندازه آواتارها به پیکسل
-                      overlap={25} // میزان همپوشانی به پیکسل
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      شما هنوز هیچ غرفه‌ای را دنبال نکرده‌اید.
-                    </p>
-                  )}
-                  ({followingShops.length})
-                </Link>
-                {/* غرفه های ایجاد شده */}
+  <Link href="/financial/invoices" className="mt-8 gap-2 flex-col text-center items-center justify-center">
+    <h2 className="text-xs font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
+      فاکتورهای شما
+    </h2>
+    <div className="flex justify-center">
+      <TextPage className="w-8 h-8 text-green-500" />
+    </div>
+    <p className="text-xs text-gray-700 dark:text-gray-300 mt-2">
+      مشاهده سابقه فاکتورها
+    </p>
+  </Link>
 
-                <Link href="/Shop/userShop" className="mt-8  gap-2 flex-col text-center items-center justify-center">
-                  <h2 className="text-lg font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4 max-h-[78vh] overflow-y-auto">
-                    غرفه‌های شما
-                  </h2>
-                  {UserShops.length > 0 ? (
-                    <AvatarGroupTailwind
-                    
-                      avatars={UserShops.map((shop) => shop.avatarUrl)}
-                      max={4}
-                      size={35} // اندازه آواتارها به پیکسل
-                      overlap={25} // میزان همپوشانی به پیکسل
-                    />
-                  ) : (
-                    <p className="text-gray-700 dark:text-gray-300">
-                      شما هنوز هیچ غرفه‌ای را ایجاد نکرده‌اید.
-                    </p>
-                  )}
-                  ({UserShops.length})
-                </Link>
-              </div>
+  {/* غرفه های ایجاد شده - این بخش حفظ شده است */}
+  <Link href="/Shop/userShop" className="mt-8 gap-2 flex-col text-center items-center justify-center">
+  <h2 className="text-xs font-MorabbaBold text-gray-800 dark:text-gray-200 mb-4">
+  غرفه‌های شما
+    </h2>
+    {UserShops.length > 0 ? (
+      <AvatarGroupTailwind
+        avatars={UserShops.map((shop) => shop.avatarUrl)}
+        max={4}
+        size={35} // اندازه آواتارها به پیکسل
+        overlap={25} // میزان همپوشانی به پیکسل
+      />
+    ) : (
+      <p className="text-gray-700 dark:text-gray-300">
+        شما هنوز هیچ غرفه‌ای را ایجاد نکرده‌اید.
+      </p>
+    )}
+    ({UserShops.length})
+  </Link>
+</div>
+
+
 
               {/* اطلاعات کاربری */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">

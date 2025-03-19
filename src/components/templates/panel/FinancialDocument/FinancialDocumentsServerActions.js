@@ -8,6 +8,10 @@ import GeneralLedger from "./GeneralLedger";
 import Account from '../Account/Account';
 import { ledgerValidationSchema } from "./FinancialDocumentSchema";
 import { CheckUserPermissionInShop } from '../rols/RolesPermissionActions';
+import shops from '@/templates/Shop/shops';
+import Contact from '../Contact/Contact';
+import Invoice from '../factors/Invoice';
+
 function convertToPlainObjects(docs) {
   return docs.map(doc => JSON.parse(JSON.stringify(doc)));
 }
@@ -517,3 +521,330 @@ export async function getAccountTransactions(accountId) {
 
 
 
+/////////////////////////
+// FinancialDocumentsServerActions.js - توابع اصلاح شده
+
+export async function getUserAccountsAndDocuments() {
+  await connectDB();
+  
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'لطفا وارد حساب کاربری خود شوید' };
+    }
+
+    // ابتدا مخاطب‌های مرتبط با کاربر را پیدا می‌کنیم
+    const userContacts = await Contact.find({ 
+      userAccount: user.id 
+    }).select('_id shop').lean();
+
+    if (!userContacts || userContacts.length === 0) {
+      return { 
+        status: 200, 
+        accounts: [],
+        documents: [],
+        message: 'هیچ حساب یا سند مالی یافت نشد'
+      };
+    }
+
+    const contactIds = userContacts.map(contact => contact._id);
+    const shopIds = [...new Set(userContacts.map(contact => contact.shop.toString()))];
+
+    // دریافت اطلاعات فروشگاه‌ها به صورت یکجا
+    const stores = await shops.find({ _id: { $in: shopIds } })
+      .select('_id ShopName LogoUrl')
+      .lean();
+
+    // ایجاد نقشه برای دسترسی آسان به اطلاعات فروشگاه
+    const storeMap = {};
+    stores.forEach(store => {
+      storeMap[store._id.toString()] = {
+        name: store.ShopName,
+        logo: store.LogoUrl
+      };
+    });
+
+    // حساب‌های مرتبط با مخاطب‌های کاربر را پیدا می‌کنیم
+    const accounts = await Account.find({ 
+      contact: { $in: contactIds },
+      accountStatus: 'فعال'
+    })
+    .select('_id title accountType accountCode store accountNature balance contact')
+    .lean();
+
+    // تبدیل داده‌های حساب به فرمت مناسب
+    const formattedAccounts = accounts.map(account => {
+      const storeId = account.store.toString();
+      return {
+        id: account._id.toString(),
+        title: account.title,
+        type: account.accountType,
+        code: account.accountCode,
+        nature: account.accountNature,
+        balance: account.balance || 0,
+        storeId: storeId,
+        storeName: storeMap[storeId] ? storeMap[storeId].name : 'نامشخص',
+        storeLogo: storeMap[storeId] ? storeMap[storeId].logo : null,
+        contactId: account.contact.toString()
+      };
+    });
+
+    // دریافت اسناد مالی مرتبط با حساب‌های کاربر
+    const accountIds = accounts.map(account => account._id);
+    
+    // ابتدا تراکنش‌های مرتبط با حساب‌های کاربر را پیدا می‌کنیم
+    const transactions = await GeneralLedger.find({
+      account: { $in: accountIds }
+    })
+    .populate({
+      path: 'shop',
+      select: 'ShopName LogoUrl'
+    })
+    .populate({
+      path: 'referenceId',
+      select: 'type description totalPrice totalItems '
+    }) 
+    .select('ledger account debit credit referenceId createdAt updatedAt')
+    .lean();
+    
+    // شناسه‌های دفتر کل را استخراج می‌کنیم
+    const ledgerIds = [...new Set(transactions.map(tx => tx.ledger))];
+    
+    // دفتر کل‌های مرتبط را دریافت می‌کنیم
+    const ledgers = await Ledger.find({
+      _id: { $in: ledgerIds }
+    })
+    
+    .select('description type shop ')
+    .lean();
+    
+    // تبدیل داده‌های اسناد مالی به فرمت مناسب
+    const formattedDocuments = ledgers.map(ledger => {
+      // یافتن تراکنش‌های مرتبط با این دفتر کل
+      const ledgerTransactions = transactions.filter(tx => 
+        tx.ledger.toString() === ledger._id.toString()
+      );
+      
+      // استخراج اطلاعات از اولین تراکنش برای دسترسی به shop و referenceId
+      const firstTransaction = ledgerTransactions[0] || {};
+      console.log("ledger--->",ledger);
+      
+      return {
+        id: ledger._id.toString(),
+        title: ledger.description || firstTransaction.referenceId?.description || 'سند مالی',
+        date: firstTransaction.createdAt ? new Date(firstTransaction.createdAt).toLocaleDateString('fa-IR') : '',
+        type: firstTransaction.referenceId?.type || ledger.type || 'سند مالی',
+        shopId: firstTransaction.shop?._id.toString(),
+        shopName: firstTransaction.shop?.ShopName || 'فروشگاه',
+        shopLogo: firstTransaction.shop?.LogoUrl || '/images/default-shop.jpg',
+        lastUpdated: firstTransaction.updatedAt,
+        relatedAccounts: ledgerTransactions.map(tx => ({
+          accountId: tx.account.toString(),
+          accountTitle: formattedAccounts.find(acc => acc.id === tx.account.toString())?.title || 'حساب',
+          debit: tx.debit || 0,
+          credit: tx.credit || 0
+        }))
+      };
+    });
+    
+    return { 
+      status: 200, 
+      accounts: formattedAccounts,
+      documents: formattedDocuments
+    };
+
+  } catch (error) {
+    console.error('خطا در دریافت حساب‌ها و اسناد مالی کاربر:', error);
+    return { 
+      status: 500, 
+      message: 'خطا در دریافت اطلاعات مالی' 
+    };
+  }
+}
+
+// export async function getUserAccountsAndDocuments() {
+//   await connectDB();
+  
+//   try {
+//     // احراز هویت کاربر
+//     const user = await authenticateUser();
+//     if (!user) {
+//       return { status: 401, message: 'لطفا وارد حساب کاربری خود شوید' };
+//     }
+
+//     // دریافت اسناد مالی کاربر
+//     const ledgers = await Ledger.find({ createdBy: user.id })
+//       .select('-__v')
+//       .populate([
+//         {
+//           path: 'transactions',
+//           populate: [
+//             {
+//               path: 'account',
+//               select: 'title accountType'
+//             },
+//             {
+//               path: 'referenceId',
+//               select: 'type description totalPrice totalItems'
+//             }
+//           ]
+//         },
+//         {
+//           path: 'shop',
+//           select: 'ShopName LogoUrl'
+//         }
+//       ])
+//       .sort({ createdAt: -1 })
+//       .lean();
+
+//     // تبدیل داده‌های اسناد مالی به فرمت مناسب
+//     const formattedDocuments = ledgers.map(ledger => {
+//       // یافتن تراکنش‌های مرتبط با این دفتر کل
+//       const transactions = ledger.transactions || [];
+      
+//       // استخراج اطلاعات از اولین تراکنش برای دسترسی به referenceId
+//       const firstTransaction = transactions[0] || {};
+      
+//       // محاسبه مجموع مبلغ سند
+//       const totalAmount = transactions.reduce((sum, tx) => sum + (tx.debit || 0), 0);
+      
+//       return {
+//         id: ledger._id.toString(),
+//         title: ledger.description || firstTransaction.referenceId?.description || 'سند مالی',
+//         date: ledger.createdAt ? new Date(ledger.createdAt).toLocaleDateString('fa-IR') : '',
+//         type: firstTransaction.referenceId?.type || ledger.type || 'other',
+//         amount: totalAmount,
+//         shopId: ledger.shop?._id?.toString(),
+//         shopName: ledger.shop?.ShopName || 'فروشگاه',
+//         shopLogo: ledger.shop?.LogoUrl || '/images/default-shop.jpg',
+//         lastUpdated: ledger.updatedAt ? new Date(ledger.updatedAt).toISOString() : '',
+//         relatedAccounts: transactions.map(tx => ({
+//           accountId: tx.account?._id?.toString(),
+//           accountTitle: tx.account?.title || 'حساب',
+//           debit: tx.debit || 0,
+//           credit: tx.credit || 0
+//         }))
+//       };
+//     });
+
+//     return { 
+//       status: 200,
+//       documents: formattedDocuments
+//     };
+
+//   } catch (error) {
+//     console.error('خطا در دریافت اسناد مالی کاربر:', error);
+//     return { 
+//       status: 500, 
+//       message: 'خطا در دریافت اطلاعات مالی' 
+//     };
+//   }
+// }
+
+
+// دریافت جزئیات یک سند مالی
+export async function getFinancialDocumentDetails(documentId) {
+  await connectDB();
+  
+  try {
+    // احراز هویت کاربر
+    const user = await authenticateUser();
+    if (!user) {
+      return { status: 401, message: 'لطفا وارد حساب کاربری خود شوید' };
+    }
+
+    // ابتدا مخاطب‌های مرتبط با کاربر را پیدا می‌کنیم
+    const userContacts = await Contact.find({ 
+      userAccount: user.id 
+    }).select('_id').lean();
+    
+    if (!userContacts || userContacts.length === 0) {
+      return { status: 403, message: 'شما دسترسی به این سند مالی ندارید' };
+    }
+
+    const contactIds = userContacts.map(contact => contact._id);
+
+    // حساب‌های مرتبط با مخاطب‌های کاربر را پیدا می‌کنیم
+    const userAccounts = await Account.find({ 
+      contact: { $in: contactIds }
+    }).select('_id').lean();
+    
+    const accountIds = userAccounts.map(account => account._id);
+
+    // بررسی می‌کنیم آیا سند مالی مورد نظر با حساب‌های کاربر مرتبط است
+    const transactions = await GeneralLedger.find({
+      ledger: documentId,
+      account: { $in: accountIds }
+    }).select('_id').lean();
+
+    if (!transactions || transactions.length === 0) {
+      return { status: 403, message: 'شما دسترسی به این سند مالی ندارید' };
+    }
+
+    // دریافت جزئیات سند مالی
+    const ledger = await Ledger.findById(documentId)
+      .populate([
+        {
+          path: 'transactions',
+          populate: [
+            {
+              path: 'account',
+              select: 'title accountType accountNature'
+            }
+          ]
+        },
+        {
+          path: 'shop',
+          select: 'ShopName LogoUrl ShopAddress ShopPhone'
+        },
+        {
+          path: 'createdBy',
+          select: 'name email phone'
+        }
+      ])
+      .lean();
+
+    if (!ledger) {
+      return { status: 404, message: 'سند مالی یافت نشد' };
+    }
+
+    // تبدیل به فرمت مناسب برای نمایش
+    const documentDetails = {
+      id: ledger._id.toString(),
+      title: ledger.description || 'سند مالی',
+      date: new Date(ledger.createdAt).toLocaleDateString('fa-IR'),
+      type: ledger.type || 'other',
+      shop: {
+        id: ledger.shop?._id.toString(),
+        name: ledger.shop?.ShopName || 'فروشگاه',
+        logo: ledger.shop?.LogoUrl || '/images/default-shop.jpg',
+        address: ledger.shop?.ShopAddress || '',
+        phone: ledger.shop?.ShopPhone || ''
+      },
+      creator: {
+        name: ledger.createdBy?.name || '',
+        email: ledger.createdBy?.email || '',
+        phone: ledger.createdBy?.phone || ''
+      },
+      items: ledger.transactions.map(tx => ({
+        id: tx._id.toString(),
+        account: {
+          id: tx.account?._id.toString(),
+          title: tx.account?.title || 'حساب',
+          type: tx.account?.accountType || '',
+          nature: tx.account?.accountNature || ''
+        },
+        debit: tx.debit || 0,
+        credit: tx.credit || 0,
+        description: tx.description || ''
+      })),
+      totalAmount: ledger.transactions.reduce((sum, tx) => sum + (tx.debit || 0), 0)
+    };
+
+    return { status: 200, document: documentDetails };
+  } catch (error) {
+    console.error('خطا در دریافت جزئیات سند مالی:', error);
+    return { status: 500, message: 'خطا در دریافت جزئیات سند مالی' };
+  }
+}
