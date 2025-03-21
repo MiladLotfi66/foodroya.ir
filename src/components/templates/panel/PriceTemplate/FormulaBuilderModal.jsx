@@ -3,7 +3,7 @@
 import React from "react";
 import FormulaBuilder from "./FormulaBuilder";
 
-const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables , formole }) => {
+const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables , formole ,ShopId}) => {
   if (!isOpen) return null;
 
   return (
@@ -14,6 +14,8 @@ const FormulaBuilderModal = ({ isOpen, onClose, onSave, variables , formole }) =
           onSave={onSave}
           onCancel={onClose}
           formole={formole}
+          ShopId={ShopId} // اضافه کردن ShopId
+
         />
       </div>
     </div>

@@ -838,7 +838,6 @@ export async function CheckUserPermissionInShop(shopId, accessName, actionName) 
       .populate('RolesId') // پرpopulate کردن نقش‌ها
       .select('RolesId') // انتخاب فقط فیلد RolesId
       .lean();
-
     if (contacts.length === 0) {
       return { status: 403, message: 'کاربر در این فروشگاه نقشی ندارد.' };
     }

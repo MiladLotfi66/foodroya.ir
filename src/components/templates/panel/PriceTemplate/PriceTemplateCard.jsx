@@ -26,11 +26,11 @@ function PriceTemplateCard({ priceTemplate: initialPriceTemplate, editFunction, 
         onDelete(); // حذف قالب قیمتی از لیست
         toast.success("قالب قیمتی با موفقیت حذف شد.");
       } else {
-        throw new Error(response.message || "خطا در حذف قالب قیمتی.");
+        toast.error(response.message || "خطا در حذف قالب قیمتی.");
       }
     } catch (error) {
       console.error("خطا در حذف قالب قیمتی:", error);
-      toast.error("خطا در حذف قالب قیمتی.");
+      toast.error(response.message || "خطا در حذف قالب قیمتی.");
     }
   };
 

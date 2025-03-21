@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { evaluate } from 'mathjs';
-import Select from 'react-select'; // استفاده از react-select
+import Select from 'react-select';
+import { GetAllGlobalVariables } from "./GlobalVariableServerAction";
+import { Toaster, toast } from "react-hot-toast";
 
-const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
+const FormulaBuilder = ({ onSave, onCancel, formole, ShopId }) => {
   const [formula, setFormula] = useState(formole);
   const [evaluationResult, setEvaluationResult] = useState(null);
+  const [globalVariables, setGlobalVariables] = useState([]);
+  const [isLoadingVariables, setIsLoadingVariables] = useState(false);
   
   // تعریف متغیرها با حروف اختصاری
   const internalVariables = [
@@ -14,16 +18,67 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
     { value: 'salePrice', label: 'قیمت فروش', alias: 'c' },
   ];
 
+  // دریافت متغیرهای عمومی
+  useEffect(() => {
+    const fetchGlobalVariables = async () => {
+      if (!ShopId) return;
+      
+      setIsLoadingVariables(true);
+      try {
+        const response = await GetAllGlobalVariables(ShopId);
+        if (response.status === 200) {
+          // تبدیل متغیرهای عمومی به فرمت مناسب با ایجاد حروف اختصاری منحصر به فرد
+          const formattedGlobalVars = response.globalVariables.map((gv, index) => {
+            // ایجاد نام اختصاری ساده و منحصر به فرد با استفاده از حروف لاتین
+            let alias = '';
+            
+            // اگر متغیر دارای نماد است، از آن استفاده کنیم (فقط حروف انگلیسی و اعداد)
+            if (gv.symbol && /^[a-zA-Z0-9]+$/.test(gv.symbol)) {
+              alias = `g${gv.symbol}`;
+            } 
+            // در غیر این صورت، از یک نماد ساده استفاده کنیم
+            else {
+              // استفاده از حروف g1, g2, g3, ... برای متغیرهای عمومی
+              alias = `g${index + 1}`;
+            }
+            
+            return {
+              value: gv._id,
+              label: gv.name,
+              alias: gv.alias.toLowerCase(), // تبدیل به حروف کوچک برای یکنواختی
+              description: gv.description,
+              actualValue: gv.value
+            };
+          });
+          setGlobalVariables(formattedGlobalVars);
+        } else {
+          toast.error("خطا در دریافت متغیرهای عمومی");
+        }
+      } catch (error) {
+        console.error("Error fetching global variables:", error);
+        toast.error("خطا در دریافت متغیرهای عمومی");
+      } finally {
+        setIsLoadingVariables(false);
+      }
+    };
+    
+    fetchGlobalVariables();
+  }, [ShopId]);
+
+
   const inputRef = useRef(null);
 
+  // ترکیب متغیرهای داخلی و عمومی
+  const allVariables = [...internalVariables, ...globalVariables];
+
   // نقشه حروف اختصاری به متغیرها
-  const aliasToVariableMap = internalVariables.reduce((acc, variable) => {
+  const aliasToVariableMap = allVariables.reduce((acc, variable) => {
     acc[variable.alias] = variable.value;
     return acc;
   }, {});
 
   // نقشه متغیرها به حروف اختصاری
-  const variableToAliasMap = internalVariables.reduce((acc, variable) => {
+  const variableToAliasMap = allVariables.reduce((acc, variable) => {
     acc[variable.value] = variable.alias;
     return acc;
   }, {});
@@ -84,27 +139,41 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
 
   const evaluateFormula = async () => {
     if (!isParenthesesBalanced(formula)) {
-      alert("تعداد پرانتزهای باز و بسته برابر نیست. لطفاً فرمول را بررسی کنید.");
+      toast.error("تعداد پرانتزهای باز و بسته برابر نیست. لطفاً فرمول را بررسی کنید.");
       return;
     }
 
     // بررسی استفاده صحیح از درصد
     const percentageInvalid = /%[^0-9]/.test(formula) || /^%/.test(formula);
     if (percentageInvalid) {
-      alert("استفاده از درصد نامعتبر است. لطفاً درصدها را بررسی کنید.");
+      toast.error("استفاده از درصد نامعتبر است. لطفاً درصدها را بررسی کنید.");
       return;
     }
 
     // شناسایی حروف اختصاری استفاده‌شده در فرمول
     const usedAliases = getUsedAliases(formula);
     if (usedAliases.length === 0) {
-      alert("فرمول بدون متغیر می‌باشد و قابل ارزیابی است.");
+      toast.info("فرمول بدون متغیر می‌باشد و قابل ارزیابی است.");
     }
 
     const variableValues = {};
 
-    // دریافت مقادیر متغیرها از کاربر
+    // استفاده مستقیم از مقادیر متغیرهای عمومی
+    const globalVariableAliases = globalVariables.map(v => v.alias);
+    usedAliases.forEach(alias => {
+      if (globalVariableAliases.includes(alias)) {
+        const globalVar = globalVariables.find(v => v.alias === alias);
+        if (globalVar) {
+          variableValues[alias] = globalVar.actualValue;
+        }
+      }
+    });
+
+    // دریافت مقادیر متغیرهای داخلی از کاربر
     for (let alias of usedAliases) {
+      // اگر متغیر عمومی است، مقدار از قبل تنظیم شده
+      if (variableValues[alias]) continue;
+      
       const varName = aliasToVariableMap[alias];
       const variable = internalVariables.find(v => v.value === varName);
       if (variable) {
@@ -117,7 +186,7 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
           }
           value = convertPersianDigitsToEnglish(value);
           if (value.trim() === '' || isNaN(value)) {
-            alert("لطفاً یک مقدار عددی معتبر وارد کنید.");
+            toast.error("لطفاً یک مقدار عددی معتبر وارد کنید.");
           } else {
             break;
           }
@@ -140,20 +209,20 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
       const result = evaluate(evaluatableFormula);
       setEvaluationResult(result);
     } catch (error) {
-      alert("خطا در ارزیابی فرمول. لطفاً فرمول را بررسی کنید.");
+      toast.error("خطا در ارزیابی فرمول. لطفاً فرمول را بررسی کنید.");
       console.error(error);
     }
   };
 
   const handleSave = () => {
     if (!isParenthesesBalanced(formula)) {
-      alert("تعداد پرانتزهای باز و بسته برابر نیست. لطفاً فرمول را بررسی کنید.");
+      toast.error("تعداد پرانتزهای باز و بسته برابر نیست. لطفاً فرمول را بررسی کنید.");
       return;
     }
 
     const percentageInvalid = /%[^0-9]/.test(formula) || /^%/.test(formula);
     if (percentageInvalid) {
-      alert("استفاده از درصد نامعتبر است. لطفاً درصدها را بررسی کنید.");
+      toast.error("استفاده از درصد نامعتبر است. لطفاً درصدها را بررسی کنید.");
       return;
     }
 
@@ -178,9 +247,9 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
           />
         </div>
 
-        {/* بخش دکمه‌های متغیر */}
+        {/* بخش دکمه‌های متغیر داخلی */}
         <div className="mb-4">
-          <label className="block mb-2 font-semibold">متغیرها:</label>
+          <label className="block mb-2 font-semibold">متغیرهای داخلی:</label>
           <div className="flex flex-wrap gap-2">
             {internalVariables.map((variable, idx) => (
               <button
@@ -195,7 +264,29 @@ const FormulaBuilder = ({ onSave, onCancel ,formole}) => {
           </div>
         </div>
 
-        {/* بخش حذف شده مقداردهی به متغیرها */}
+        {/* بخش دکمه‌های متغیر عمومی */}
+        <div className="mb-4">
+          <label className="block mb-2 font-semibold">متغیرهای عمومی:</label>
+          {isLoadingVariables ? (
+            <div className="text-gray-500">در حال بارگذاری متغیرها...</div>
+          ) : globalVariables.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {globalVariables.map((variable, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => insertVariable(variable.alias)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                  type="button"
+                  title={variable.description || ''}
+                >
+                  {`${variable.label} (${variable.alias}) = ${variable.actualValue}`}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-gray-500">هیچ متغیر عمومی تعریف نشده است.</div>
+          )}
+        </div>
 
         <div className="mb-4">
           <label className="block mb-2 font-semibold">تست فرمول</label>

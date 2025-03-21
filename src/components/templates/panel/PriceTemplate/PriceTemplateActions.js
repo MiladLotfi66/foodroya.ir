@@ -5,6 +5,7 @@ import PriceTemplate from "./PriceTemplate";
 import { authenticateUser } from "@/templates/Shop/ShopServerActions";
 import mongoose from 'mongoose';
 import { CheckUserPermissionInShop } from "../rols/RolesPermissionActions";
+import Product from "../Product/Product";
 
 
 
@@ -167,6 +168,33 @@ const hasAccess=await CheckUserPermissionInShop(priceTemplate.shop,"priceTemplat
 if (!hasAccess.hasPermission) {
    return { status: 401, message: 'شما دسترسی لازم را ندارید' };
  } 
+
+    // جستجوی محصولاتی که از این قالب قیمتی استفاده می‌کنند
+    const productsUsingTemplate = await Product.find({
+      ShopId: priceTemplate.shop,
+      pricingTemplate: priceTemplateId
+    }).select('title _id').lean();
+    
+    console.log(`Found ${productsUsingTemplate.length} products using this price template.`);
+    
+    // اگر محصولی از این قالب استفاده می‌کند، اجازه حذف نمی‌دهیم
+    if (productsUsingTemplate.length > 0) {
+      // حداکثر 5 محصول را نمایش می‌دهیم
+      const productTitles = productsUsingTemplate
+        .slice(0, 5)
+        .map(product => product.title)
+        .join('، ');
+      
+      const additionalText = productsUsingTemplate.length > 5 
+        ? ` و ${productsUsingTemplate.length - 5} محصول دیگر` 
+        : '';
+        
+      return { 
+        status: 409, 
+        message: `این قالب قیمتی در محصولات زیر استفاده شده است و قابل حذف نیست: ${productTitles}${additionalText}` 
+      };
+    }
+
 
   try {
       const deletedPriceTemplate = await PriceTemplate.findByIdAndDelete(priceTemplateId).lean();

@@ -14,18 +14,33 @@ import NotAuthenticated from "../rols/NotAuthenticated";
 import PermissionLoading from "../rols/PermissionLoading";
 import NoPermission from "../rols/NoPermission";
 ////////////////////////////////
+import { 
+  GetAllGlobalVariables, 
+  AddGlobalVariableAction, 
+  EditGlobalVariableAction, 
+  DeleteGlobalVariable 
+}  from "./GlobalVariableServerAction";
+import GlobalVariableCard from "./GlobalVariableCard"; // این کامپوننت را باید بسازیم
+import AddGlobalVariable from "./AddGlobalVariable"; // این کامپوننت را باید بسازیم
+
 
 function PriceTemplateManage() {
   const [priceTemplates, setPriceTemplates] = useState([]);
   const [isOpenAddPriceTemplate, setIsOpenAddPriceTemplate] = useState(false);
   const [selectedPriceTemplate, setSelectedPriceTemplate] = useState(null);
-  const [selectedPriceTemplateFile, setSelectedPriceTemplateFile] = useState(null); // افزودن استیت جدید
+  const [selectedPriceTemplateFile, setSelectedPriceTemplateFile] = useState(null);
+  
+  // اضافه کردن state‌های جدید برای متغیرهای عمومی
+  const [globalVariables, setGlobalVariables] = useState([]);
+  const [isOpenAddGlobalVariable, setIsOpenAddGlobalVariable] = useState(false);
+  const [selectedGlobalVariable, setSelectedGlobalVariable] = useState(null);
+  
   const {
     currentShopId,
     shopPanelImage,
-     } = useShopInfoFromRedux();
-  const ShopId  = currentShopId;
-   const BGImage=shopPanelImage;
+  } = useShopInfoFromRedux();
+  const ShopId = currentShopId;
+  const BGImage = shopPanelImage;
             ////////////////accessibility///////////////////
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
@@ -147,23 +162,107 @@ function PriceTemplateManage() {
     setSelectedPriceTemplate(null);
     setSelectedPriceTemplateFile(null);
   }, []);
-    ///////////////////////////////////////
-    if (status === "loading" || permissionLoading) {
-      return <PermissionLoading BGImage={BGImage} />;
-    }
-  
-    if (!isAuthenticated) {
-      return <NotAuthenticated />;
-    }
-  
-    if (!hasViewPermission) {
-      return <NoPermission />;
-    }
-  
-    ///////////////////////////////////////////////
+   
+  // اضافه کردن تابع refreshGlobalVariables
+  const refreshGlobalVariables = useCallback(async () => {
+    if (!isAuthenticated) return;
 
+    try {
+      if (!ShopId) {
+        console.error("فروشگاهی با این نام یافت نشد.");
+        return;
+      }
+      const response = await GetAllGlobalVariables(ShopId);
+      console.log("response",response);
+      
+      if (response.status === 200) {
+        setGlobalVariables(response.globalVariables);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Error fetching global variables:", error);
+      toast.error("خطا در دریافت متغیرهای عمومی.");
+    }
+  }, [ShopId, isAuthenticated]);
+
+  // اضافه کردن useEffect برای لود اولیه متغیرهای عمومی
+  useEffect(() => {
+    if (isAuthenticated && hasViewPermission) {
+      refreshGlobalVariables();
+    }
+  }, [isAuthenticated, hasViewPermission, refreshGlobalVariables]);
+
+  // اضافه کردن handler‌های مربوط به متغیرهای عمومی
+  const handleAddGlobalVariableClick = useCallback(() => {
+    setIsOpenAddGlobalVariable(true);
+    setSelectedGlobalVariable(null);
+  }, []);
+
+  const handleEditGlobalVariable = useCallback((globalVariable) => {
+    setSelectedGlobalVariable(globalVariable);
+    setIsOpenAddGlobalVariable(true);
+  }, []);
+
+  const handleDeleteGlobalVariable = useCallback(async (globalVariableId) => {
+    try {
+      const response = await DeleteGlobalVariable(globalVariableId);
+      if (response.status === 200) {
+        setGlobalVariables(prev => prev.filter(v => v._id !== globalVariableId));
+        toast.success(response.message);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Error deleting global variable:", error);
+      toast.error("خطا در حذف متغیر عمومی.");
+    }
+  }, []);
+
+  const handleCloseGlobalVariableModal = useCallback(() => {
+    setIsOpenAddGlobalVariable(false);
+    setSelectedGlobalVariable(null);
+  }, []);
+ ///////////////////////////////////////
+ if (status === "loading" || permissionLoading) {
+  return <PermissionLoading BGImage={BGImage} />;
+}
+
+if (!isAuthenticated) {
+  return <NotAuthenticated />;
+}
+
+if (!hasViewPermission) {
+  return <NoPermission />;
+}
+
+///////////////////////////////////////////////
   return (
     <FormTemplate BGImage={BGImage}>
+            {/* Modal برای افزودن/ویرایش متغیر عمومی */}
+            {isOpenAddGlobalVariable && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseGlobalVariableModal();
+            }
+          }}
+        >
+          <div
+            className="relative bg-white bg-opacity-90 dark:bg-zinc-700 dark:bg-opacity-90 shadow-normal rounded-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AddGlobalVariable
+              globalVariable={selectedGlobalVariable}
+              onClose={handleCloseGlobalVariableModal}
+              refreshGlobalVariables={refreshGlobalVariables}
+              ShopId={ShopId}
+            />
+          </div>
+        </div>
+      )}
+
       {isOpenAddPriceTemplate && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
@@ -213,6 +312,37 @@ function PriceTemplateManage() {
             />
           ))}
         </div>
+
+              {/* بخش متغیرهای عمومی */}
+      <div className="bg-white bg-opacity-95 dark:bg-zinc-700 dark:bg-opacity-95 shadow-normal rounded-2xl mt-6">
+        <div className="flex justify-between p-2 md:p-5">
+          <h1 className="text-2xl md:text-3xl font-MorabbaBold">متغیرهای عمومی</h1>
+          {hasAddPermission && (
+            <button
+              className="h-11 md:h-14 bg-teal-600 rounded-xl hover:bg-teal-700 text-white mt-4 p-4"
+              aria-label="add global variable"
+              onClick={handleAddGlobalVariableClick}
+            >
+              افزودن متغیر عمومی
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 pb-16 max-h-[78vh] overflow-y-auto">
+          {globalVariables.map((globalVariable) => (
+            <GlobalVariableCard
+              key={globalVariable._id}
+              globalVariable={globalVariable}
+              hasViewPermission={hasViewPermission}
+              hasEditPermission={hasEditPermission}
+              hasDeletePermission={hasDeletePermission}
+              onEdit={() => handleEditGlobalVariable(globalVariable)}
+              onDelete={() => handleDeleteGlobalVariable(globalVariable._id)}
+            />
+          ))}
+        </div>
+      </div>
+
       </div>
       <Toaster />
     </FormTemplate>

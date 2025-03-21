@@ -440,6 +440,7 @@ function AddPriceTemplate({
             isOpen={isFormulaModalOpen}
             onClose={() => setIsFormulaModalOpen(false)}
             onSave={saveFormula}
+            ShopId={ShopId} // اضافه کردن ShopId
             formole={
               currentFormulaIndex !== null && fields[currentFormulaIndex]
                 ? fields[currentFormulaIndex].formula
