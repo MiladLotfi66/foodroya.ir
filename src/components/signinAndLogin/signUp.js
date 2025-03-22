@@ -220,7 +220,7 @@ function SignUp() {
             <h4 className="text-sm">
               خوش آمدید به
               <Link href="/" className="text-orange-300 font-MorabbaMedium mr-1">
-                {" فود رویا"}
+                {"نیبرو"}
               </Link>
             </h4>
             <h1 className="text-2xl font-MorabbaBold">ثبت نام</h1>

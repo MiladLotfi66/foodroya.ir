@@ -88,7 +88,7 @@ function ForgetPassword() {
                 خوش آمدید به
                 <Link href="/" className="text-orange-300 font-MorabbaMedium">
                   {" "}
-                  فود رویا
+                  نیبرو
                 </Link>
               </h4>
               <h1 className="text-2xl font-MorabbaBold">فراموشی رمز عبور </h1>
